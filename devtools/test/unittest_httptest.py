@@ -41,7 +41,7 @@ class TwistedCWAnonTC(CubicWebServerTC):
 
 
 class TwistedCWIdentTC(CubicWebServerTC):
-
+    test_db_id = 'httptest-cwident'
     anonymous_allowed = False
     tags = CubicWebServerTC.tags | Tags(('auth',))
 

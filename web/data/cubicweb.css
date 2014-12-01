@@ -52,6 +52,11 @@ html, body {
   background: %(pageBgColor)s;
 }
 
+/* more specific selectors to override jQueryUI's braindamaged CSS rules */
+#pageContent .ui-tabs-panel a,
+#pageContent .ui-tabs-panel a:active,
+#pageContent .ui-tabs-panel a:visited,
+#pageContent .ui-tabs-panel a:link,
 a, a:active, a:visited, a:link {
   color: %(aColor)s;
   text-decoration: none;

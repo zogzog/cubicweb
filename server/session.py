@@ -1074,8 +1074,13 @@ class Connection(RequestSessionBase):
         cstate = self.commit_state
         if cstate == 'uncommitable':
             raise QueryError('transaction must be rolled back')
-        if cstate is not None:
+        if cstate == 'precommit':
+            self.warn('calling commit in precommit makes no sense; ignoring commit')
             return
+        if cstate == 'postcommit':
+            self.critical('postcommit phase is not allowed to write to the db; ignoring commit')
+            return
+        assert cstate is None
         # on rollback, an operation should have the following state
         # information:
         # - processed by the precommit/commit event or not

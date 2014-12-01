@@ -30,7 +30,7 @@ class StatsService(Service):
     """
 
     __regid__  = 'repo_stats'
-    __select__ = match_user_groups('managers')
+    __select__ = match_user_groups('managers', 'users')
 
     def call(self):
         repo = self._cw.repo # Service are repo side only.

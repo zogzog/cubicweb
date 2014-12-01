@@ -133,17 +133,19 @@ elif driver.startswith('sqlserver'):
 # recreate the constraints, hook will lead to low-level recreation
 for eschema in sorted(schema.entities()):
     if eschema._unique_together:
+        print 'recreate unique indexes for', eschema
         rql_args = schemaserial.uniquetogether2rqls(eschema)
         for rql, args in rql_args:
             args['x'] = eschema.eid
             session.execute(rql, args)
-        commit()
-
+commit()
 
 # all attributes perms have to be refreshed ...
-for rschema in schema.relations():
+for rschema in sorted(schema.relations()):
     if rschema.final:
         if rschema.type in fsschema:
-            sync_schema_props_perms(rschema.type, syncprops=False, ask_confirm=False)
+            print 'sync perms for', rschema.type
+            sync_schema_props_perms(rschema.type, syncprops=False, ask_confirm=False, commit=False)
         else:
             print 'WARNING: attribute %s missing from fs schema' % rschema.type
+commit()

@@ -160,7 +160,8 @@ class CWGroupInContextView(EntityView):
     def entity_call(self, entity, **kwargs):
         entity.complete()
         self.w(u'<a href="%s" class="%s">%s</a>' % (
-            entity.absolute_url(), entity.name, entity.printable_value('name')))
+            entity.absolute_url(), xml_escape(entity.name),
+            entity.printable_value('name')))
 
 
 # user / groups management views ###############################################

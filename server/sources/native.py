@@ -1505,11 +1505,12 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
             args['pwd'] = Binary(crypt_password(password, pwd.getvalue()))
         # get eid from login and (crypted) password
         rset = self.source.syntax_tree_search(cnx, self._auth_rqlst, args)
+        pwd = args['pwd']
         try:
             user = rset[0][0]
             # If the stored hash uses a deprecated scheme (e.g. DES or MD5 used
             # before 3.14.7), update with a fresh one
-            if pwd.getvalue():
+            if pwd is not None and pwd.getvalue():
                 verify, newhash = verify_and_update(password, pwd.getvalue())
                 if not verify: # should not happen, but...
                     raise AuthenticationError('bad password')
@@ -1564,6 +1565,8 @@ class DatabaseIndependentBackupRestore(object):
     Tables are saved in chunks in different files in order to prevent
     a too high memory consumption.
     """
+    blocksize = 100
+
     def __init__(self, source):
         """
         :param: source an instance of the system source
@@ -1647,10 +1650,7 @@ class DatabaseIndependentBackupRestore(object):
         sql = 'SELECT * FROM %s' % table
         columns, rows_iterator = self._get_cols_and_rows(sql)
         self.logger.info('number of rows: %d', rowcount)
-        if table.startswith('cw_'): # entities
-            blocksize = 2000
-        else: # relations and metadata
-            blocksize = 10000
+        blocksize = self.blocksize
         if rowcount > 0:
             for i, start in enumerate(xrange(0, rowcount, blocksize)):
                 rows = list(itertools.islice(rows_iterator, blocksize))

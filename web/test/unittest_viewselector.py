@@ -218,7 +218,6 @@ class VRegistryTC(ViewSelectorTC):
             rset = req.execute('Any N, X WHERE X in_group Y, Y name N')
             self.assertListEqual(self.pviews(req, rset),
                                  [('csvexport', csvexport.CSVRsetView),
-                                  ('ecsvexport', csvexport.CSVEntityView),
                                   ('jsonexport', json.JsonRsetView),
                                   ('rsetxml', xmlrss.XMLRsetView),
                                   ('table', tableview.RsetTableView),

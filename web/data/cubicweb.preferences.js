@@ -25,7 +25,7 @@ function openFieldset(fieldsetid) {
 function _toggleFieldset(fieldsetid, closeaction, linklabel, linkhref) {
     jQuery('#' + fieldsetid).find('div.openlink').each(function() {
         var link = A({
-            'href': "javascript:noop();",
+            'href': "javascript:$.noop();",
             'onclick': linkhref
         },
         linklabel);

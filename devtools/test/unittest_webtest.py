@@ -15,6 +15,7 @@ class CWTTC(CubicWebTestTC):
 
 
 class CWTIdentTC(CubicWebTestTC):
+    test_db_id = 'webtest-ident'
     anonymous_allowed = False
     tags = CubicWebTestTC.tags | Tags(('auth',))
 

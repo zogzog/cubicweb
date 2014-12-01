@@ -355,7 +355,7 @@ Widgets.LazySuggestField = defclass('LazySuggestField', [Widgets.SuggestField], 
 Widgets.SuggestForm = defclass("SuggestForm", null, {
 
     __init__: function(inputid, initfunc, varargs, validatefunc, options) {
-        this.validatefunc = validatefunc || noop;
+        this.validatefunc = validatefunc || $.noop;
         this.sgfield = new Widgets.BaseSuggestField(inputid, initfunc, varargs, options);
         this.oklabel = options.oklabel || 'ok';
         this.cancellabel = options.cancellabel || 'cancel';
@@ -369,11 +369,11 @@ Widgets.SuggestForm = defclass("SuggestForm", null, {
             'class': "sgformbuttons"
         },
         [A({
-            'href': "javascript: noop();",
+            'href': "javascript: $.noop();",
             'onclick': this.onValidateClicked
         },
         this.oklabel), ' / ', A({
-            'href': "javascript: noop();",
+            'href': "javascript: $.noop();",
             'onclick': this.destroy
         },
         escapeHTML(this.cancellabel))]);

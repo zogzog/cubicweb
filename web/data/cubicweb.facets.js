@@ -35,7 +35,7 @@ function facetFormContent($form) {
     });
     // pick up hidden inputs (required metadata inputs such as 'facets'
     // but also RangeWidgets)
-    $form.find('input:hidden').each(function() {
+    $form.find('input[type="hidden"]').each(function() {
         names.push(this.name);
         values.push(this.value);
     });

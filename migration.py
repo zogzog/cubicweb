@@ -525,7 +525,7 @@ class ConfigurationProblem(object):
                 self.errors.append( ('add', cube, version, source) )
             elif versions:
                 lower_strict = version_strictly_lower(self.cubes[cube], version)
-                if oper in ('>=','='):
+                if oper in ('>=','=','=='):
                     if lower_strict:
                         self.errors.append( ('update', cube, version, source) )
                 elif oper is None:

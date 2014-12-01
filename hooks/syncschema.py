@@ -476,7 +476,7 @@ class CWAttributeAddOp(MemSchemaOperation):
             cnx.system_sql(str('ALTER TABLE %s ADD %s %s'
                                % (table, column, attrtype)),
                            rollback_on_failure=False)
-            self.info('added column %s to table %s', table, column)
+            self.info('added column %s to table %s', column, table)
         except Exception as ex:
             # the column probably already exists. this occurs when
             # the entity's type has just been added or if the column

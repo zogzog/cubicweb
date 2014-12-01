@@ -431,13 +431,21 @@ function loadRemote(url, form, reqtype, sync) {
 }
 
 //============= higher level AJAX functions using remote calls ===============//
+
+var _i18ncache = {};
+
 /**
  * .. function:: _(message)
  *
  * emulation of gettext's _ shortcut
  */
 function _(message) {
-    return loadRemote(AJAX_BASE_URL, ajaxFuncArgs('i18n', null, [message]), 'GET', true)[0];
+    var form;
+    if (!(message in _i18ncache)) {
+        form = ajaxFuncArgs('i18n', null, [message]);
+        _i18ncache[message] = loadRemote(AJAX_BASE_URL, form, 'GET', true)[0];
+    }
+    return _i18ncache[message];
 }
 
 /**
