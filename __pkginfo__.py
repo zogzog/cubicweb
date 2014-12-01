@@ -115,8 +115,6 @@ try:
         [join('share', 'cubicweb', 'cubes', 'shared', 'data'),
          [join(_data_dir, fname) for fname in listdir(_data_dir)
           if not isdir(join(_data_dir, fname))]],
-        [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'timeline'),
-         [join(_data_dir, 'timeline', fname) for fname in listdir(join(_data_dir, 'timeline'))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'images'),
          [join(_data_dir, 'images', fname) for fname in listdir(join(_data_dir, 'images'))]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'jquery-treeview'),

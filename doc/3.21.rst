@@ -1,6 +1,13 @@
 What's new in CubicWeb 3.21?
 ============================
 
+Code movement
+-------------
+
+The cubicweb.web.views.timeline module (providing the timeline-json, timeline
+and static-timeline views) has moved to a standalone cube_
+
+.. _cube: https://www.cubicweb.org/project/cubicweb-timeline
 
 Deprecated code drops
 ---------------------

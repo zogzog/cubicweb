@@ -134,7 +134,6 @@ INDEX_IN_ORDER = [
     'cubicweb.preferences',
     'cubicweb.edition',
     'cubicweb.reledit',
-    'cubicweb.timeline-ext',
 ]
 
 FILES_TO_IGNORE = set([
@@ -152,7 +151,6 @@ FILES_TO_IGNORE = set([
     'cubicweb.fckcwconfig-full.js',
     'cubicweb.goa.js',
     'cubicweb.compat.js',
-    'cubicweb.timeline-bundle.js',
     ])
 
 if __name__ == '__main__':
