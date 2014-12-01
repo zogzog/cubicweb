@@ -372,7 +372,7 @@ class ResultSet(object):
         if encoded is not _MARKER:
             warn('[3.21] the "encoded" argument is deprecated', DeprecationWarning)
         encoding = self.req.encoding
-        rqlstr = self.syntax_tree().as_string(encoding, self.args)
+        rqlstr = self.syntax_tree().as_string(kwargs=self.args)
         # sounds like we get encoded or unicode string due to a bug in as_string
         if not encoded:
             if isinstance(rqlstr, unicode):

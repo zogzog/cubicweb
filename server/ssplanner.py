@@ -249,7 +249,7 @@ class SSPlanner(object):
                 raise QueryError('can not assign to %r relation'
                                  % relation.r_type)
             lhs, rhs = relation.get_variable_parts()
-            lhskey = lhs.as_string('utf-8')
+            lhskey = lhs.as_string()
             if not lhskey in selectedidx:
                 if lhs.variable in eidconsts:
                     eid = eidconsts[lhs.variable]
@@ -262,7 +262,7 @@ class SSPlanner(object):
                 selectedidx[lhskey] = lhsinfo
             else:
                 lhsinfo = selectedidx[lhskey][:-1] + (None,)
-            rhskey = rhs.as_string('utf-8')
+            rhskey = rhs.as_string()
             if not rhskey in selectedidx:
                 if isinstance(rhs, Constant):
                     rhsinfo = (_CONSTANT, rhs.eval(plan.args), residx)
