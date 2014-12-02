@@ -25,7 +25,7 @@ class CubicWebAuthTktAuthenticationPolicy(AuthTktAuthenticationPolicy):
             request, principal, **kw)
         try:
             repo = request.registry['cubicweb.repository']
-            with repo.internal_session() as cnx:
+            with repo.internal_cnx() as cnx:
                 cnx.execute(
                     "SET U last_login_time %(now)s WHERE U eid %(user)s", {
                         'now': datetime.datetime.now(),
