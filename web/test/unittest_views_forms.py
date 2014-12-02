@@ -21,14 +21,14 @@ from cubicweb.devtools.testlib import CubicWebTC
 class InlinedFormTC(CubicWebTC):
 
     def test_linked_to(self):
-        req = self.request()
-        formview = req.vreg['views'].select(
-            'inline-creation', req,
-            etype='File', rtype='described_by_test', role='subject',
-            peid=123,
-            petype='Salesterm')
-        self.assertEqual({('described_by_test', 'object'): [123]},
-                         formview.form.linked_to)
+        with self.admin_access.web_request() as req:
+            formview = req.vreg['views'].select(
+                'inline-creation', req,
+                etype='File', rtype='described_by_test', role='subject',
+                peid=123,
+                petype='Salesterm')
+            self.assertEqual({('described_by_test', 'object'): [123]},
+                             formview.form.linked_to)
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
