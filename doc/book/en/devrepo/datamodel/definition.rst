@@ -92,6 +92,19 @@ There is also a `RichString` kindof type:
 
  .. autoclass:: yams.buildobjs.RichString
 
+The ``__unique_together__`` class attribute is a list of tuples of names of
+attributes or inlined relations.  For each tuple, CubicWeb ensures the unicity
+of the combination.  For example:
+
+.. sourcecode:: python
+
+  class State(EntityType):
+      __unique_together__ = [('name', 'state_of')]
+
+      name = String(required=True)
+      state_of = SubjectRelation('Workflow', cardinality='1*',
+                                 composite='object', inlined=True)
+
 
 You can find more base entity types in
 :ref:`pre_defined_entity_types`.
@@ -273,20 +286,8 @@ third argument is not available.
   attribute is unique in a specific context. The Query must **never** return more
   than a single result to be satisfied. In this query the variables `S` is
   reserved for the relation subject entity. The other variables should be
-  specified with the second constructor argument (mainvars). This constraints
-  should be used when UniqueConstraint doesn't fit. Here is a simple example.
-
-.. sourcecode:: python
-
-    # Check that in the same Workflow each state's name is unique.  Using
-    # UniqueConstraint (or unique=True) here would prevent states in different
-    # workflows to have the same name.
-
-    # With: State S, Workflow W, String N ; S state_of W, S name N
-
-    RQLUniqueConstraint('S name N, S state_of WF, Y state_of WF, Y name N',
-                        mainvars='Y',
-                        msg=_('workflow already has a state of that name'))
+  specified with the second constructor argument (mainvars). This constraint type
+  should be used when __unique_together__ doesn't fit.
 
 .. XXX note about how to add new constraint
 
