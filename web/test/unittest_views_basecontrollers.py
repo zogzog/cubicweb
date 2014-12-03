@@ -812,18 +812,19 @@ class AjaxControllerTC(CubicWebTC):
     def test_maydel_perms(self):
         """Check that AjaxEditRelationCtxComponent calls rdef.check with a
         sufficient context"""
-        self.remote_call('tag_entity', self.john.eid, ['python'])
+        with self.remote_calling('tag_entity', self.john.eid, ['python']) as (_, req):
+            req.cnx.commit()
         with self.temporary_permissions(
                 (self.schema['tags'].rdefs['Tag', 'CWUser'],
                  {'delete': (RRQLExpression('S owned_by U'), )}, )):
-            req = self.request(rql='CWUser P WHERE P login "John"',
-                               pageid='123', fname='view')
-            ctrl = self.ctrl(req)
-            rset = self.john.as_rset()
-            rset.req = req
-            source = ctrl.publish()
-            # maydel jscall
-            self.assertIn('ajaxBoxRemoveLinkedEntity', source)
+            with self.admin_access.web_request(rql='CWUser P WHERE P login "John"',
+                                   pageid='123', fname='view') as req:
+                ctrl = self.ctrl(req)
+                rset = self.john.as_rset()
+                rset.req = req
+                source = ctrl.publish()
+                # maydel jscall
+                self.assertIn('ajaxBoxRemoveLinkedEntity', source)
 
     def test_pending_insertion(self):
         with self.remote_calling('add_pending_inserts', [['12', 'tags', '13']]) as (_, req):
