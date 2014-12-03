@@ -312,10 +312,11 @@ class SQLAdapterMixIn(object):
         dbpassword = source_config.get('db-password')
         dbencoding = source_config.get('db-encoding', 'UTF-8')
         dbextraargs = source_config.get('db-extra-arguments')
+        dbnamespace = source_config.get('db-namespace')
         self.dbhelper = db.get_db_helper(self.dbdriver)
         self.dbhelper.record_connection_info(dbname, dbhost, dbport, dbuser,
                                              dbpassword, dbextraargs,
-                                             dbencoding)
+                                             dbencoding, dbnamespace)
         self.sqlgen = SQLGenerator()
         # copy back some commonly accessed attributes
         dbapi_module = self.dbhelper.dbapi_module

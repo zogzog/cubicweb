@@ -88,6 +88,7 @@ def source_cnx(source, dbname=None, special_privs=False, interactive=True):
     extra = extra_args and {'extra_args': extra_args} or {}
     cnx = get_connection(driver, dbhost, dbname, user, password=password,
                          port=source.get('db-port'),
+                         schema=source.get('db-namespace'),
                          **extra)
     try:
         cnx.logged_user = user
@@ -242,6 +243,13 @@ class RepositoryDeleteHandler(CommandHandler):
     cmdname = 'delete'
     cfgname = 'repository'
 
+    def _drop_namespace(self, source):
+        db_namespace = source.get('db-namespace')
+        with db_transaction(source, privilege='DROP SCHEMA') as cursor:
+            helper = get_db_helper(source['db-driver'])
+            helper.drop_schema(cursor, db_namespace)
+            print '-> database schema %s dropped' % db_namespace
+
     def _drop_database(self, source):
         dbname = source['db-name']
         if source['db-driver'] == 'sqlite':
@@ -263,10 +271,15 @@ class RepositoryDeleteHandler(CommandHandler):
                 cursor.execute('DROP USER %s' % user)
 
     def _cleanup_steps(self, source):
-        # 1/ delete database
+        # 1/ delete namespace if used
+        db_namespace = source.get('db-namespace')
+        if db_namespace:
+            yield ('Delete database namespace "%s"' % db_namespace,
+                   self._drop_namespace, True)
+        # 2/ delete database
         yield ('Delete database "%(db-name)s"' % source,
                self._drop_database, True)
-        # 2/ delete user
+        # 3/ delete user
         helper = get_db_helper(source['db-driver'])
         if source['db-user'] and helper.users_support:
             # XXX should check we are not connected as user
@@ -402,10 +415,14 @@ class CreateInstanceDBCommand(Command):
             except BaseException:
                 dbcnx.rollback()
                 raise
-        cnx = system_source_cnx(source, special_privs='CREATE LANGUAGE',
+        cnx = system_source_cnx(source, special_privs='CREATE LANGUAGE/SCHEMA',
                                 interactive=not automatic)
         cursor = cnx.cursor()
         helper.init_fti_extensions(cursor)
+        namespace = source.get('db-namespace')
+        if namespace and ASK.confirm('Create schema %s in database %s ?'
+                                     % (namespace, dbname)):
+            helper.create_schema(cursor, namespace)
         cnx.commit()
         # postgres specific stuff
         if driver == 'postgres':
@@ -480,7 +497,7 @@ class InitInstanceCommand(Command):
                 system['db-driver'], database=system['db-name'],
                 host=system.get('db-host'), port=system.get('db-port'),
                 user=system.get('db-user') or '', password=system.get('db-password') or '',
-                **extra)
+                schema=system.get('db-namespace'), **extra)
         except Exception as ex:
             raise ConfigurationError(
                 'You seem to have provided wrong connection information in '\
