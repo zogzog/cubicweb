@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -46,6 +46,20 @@ _MARKER = object()
 
 # initialize random seed from current time
 random.seed()
+
+def admincnx(appid):
+    from cubicweb.cwconfig import CubicWebConfiguration
+    from cubicweb.server.repository import Repository
+    from cubicweb.server.utils import TasksManager
+    config = CubicWebConfiguration.config_for(appid)
+
+    login = config.default_admin_config['login']
+    password = config.default_admin_config['password']
+
+    repo = Repository(config, TasksManager())
+    session = repo.new_session(login, password=password)
+    return session.new_cnx()
+
 
 def make_uid(key=None):
     """Return a unique identifier string.

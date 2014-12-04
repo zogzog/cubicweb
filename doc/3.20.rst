@@ -15,6 +15,9 @@ New features
   Both of these features are described in `CWEP-002`_, and the updated
   "Data model" chapter of the CubicWeb book.
 
+* cubicweb-ctl plugins can use the ``cubicweb.utils.admincnx`` function
+  to get a Connection object from an instance name.
+
 .. _CWEP-002: http://hg.logilab.org/review/cwep/file/tip/CWEP-002.rst
 
 
