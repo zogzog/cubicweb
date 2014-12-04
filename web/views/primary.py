@@ -237,7 +237,9 @@ class PrimaryView(EntityView):
                                      rtype=rschema.type, role=role)
             else:
                 vid = dispctrl.get('vid', 'autolimited')
-                limit = defaultlimit if vid == 'autolimited' else None
+                limit = dispctrl.get('limit', defaultlimit) if vid == 'autolimited' else None
+                if limit is not None:
+                    limit += 1 # need one more so the view can check if there is more than the limit
                 rset = self._relation_rset(entity, rschema, role, dispctrl, limit=limit)
                 if not rset:
                     continue
