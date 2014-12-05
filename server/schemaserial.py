@@ -358,27 +358,23 @@ def serialize_schema(cnx, schema):
     eschemas.insert(0, schema.eschema('CWEType'))
     for eschema in eschemas:
         execschemarql(execute, eschema, eschema2rql(eschema, groupmap))
-        if pb is not None:
-            pb.update()
+        pb.update()
     # serialize constraint types
     cstrtypemap = {}
     rql = 'INSERT CWConstraintType X: X name %(ct)s'
     for cstrtype in CONSTRAINTS:
         cstrtypemap[cstrtype] = execute(rql, {'ct': unicode(cstrtype)},
                                         build_descr=False)[0][0]
-        if pb is not None:
-            pb.update()
+        pb.update()
     # serialize relations
     for rschema in schema.relations():
         # skip virtual relations such as eid, has_text and identity
         if rschema in VIRTUAL_RTYPES:
-            if pb is not None:
-                pb.update()
+            pb.update()
             continue
         if rschema.rule:
             execschemarql(execute, rschema, crschema2rql(rschema))
-            if pb is not None:
-                pb.update()
+            pb.update()
             continue
         execschemarql(execute, rschema, rschema2rql(rschema, addrdef=False))
         if rschema.symmetric:
@@ -389,8 +385,7 @@ def serialize_schema(cnx, schema):
         for rdef in rdefs:
             execschemarql(execute, rdef,
                           rdef2rql(rdef, cstrtypemap, groupmap))
-        if pb is not None:
-            pb.update()
+        pb.update()
     # serialize unique_together constraints
     for eschema in eschemas:
         if eschema._unique_together:
@@ -398,8 +393,7 @@ def serialize_schema(cnx, schema):
     # serialize yams inheritance relationships
     for rql, kwargs in specialize2rql(schema):
         execute(rql, kwargs, build_descr=False)
-        if pb is not None:
-            pb.update()
+        pb.update()
     print
 
 
