@@ -26,9 +26,6 @@ class MyAFS(uicfg.AutoformSectionRelationTags):
 
 _myafs = MyAFS()
 
-# XXX useless ASA logilab.common.registry is fixed
-_myafs.__module__ = "cubes.i18ntestcube.views"
-
 _myafs.tag_object_of(('*', 'in_forum', 'Forum'), 'main', 'inlined')
 
 afs.tag_object_of(('*', 'in_forum', 'Forum'), 'main', 'inlined')
