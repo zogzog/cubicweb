@@ -35,7 +35,7 @@ def login_password_login(request):
 
     max_age = None
     if request.params.get('__setauthcookie') == '1':
-        max_age = '604800'
+        max_age = 604800
     headers = security.remember(request, user_eid, max_age=max_age)
 
     new_path = request.params.get('postlogin_path', '/')
