@@ -83,7 +83,7 @@ a set of attributes and relations, and some permissions which define who can add
 update or delete entities of this type.
 
 The following built-in types are available: ``String``,
-``Int``, ``Float``, ``Decimal``, ``Boolean``,
+``Int``, ``BigInt``, ``Float``, ``Decimal``, ``Boolean``,
 ``Date``, ``Datetime``, ``Time``, ``Interval``, ``Byte`` and
 ``Password``. They can only be used as attributes of an other entity
 type.
