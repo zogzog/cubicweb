@@ -563,6 +563,14 @@ class ResultSetTC(CubicWebTC):
             self.assertIsInstance(str(rset), basestring)
             self.assertEqual(len(str(rset).splitlines()), 1)
 
+    def test_nonregr_symmetric_relation(self):
+        # see https://www.cubicweb.org/ticket/4739253
+        with self.admin_access.client_cnx() as cnx:
+            p1 = cnx.create_entity('Personne', nom=u'sylvain')
+            cnx.create_entity('Personne', nom=u'denis', connait=p1)
+            cnx.commit()
+            rset = cnx.execute('Any X,Y WHERE X connait Y')
+            rset.get_entity(0, 1) # used to raise KeyError
 
 if __name__ == '__main__':
     unittest_main()
