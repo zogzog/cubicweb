@@ -154,6 +154,15 @@ class SecurityTC(BaseSecurityTC):
             cnx.execute("INSERT Societe X: X nom 'looogilab'")
             cnx.execute("SET X travaille S WHERE X nom 'biduuule', S nom 'looogilab'")
 
+    def test_insert_immutable_attribute_update(self):
+        with self.admin_access.repo_cnx() as cnx:
+            cnx.create_entity('Old', name=u'Babar')
+            cnx.commit()
+            # this should be equivalent
+            o = cnx.create_entity('Old')
+            o.cw_set(name=u'Celeste')
+            cnx.commit()
+
     def test_update_rql_permission(self):
         with self.admin_access.repo_cnx() as cnx:
             cnx.execute("SET A concerne S WHERE A is Affaire, S is Societe")
