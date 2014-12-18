@@ -40,34 +40,3 @@ The algorithm implemented in CubicWeb is the following:
 
 Keep in mind that the browser will then interpret the CSSs and apply
 the standard cascading mechanism.
-
-FAQ
-====
-
-- How do I keep the old style?
-
-  Put ``STYLESHEET = [data('cubicweb.old.css')]`` in your uiprops.py
-  file and think about something else.
-
-- What are the changes in cubicweb.css?
-
-  Version 3.9.0 of cubicweb changed the following in the default html
-  markup and css:
-
-  ===============  ==================================
-   old              new
-  ===============  ==================================
-   .navcol          #navColumnLeft, #navColumnRight
-   #contentcol      #contentColumn
-   .footer          #footer
-   .logo	    #logo
-   .simpleMessage   .loginMessage
-   .appMsg	    (styles are removed from css)
-   .searchMessage   (styles are removed from css)
-  ===============  ==================================
-
-  Introduction of the new cubicweb.reset.css based on Eric Meyer's
-  reset css.
-
-  Lots of margin, padding, etc.
-

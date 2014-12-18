@@ -32,6 +32,9 @@ API Changes
 
 * the migration environment's ``remove_cube`` function is now called ``drop_cube``.
 
+* cubicweb.old.css is now cubicweb.css.  The previous "new"
+  cubicweb.css, along with its cubicweb.reset.css companion, have been
+  removed.
 
 Deprecated Code Drops
 ----------------------

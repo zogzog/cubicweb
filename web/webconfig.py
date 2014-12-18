@@ -209,12 +209,6 @@ have the python imaging library installed to use captcha)',
           'group': 'web', 'level': 3,
           }),
 
-        ('use-old-css',
-         {'type' : 'yn',
-          'default': True,
-          'help': 'use cubicweb.old.css instead of 3.9 cubicweb.css',
-          'group': 'web', 'level': 2,
-          }),
         ('concat-resources',
          {'type' : 'yn',
           'default': False,
@@ -368,9 +362,11 @@ have the python imaging library installed to use captcha)',
         if directory is None:
             return None, None
         if rdirectory == 'data' and rid.endswith('.css'):
-            if self['use-old-css'] and rid == 'cubicweb.css':
+            if rid == 'cubicweb.old.css':
                 # @import('cubicweb.css') in css
-                rid = 'cubicweb.old.css'
+                warn('[3.20] cubicweb.old.css has been renamed back to cubicweb.css',
+                     DeprecationWarning)
+                rid = 'cubicweb.css'
             return self.uiprops.process_resource(join(directory, rdirectory), rid), rid
         return join(directory, rdirectory), rid
 
@@ -437,13 +433,14 @@ have the python imaging library installed to use captcha)',
             self._load_ui_properties_file(uiprops, path)
         self._load_ui_properties_file(uiprops, self.apphome)
         datadir_url = uiprops.context['datadir_url']
-        # pre 3.9 css compat, however the old css still rules
-        if self['use-old-css']:
-            if (datadir_url+'/cubicweb.css') in uiprops['STYLESHEETS']:
-                idx = uiprops['STYLESHEETS'].index(datadir_url+'/cubicweb.css')
-                uiprops['STYLESHEETS'][idx] = datadir_url+'/cubicweb.old.css'
-            if datadir_url+'/cubicweb.reset.css' in uiprops['STYLESHEETS']:
-                uiprops['STYLESHEETS'].remove(datadir_url+'/cubicweb.reset.css')
+        if (datadir_url+'/cubicweb.old.css') in uiprops['STYLESHEETS']:
+            warn('[3.20] cubicweb.old.css has been renamed back to cubicweb.css',
+                 DeprecationWarning)
+            idx = uiprops['STYLESHEETS'].index(datadir_url+'/cubicweb.old.css')
+            uiprops['STYLESHEETS'][idx] = datadir_url+'/cubicweb.css'
+        if datadir_url+'/cubicweb.reset.css' in uiprops['STYLESHEETS']:
+            warn('[3.20] cubicweb.reset.css is obsolete', DeprecationWarning)
+            uiprops['STYLESHEETS'].remove(datadir_url+'/cubicweb.reset.css')
         cubicweb_js_url = datadir_url + '/cubicweb.js'
         if cubicweb_js_url not in uiprops['JAVASCRIPTS']:
             uiprops['JAVASCRIPTS'].insert(0, cubicweb_js_url)

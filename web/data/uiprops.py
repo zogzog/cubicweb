@@ -2,8 +2,7 @@
 
 # CSS stylesheets to include systematically in HTML headers
 # use the following line if you *need* to keep the old stylesheet
-STYLESHEETS =       [data('cubicweb.reset.css'),
-                     data('cubicweb.css'), ]
+STYLESHEETS =       [data('cubicweb.css'), ]
 STYLESHEETS_IE =    [data('cubicweb.ie.css')]
 STYLESHEETS_PRINT = [data('cubicweb.print.css')]
 
