@@ -11,5 +11,5 @@ type de recherche que vous désirez :
 * `rql` : requête RQL
 * `text` : recherche plein texte
 
-.. _RQL: doc/tut_rql
+.. _RQL: tut_rql
 

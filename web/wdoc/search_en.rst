@@ -10,4 +10,4 @@ want:
 * `rql` : RQL query
 * `text` : full text search
 
-.. _RQL: doc/tut_rql
+.. _RQL: tut_rql

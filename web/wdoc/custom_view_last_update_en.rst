@@ -5,4 +5,4 @@ Latest changes
 
 Links below is providing useful RQL query example.
 
-.. _all latest changes: view?rql=Any+M%2CX+WHERE+X+modification_date+M+ORDERBY+M+DESC+LIMIT+30
+.. _all latest changes: ../view?rql=Any+M%2CX+WHERE+X+modification_date+M+ORDERBY+M+DESC+LIMIT+30

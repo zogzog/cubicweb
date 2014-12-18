@@ -20,7 +20,7 @@ To use RQL, you'll have to know the basis of the language as well as a good
 knowledge of the application'schema. You can always view it using the "schema"
 link in user's dropdown menu (on the top-right of the screen) or by clicking here_.
 
-.. _here: schema
+.. _here: ../schema
 
 
 Some bits of theory
