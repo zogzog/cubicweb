@@ -207,6 +207,22 @@ class RepositoryCreateHandler(CommandHandler):
 
 
 @contextmanager
+def db_transaction(source, privilege):
+    """Open a transaction to the instance database"""
+    cnx = system_source_cnx(source, special_privs=privilege)
+    cursor = cnx.cursor()
+    try:
+        yield cursor
+    except:
+        cnx.rollback()
+        cnx.close()
+        raise
+    else:
+        cnx.commit()
+        cnx.close()
+
+
+@contextmanager
 def db_sys_transaction(source, privilege):
     """Open a transaction to the system database"""
     cnx = _db_sys_cnx(source, privilege)
