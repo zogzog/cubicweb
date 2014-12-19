@@ -75,6 +75,7 @@ Architecture: all
 # postgresql-client packages for backup/restore of non local database
 Depends:
  ${misc:Depends},
+ ${python:Depends},
  python-psycopg2,
  postgresql-client
 Description: postgres support for the CubicWeb framework
@@ -88,6 +89,7 @@ Architecture: all
 # mysql-client packages for backup/restore of non local database
 Depends:
  ${misc:Depends},
+ ${python:Depends},
  python-mysqldb,
  mysql-client
 Description: mysql support for the CubicWeb framework
@@ -212,6 +214,8 @@ Description: tests suite and development tools for the CubicWeb framework
 
 Package: cubicweb-documentation
 Architecture: all
+Depends:
+ ${misc:Depends},
 Recommends:
  doc-base
 Description: documentation for the CubicWeb framework
