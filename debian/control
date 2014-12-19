@@ -35,11 +35,10 @@ Recommends:
 Description: the complete CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
- This package will install all the components you need to run cubicweb on
- a single machine. You can also deploy cubicweb by running the different
- process on different computers, in which case you need to install the
- corresponding packages on the different hosts.
-
+ This metapackage will install all the components you need to run cubicweb on a
+ single machine. You can also deploy cubicweb by running the different process
+ on different computers, in which case you need to install the corresponding
+ packages on the different hosts.
 
 Package: cubicweb-server
 Architecture: all
