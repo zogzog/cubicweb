@@ -39,7 +39,7 @@ def wsgi_application_from_cwconfig(cwconfig):
     # pyramid_cubicweb anymore
     app = wsgicors.CORS(
         app,
-        origin=cwconfig['access-control-allow-origin'],
+        origin=' '.join(cwconfig['access-control-allow-origin']),
         headers=cwconfig['access-control-allow-headers'],
         methods=cwconfig['access-control-allow-methods'],
         credentials='true')
