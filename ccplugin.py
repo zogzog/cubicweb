@@ -38,10 +38,14 @@ class PyramidStartHandler(InstanceCommand):
         ('no-daemon',
          {'action': 'store_true',
           'help': 'Run the server in the foreground.'}),
+        ('debug-mode',
+         {'action': 'store_true',
+          'help': 'Activate the repository debug mode ('
+                  'logs in the console and the debug toolbar).'
+                  ' Implies --no-daemon'}),
         ('debug',
          {'short': 'D', 'action': 'store_true',
-          'help': 'Activate the debug tools and '
-                  'run the server in the foreground.'}),
+          'help': 'Equals to "--debug-mode --no-daemon --reload"'}),
         ('reload',
          {'action': 'store_true',
           'help': 'Restart the server if any source file is changed'}),
@@ -66,9 +70,11 @@ class PyramidStartHandler(InstanceCommand):
 
     def ordered_instances(self):
         instances = super(PyramidStartHandler, self).ordered_instances()
-        if (self['debug'] or self['reload']) and len(instances) > 1:
+        if (self['debug-mode'] or self['debug'] or self['reload']) \
+                and len(instances) > 1:
             raise BadCommandUsage(
-                '--debug and --reload can be used on a single instance only')
+                '--debug-mode, --debug and --reload can be used on a single '
+                'instance only')
         return instances
 
     def quote_first_command_arg(self, arg):
@@ -241,12 +247,16 @@ class PyramidStartHandler(InstanceCommand):
     def pyramid_instance(self, appid):
         self._needreload = False
 
-        if self['reload'] and not os.environ.get(self._reloader_environ_key):
+        debugmode = self['debug-mode'] or self['debug']
+        autoreload = self['reload'] or self['debug']
+        daemonize = not (self['no-daemon'] or debugmode or autoreload)
+
+        if autoreload and not os.environ.get(self._reloader_environ_key):
             return self.restart_with_reloader()
 
-        cwconfig = cwcfg.config_for(appid, debugmode=self['debug'])
+        cwconfig = cwcfg.config_for(appid, debugmode=debugmode)
 
-        if self['reload']:
+        if autoreload:
             _turn_sigterm_into_systemexit()
             self.debug('Running reloading file monitor')
             extra_files = [sys.argv[0], cwconfig.main_config_file()]
@@ -256,7 +266,7 @@ class PyramidStartHandler(InstanceCommand):
                 filelist_path=os.environ.get(
                     self._reloader_filelist_environ_key))
 
-        if not (self['no-daemon'] or self['reload'] or self['debug']):
+        if daemonize:
             self.daemonize(cwconfig['pid-file'])
             self.record_pid(cwconfig['pid-file'])
 
