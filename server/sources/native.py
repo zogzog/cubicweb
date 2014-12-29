@@ -707,13 +707,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if self.repo.config.mode != 'test':
                 # during test we get those message when trying to alter sqlite
                 # db schema
-                self.critical("sql: %r\n args: %s\ndbms message: %r",
+                self.info("sql: %r\n args: %s\ndbms message: %r",
                               query, args, ex.args[0])
             if rollback:
                 try:
                     cnx.cnxset.rollback()
                     if self.repo.config.mode != 'test':
-                        self.critical('transaction has been rolled back')
+                        self.debug('transaction has been rolled back')
                 except Exception as ex:
                     pass
             if ex.__class__.__name__ == 'IntegrityError':
