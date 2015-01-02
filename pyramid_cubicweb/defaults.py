@@ -49,7 +49,7 @@ def includeme(config):
 
             The authentication cookies are signed with a static secret key.
             To put your own secret key, edit your all-in-one.conf file
-            and set the 'pyramid-session-secret' key.
+            and set the 'pyramid-auth-secret' key.
 
             YOU SHOULD STOP THIS INSTANCE unless your really know what you
             are doing !!
