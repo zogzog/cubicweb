@@ -58,8 +58,16 @@ def make_cubicweb_application(cwconfig):
     return config
 
 
-def wsgi_application_from_cwconfig(cwconfig):
+def wsgi_application_from_cwconfig(
+        cwconfig,
+        profile=False, profile_output=None, profile_dump_every=None):
     config = make_cubicweb_application(cwconfig)
+    profile = profile or asbool(config.registry.settings.get(
+        'cubicweb.profile.enable', False))
+    if profile:
+        config.add_route('profile_ping', '_profile/ping')
+        config.add_route('profile_cnx', '_profile/cnx')
+        config.scan('pyramid_cubicweb.profile')
     app = config.make_wsgi_app()
     # This replaces completely web/cors.py, which is not used by
     # pyramid_cubicweb anymore
@@ -69,6 +77,14 @@ def wsgi_application_from_cwconfig(cwconfig):
         headers=cwconfig['access-control-allow-headers'],
         methods=cwconfig['access-control-allow-methods'],
         credentials='true')
+
+    if profile:
+        from pyramid_cubicweb.profile import wsgi_profile
+        filename = profile_output or config.registry.settings.get(
+            'cubicweb.profile.output', 'program.prof')
+        dump_every = profile_dump_every or config.registry.settings.get(
+            'cubicweb.profile.dump_every', 100)
+        app = wsgi_profile(app, filename=filename, dump_every=dump_every)
     return app
 
 
