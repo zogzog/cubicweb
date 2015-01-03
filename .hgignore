@@ -5,4 +5,5 @@ syntax: glob
 
 *.egg-info
 
+docs/_build
 pyramid_cubicweb/tests/data/database

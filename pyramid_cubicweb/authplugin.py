@@ -19,8 +19,8 @@ EXT_TOKEN = Token()
 class DirectAuthentifier(native.BaseAuthentifier):
     """return CWUser eid for the given login.
 
-    Before doing so, it makes sure the authentication request comes from
-    xxx by checking the special '__externalauth_directauth' kwarg.
+    Before doing so, it makes sure the authentication request is not coming
+    from ouside by checking the special '__externalauth_directauth' kwarg.
 
     """
 

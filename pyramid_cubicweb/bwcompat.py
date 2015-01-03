@@ -15,7 +15,11 @@ from pyramid_cubicweb.core import cw_to_pyramid
 
 class PyramidSessionHandler(object):
     """A CW Session handler that rely on the pyramid API to fetch the needed
-    informations"""
+    informations.
+
+    It implements the :class:`cubicweb.web.application.CookieSessionHandler`
+    API.
+    """
 
     def __init__(self, appli):
         self.appli = appli
@@ -28,6 +32,11 @@ class PyramidSessionHandler(object):
 
 
 class CubicWebPyramidHandler(object):
+    """ A Pyramid request handler that rely on a cubicweb instance to do the
+    whole job
+
+    :param appli: A CubicWeb 'Application' object.
+    """
     def __init__(self, appli):
         self.appli = appli
 
@@ -107,6 +116,12 @@ class CubicWebPyramidHandler(object):
 
 
 class TweenHandler(object):
+    """ A Pyramid tween handler that submit unhandled requests to a Cubicweb
+    handler.
+
+    The CubicWeb handler to use is expected to be in the pyramid registry, at
+    key ``'cubicweb.handler'``.
+    """
     def __init__(self, handler, registry):
         self.handler = handler
         self.cwhandler = registry['cubicweb.handler']
@@ -124,10 +139,22 @@ class TweenHandler(object):
 
 
 def includeme(config):
-    # Set up a tween app that will handle the request if the main application
-    # raises a HTTPNotFound exception.
-    # This is to keep legacy compatibility for cubes that makes use of the
-    # cubicweb controllers.
+    """ Set up a tween app that will handle the request if the main application
+    raises a HTTPNotFound exception.
+
+    This is to keep legacy compatibility for cubes that makes use of the
+    cubicweb urlresolvers.
+
+    It provides, for now, support for cubicweb controllers, but this feature
+    will be reimplemented separatly in a less compatible way.
+
+    It is automatically included by the configuration system, but can be
+    disabled in the :ref:`pyramid_settings`:
+
+    .. code-block:: ini
+
+        cubicweb.bwcompat = no
+    """
     cwconfig = config.registry['cubicweb.config']
     repository = config.registry['cubicweb.repository']
     cwappli = CubicWebPublisher(

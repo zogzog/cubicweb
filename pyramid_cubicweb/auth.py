@@ -18,6 +18,8 @@ class CubicWebAuthTktAuthenticationPolicy(AuthTktAuthenticationPolicy):
 
     Meaning, the last_login_time is updated reissue_time seconds (maximum)
     before the last request by the user.
+
+    Usually used via :func:`includeme`.
     """
 
     def remember(self, request, principal, **kw):
@@ -37,6 +39,12 @@ class CubicWebAuthTktAuthenticationPolicy(AuthTktAuthenticationPolicy):
 
 
 def includeme(config):
+    """ Activate the CubicWeb AuthTkt authentication policy.
+
+    Usually called via ``config.include('pyramid_cubicweb.auth')``.
+
+    See also :ref:`defaults_module`
+    """
     secret = config.registry['cubicweb.config']['pyramid-auth-secret']
 
     if not secret:

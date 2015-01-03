@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 @contextmanager
 def cw_to_pyramid(request):
-    """Wrap a call to the cubicweb API.
+    """ Context manager to wrap a call to the cubicweb API.
 
     All CW exceptions will be transformed into their pyramid equivalent.
     When needed, some CW reponse bits may be converted too (mainly headers)"""
@@ -53,6 +53,11 @@ def cw_to_pyramid(request):
 
 
 class CubicWebPyramidRequest(CubicWebRequestBase):
+    """ A CubicWeb request that only wraps a pyramid request.
+
+    :param request: A pyramid request
+
+    """
     def __init__(self, request):
         self._request = request
 
@@ -121,6 +126,13 @@ class CubicWebPyramidRequest(CubicWebRequestBase):
 
 
 def render_view(request, vid, **kwargs):
+    """ Helper function to render a CubicWeb view.
+
+    :param request: A pyramid request
+    :param vid: A CubicWeb view id
+    :param **kwargs: Keyword arguments to select and instanciate the view
+    :returns: The rendered view content
+    """
     vreg = request.registry['cubicweb.registry']
     # XXX The select() function could, know how to handle a pyramid
     # request, and feed it directly to the views that supports it.
@@ -135,6 +147,17 @@ def render_view(request, vid, **kwargs):
 
 
 def _cw_cnx(request):
+    """ Obtains a cw session from a pyramid request
+
+    The connection will be commited or rolled-back in a request finish
+    callback (this is temporary, we should make use of the transaction manager
+    in a later version).
+
+    Not meant for direct use, use ``request.cw_cnx`` instead.
+
+    :param request: A pyramid request
+    :returns type: :class:`cubicweb.server.session.Connection`
+    """
     cnx = repoapi.ClientConnection(request.cw_session)
 
     def cleanup(request):
@@ -153,8 +176,9 @@ def _cw_cnx(request):
 
 
 def repo_connect(repo, eid):
-    """A lightweight version of repo.connect that does not keep track of opened
-    sessions, removing the need of closing them"""
+    """A lightweight version of
+    :meth:`cubicweb.server.repository.Repository.connect` that does not keep
+    track of opened sessions, removing the need of closing them"""
     with repo.internal_cnx() as cnx:
         user = repo._build_user(cnx, eid=eid)
     session = Session(user, repo, None)
@@ -170,7 +194,13 @@ def repo_connect(repo, eid):
 
 
 def _cw_session(request):
-    """Obtains a cw session from a pyramid request"""
+    """Obtains a cw session from a pyramid request
+
+    :param request: A pyramid request
+    :returns type: :class:`cubicweb.server.session.Session`
+
+    Not meant for direct use, use ``request.cw_session`` instead.
+    """
     repo = request.registry['cubicweb.repository']
 
     if not request.authenticated_userid:
@@ -187,12 +217,37 @@ def _cw_session(request):
 
 
 def _cw_request(request):
+    """ Obtains a CubicWeb request wrapper for the pyramid request.
+
+    :param request: A pyramid request
+    :return: A CubicWeb request
+    :returns type: :class:`CubicWebPyramidRequest`
+
+    Not meant for direct use, use ``request.cw_request`` instead.
+
+    """
     req = CubicWebPyramidRequest(request)
     req.set_cnx(request.cw_cnx)
     return req
 
 
 def get_principals(login, request):
+    """ Returns the group names of the authenticated user.
+
+    This function is meant to be used as an authentication policy callback.
+
+    It also pre-open the cubicweb session and put it in
+    request._cw_cached_session for later usage by :func:`_cw_session`.
+
+    .. note::
+
+        It the default authentication policy is not used, make sure this
+        function gets called by the active authentication policy.
+
+    :param login: A cubicweb user eid
+    :param request: A pyramid request
+    :returns: A list of group names
+    """
     repo = request.registry['cubicweb.repository']
 
     try:
@@ -206,6 +261,21 @@ def get_principals(login, request):
 
 
 def includeme(config):
+    """ Enables the core features of Pyramid CubicWeb.
+
+    Automatically called by the 'pyramid' command, or via
+    ``config.include('pyramid_cubicweb.code')``. In the later case,
+    the following registry entries must be defined first:
+
+    'cubicweb.config'
+        A cubicweb 'config' instance.
+
+    'cubicweb.repository'
+        The correponding cubicweb repository.
+
+    'cubicweb.registry'
+        The vreg.
+    """
     repo = config.registry['cubicweb.repository']
 
     with repo.internal_cnx() as cnx:

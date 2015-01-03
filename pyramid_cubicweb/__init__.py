@@ -16,6 +16,9 @@ def make_cubicweb_application(cwconfig):
     Create a pyramid-based CubicWeb instance from a cubicweb configuration.
 
     It is initialy meant to be used by the 'pyramid' command of cubicweb-ctl.
+
+    :param cwconfig: A CubicWeb configuration
+    :returns: A Pyramid config object
     """
     settings_filenames = [os.path.join(cwconfig.apphome, 'pyramid.ini')]
 
@@ -61,6 +64,16 @@ def make_cubicweb_application(cwconfig):
 def wsgi_application_from_cwconfig(
         cwconfig,
         profile=False, profile_output=None, profile_dump_every=None):
+    """ Build a WSGI application from a cubicweb configuration
+
+    :param cwconfig: A CubicWeb configuration
+    :param profile: Enable profiling. See :ref:`profiling`.
+    :param profile_output: Profiling output filename. See :ref:`profiling`.
+    :param profile_dump_every: Profiling number of requests before dumping the
+                               stats. See :ref:`profiling`.
+
+    :returns: A fully operationnal WSGI application
+    """
     config = make_cubicweb_application(cwconfig)
     profile = profile or asbool(config.registry.settings.get(
         'cubicweb.profile.enable', False))
@@ -89,6 +102,40 @@ def wsgi_application_from_cwconfig(
 
 
 def wsgi_application(instance_name=None, debug=None):
+    """ Build a WSGI application from a cubicweb instance name
+
+    :param instance_name: Name of the cubicweb instance (optional). If not
+                          provided, :envvar:`CW_INSTANCE` must exists.
+    :param debug: Enable/disable the debug mode. If defined to True or False,
+                  overrides :envvar:`CW_DEBUG`.
+
+    The following environment variables are used if they exist:
+
+    .. envvar:: CW_INSTANCE
+
+        A CubicWeb instance name.
+
+    .. envvar:: CW_DEBUG
+
+        If defined, the debugmode is enabled.
+
+    The function can be used as an entry-point for third-party wsgi containers.
+    Below is a sample uswgi configuration file:
+
+    .. code-block:: ini
+
+        [uwsgi]
+        http = 127.0.1.1:8080
+        env = CW_INSTANCE=myinstance
+        env = CW_DEBUG=1
+        module = pyramid_cubicweb:wsgi_application()
+        virtualenv = /home/user/.virtualenvs/myvirtualenv
+        processes = 1
+        threads = 8
+        stats = 127.0.0.1:9191
+        plugins = http,python
+
+    """
     if instance_name is None:
         instance_name = os.environ.get('CW_INSTANCE')
     if debug is None:

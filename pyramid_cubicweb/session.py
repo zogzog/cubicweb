@@ -35,6 +35,26 @@ def CWSessionFactory(
         hashalg='sha512',
         salt='pyramid.session.',
         serializer=None):
+    """ A pyramid session factory that store session data in the CubicWeb
+    database.
+
+    Storage is done with the 'CWSession' entity, which is provided by the
+    'pyramid' cube.
+
+    .. warning::
+
+        Although it provides a sane default behavior, this session storage has
+        a serious overhead because it uses RQL to access the database.
+
+        Using pure SQL would improve a bit (it is roughly twice faster), but it
+        is still pretty slow and thus not an immediate priority.
+
+        It is recommended to use faster session factory
+        (pyramid_redis_sessions_ for example) if you need speed.
+
+    .. _pyramid_redis_sessions: http://pyramid-redis-sessions.readthedocs.org/
+                                en/latest/index.html
+    """
 
     SignedCookieSession = SignedCookieSessionFactory(
         secret,
@@ -118,6 +138,12 @@ def CWSessionFactory(
 
 
 def includeme(config):
+    """ Activate the CubicWeb session factory.
+
+    Usually called via ``config.include('pyramid_cubicweb.auth')``.
+
+    See also :ref:`defaults_module`
+    """
     secret = config.registry['cubicweb.config']['pyramid-session-secret']
     if not secret:
         secret = 'notsosecret'
