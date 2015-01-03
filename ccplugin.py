@@ -57,6 +57,20 @@ class PyramidStartHandler(InstanceCommand):
           'default': None, 'choices': ('debug', 'info', 'warning', 'error'),
           'help': 'debug if -D is set, error otherwise',
           }),
+        ('profile',
+         {'short': 'p', 'action': 'store_true',
+          'default': False,
+          'help': 'Enable profiling'}),
+        ('profile-output',
+         {'type': 'string',
+          'default': None,
+          'help': 'Profiling output file (default: "program.prof")'}),
+        ('profile-dump-every',
+         {'type': 'int',
+          'default': None,
+          'metavar': 'N',
+          'help': 'Dump profile stats to ouput every N requests '
+                  '(default: 100)'}),
     )
 
     _reloader_environ_key = 'CW_RELOADER_SHOULD_RUN'
@@ -285,7 +299,11 @@ class PyramidStartHandler(InstanceCommand):
         host = cwconfig['interface']
         port = cwconfig['port'] or 8080
 
-        app = wsgi_application_from_cwconfig(cwconfig)
+        app = wsgi_application_from_cwconfig(
+            cwconfig, profile=self['profile'],
+            profile_output=self['profile-output'],
+            profile_dump_every=self['profile-dump-every']
+        )
 
         repo = cwconfig.repository()
         try:
