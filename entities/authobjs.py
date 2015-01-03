@@ -74,7 +74,11 @@ class CWUser(AnyEntity):
         try:
             return self._properties
         except AttributeError:
-            self._properties = dict((p.pkey, p.value) for p in self.reverse_for_user)
+            self._properties = dict(
+                self._cw.execute(
+                    'Any K, V WHERE P for_user U, U eid %(userid)s, '
+                    'P pkey K, P value V',
+                    {'userid': self.eid}))
             return self._properties
 
     def prefered_language(self, language=None):
