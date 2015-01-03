@@ -235,8 +235,17 @@ class PyramidStartHandler(InstanceCommand):
         mon_thread.daemon = True
         mon_thread.start()
 
+    def configfiles(self, cwconfig):
+        """Generate instance configuration files"""
+        yield cwconfig.main_config_file()
+        for f in (
+                'sources', 'logging.conf', 'pyramid.ini', 'pyramid-debug.ini'):
+            f = os.path.join(cwconfig.apphome, f)
+            if os.path.exists(f):
+                yield f
+
     def i18nfiles(self, cwconfig):
-        """Return instance i18n files"""
+        """Generate instance i18n files"""
         i18ndir = os.path.join(cwconfig.apphome, 'i18n')
         if os.path.exists(i18ndir):
             for lang in cwconfig.available_languages():
@@ -259,7 +268,8 @@ class PyramidStartHandler(InstanceCommand):
         if autoreload:
             _turn_sigterm_into_systemexit()
             self.debug('Running reloading file monitor')
-            extra_files = [sys.argv[0], cwconfig.main_config_file()]
+            extra_files = [sys.argv[0]]
+            extra_files.extend(self.configfiles(cwconfig))
             extra_files.extend(self.i18nfiles(cwconfig))
             self.install_reloader(
                 self['reload-interval'], extra_files,
