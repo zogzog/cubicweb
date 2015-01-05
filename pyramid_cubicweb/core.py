@@ -205,12 +205,6 @@ def get_principals(login, request):
     return session.user.groups
 
 
-def hello_world(request):
-    request.response.text = \
-        u"<html><body>Hello %s</body></html>" % request.cw_cnx.user.login
-    return request.response
-
-
 def includeme(config):
     repo = config.registry['cubicweb.repository']
 
