@@ -8,7 +8,7 @@ import cubicweb.web
 
 from cubicweb.web.application import CubicWebPublisher
 
-from cubicweb.web import LogOut, cors
+from cubicweb.web import LogOut
 
 from pyramid_cubicweb.core import cw_to_pyramid
 
@@ -57,7 +57,8 @@ class CubicWebPyramidHandler(object):
             content = None
             try:
                 with cw_to_pyramid(request):
-                    ctrlid, rset = self.appli.url_resolver.process(req, req.path)
+                    ctrlid, rset = self.appli.url_resolver.process(req,
+                                                                   req.path)
 
                     try:
                         controller = vreg['controllers'].select(
@@ -69,8 +70,8 @@ class CubicWebPyramidHandler(object):
                     req.update_search_state()
                     content = controller.publish(rset=rset)
 
-                    # XXX this auto-commit should be handled by the cw_request cleanup
-                    # or the pyramid transaction manager.
+                    # XXX this auto-commit should be handled by the cw_request
+                    # cleanup or the pyramid transaction manager.
                     # It is kept here to have the ValidationError handling bw
                     # compatible
                     if req.cnx:
