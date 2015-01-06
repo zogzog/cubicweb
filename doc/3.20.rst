@@ -18,6 +18,24 @@ New features
 * cubicweb-ctl plugins can use the ``cubicweb.utils.admincnx`` function
   to get a Connection object from an instance name.
 
+* new 'tornado' wsgi backend
+
+* session cookies have the HttpOnly flag, so they're no longer exposed to
+  javascript
+
+* rich text fields can be formatted as markdown
+
+* the edit controller detects concurrent editions, and raises a ValidationError
+  if an entity was modified between form generation and submission
+
+* cubicweb can use a postgresql "schema" (namespace) for its tables
+
+* "cubicweb-ctl configure" can be used to set values of the admin user
+  credentials in the sources configuration file
+
+* in debug mode, setting the _cwtracehtml parameter on a request allows tracing
+  where each bit of output is produced
+
 .. _CWEP-002: http://hg.logilab.org/review/cwep/file/tip/CWEP-002.rst
 
 
@@ -35,6 +53,9 @@ API Changes
 * cubicweb.old.css is now cubicweb.css.  The previous "new"
   cubicweb.css, along with its cubicweb.reset.css companion, have been
   removed.
+
+* the jquery-treeview plugin was updated to its latest version
+
 
 Deprecated Code Drops
 ----------------------

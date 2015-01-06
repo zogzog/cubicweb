@@ -1,8 +1,8 @@
-cubicweb (3.20.0-1) UNRELEASED; urgency=medium
+cubicweb (3.20.0-1) unstable; urgency=medium
 
   * new upstream release
 
- -- Julien Cristau <julien.cristau@logilab.fr>  Thu, 18 Dec 2014 16:44:03 +0100
+ -- Julien Cristau <julien.cristau@logilab.fr>  Tue, 06 Jan 2015 18:11:03 +0100
 
 cubicweb (3.19.6-1) unstable; urgency=low
 
