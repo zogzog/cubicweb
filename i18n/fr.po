@@ -260,9 +260,6 @@ msgstr "contrainte de bornes"
 msgid "BoundaryConstraint"
 msgstr "contrainte de bornes"
 
-msgid "Browse by category"
-msgstr "Naviguer par catégorie"
-
 msgid "Browse by entity type"
 msgstr "Naviguer par type d'entité"
 
@@ -287,6 +284,12 @@ msgstr "Cache applicatif"
 
 msgid "CWCache_plural"
 msgstr "Caches applicatifs"
+
+msgid "CWComputedRType"
+msgstr "Relation virtuelle"
+
+msgid "CWComputedRType_plural"
+msgstr "Relations virtuelles"
 
 msgid "CWConstraint"
 msgstr "Contrainte"
@@ -490,7 +493,9 @@ msgstr "entités"
 msgid ""
 "Entity %(eid)s has changed since you started to edit it. Reload the page and "
 "reapply your changes."
-msgstr "L'entité %(eid)s a été modifiée depuis votre demande d'édition. Veuillez recharger cette page et réappliquer vos changements."
+msgstr ""
+"L'entité %(eid)s a été modifiée depuis votre demande d'édition. Veuillez "
+"recharger cette page et réappliquer vos changements."
 
 msgid "Entity and relation supported by this source"
 msgstr "Entités et relations supportés par cette source"
@@ -572,6 +577,9 @@ msgstr "Nouvelle définition de relation finale"
 
 msgid "New CWCache"
 msgstr "Nouveau cache applicatif"
+
+msgid "New CWComputedRType"
+msgstr "Nouvelle relation virtuelle"
 
 msgid "New CWConstraint"
 msgstr "Nouvelle contrainte"
@@ -789,6 +797,9 @@ msgstr "Cette définition de relation finale"
 
 msgid "This CWCache"
 msgstr "Ce cache applicatif"
+
+msgid "This CWComputedRType"
+msgstr "Cette relation virtuelle"
 
 msgid "This CWConstraint"
 msgstr "Cette contrainte"
@@ -1260,9 +1271,6 @@ msgstr "et liée"
 
 msgid "and/or between different values"
 msgstr "et/ou entre les différentes valeurs"
-
-msgid "anonymous"
-msgstr "anonyme"
 
 msgid "anyrsetview"
 msgstr "vues pour tout rset"
@@ -2173,6 +2181,9 @@ msgstr "définit une contrainte de schema"
 msgid "define a schema constraint type"
 msgstr "définit un type de contrainte de schema"
 
+msgid "define a virtual relation type, used to build the instance schema"
+msgstr "définit une relation virtuelle"
+
 msgid "define an entity type, used to build the instance schema"
 msgstr "définit un type d'entité"
 
@@ -2246,6 +2257,10 @@ msgctxt "CWAttribute"
 msgid "description"
 msgstr "description"
 
+msgctxt "CWComputedRType"
+msgid "description"
+msgstr "description"
+
 msgctxt "CWEType"
 msgid "description"
 msgstr "description"
@@ -2282,6 +2297,10 @@ msgid "description_format"
 msgstr "format"
 
 msgctxt "CWAttribute"
+msgid "description_format"
+msgstr "format"
+
+msgctxt "CWComputedRType"
 msgid "description_format"
 msgstr "format"
 
@@ -2608,6 +2627,13 @@ msgstr "utilise les propriétés"
 msgctxt "CWUser"
 msgid "for_user_object"
 msgstr "a pour préférence"
+
+msgid "formula"
+msgstr "formule"
+
+msgctxt "CWAttribute"
+msgid "formula"
+msgstr "formule"
 
 msgid "friday"
 msgstr "vendredi"
@@ -3214,6 +3240,10 @@ msgctxt "CWCache"
 msgid "name"
 msgstr "nom"
 
+msgctxt "CWComputedRType"
+msgid "name"
+msgstr "nom"
+
 msgctxt "CWConstraintType"
 msgid "name"
 msgstr "nom"
@@ -3722,6 +3752,13 @@ msgstr "conditions rql"
 msgid "rss export"
 msgstr "export RSS"
 
+msgid "rule"
+msgstr "règle"
+
+msgctxt "CWComputedRType"
+msgid "rule"
+msgstr "règle"
+
 msgid "same_as"
 msgstr "identique à"
 
@@ -4054,6 +4091,9 @@ msgstr "contenu dynamique"
 
 msgid "text/html"
 msgstr "html"
+
+msgid "text/markdown"
+msgstr "texte au format markdown"
 
 msgid "text/plain"
 msgstr "texte pur"
@@ -4551,12 +4591,6 @@ msgstr ""
 msgid "workflow"
 msgstr "workflow"
 
-msgid "workflow already has a state of that name"
-msgstr "le workflow a déja un état du même nom"
-
-msgid "workflow already has a transition of that name"
-msgstr "le workflow a déja une transition du même nom"
-
 #, python-format
 msgid "workflow changed to \"%s\""
 msgstr "workflow changé à \"%s\""
@@ -4618,6 +4652,12 @@ msgstr "vous devriez probablement supprimer cette propriété"
 #~ msgid "Any"
 #~ msgstr "Tous"
 
+#~ msgid "Browse by category"
+#~ msgstr "Naviguer par catégorie"
+
+#~ msgid "anonymous"
+#~ msgstr "anonyme"
+
 #~ msgid "attribute/relation can't be mapped, only entity and relation types"
 #~ msgstr ""
 #~ "les attributs et relations ne peuvent être mappés, uniquement les types "
@@ -4656,6 +4696,12 @@ msgstr "vous devriez probablement supprimer cette propriété"
 
 #~ msgid "web sessions without CNX"
 #~ msgstr "sessions web sans connexion associée"
+
+#~ msgid "workflow already has a state of that name"
+#~ msgstr "le workflow a déja un état du même nom"
+
+#~ msgid "workflow already has a transition of that name"
+#~ msgstr "le workflow a déja une transition du même nom"
 
 #~ msgid "you may want to specify something for %s"
 #~ msgstr "vous désirez peut-être spécifié quelque chose pour la relation %s"

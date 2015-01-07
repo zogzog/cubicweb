@@ -266,9 +266,6 @@ msgstr "Restricción de límite"
 msgid "BoundaryConstraint"
 msgstr "Restricción de límite"
 
-msgid "Browse by category"
-msgstr "Busca por categoría"
-
 msgid "Browse by entity type"
 msgstr "Busca por tipo de entidad"
 
@@ -293,6 +290,12 @@ msgstr "Cache"
 
 msgid "CWCache_plural"
 msgstr "Caches"
+
+msgid "CWComputedRType"
+msgstr ""
+
+msgid "CWComputedRType_plural"
+msgstr ""
 
 msgid "CWConstraint"
 msgstr "Restricción"
@@ -579,6 +582,9 @@ msgstr "Nueva definición de relación final"
 msgid "New CWCache"
 msgstr "Agregar Caché"
 
+msgid "New CWComputedRType"
+msgstr ""
+
 msgid "New CWConstraint"
 msgstr "Agregar Restricción"
 
@@ -795,6 +801,9 @@ msgstr "Esta definición de relación final"
 
 msgid "This CWCache"
 msgstr "Este Caché"
+
+msgid "This CWComputedRType"
+msgstr ""
 
 msgid "This CWConstraint"
 msgstr "Esta Restricción"
@@ -1266,9 +1275,6 @@ msgstr "y relacionada"
 
 msgid "and/or between different values"
 msgstr "y/o entre los diferentes valores"
-
-msgid "anonymous"
-msgstr "anónimo"
 
 msgid "anyrsetview"
 msgstr "vistas rset"
@@ -2177,6 +2183,9 @@ msgstr "Define una condición de esquema"
 msgid "define a schema constraint type"
 msgstr "Define un tipo de condición de esquema"
 
+msgid "define a virtual relation type, used to build the instance schema"
+msgstr ""
+
 msgid "define an entity type, used to build the instance schema"
 msgstr ""
 "Define un tipo de entidad, usado para construir el esquema de la instancia."
@@ -2251,6 +2260,10 @@ msgctxt "CWAttribute"
 msgid "description"
 msgstr "Descripción"
 
+msgctxt "CWComputedRType"
+msgid "description"
+msgstr ""
+
 msgctxt "CWEType"
 msgid "description"
 msgstr "Descripción"
@@ -2289,6 +2302,10 @@ msgstr "Formato"
 msgctxt "CWAttribute"
 msgid "description_format"
 msgstr "Formato"
+
+msgctxt "CWComputedRType"
+msgid "description_format"
+msgstr ""
 
 msgctxt "CWEType"
 msgid "description_format"
@@ -2613,6 +2630,13 @@ msgstr "Utiliza las propiedades"
 msgctxt "CWUser"
 msgid "for_user_object"
 msgstr "Tiene como preferencia"
+
+msgid "formula"
+msgstr ""
+
+msgctxt "CWAttribute"
+msgid "formula"
+msgstr ""
 
 msgid "friday"
 msgstr "Viernes"
@@ -3219,6 +3243,10 @@ msgctxt "CWCache"
 msgid "name"
 msgstr "Nombre"
 
+msgctxt "CWComputedRType"
+msgid "name"
+msgstr ""
+
 msgctxt "CWConstraintType"
 msgid "name"
 msgstr "Nombre"
@@ -3724,6 +3752,13 @@ msgstr "Expresiones RQL"
 msgid "rss export"
 msgstr "Exportación RSS"
 
+msgid "rule"
+msgstr ""
+
+msgctxt "CWComputedRType"
+msgid "rule"
+msgstr ""
+
 msgid "same_as"
 msgstr "Idéntico a"
 
@@ -4057,6 +4092,9 @@ msgstr "Usar Page Templates"
 
 msgid "text/html"
 msgstr "Usar HTML"
+
+msgid "text/markdown"
+msgstr ""
 
 msgid "text/plain"
 msgstr "Usar Texto simple"
@@ -4549,12 +4587,6 @@ msgstr ""
 msgid "workflow"
 msgstr "Workflow"
 
-msgid "workflow already has a state of that name"
-msgstr "el workflow posee ya un estado con ese nombre"
-
-msgid "workflow already has a transition of that name"
-msgstr "El Workflow posee ya una transición con ese nombre"
-
 #, python-format
 msgid "workflow changed to \"%s\""
 msgstr "Workflow cambiado a \"%s\""
@@ -4616,6 +4648,12 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgid "Any"
 #~ msgstr "Cualquiera"
 
+#~ msgid "Browse by category"
+#~ msgstr "Busca por categoría"
+
+#~ msgid "anonymous"
+#~ msgstr "anónimo"
+
 #~ msgid "attribute/relation can't be mapped, only entity and relation types"
 #~ msgstr ""
 #~ "los atributos y las relaciones no pueden ser mapeados, solamente los "
@@ -4654,6 +4692,12 @@ msgstr "probablamente debería  suprimir esta propriedad"
 
 #~ msgid "web sessions without CNX"
 #~ msgstr "sesiones web sin conexión asociada"
+
+#~ msgid "workflow already has a state of that name"
+#~ msgstr "el workflow posee ya un estado con ese nombre"
+
+#~ msgid "workflow already has a transition of that name"
+#~ msgstr "El Workflow posee ya una transición con ese nombre"
 
 #~ msgid "you may want to specify something for %s"
 #~ msgstr "usted desea quizás especificar algo para la relación %s"

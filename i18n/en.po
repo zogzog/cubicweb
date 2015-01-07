@@ -247,9 +247,6 @@ msgstr "bound constraint"
 msgid "BoundaryConstraint"
 msgstr ""
 
-msgid "Browse by category"
-msgstr ""
-
 msgid "Browse by entity type"
 msgstr ""
 
@@ -274,6 +271,12 @@ msgstr "CubicWeb Cache"
 
 msgid "CWCache_plural"
 msgstr "CubicWeb Caches"
+
+msgid "CWComputedRType"
+msgstr "Virtual relation"
+
+msgid "CWComputedRType_plural"
+msgstr "Virtual relations"
 
 msgid "CWConstraint"
 msgstr "Constraint"
@@ -548,6 +551,9 @@ msgstr "New attribute"
 msgid "New CWCache"
 msgstr "New cache"
 
+msgid "New CWComputedRType"
+msgstr "New virtual relation"
+
 msgid "New CWConstraint"
 msgstr "New constraint"
 
@@ -761,6 +767,9 @@ msgstr "This attribute"
 
 msgid "This CWCache"
 msgstr "This cache"
+
+msgid "This CWComputedRType"
+msgstr "This virtual relation"
 
 msgid "This CWConstraint"
 msgstr "This constraint"
@@ -1206,9 +1215,6 @@ msgid "and linked"
 msgstr ""
 
 msgid "and/or between different values"
-msgstr ""
-
-msgid "anonymous"
 msgstr ""
 
 msgid "anyrsetview"
@@ -2083,6 +2089,9 @@ msgstr ""
 msgid "define a schema constraint type"
 msgstr ""
 
+msgid "define a virtual relation type, used to build the instance schema"
+msgstr ""
+
 msgid "define an entity type, used to build the instance schema"
 msgstr ""
 
@@ -2152,6 +2161,10 @@ msgctxt "CWAttribute"
 msgid "description"
 msgstr "description"
 
+msgctxt "CWComputedRType"
+msgid "description"
+msgstr "description"
+
 msgctxt "CWEType"
 msgid "description"
 msgstr "description"
@@ -2188,6 +2201,10 @@ msgid "description_format"
 msgstr "format"
 
 msgctxt "CWAttribute"
+msgid "description_format"
+msgstr "format"
+
+msgctxt "CWComputedRType"
 msgid "description_format"
 msgstr "format"
 
@@ -2506,6 +2523,13 @@ msgstr "use properties"
 msgctxt "CWUser"
 msgid "for_user_object"
 msgstr "property of"
+
+msgid "formula"
+msgstr "formula"
+
+msgctxt "CWAttribute"
+msgid "formula"
+msgstr "formula"
 
 msgid "friday"
 msgstr ""
@@ -3086,6 +3110,10 @@ msgctxt "CWCache"
 msgid "name"
 msgstr "name"
 
+msgctxt "CWComputedRType"
+msgid "name"
+msgstr "name"
+
 msgctxt "CWConstraintType"
 msgid "name"
 msgstr "name"
@@ -3576,6 +3604,13 @@ msgstr ""
 msgid "rss export"
 msgstr "RSS export"
 
+msgid "rule"
+msgstr "rule"
+
+msgctxt "CWComputedRType"
+msgid "rule"
+msgstr "rule"
+
 msgid "same_as"
 msgstr "same as"
 
@@ -3896,6 +3931,9 @@ msgstr "cubicweb page template"
 
 msgid "text/html"
 msgstr "html"
+
+msgid "text/markdown"
+msgstr "markdown formatted text"
 
 msgid "text/plain"
 msgstr "plain text"
@@ -4373,12 +4411,6 @@ msgid ""
 msgstr ""
 
 msgid "workflow"
-msgstr ""
-
-msgid "workflow already has a state of that name"
-msgstr ""
-
-msgid "workflow already has a transition of that name"
 msgstr ""
 
 #, python-format

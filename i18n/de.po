@@ -258,9 +258,6 @@ msgstr "gebundene Einschränkung"
 msgid "BoundaryConstraint"
 msgstr "Rand-einschränkung"
 
-msgid "Browse by category"
-msgstr "nach Kategorien navigieren"
-
 msgid "Browse by entity type"
 msgstr "nach Identitätstyp navigieren"
 
@@ -285,6 +282,12 @@ msgstr "Cache"
 
 msgid "CWCache_plural"
 msgstr "Caches"
+
+msgid "CWComputedRType"
+msgstr ""
+
+msgid "CWComputedRType_plural"
+msgstr ""
 
 msgid "CWConstraint"
 msgstr "Einschränkung"
@@ -570,6 +573,9 @@ msgstr "Neue finale Relationsdefinition"
 msgid "New CWCache"
 msgstr "Neuer Anwendungs-Cache"
 
+msgid "New CWComputedRType"
+msgstr ""
+
 msgid "New CWConstraint"
 msgstr "Neue Einschränkung"
 
@@ -785,6 +791,9 @@ msgstr "diese finale Relationsdefinition"
 
 msgid "This CWCache"
 msgstr "Dieser Anwendungs-Cache"
+
+msgid "This CWComputedRType"
+msgstr ""
 
 msgid "This CWConstraint"
 msgstr "diese Einschränkung"
@@ -1248,9 +1257,6 @@ msgstr "und verknüpft"
 
 msgid "and/or between different values"
 msgstr "und/oder zwischen verschiedenen Werten"
-
-msgid "anonymous"
-msgstr "anonym"
 
 msgid "anyrsetview"
 msgstr ""
@@ -2128,6 +2134,9 @@ msgstr "Eine Schema-Einschränkung definieren"
 msgid "define a schema constraint type"
 msgstr "den Typ einer Schema-Einschränkung definieren"
 
+msgid "define a virtual relation type, used to build the instance schema"
+msgstr ""
+
 msgid "define an entity type, used to build the instance schema"
 msgstr "definieren eines Entitätstyps zur Erstellung des Instanz-Schemas"
 
@@ -2201,6 +2210,10 @@ msgctxt "CWAttribute"
 msgid "description"
 msgstr "Beschreibung"
 
+msgctxt "CWComputedRType"
+msgid "description"
+msgstr ""
+
 msgctxt "CWEType"
 msgid "description"
 msgstr "Beschreibung"
@@ -2239,6 +2252,10 @@ msgstr "Format"
 msgctxt "CWAttribute"
 msgid "description_format"
 msgstr "Format"
+
+msgctxt "CWComputedRType"
+msgid "description_format"
+msgstr ""
 
 msgctxt "CWEType"
 msgid "description_format"
@@ -2557,6 +2574,13 @@ msgstr "hat als Eigenschaft"
 msgctxt "CWUser"
 msgid "for_user_object"
 msgstr "verwendet die Eigenschaften"
+
+msgid "formula"
+msgstr ""
+
+msgctxt "CWAttribute"
+msgid "formula"
+msgstr ""
 
 msgid "friday"
 msgstr "Freitag"
@@ -3166,6 +3190,10 @@ msgctxt "CWCache"
 msgid "name"
 msgstr "Name"
 
+msgctxt "CWComputedRType"
+msgid "name"
+msgstr ""
+
 msgctxt "CWConstraintType"
 msgid "name"
 msgstr "Name"
@@ -3662,6 +3690,13 @@ msgstr "RQL-Ausdrücke"
 msgid "rss export"
 msgstr ""
 
+msgid "rule"
+msgstr ""
+
+msgctxt "CWComputedRType"
+msgid "rule"
+msgstr ""
+
 msgid "same_as"
 msgstr "identisch mit"
 
@@ -3993,6 +4028,9 @@ msgstr "dynamischer Inhalt"
 
 msgid "text/html"
 msgstr "html"
+
+msgid "text/markdown"
+msgstr ""
 
 msgid "text/plain"
 msgstr "Nur Text"
@@ -4486,12 +4524,6 @@ msgstr ""
 msgid "workflow"
 msgstr "Workflow"
 
-msgid "workflow already has a state of that name"
-msgstr ""
-
-msgid "workflow already has a transition of that name"
-msgstr ""
-
 #, python-format
 msgid "workflow changed to \"%s\""
 msgstr "Workflow geändert in \"%s\""
@@ -4549,6 +4581,12 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 
 #~ msgid "Any"
 #~ msgstr "irgendein"
+
+#~ msgid "Browse by category"
+#~ msgstr "nach Kategorien navigieren"
+
+#~ msgid "anonymous"
+#~ msgstr "anonym"
 
 #~ msgid "can't connect to source %s, some data may be missing"
 #~ msgstr "Keine Verbindung zu der Quelle %s, einige Daten könnten fehlen"
