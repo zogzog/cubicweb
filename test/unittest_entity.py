@@ -600,8 +600,8 @@ class EntityTC(CubicWebTC):
     def test_printable_value_string(self):
         with self.admin_access.web_request() as req:
             e = req.create_entity('Card', title=u'rest test',
-                                       content=u'du :eid:`1:*ReST*`',
-                                       content_format=u'text/rest')
+                                  content=u'du :eid:`1:*ReST*`',
+                                  content_format=u'text/rest')
             self.assertEqual(e.printable_value('content'),
                              '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwsource/system">*ReST*</a></p>')
             e.cw_attr_cache['content'] = 'du <em>html</em> <ref rql="CWUser X">users</ref>'
@@ -610,8 +610,8 @@ class EntityTC(CubicWebTC):
                               'du <em>html</em> <a href="http://testing.fr/cubicweb/view?rql=CWUser%20X">users</a>')
             e.cw_attr_cache['content'] = 'du *texte*'
             e.cw_attr_cache['content_format'] = 'text/plain'
-            self.assertEqual(e.printable_value('content'),
-                              '<p>\ndu *texte*<br/></p>')
+            self.assertEqual(e.printable_value('content').replace("\n", ""),
+                             '<p>du *texte*<br/></p>')
             e.cw_attr_cache['title'] = 'zou'
             e.cw_attr_cache['content'] = '''\
 a title

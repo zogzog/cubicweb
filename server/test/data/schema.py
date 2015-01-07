@@ -155,7 +155,11 @@ class Personne(EntityType):
 
 
 class Old(EntityType):
-    name = String()
+    name = String(__permissions__ = {
+        'read'   : ('managers', 'users', 'guests'),
+        'add'    : ('managers', 'users', 'guests'),
+        'update' : ()
+    })
 
 
 class connait(RelationType):

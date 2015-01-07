@@ -116,8 +116,9 @@ class AfterUpdateEntitySecurityHook(SecurityHook):
         # save back editedattrs in case the entity is reedited later in the
         # same transaction, which will lead to cw_edited being
         # overwritten
+        action = 'add' if self._cw.added_in_transaction(self.entity.eid) else 'update'
         CheckEntityPermissionOp.get_instance(self._cw).add_data(
-            (self.entity.eid, 'update', self.entity.cw_edited) )
+            (self.entity.eid, action, self.entity.cw_edited) )
 
 
 class BeforeDelEntitySecurityHook(SecurityHook):

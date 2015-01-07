@@ -131,13 +131,15 @@ Recommends:
  fckeditor,
  python-fyzz,
  python-imaging,
- python-rdflib
+ python-rdflib,
+ python-werkzeug,
 Breaks:
  cubicweb-inlinedit (<< 1.1.1),
 Description: web interface library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
  This package provides an adaptative web interface to the CubicWeb server.
+ It also ships a WSGI interface for CubicWeb instances.
  Install the cubicweb-twisted package to serve this interface via HTTP.
  .
  This package provides the web interface part of the library and

@@ -711,10 +711,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         cursor = cnx.cnxset.cu
         if server.DEBUG & server.DBG_SQL:
-            cnx = cnx.cnxset.cnx
-            # getattr to get the actual connection if cnx is a CnxLoggingWrapper
-            # instance
-            print 'exec', query, args, getattr(cnx, '_cnx', cnx)
+            print 'exec', query, args, cnx.cnxset.cnx
         try:
             # str(query) to avoid error if it's a unicode string
             cursor.execute(str(query), args)

@@ -178,9 +178,9 @@ quis nostrud exercitation ullamco laboris nisi"),
         self.assertMultiLineEqual(uilib.soup2xhtml(incoming, 'ascii'), expected)
 
     def test_unknown_namespace(self):
-        incoming = '''<table cellspacing="0" cellpadding="0" width="81" border="0" x:str="" style="width: 61pt; border-collapse: collapse">
-<colgroup><col width="81" style="width: 61pt; mso-width-source: userset; mso-width-alt: 2962"/></colgroup>
-<tbody><tr height="17" style="height: 12.75pt"><td width="81" height="17" style="border-right: #e0dfe3; border-top: #e0dfe3; border-left: #e0dfe3; width: 61pt; border-bottom: #e0dfe3; height: 12.75pt; background-color: transparent"><font size="2">XXXXXXX</font></td></tr></tbody>
+        incoming = '''<table cellspacing="0" cellpadding="0" width="81" border="0" x:str="" style="width: 61pt; border-collapse: collapse">\
+<colgroup><col width="81" style="width: 61pt; mso-width-source: userset; mso-width-alt: 2962"/></colgroup>\
+<tbody><tr height="17" style="height: 12.75pt"><td width="81" height="17" style="border-right: #e0dfe3; border-top: #e0dfe3; border-left: #e0dfe3; width: 61pt; border-bottom: #e0dfe3; height: 12.75pt; background-color: transparent"><font size="2">XXXXXXX</font></td></tr></tbody>\
 </table>'''
         expected = '''<table cellspacing="0" cellpadding="0" width="81" border="0">\
 <colgroup><col width="81"/></colgroup>\
