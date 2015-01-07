@@ -319,6 +319,8 @@ class DataFeedParser(AppObject):
         * handle file:// URL
         * other will be considered as plain content, useful for testing purpose
         """
+        if headers is None:
+            headers = {}
         if url.startswith('http'):
             url = self.normalize_url(url)
             if data:
