@@ -309,6 +309,8 @@ class MigrationCommandsTC(MigrationTC):
             self.assertEqual(self.schema['filed_under2'].objects(), ('Folder2',))
             mh.cmd_drop_relation_type('filed_under2')
             self.assertNotIn('filed_under2', self.schema)
+            # this should not crash
+            mh.cmd_drop_relation_type('filed_under2')
 
     def test_add_relation_definition_nortype(self):
         with self.mh() as (cnx, mh):
