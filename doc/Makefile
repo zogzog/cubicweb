@@ -5,11 +5,11 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 #BUILDDIR      = build
-BUILDDIR      = ../..
-CWDIR         = ../../..
+BUILDDIR      = _build
+CWDIR         = ..
 JSDIR         = ${CWDIR}/web/data
-JSTORST       = ${CWDIR}/doc/tools/pyjsrest.py
-BUILDJS       = devweb/js_api
+JSTORST       = tools/pyjsrest.py
+BUILDJS       = js_api
 
 # Internal variables for sphinx
 PAPEROPT_a4     = -D latex_paper_size=a4

@@ -1,7 +1,3 @@
-.. -*- coding: utf-8 -*-
-
-.. _contents:
-
 =====================================================
 |cubicweb| - The Semantic Web is a construction game!
 =====================================================
@@ -11,7 +7,8 @@ that empowers developers to efficiently build web applications by reusing
 components (called `cubes`) and following the well known object-oriented design
 principles.
 
-Its main features are:
+Main Features
+~~~~~~~~~~~~~
 
 * an engine driven by the explicit :ref:`data model
   <TutosBaseCustomizingTheApplicationDataModel>` of the application,
@@ -34,13 +31,19 @@ daily visits at some production sites, |cubicweb| is a proven end to end solutio
 for semantic web application development that promotes quality, reusability and
 efficiency.
 
-The unbeliever will read the :ref:`Tutorials`.
-
-The hacker will join development at the forge_.
+QuickStart
+~~~~~~~~~~
 
 The impatient developer will move right away to :ref:`SetUpEnv` then to :ref:`ConfigEnv`.
 
-The chatter lover will join the `jabber forum`_, the `mailing-list`_ and the blog_.
+Social
+~~~~~~
+
+*   Chat on the `jabber forum`_
+*   Discuss on the `mailing-list`_
+*   Discover on the `blog`_
+*   Contribute on the forge_
+
 
 .. _Logilab: http://www.logilab.fr/
 .. _forge: http://www.cubicweb.org/project/
@@ -49,26 +52,60 @@ The chatter lover will join the `jabber forum`_, the `mailing-list`_ and the blo
 .. _`mailing-list`: http://lists.cubicweb.org/mailman/listinfo/cubicweb
 .. _blog: http://www.cubicweb.org/blog/1238
 
+
+Narrative Documentation
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A.k.a. "The Book"
+
 .. toctree::
    :maxdepth: 2
 
-   intro/index
-   tutorials/index
+   book/intro/index
 
 .. toctree::
    :maxdepth: 3
 
-   devrepo/index
-   devweb/index
+   book/devrepo/index
+   book/devweb/index
 
 .. toctree::
    :maxdepth: 2
 
-   admin/index
-   additionnal_services/index
-   annexes/index
+   book/admin/index
+   book/additionnal_services/index
+   book/annexes/index
 
-See also:
+Tutorial
+~~~~~~~~
+
+We present two tutorials of different levels. The blog building
+tutorial introduces one smoothly to the basic concepts.
+
+Then there is a photo gallery construction tutorial which highlights
+more advanced concepts such as unit tests, security settings,
+migration scripts.
+
+.. toctree::
+   :maxdepth: 1
+   :numbered:
+
+   tutorials/base/index
+   tutorials/advanced/index
+   tutorials/tools/windmill.rst
+   tutorials/textreports/index
+
+
+Reference documentation
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. toctree::
+    :maxdepth: 1
+
+    js_api/index
+
+Indexes
+~~~~~~~
 
 * the :ref:`genindex`,
 * the :ref:`modindex`,

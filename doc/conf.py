@@ -34,13 +34,11 @@
 from os import path as osp
 
 path = __file__
-path = osp.dirname(path) #./doc/book/en
-path = osp.dirname(path) #./doc/book/
-path = osp.dirname(path) #./doc/
-path = osp.dirname(path) #./
-path = osp.join(path,'__pkginfo__.py') #./__pkginfo__.py
+path = osp.dirname(path)  # ./doc
+path = osp.dirname(path)  # ./
+path = osp.join(path, '__pkginfo__.py')  # ./__pkginfo__.py
 cw = {}
-execfile(path,{},cw)
+execfile(path, {}, cw)
 
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it

@@ -92,6 +92,9 @@ def parse_js_files(args=sys.argv):
                 f_rst.write(rst_content)
     stream = open(osp.join(rst_dir, 'index.rst'), 'w')
     stream.write('''
+Javascript API
+==============
+
 .. toctree::
     :maxdepth: 1
 
