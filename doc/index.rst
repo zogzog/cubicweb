@@ -104,6 +104,15 @@ Reference documentation
 
     js_api/index
 
+Developpers
+~~~~~~~~~~~
+
+.. toctree::
+    :maxdepth: 1
+    :glob:
+
+    dev/*
+
 Indexes
 ~~~~~~~
 
