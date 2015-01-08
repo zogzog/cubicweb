@@ -39,3 +39,4 @@ prune doc/html/_sources/
 prune misc/cwfs
 prune goa
 prune doc/book/en/devweb/js_api
+global-exclude *.pyc
