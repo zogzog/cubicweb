@@ -130,7 +130,7 @@ CREATE TABLE Societe(
 );
 
 CREATE TABLE State(
- eid integer PRIMARY KEY,
+ eid integer PRIMARY KEY REFERENCES entities (eid),
  name varchar(256) NOT NULL,
  description text
 );

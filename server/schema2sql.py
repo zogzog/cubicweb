@@ -156,7 +156,7 @@ def aschema2sql(dbhelper, eschema, rschema, aschema, creating=True, indent=''):
             # this is expected for NOW / TODAY
     if creating:
         if rdef.uid:
-            sqltype += ' PRIMARY KEY'
+            sqltype += ' PRIMARY KEY REFERENCES entities (eid)'
         elif rdef.cardinality[0] == '1':
             # don't set NOT NULL if backend isn't able to change it later
             if dbhelper.alter_column_support:
