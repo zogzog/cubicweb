@@ -117,8 +117,7 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
             sqltype = aschema2sql(dbhelper, eschema, rschema, attrschema,
                                   indent=' ')
         else: # inline relation
-            # XXX integer is ginco specific
-            sqltype = 'integer'
+            sqltype = 'integer REFERENCES entities (eid)'
         if i == len(attrs) - 1:
             w(' %s%s %s' % (prefix, rschema.type, sqltype))
         else:

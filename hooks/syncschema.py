@@ -72,7 +72,7 @@ def add_inline_relation_column(cnx, etype, rtype):
     table = SQL_PREFIX + etype
     column = SQL_PREFIX + rtype
     try:
-        cnx.system_sql(str('ALTER TABLE %s ADD %s integer' % (table, column)),
+        cnx.system_sql(str('ALTER TABLE %s ADD %s integer REFERENCES entities (eid)' % (table, column)),
                        rollback_on_failure=False)
         cnx.info('added column %s to table %s', column, table)
     except Exception:

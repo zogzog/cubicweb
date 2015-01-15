@@ -37,7 +37,7 @@ EXPECTED_DATA_NO_DROP = """
 CREATE TABLE Affaire(
  sujet varchar(128),
  ref varchar(12),
- inline_rel integer
+ inline_rel integer REFERENCES entities (eid)
 );
 CREATE INDEX affaire_inline_rel_idx ON Affaire(inline_rel);
 
@@ -68,7 +68,7 @@ CREATE TABLE Eetype(
  description text,
  meta boolean,
  final boolean,
- initial_state integer
+ initial_state integer REFERENCES entities (eid)
 );
 CREATE INDEX eetype_name_idx ON Eetype(name);
 CREATE INDEX eetype_initial_state_idx ON Eetype(initial_state);
