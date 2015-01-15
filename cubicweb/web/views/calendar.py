@@ -41,11 +41,16 @@ MONTHNAMES = ( _('january'), _('february'), _('march'), _('april'), _('may'),
                _('november'), _('december')
                )
 
+ICAL_EVENT = "event"
+ICAL_TODO = "todo"
 
 class ICalendarableAdapter(EntityAdapter):
     __needs_bw_compat__ = True
     __regid__ = 'ICalendarable'
     __abstract__ = True
+
+    # component type
+    component = ICAL_EVENT
 
     @property
     def start(self):
@@ -64,7 +69,7 @@ try:
     from vobject import iCalendar
 
     class iCalView(EntityView):
-        """A calendar view that generates a iCalendar file (RFC 2445)
+        """A calendar view that generates a iCalendar file (RFC 5545)
 
         Does apply to ICalendarable compatible entities
         """
@@ -79,14 +84,21 @@ try:
             ical = iCalendar()
             for i in range(len(self.cw_rset.rows)):
                 task = self.cw_rset.complete_entity(i, 0)
-                event = ical.add('vevent')
-                event.add('summary').value = task.dc_title()
-                event.add('description').value = task.dc_description()
-                icalendarable = task.cw_adapt_to('ICalendarable')
-                if icalendarable.start:
-                    event.add('dtstart').value = icalendarable.start
-                if icalendarable.stop:
-                    event.add('dtend').value = icalendarable.stop
+                ical_task = task.cw_adapt_to('ICalendarable')
+                if ical_task.component == ICAL_TODO:
+                    elt = ical.add('vtodo')
+                    stop_kw = "due"
+                else:
+                    elt = ical.add('vevent')
+                    stop_kw = "dtend"
+                elt.add('uid').value = task.absolute_url() # unique stable id
+                elt.add('url').value = task.absolute_url()
+                elt.add('summary').value = task.dc_title()
+                elt.add('description').value = task.dc_description()
+                if ical_task.start:
+                    elt.add('dtstart').value = ical_task.start
+                if ical_task.stop:
+                    elt.add(stop_kw).value = ical_task.stop
 
             buff = ical.serialize()
             if not isinstance(buff, unicode):
