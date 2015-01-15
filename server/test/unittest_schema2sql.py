@@ -159,8 +159,8 @@ CREATE TABLE pkginfo(
 
 
 CREATE TABLE concerne_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT concerne_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -168,8 +168,8 @@ CREATE INDEX concerne_relation_from_idx ON concerne_relation(eid_from);
 CREATE INDEX concerne_relation_to_idx ON concerne_relation(eid_to);
 
 CREATE TABLE division_of_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT division_of_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -177,8 +177,8 @@ CREATE INDEX division_of_relation_from_idx ON division_of_relation(eid_from);
 CREATE INDEX division_of_relation_to_idx ON division_of_relation(eid_to);
 
 CREATE TABLE evaluee_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT evaluee_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -186,8 +186,8 @@ CREATE INDEX evaluee_relation_from_idx ON evaluee_relation(eid_from);
 CREATE INDEX evaluee_relation_to_idx ON evaluee_relation(eid_to);
 
 CREATE TABLE next_state_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT next_state_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -195,8 +195,8 @@ CREATE INDEX next_state_relation_from_idx ON next_state_relation(eid_from);
 CREATE INDEX next_state_relation_to_idx ON next_state_relation(eid_to);
 
 CREATE TABLE obj_wildcard_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT obj_wildcard_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -204,8 +204,8 @@ CREATE INDEX obj_wildcard_relation_from_idx ON obj_wildcard_relation(eid_from);
 CREATE INDEX obj_wildcard_relation_to_idx ON obj_wildcard_relation(eid_to);
 
 CREATE TABLE require_permission_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT require_permission_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -213,8 +213,8 @@ CREATE INDEX require_permission_relation_from_idx ON require_permission_relation
 CREATE INDEX require_permission_relation_to_idx ON require_permission_relation(eid_to);
 
 CREATE TABLE state_of_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT state_of_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -222,8 +222,8 @@ CREATE INDEX state_of_relation_from_idx ON state_of_relation(eid_from);
 CREATE INDEX state_of_relation_to_idx ON state_of_relation(eid_to);
 
 CREATE TABLE subcompany_of_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT subcompany_of_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -231,8 +231,8 @@ CREATE INDEX subcompany_of_relation_from_idx ON subcompany_of_relation(eid_from)
 CREATE INDEX subcompany_of_relation_to_idx ON subcompany_of_relation(eid_to);
 
 CREATE TABLE subdivision_of_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT subdivision_of_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -240,8 +240,8 @@ CREATE INDEX subdivision_of_relation_from_idx ON subdivision_of_relation(eid_fro
 CREATE INDEX subdivision_of_relation_to_idx ON subdivision_of_relation(eid_to);
 
 CREATE TABLE subj_wildcard_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT subj_wildcard_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -249,8 +249,8 @@ CREATE INDEX subj_wildcard_relation_from_idx ON subj_wildcard_relation(eid_from)
 CREATE INDEX subj_wildcard_relation_to_idx ON subj_wildcard_relation(eid_to);
 
 CREATE TABLE sym_rel_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT sym_rel_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -258,8 +258,8 @@ CREATE INDEX sym_rel_relation_from_idx ON sym_rel_relation(eid_from);
 CREATE INDEX sym_rel_relation_to_idx ON sym_rel_relation(eid_to);
 
 CREATE TABLE travaille_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT travaille_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
@@ -267,8 +267,8 @@ CREATE INDEX travaille_relation_from_idx ON travaille_relation(eid_from);
 CREATE INDEX travaille_relation_to_idx ON travaille_relation(eid_to);
 
 CREATE TABLE works_for_relation (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT works_for_relation_p_key PRIMARY KEY(eid_from, eid_to)
 );
 

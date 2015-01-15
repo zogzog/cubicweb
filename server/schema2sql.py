@@ -187,8 +187,8 @@ def type_from_constraints(dbhelper, etype, constraints, creating=True):
 
 _SQL_SCHEMA = """
 CREATE TABLE %(table)s (
-  eid_from INTEGER NOT NULL,
-  eid_to INTEGER NOT NULL,
+  eid_from INTEGER NOT NULL REFERENCES entities (eid),
+  eid_to INTEGER NOT NULL REFERENCES entities (eid),
   CONSTRAINT %(table)s_p_key PRIMARY KEY(eid_from, eid_to)
 );
 
