@@ -500,6 +500,8 @@ def init_sqlite_connexion(cnx):
         return (dt.weekday() + 1) % 7
     cnx.create_function("WEEKDAY", 1, weekday)
 
+    cnx.cursor().execute("pragma foreign_keys = on")
+
     import yams.constraints
     yams.constraints.patch_sqlite_decimal()
 
