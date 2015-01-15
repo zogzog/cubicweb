@@ -1,4 +1,4 @@
-from yams import schema2sql as y2sql
+from cubicweb.server import schema2sql as y2sql
 
 dbhelper = repo.system_source.dbhelper
 rdefdef = schema['CWSource'].rdef('name')

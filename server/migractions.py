@@ -44,7 +44,6 @@ from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
 
 from yams.constraints import SizeConstraint
-from yams.schema2sql import eschema2sql, rschema2sql, unique_index_name
 from yams.schema import RelationDefinitionSchema
 
 from cubicweb import CW_SOFTWARE_ROOT, AuthenticationError, ExecutionError
@@ -56,6 +55,7 @@ from cubicweb.cwvreg import CW_EVENT_MANAGER
 from cubicweb import repoapi
 from cubicweb.migration import MigrationHelper, yes
 from cubicweb.server import hook, schemaserial as ss
+from cubicweb.server.schema2sql import eschema2sql, rschema2sql, unique_index_name
 from cubicweb.server.utils import manager_userpasswd
 from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 

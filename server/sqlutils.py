@@ -103,7 +103,7 @@ def sqlgrants(schema, driver, user,
     """return sql to give all access privileges to the given user on the system
     schema
     """
-    from yams.schema2sql import grant_schema
+    from cubicweb.server.schema2sql import grant_schema
     from cubicweb.server.sources import native
     output = []
     w = output.append
@@ -121,7 +121,7 @@ def sqlschema(schema, driver, text_index=True,
               user=None, set_owner=False,
               skip_relations=PURE_VIRTUAL_RTYPES, skip_entities=()):
     """return the system sql schema, according to the given parameters"""
-    from yams.schema2sql import schema2sql
+    from cubicweb.server.schema2sql import schema2sql
     from cubicweb.server.sources import native
     if set_owner:
         assert user, 'user is argument required when set_owner is true'
@@ -146,7 +146,7 @@ def sqlschema(schema, driver, text_index=True,
 def sqldropschema(schema, driver, text_index=True,
                   skip_relations=PURE_VIRTUAL_RTYPES, skip_entities=()):
     """return the sql to drop the schema, according to the given parameters"""
-    from yams.schema2sql import dropschema2sql
+    from cubicweb.server.schema2sql import dropschema2sql
     from cubicweb.server.sources import native
     output = []
     w = output.append

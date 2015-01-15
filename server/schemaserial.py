@@ -24,13 +24,12 @@ import json
 
 from logilab.common.shellutils import ProgressBar
 
-from yams import (BadSchemaDefinition, schema as schemamod, buildobjs as ybo,
-                  schema2sql as y2sql)
+from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
 
 from cubicweb import Binary
 from cubicweb.schema import (KNOWN_RPROPERTIES, CONSTRAINTS, ETYPE_NAME_MAP,
                              VIRTUAL_RTYPES)
-from cubicweb.server import sqlutils
+from cubicweb.server import sqlutils, schema2sql as y2sql
 
 
 def group_mapping(cnx, interactive=True):

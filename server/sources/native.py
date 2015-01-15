@@ -43,7 +43,6 @@ from logilab.common.configuration import Method
 from logilab.common.shellutils import getlogin
 from logilab.database import get_db_helper, sqlgen
 
-from yams import schema2sql as y2sql
 from yams.schema import role_name
 
 from cubicweb import (UnknownEid, AuthenticationError, ValidationError, Binary,
@@ -53,6 +52,7 @@ from cubicweb.utils import QueryCache
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.server import hook
+from cubicweb.server import schema2sql as y2sql
 from cubicweb.server.utils import crypt_password, eschema_eid, verify_and_update
 from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata

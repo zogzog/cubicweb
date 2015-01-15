@@ -29,7 +29,7 @@ _ = unicode
 from copy import copy
 from yams.schema import (BASE_TYPES, BadSchemaDefinition,
                          RelationSchema, RelationDefinitionSchema)
-from yams import buildobjs as ybo, schema2sql as y2sql, convert_default_value
+from yams import buildobjs as ybo, convert_default_value
 
 from logilab.common.decorators import clear_cache
 
@@ -37,7 +37,7 @@ from cubicweb import validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
                              CONSTRAINTS, ETYPE_NAME_MAP, display_name)
-from cubicweb.server import hook, schemaserial as ss
+from cubicweb.server import hook, schemaserial as ss, schema2sql as y2sql
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.hooks.synccomputed import RecomputeAttributeOperation
 
