@@ -184,6 +184,17 @@ class UserGroupHooksTC(CubicWebTC):
                                            'U login "toto", X address A')[0][0],
                               'toto@logilab.fr')
 
+    def test_user_composite_no_owner_on_deleted_entity(self):
+        with self.admin_access.repo_cnx() as cnx:
+            u = self.create_user(cnx, 'toto').eid
+            cnx.commit()
+            e = cnx.create_entity('EmailAddress', address=u'toto@logilab.fr', reverse_use_email=u)
+            e.cw_delete()
+            cnx.commit()
+            self.assertFalse(cnx.system_sql(
+                'SELECT * FROM owned_by_relation '
+                'WHERE eid_from NOT IN (SELECT eid FROM entities)').fetchall())
+
     def test_no_created_by_on_deleted_entity(self):
         with self.admin_access.repo_cnx() as cnx:
             eid = cnx.execute('INSERT EmailAddress X: X address "toto@logilab.fr"')[0][0]
