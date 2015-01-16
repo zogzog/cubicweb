@@ -1182,10 +1182,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.repo.hm.call_hooks('before_add_entity', cnx, entity=entity)
         # restore the entity
         action.changes['cw_eid'] = eid
-        sql = self.sqlgen.insert(SQL_PREFIX + etype, action.changes)
-        self.doexec(cnx, sql, action.changes)
         # restore record in entities (will update fti if needed)
         self.add_info(cnx, entity, self, None)
+        sql = self.sqlgen.insert(SQL_PREFIX + etype, action.changes)
+        self.doexec(cnx, sql, action.changes)
         self.repo.hm.call_hooks('after_add_entity', cnx, entity=entity)
         return errors
 

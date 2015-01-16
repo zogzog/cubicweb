@@ -1074,48 +1074,9 @@ class Repository(object):
         hook.CleanupNewEidsCacheOp.get_instance(session).add_data(entity.eid)
         self.system_source.add_info(session, entity, source, extid)
 
-    def delete_info(self, session, entity, sourceuri):
-        """called by external source when some entity known by the system source
-        has been deleted in the external source
-        """
-        # mark eid as being deleted in session info and setup cache update
-        # operation
-        hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
-        self._delete_info(session, entity, sourceuri)
-
-    def _delete_info(self, session, entity, sourceuri):
-        """delete system information on deletion of an entity:
-
-        * delete all remaining relations from/to this entity
-        * call delete info on the system source
-        """
-        pendingrtypes = session.transaction_data.get('pendingrtypes', ())
-        # delete remaining relations: if user can delete the entity, he can
-        # delete all its relations without security checking
-        with session.security_enabled(read=False, write=False):
-            eid = entity.eid
-            for rschema, _, role in entity.e_schema.relation_definitions():
-                rtype = rschema.type
-                if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
-                    continue
-                if role == 'subject':
-                    # don't skip inlined relation so they are regularly
-                    # deleted and so hooks are correctly called
-                    rql = 'DELETE X %s Y WHERE X eid %%(x)s' % rtype
-                else:
-                    rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
-                try:
-                    session.execute(rql, {'x': eid}, build_descr=False)
-                except Exception:
-                    if self.config.mode == 'test':
-                        raise
-                    self.exception('error while cascading delete for entity %s '
-                                   'from %s. RQL: %s', entity, sourceuri, rql)
-        self.system_source.delete_info_multi(session, [entity])
-
-    def _delete_info_multi(self, session, entities):
-        """same as _delete_info but accepts a list of entities with
-        the same etype and belinging to the same source.
+    def _delete_cascade_multi(self, session, entities):
+        """same as _delete_cascade but accepts a list of entities with
+        the same etype and belonging to the same source.
         """
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
         # delete remaining relations: if user can delete the entity, he can
@@ -1146,7 +1107,6 @@ class Repository(object):
                         raise
                     self.exception('error while cascading delete for entity %s. RQL: %s',
                                    entities, rql)
-        self.system_source.delete_info_multi(session, entities)
 
     def init_entity_caches(self, cnx, entity, source):
         """add entity to connection entities cache and repo's extid cache.
@@ -1184,13 +1144,13 @@ class Repository(object):
         edited.set_defaults()
         if cnx.is_hook_category_activated('integrity'):
             edited.check(creation=True)
+        self.add_info(cnx, entity, source, extid)
         try:
             source.add_entity(cnx, entity)
         except UniqueTogetherError as exc:
             userhdlr = cnx.vreg['adapters'].select(
                 'IUserFriendlyError', cnx, entity=entity, exc=exc)
             userhdlr.raise_user_exception()
-        self.add_info(cnx, entity, source, extid)
         edited.saved = entity._cw_is_saved = True
         # trigger after_add_entity after after_add_relation
         self.hm.call_hooks('after_add_entity', cnx, entity=entity)
@@ -1305,8 +1265,9 @@ class Repository(object):
             if server.DEBUG & server.DBG_REPO:
                 print 'DELETE entities', etype, [entity.eid for entity in entities]
             self.hm.call_hooks('before_delete_entity', cnx, entities=entities)
-            self._delete_info_multi(cnx, entities)
+            self._delete_cascade_multi(cnx, entities)
             source.delete_entities(cnx, entities)
+            source.delete_info_multi(cnx, entities)
             self.hm.call_hooks('after_delete_entity', cnx, entities=entities)
         # don't clear cache here, it is done in a hook on commit
 
