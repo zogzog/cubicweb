@@ -1230,7 +1230,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # unvisible as transaction action
         self.doexec(cnx, 'DELETE FROM is_relation WHERE eid_from=%s' % eid)
         self.doexec(cnx, 'DELETE FROM is_instance_of_relation WHERE eid_from=%s' % eid)
-        self.doexec(cnx, 'DELETE FROM cw_source_relation WHERE eid_from=%s' % self.eid)
+        self.doexec(cnx, 'DELETE FROM cw_source_relation WHERE eid_from=%s' % eid)
         # XXX check removal of inlined relation?
         # delete the entity
         attrs = {'cw_eid': eid}
