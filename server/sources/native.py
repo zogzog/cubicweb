@@ -1151,6 +1151,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         err(cnx._("can't restore entity %(eid)s of type %(eschema)s, "
                                       "target of %(rtype)s (eid %(value)s) does not exist any longer")
                             % locals())
+                        changes[column] = None
             elif eschema.destination(rtype) in ('Bytes', 'Password'):
                 changes[column] = self._binary(value)
                 edited[rtype] = Binary(value)
