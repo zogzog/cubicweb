@@ -1387,10 +1387,9 @@ CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
   asource VARCHAR(128) NOT NULL,
-  extid VARCHAR(256)
+  extid VARCHAR(256) UNIQUE
 );;
 CREATE INDEX entities_type_idx ON entities(type);;
-CREATE INDEX entities_extid_idx ON entities(extid);;
 
 CREATE TABLE transactions (
   tx_uuid CHAR(32) PRIMARY KEY NOT NULL,
