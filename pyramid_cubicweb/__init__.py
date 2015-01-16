@@ -51,7 +51,7 @@ def make_cubicweb_application(cwconfig):
     if asbool(config.registry.settings.get('cubicweb.defaults', True)):
         config.include('pyramid_cubicweb.defaults')
 
-    for name in aslist(config.registry.settings.get('cubicweb.includes')):
+    for name in aslist(config.registry.settings.get('cubicweb.includes', [])):
         config.include(name)
 
     config.include('pyramid_cubicweb.core')
