@@ -868,9 +868,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def extid2eid(self, cnx, extid):
         """get eid from an external id. Return None if no record found."""
         assert isinstance(extid, str)
+        args = {'x': b64encode(extid)}
         cursor = self.doexec(cnx,
                              'SELECT eid FROM entities WHERE extid=%(x)s',
-                             {'x': b64encode(extid)})
+                             args)
         # XXX testing rowcount cause strange bug with sqlite, results are there
         #     but rowcount is 0
         #if cursor.rowcount > 0:
@@ -878,6 +879,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             result = cursor.fetchone()
             if result:
                 return result[0]
+        except Exception:
+            pass
+        cursor = self.doexec(cnx,
+                             'SELECT eid FROM moved_entities WHERE extid=%(x)s',
+                             args)
+        try:
+            result = cursor.fetchone()
+            if result:
+                # entity was moved to the system source, return negative
+                # number to tell the external source to ignore it
+                return -result[0]
         except Exception:
             pass
         return None
@@ -1390,6 +1402,10 @@ CREATE TABLE entities (
   extid VARCHAR(256) UNIQUE
 );;
 CREATE INDEX entities_type_idx ON entities(type);;
+CREATE TABLE moved_entities (
+  eid INTEGER PRIMARY KEY NOT NULL,
+  extid VARCHAR(256) UNIQUE
+);;
 
 CREATE TABLE transactions (
   tx_uuid CHAR(32) PRIMARY KEY NOT NULL,

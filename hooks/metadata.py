@@ -199,17 +199,15 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             oldsource = self._cw.entity_from_eid(schange[self.eidfrom])
             entity = self._cw.entity_from_eid(self.eidfrom)
             # we don't want the moved entity to be reimported later.  To
-            # distinguish this state, the trick is to change the associated
-            # record in the 'entities' system table with eid=-eid while leaving
-            # other fields unchanged, and to add a new record with eid=eid,
-            # source='system'. External source will then have consider case
-            # where `extid2eid` return a negative eid as 'this entity was known
-            # but has been moved, ignore it'.
-            self._cw.system_sql('UPDATE entities SET eid=-eid WHERE eid=%(eid)s',
-                                {'eid': self.eidfrom})
+            # distinguish this state, move the record from the 'entities' table
+            # to 'moved_entities'.  External source will then have consider
+            # case where `extid2eid` returns a negative eid as 'this entity was
+            # known but has been moved, ignore it'.
+            attrs = {'eid': entity.eid, 'extid': self._cw.entity_metas(entity.eid)['extid']}
+            self._cw.system_sql(syssource.sqlgen.insert('moved_entities', attrs), attrs)
             attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': None,
                      'asource': 'system'}
-            self._cw.system_sql(syssource.sqlgen.insert('entities', attrs), attrs)
+            self._cw.system_sql(syssource.sqlgen.update('entities', attrs, ['eid']), attrs)
             # register an operation to update repository/sources caches
             ChangeEntitySourceUpdateCaches(self._cw, entity=entity,
                                            oldsource=oldsource.repo_source,
