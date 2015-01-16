@@ -35,6 +35,10 @@ class SetUseEmailRelationOp(hook.Operation):
                        if self.email.eid == e.eid)
 
     def precommit_event(self):
+        if self.cnx.deleted_in_transaction(self.entity.eid):
+            return
+        if self.cnx.deleted_in_transaction(self.email.eid):
+            return
         if self.condition():
             self.cnx.execute(
                 'SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % self.rtype,
