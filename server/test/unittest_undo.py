@@ -375,6 +375,17 @@ class UndoableTransactionTC(CubicWebTC):
             p.cw_clear_all_caches()
             self.assertFalse(p.fiche)
 
+    def test_undo_inline_rel_delete_ko(self):
+        with self.admin_access.client_cnx() as cnx:
+            c = cnx.create_entity('Card', title=u'hop', content=u'hop')
+            txuuid = cnx.commit()
+            p = cnx.create_entity('Personne', nom=u'louis', fiche=c)
+            cnx.commit()
+            integrityerror = self.repo.sources_by_uri['system'].dbhelper.dbapi_module.IntegrityError
+            with self.assertRaises(integrityerror):
+                cnx.undo_transaction(txuuid)
+
+
     def test_undo_inline_rel_add_ko(self):
         """Undo add relation  Personne (?) fiche (?) Card
 
