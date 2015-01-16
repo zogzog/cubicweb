@@ -238,6 +238,8 @@ class UndoableTransactionTC(CubicWebTC):
             cnx.commit()
             p.cw_clear_all_caches()
             self.assertEqual(p.fiche[0].eid, c2.eid)
+            # we restored the card
+            self.assertTrue(cnx.entity_from_eid(c.eid))
 
     def test_undo_deletion_integrity_2(self):
         with self.admin_access.client_cnx() as cnx:
