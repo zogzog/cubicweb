@@ -34,6 +34,14 @@ Api Documentation
 
     api
 
+Change History
+==============
+
+.. toctree::
+    :maxdepth: 1
+
+    changes
+
 Indices and tables
 ==================
 

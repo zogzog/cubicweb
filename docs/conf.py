@@ -30,6 +30,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
+    'sphinx.ext.extlinks',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -272,6 +273,9 @@ intersphinx_mapping = {
     'http://pyramid.readthedocs.org/en/latest/': None,
     'http://docs.cubicweb.org/': None
 }
+
+extlinks = {'issue': ('https://www.cubicweb.org/ticket/%s',
+                      'issue ')}
 
 
 def setup(app):
