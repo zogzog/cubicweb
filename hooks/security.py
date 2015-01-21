@@ -68,6 +68,12 @@ def check_entity_attributes(session, entity, action, editedattrs=None):
                 # going through check_perm.
                 raise Unauthorized(action, str(rdef))
             rdef.check_perm(session, action, eid=eid)
+    if action == 'add' and not etypechecked:
+        # think about cnx.create_entity('Foo')
+        # the standard metadata were inserted by a hook
+        # with a bypass ... we conceptually need to check
+        # the eid attribute at *creation* time
+        entity.cw_check_perm(action)
 
 
 class CheckEntityPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
