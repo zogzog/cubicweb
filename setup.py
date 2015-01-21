@@ -7,7 +7,7 @@ setup(
     description='Integrate CubicWeb with a Pyramid application.',
     author='Christophe de Vienne',
     author_email='username: christophe, domain: unlish.com',
-    url='http://bitbucket.com/cdevienne/pyramid_cubicweb',
+    url='https://www.cubicweb.org/project/pyramid-cubicweb',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
