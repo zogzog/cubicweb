@@ -87,8 +87,8 @@ def wsgi_application_from_cwconfig(
     app = wsgicors.CORS(
         app,
         origin=' '.join(cwconfig['access-control-allow-origin']),
-        headers=cwconfig['access-control-allow-headers'],
-        methods=cwconfig['access-control-allow-methods'],
+        headers=', '.join(cwconfig['access-control-allow-headers']),
+        methods=', '.join(cwconfig['access-control-allow-methods']),
         credentials='true')
 
     if profile:
