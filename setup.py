@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name='pyramid_cubicweb',
+    name='pyramid-cubicweb',
     version='0.2.1',
     description='Integrate CubicWeb with a Pyramid application.',
     author='Christophe de Vienne',
