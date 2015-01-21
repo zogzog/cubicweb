@@ -4,7 +4,7 @@
 modname = 'pyramid'
 distname = 'cubicweb-pyramid'
 
-numversion = (0, 1, 1)
+numversion = (0, 2, 0)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LGPL'
@@ -16,7 +16,7 @@ web = 'http://www.cubicweb.org/project/%s' % distname
 __depends__ = {
     'cubicweb': '>= 3.19.3',
     'wsgicors': '>= 0.3',
-    'pyramid-cubicweb': '>= 0.1.2'
+    'pyramid-cubicweb': '>= 0.2.0'
 }
 __recommends__ = {}
 
