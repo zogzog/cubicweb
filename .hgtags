@@ -365,6 +365,9 @@ d915013567429b481cb2c367071e36451c07a226 cubicweb-debian-version-3.18.6-1
 cb96f4403cf2837b595992ceb0dfef2070d55e70 cubicweb-version-3.18.7
 cb96f4403cf2837b595992ceb0dfef2070d55e70 cubicweb-debian-version-3.18.7-1
 cb96f4403cf2837b595992ceb0dfef2070d55e70 cubicweb-centos-version-3.18.7-1
+231094063d62fa7c5296f2e46bc204e728038e85 cubicweb-version-3.18.8
+231094063d62fa7c5296f2e46bc204e728038e85 cubicweb-debian-version-3.18.8-1
+231094063d62fa7c5296f2e46bc204e728038e85 cubicweb-centos-version-3.18.8-1
 1141927b8494aabd16e31b0d0d9a50fe1fed5f2f cubicweb-version-3.19.0
 1141927b8494aabd16e31b0d0d9a50fe1fed5f2f cubicweb-debian-version-3.19.0-1
 1141927b8494aabd16e31b0d0d9a50fe1fed5f2f cubicweb-centos-version-3.19.0-1
@@ -389,6 +392,9 @@ c4e740e50fc7d371d14df17d26bc42d1f8060261 cubicweb-centos-version-3.19.4-1
 ac4f5f615597575bec32f8f591260e5a91e53855 cubicweb-version-3.19.7
 ac4f5f615597575bec32f8f591260e5a91e53855 cubicweb-debian-version-3.19.7-1
 ac4f5f615597575bec32f8f591260e5a91e53855 cubicweb-centos-version-3.19.7-1
+efc8645ece4300958e3628db81464fef12d5f6e8 cubicweb-version-3.19.8
+efc8645ece4300958e3628db81464fef12d5f6e8 cubicweb-debian-version-3.19.8-1
+efc8645ece4300958e3628db81464fef12d5f6e8 cubicweb-centos-version-3.19.8-1
 7e6b7739afe6128589ad51b0318decb767cbae36 cubicweb-version-3.20.0
 7e6b7739afe6128589ad51b0318decb767cbae36 cubicweb-debian-version-3.20.0-1
 7e6b7739afe6128589ad51b0318decb767cbae36 cubicweb-centos-version-3.20.0-1
