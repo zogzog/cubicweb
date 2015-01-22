@@ -107,7 +107,7 @@ try:
     data_files = [
         # server data
         [join('share', 'cubicweb', 'schemas'),
-         [join('schemas', filename) for filename in glob.glob(join('schemas', '*.sql'))]],
+         glob.glob(join('schemas', '*.sql'))],
         [join('share', 'cubicweb', 'migration'),
          [join(_server_migration_dir, filename)
           for filename in listdir(_server_migration_dir)]],
@@ -125,7 +125,7 @@ try:
         [join('share', 'cubicweb', 'cubes', 'shared', 'wdoc', 'images'),
          [join(_wdocimages_dir, fname) for fname in listdir(_wdocimages_dir)]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'i18n'),
-         [join(_i18n_dir, fname) for fname in glob.glob(join(_i18n_dir, '*.po'))]],
+         glob.glob(join(_i18n_dir, '*.po'))],
         # skeleton
         ]
 except OSError:
