@@ -400,7 +400,9 @@ class EntityFieldsForm(FieldsForm):
         # case where this is an embeded creation form
         try:
             eid = int(self.cw_extra_kwargs['peid'])
-        except KeyError:
+        except (KeyError, ValueError):
+            # When parent is being created, its eid is not numeric (e.g. 'A')
+            # hence ValueError.
             pass
         else:
             ltrtype = self.cw_extra_kwargs['rtype']

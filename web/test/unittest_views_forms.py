@@ -30,6 +30,16 @@ class InlinedFormTC(CubicWebTC):
             self.assertEqual({('described_by_test', 'object'): [123]},
                              formview.form.linked_to)
 
+    def test_linked_to_parent_being_created(self):
+        with self.admin_access.web_request() as req:
+            formview = req.vreg['views'].select(
+                'inline-creation', req,
+                etype='File', rtype='described_by_test', role='subject',
+                peid='A',
+                petype='Salesterm')
+            self.assertEqual(formview.form.linked_to, {})
+
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()
