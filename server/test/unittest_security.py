@@ -116,6 +116,14 @@ class SecurityTC(BaseSecurityTC):
             self.assertRaises(Unauthorized, cnx.commit)
             self.assertEqual(cnx.execute('Personne X').rowcount, 1)
 
+    def test_insert_security_2(self):
+        with self.login('anon') as cu:
+            cu.execute("INSERT Affaire X")
+            self.assertRaises(Unauthorized, self.commit)
+            # anon has no read permission on Affaire entities, so
+            # rowcount == 0
+            self.assertEqual(cu.execute('Affaire X').rowcount, 0)
+
     def test_insert_rql_permission(self):
         # test user can only add une affaire related to a societe he owns
         with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
