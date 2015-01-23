@@ -1,9 +1,15 @@
+0.2.1 (2015-01-23)
+------------------
+
+-   Fix cors 'methods' and 'headers' parameters passing (:issue:`4849874`).
+
 0.2.0 (2015-01-21)
 ------------------
 
 -   Create a documentation (:issue:`4849313`)
 -   Fix cors 'origin' parameter passing (:issue:`4783343`)
--   Fix configuration loading when 'cubicweb.includes' is not set (:issue:`4849314`)
+-   Fix configuration loading when 'cubicweb.includes' is not set
+    (:issue:`4849314`)
 -   Move auth-related code to :mod:`pyramid_cubicweb.auth`.
 -   Add profiling tools
 -   Cleanups
@@ -16,7 +22,8 @@
 0.1.2 (2014-11-15)
 ------------------
 
--   Fix excessive rollbacks on HTTPSuccessful or HTTPRedirection (:issue:`4566482`)
+-   Fix excessive rollbacks on HTTPSuccessful or HTTPRedirection
+    (:issue:`4566482`)
 
 0.1.1 (2014-11-02)
 ------------------
@@ -28,6 +35,6 @@
 
 Initial release
 
--   Provides a pyramid-based authentication and session management for a cubicweb
-    instance.
+-   Provides a pyramid-based authentication and session management for a
+    cubicweb instance.
 -   Run a cubicweb instance as a pyramid application
