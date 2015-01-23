@@ -548,7 +548,7 @@ class Connection(RequestSessionBase):
         return self._rewriter
 
     @_open_only
-    @deprecated('[3.19] use session or transaction data')
+    @deprecated('[3.19] use session or transaction data', stacklevel=3)
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
         if txdata:
@@ -561,7 +561,7 @@ class Connection(RequestSessionBase):
             return data.get(key, default)
 
     @_open_only
-    @deprecated('[3.19] use session or transaction data')
+    @deprecated('[3.19] use session or transaction data', stacklevel=3)
     def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in session data"""
         if txdata:
