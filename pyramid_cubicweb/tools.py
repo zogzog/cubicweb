@@ -1,4 +1,10 @@
-"""Various tools"""
+"""Various tools.
+
+.. warning::
+
+    This module should be considered as internal implementation details. Use
+    with caution, as the API may change without notice.
+"""
 
 #: A short-term cache for user clones.
 #: used by cached_build_user to speed-up repetitive calls to build_user
@@ -43,6 +49,11 @@ def cached_build_user(repo, eid):
     with repo.internal_cnx() as cnx:
         if eid in _user_cache:
             entity = clone_user(repo, _user_cache[eid])
+            # XXX the cnx is needed here so that the CWUser instance has an
+            # access to the vreg, which it needs when its 'prefered_language'
+            # property is accessed.
+            # If this property did not need a cnx to access a vreg, we could
+            # avoid the internal_cnx() and save more time.
             cnx_attach_entity(cnx, entity)
             return entity
 
@@ -58,6 +69,10 @@ def clear_cache():
 
 
 def includeme(config):
+    """Start the cache maintenance loop task.
+
+    Automatically included by :func:`pyramid_cubicweb.make_cubicweb_application`.
+    """
     repo = config.registry['cubicweb.repository']
     interval = int(config.registry.settings.get(
         'cubicweb.usercache.expiration_time', 60*5))
