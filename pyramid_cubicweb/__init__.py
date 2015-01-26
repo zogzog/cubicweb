@@ -54,6 +54,7 @@ def make_cubicweb_application(cwconfig):
     for name in aslist(config.registry.settings.get('cubicweb.includes', [])):
         config.include(name)
 
+    config.include('pyramid_cubicweb.tools')
     config.include('pyramid_cubicweb.core')
 
     if asbool(config.registry.settings.get('cubicweb.bwcompat', True)):
