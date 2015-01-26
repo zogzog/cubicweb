@@ -1586,6 +1586,9 @@ class DatabaseIndependentBackupRestore(object):
             for seq in self.get_sequences():
                 self.logger.info('processing sequence %s', seq)
                 self.write_sequence(archive, seq)
+            for numrange in self.get_numranges():
+                self.logger.info('processing numrange %s', numrange)
+                self.write_numrange(archive, numrange)
             for table in self.get_tables():
                 self.logger.info('processing table %s', table)
                 self.write_table(archive, table)
@@ -1616,12 +1619,16 @@ class DatabaseIndependentBackupRestore(object):
         return non_entity_tables + etype_tables + relation_tables
 
     def get_sequences(self):
+        return []
+
+    def get_numranges(self):
         return ['entities_id_seq']
 
     def write_metadata(self, archive):
-        archive.writestr('format.txt', '1.0')
+        archive.writestr('format.txt', '1.1')
         archive.writestr('tables.txt', '\n'.join(self.get_tables()))
         archive.writestr('sequences.txt', '\n'.join(self.get_sequences()))
+        archive.writestr('numranges.txt', '\n'.join(self.get_numranges()))
         versions = self._get_versions()
         versions_str = '\n'.join('%s %s' % (k, v)
                                  for k, v in versions)
@@ -1633,6 +1640,13 @@ class DatabaseIndependentBackupRestore(object):
         rows = list(rows_iterator)
         serialized = self._serialize(seq, columns, rows)
         archive.writestr('sequences/%s' % seq, serialized)
+
+    def write_numrange(self, archive, numrange):
+        sql = self.dbhelper.sql_numrange_current_state(numrange)
+        columns, rows_iterator = self._get_cols_and_rows(sql)
+        rows = list(rows_iterator)
+        serialized = self._serialize(numrange, columns, rows)
+        archive.writestr('numrange/%s' % numrange, serialized)
 
     def write_table(self, archive, table):
         nb_lines_sql = 'SELECT COUNT(*) FROM %s' % table
