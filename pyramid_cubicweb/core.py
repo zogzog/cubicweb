@@ -13,7 +13,7 @@ from cubicweb.server.session import Session
 
 from pyramid import httpexceptions
 
-from pyramid_cubicweb import authplugin
+from pyramid_cubicweb import authplugin, tools
 
 import logging
 
@@ -179,11 +179,9 @@ def repo_connect(repo, eid):
     """A lightweight version of
     :meth:`cubicweb.server.repository.Repository.connect` that does not keep
     track of opened sessions, removing the need of closing them"""
-    with repo.internal_cnx() as cnx:
-        user = repo._build_user(cnx, eid=eid)
+    user = tools.cached_build_user(repo, eid)
     session = Session(user, repo, None)
-    user._cw = user.cw_rset.req = session
-    user.cw_clear_relation_cache()
+    tools.cnx_attach_entity(session, user)
     # Calling the hooks should be done only once, disabling it completely for
     # now
     #with session.new_cnx() as cnx:
