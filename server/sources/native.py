@@ -1541,14 +1541,15 @@ class DatabaseIndependentBackupRestore(object):
     system database in a database independent format. The file is a
     Zip archive containing the following files:
 
-    * format.txt: the format of the archive. Currently '1.0'
+    * format.txt: the format of the archive. Currently '1.1'
     * tables.txt: list of filenames in the archive tables/ directory
     * sequences.txt: list of filenames in the archive sequences/ directory
+    * numranges.txt: list of filenames in the archive numrange/ directory
     * versions.txt: the list of cube versions from CWProperty
     * tables/<tablename>.<chunkno>: pickled data
     * sequences/<sequencename>: pickled data
 
-    The pickled data format for tables and sequences is a tuple of 3 elements:
+    The pickled data format for tables, numranges and sequences is a tuple of 3 elements:
     * the table name
     * a tuple of column names
     * a list of rows (as tuples with one element per column)
@@ -1684,10 +1685,13 @@ class DatabaseIndependentBackupRestore(object):
         archive = zipfile.ZipFile(backupfile, 'r', allowZip64=True)
         self.cnx = self.get_connection()
         self.cursor = self.cnx.cursor()
-        sequences, tables, table_chunks = self.read_metadata(archive, backupfile)
+        sequences, numranges, tables, table_chunks = self.read_metadata(archive, backupfile)
         for seq in sequences:
             self.logger.info('restoring sequence %s', seq)
             self.read_sequence(archive, seq)
+        for numrange in numranges:
+            self.logger.info('restoring numrange %s', seq)
+            self.read_numrange(archive, numrange)
         for table in tables:
             self.logger.info('restoring table %s', table)
             self.read_table(archive, table, sorted(table_chunks[table]))
@@ -1698,11 +1702,12 @@ class DatabaseIndependentBackupRestore(object):
     def read_metadata(self, archive, backupfile):
         formatinfo = archive.read('format.txt')
         self.logger.info('checking metadata')
-        if formatinfo.strip() != "1.0":
+        if formatinfo.strip() != "1.1":
             self.logger.critical('Unsupported format in archive: %s', formatinfo)
             raise ValueError('Unknown format in %s: %s' % (backupfile, formatinfo))
         tables = archive.read('tables.txt').splitlines()
         sequences = archive.read('sequences.txt').splitlines()
+        numranges = archive.read('numranges.txt').splitlines()
         file_versions = self._parse_versions(archive.read('versions.txt'))
         versions = set(self._get_versions())
         if file_versions != versions:
@@ -1719,7 +1724,7 @@ class DatabaseIndependentBackupRestore(object):
             filename = basename(name)
             tablename, _ext = filename.rsplit('.', 1)
             table_chunks.setdefault(tablename, []).append(name)
-        return sequences, tables, table_chunks
+        return sequences, numranges, tables, table_chunks
 
     def read_sequence(self, archive, seq):
         seqname, columns, rows = loads(archive.read('sequences/%s' % seq))
@@ -1728,6 +1733,16 @@ class DatabaseIndependentBackupRestore(object):
         assert len(rows[0]) == 1
         value = rows[0][0]
         sql = self.dbhelper.sql_restart_sequence(seq, value)
+        self.cursor.execute(sql)
+        self.cnx.commit()
+
+    def read_numrange(self, archive, numrange):
+        rangename, columns, rows = loads(archive.read('numrange/%s' % numrange))
+        assert rangename == numrange
+        assert len(rows) == 1
+        assert len(rows[0]) == 1
+        value = rows[0][0]
+        sql = self.dbhelper.sql_restart_numrange(numrange, value)
         self.cursor.execute(sql)
         self.cnx.commit()
 
