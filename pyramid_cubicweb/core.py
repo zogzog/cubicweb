@@ -9,7 +9,7 @@ from cubicweb import repoapi
 
 import cubicweb
 import cubicweb.web
-from cubicweb.server.session import Session
+from cubicweb.server import session as cwsession
 
 from pyramid import httpexceptions
 
@@ -18,6 +18,56 @@ from pyramid_cubicweb import authplugin, tools
 import logging
 
 log = logging.getLogger(__name__)
+
+
+class Connection(cwsession.Connection):
+    """ A specialised Connection that access the session data through a
+    property.
+
+    This behavior makes sure the actual session data is not loaded until
+    actually accessed.
+    """
+    def __init__(self, session, *args, **kw):
+        super(Connection, self).__init__(session, *args, **kw)
+        self._session = session
+
+    def _get_session_data(self):
+        return self._session.data
+
+    def _set_session_data(self, data):
+        pass
+
+    _session_data = property(_get_session_data, _set_session_data)
+
+
+class Session(cwsession.Session):
+    """ A Session that access the session data through a property.
+
+    Along with :class:`Connection`, it avoid any load of the pyramid session
+    data until it is actually accessed.
+    """
+    def __init__(self, pyramid_request, user, repo):
+        super(Session, self).__init__(user, repo)
+        self._pyramid_request = pyramid_request
+
+    def get_data(self):
+        if not getattr(self, '_protect_data_access', False):
+            self._data_accessed = True
+            return self._pyramid_request.session
+
+    def set_data(self, data):
+        if getattr(self, '_data_accessed', False):
+            self._pyramid_request.session.clear()
+            self._pyramid_request.session.update(data)
+
+    data = property(get_data, set_data)
+
+    def new_cnx(self):
+        self._protect_data_access = True
+        try:
+            return Connection(self)
+        finally:
+            self._protect_data_access = False
 
 
 @contextmanager
@@ -175,12 +225,12 @@ def _cw_cnx(request):
     return cnx
 
 
-def repo_connect(repo, eid):
+def repo_connect(request, repo, eid):
     """A lightweight version of
     :meth:`cubicweb.server.repository.Repository.connect` that does not keep
     track of opened sessions, removing the need of closing them"""
     user = tools.cached_build_user(repo, eid)
-    session = Session(user, repo, None)
+    session = Session(request, user, repo)
     tools.cnx_attach_entity(session, user)
     # Calling the hooks should be done only once, disabling it completely for
     # now
@@ -203,13 +253,9 @@ def _cw_session(request):
 
     if not request.authenticated_userid:
         session = repo_connect(
-            repo, eid=request.registry['cubicweb.anonymous_eid'])
+            request, repo, eid=request.registry['cubicweb.anonymous_eid'])
     else:
         session = request._cw_cached_session
-
-    # XXX Ideally we store the cw session data in the pyramid session.
-    # BUT some data in the cw session data dictionnary makes pyramid fail.
-    session.data = request.session
 
     return session
 
@@ -249,7 +295,7 @@ def get_principals(login, request):
     repo = request.registry['cubicweb.repository']
 
     try:
-        session = repo_connect(repo, eid=login)
+        session = repo_connect(request, repo, eid=login)
         request._cw_cached_session = session
     except:
         log.exception("Failed")
