@@ -155,9 +155,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         #: shared among various components used to publish the request (views,
         #: controller, application...)
         self.data = {}
-        #:  search state: 'normal' or 'linksearch' (eg searching for an object
-        #:  to create a relation with another)
-        self.search_state = ('normal',)
+        self._search_state = None
         #: page id, set by htmlheader template
         self.pageid = None
         self._set_pageid()
@@ -354,21 +352,32 @@ class _CubicWebRequestBase(RequestSessionBase):
             self.session.data.pop(self._msgid, u'')
             del self._msgid
 
-    def update_search_state(self):
-        """update the current search state"""
-        searchstate = self.form.get('__mode')
-        if not searchstate:
+    def _load_search_state(self, searchstate):
+        if searchstate is None or searchstate == 'normal':
+            self._search_state = (searchstate or 'normal',)
+        else:
+            self._search_state = ('linksearch', searchstate.split(':'))
+            assert len(self._search_state[-1]) == 4, 'invalid searchstate'
+
+    @property
+    def search_state(self):
+        """search state: 'normal' or 'linksearch' (eg searching for an object
+        to create a relation with another)"""
+        if self._search_state is None:
             searchstate = self.session.data.get('search_state', 'normal')
-        self.set_search_state(searchstate)
+            self._load_search_state(searchstate)
+        return self._search_state
+
+    def update_search_state(self):
+        """update the current search state if needed"""
+        searchstate = self.form.get('__mode')
+        if searchstate:
+            self.set_search_state(searchstate)
 
     def set_search_state(self, searchstate):
         """set a new search state"""
-        if searchstate is None or searchstate == 'normal':
-            self.search_state = (searchstate or 'normal',)
-        else:
-            self.search_state = ('linksearch', searchstate.split(':'))
-            assert len(self.search_state[-1]) == 4
         self.session.data['search_state'] = searchstate
+        self._load_search_state(searchstate)
 
     def match_search_state(self, rset):
         """when searching an entity to create a relation, return True if entities in
@@ -385,7 +394,7 @@ class _CubicWebRequestBase(RequestSessionBase):
 
     def update_breadcrumbs(self):
         """stores the last visisted page in session data"""
-        searchstate = self.session.data.get('search_state')
+        searchstate = self.search_state[0]
         if searchstate == 'normal':
             breadcrumbs = self.session.data.get('breadcrumbs')
             if breadcrumbs is None:
