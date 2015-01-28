@@ -33,7 +33,7 @@ import tempfile
 import getpass
 from hashlib import sha1 # pylint: disable=E0611
 from datetime import timedelta
-from os.path import (abspath, join, exists, split, isabs, isdir)
+from os.path import (abspath, realpath, join, exists, split, isabs, isdir)
 from functools import partial
 
 from logilab.common.date import strptime
@@ -549,7 +549,9 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
 
     def __init__(self, *args, **kwargs):
         super(PostgresTestDataBaseHandler, self).__init__(*args, **kwargs)
-        datadir = join(self.config.apphome, 'pgdb')
+        datadir = realpath(join(self.config.apphome, 'pgdb'))
+        if datadir in self.__CTL:
+            return
         if not exists(datadir):
             try:
                 subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8', '--locale=C'])
