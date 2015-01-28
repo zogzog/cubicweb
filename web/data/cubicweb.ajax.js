@@ -538,7 +538,7 @@ userCallbackThenUpdateUI = cw.utils.deprecatedFunction(
     var d = userCallback(cbname);
     d.addCallback(function() {
         $('#' + nodeid).loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {'rql': rql},
-                                                       registry, compid));
+                                                       registry, compid), null, 'swap');
         if (msg) {
             updateMessage(msg);
         }
