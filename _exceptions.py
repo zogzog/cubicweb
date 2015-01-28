@@ -82,6 +82,8 @@ class UniqueTogetherError(RepositoryError):
         self.session = session
         assert 'rtypes' in kwargs or 'cstrname' in kwargs
         self.kwargs = kwargs
+        # fill cache while the session is open
+        self.rtypes
 
     @cachedproperty
     def rtypes(self):
