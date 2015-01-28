@@ -615,7 +615,7 @@ In the above case we would define the *computed relation*
 
 .. sourcecode:: python
 
-    class illustrator_of(ComputedRelationType):
+    class illustrator_of(ComputedRelation):
         rule  = ('C is Contribution, C contributor S, C manifestation O,'
                  'C role R, R name "illustrator"')
 
@@ -643,7 +643,7 @@ Computed (or synthesized) attributes
 ````````````````````````````````````
 
 In the above case we would define the *computed attribute*
-``total_salary`` on the ``Company`` entity type in the schema by::
+``total_salary`` on the ``Company`` entity type in the schema by:
 
 .. sourcecode:: python
 
