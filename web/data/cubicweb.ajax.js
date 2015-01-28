@@ -62,15 +62,11 @@ jQuery.extend(Deferred.prototype, {
 
     success: function(result) {
         this._result = result;
-        try {
-            for (var i = 0; i < this._onSuccess.length; i++) {
-                var callback = this._onSuccess[i][0];
-                var args = [result, this._req];
-                jQuery.merge(args, this._onSuccess[i][1]);
-                callback.apply(null, args);
-            }
-        } catch(error) {
-            this.error(this._req, null, error);
+        for (var i = 0; i < this._onSuccess.length; i++) {
+            var callback = this._onSuccess[i][0];
+            var args = [result, this._req];
+            jQuery.merge(args, this._onSuccess[i][1]);
+            callback.apply(null, args);
         }
     },
 
