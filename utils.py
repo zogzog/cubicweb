@@ -368,14 +368,20 @@ class HTMLHead(UStringIO):
         w = self.write
         # 1/ variable declaration if any
         if self.jsvars:
-            w(self.script_opening)
+            if skiphead:
+                w(u'<cubicweb:script>')
+            else:
+                w(self.script_opening)
             for var, value, override in self.jsvars:
                 vardecl = u'%s = %s;' % (var, json.dumps(value))
                 if not override:
                     vardecl = (u'if (typeof %s == "undefined") {%s}' %
                                (var, vardecl))
                 w(vardecl + u'\n')
-            w(self.script_closing)
+            if skiphead:
+                w(u'</cubicweb:script>')
+            else:
+                w(self.script_closing)
         # 2/ css files
         ie_cssfiles = ((x, (y, z)) for x, y, z in self.ie_cssfiles)
         if self.datadir_url and self._cw.vreg.config['concat-resources']:
