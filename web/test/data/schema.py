@@ -95,3 +95,8 @@ class Ticket(EntityType):
 
 # used by windmill for `test_edit_relation`
 from cubes.folder.schema import Folder
+
+
+class TreeNode(EntityType):
+    name = String(required=True)
+    parent = SubjectRelation('TreeNode', cardinality='?*')

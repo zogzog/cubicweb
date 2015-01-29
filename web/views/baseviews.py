@@ -315,12 +315,12 @@ class ListView(EntityView):
         else:
             self.w(u'<ul%s class="%s">\n' % (listid, klass or 'section'))
         for i in xrange(self.cw_rset.rowcount):
-            self.cell_call(row=i, col=0, vid=subvid, **kwargs)
+            self.cell_call(row=i, col=0, vid=subvid, klass=klass, **kwargs)
         self.w(u'</ul>\n')
         if title:
             self.w(u'</div>\n')
 
-    def cell_call(self, row, col=0, vid=None, **kwargs):
+    def cell_call(self, row, col=0, vid=None, klass=None, **kwargs):
         self.w(u'<li>')
         self.wview(self.item_vid, self.cw_rset, row=row, col=col, vid=vid, **kwargs)
         self.w(u'</li>\n')
