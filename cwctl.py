@@ -25,7 +25,7 @@ __docformat__ = "restructuredtext en"
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.
 import sys
-from warnings import warn
+from warnings import warn, filterwarnings
 from os import remove, listdir, system, pathsep
 from os.path import exists, join, isfile, isdir, dirname, abspath
 from urlparse import urlparse
@@ -1133,6 +1133,7 @@ def run(args):
     import os
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
     sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+    filterwarnings('default', category=DeprecationWarning)
     cwcfg.load_cwctl_plugins()
     try:
         CWCTL.run(args)
