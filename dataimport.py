@@ -792,7 +792,7 @@ class NoHookRQLObjectStore(RQLObjectStore):
         entity.cw_edited.update(kwargs, skipsec=False)
         cnx = self._cnx
         self.source.add_entity(cnx, entity)
-        self.source.add_info(cnx, entity, self.source, None, complete=False)
+        self.source.add_info(cnx, entity, self.source, None)
         kwargs = dict()
         if inspect.getargspec(self.add_relation).keywords:
             kwargs['subjtype'] = entity.cw_etype
@@ -1129,7 +1129,7 @@ class SQLGenSourceWrapper(object):
     # add_info is _copypasted_ from the one in NativeSQLSource. We want it
     # there because it will use the _handlers of the SQLGenSourceWrapper, which
     # are not like the ones in the native source.
-    def add_info(self, cnx, entity, source, extid, complete):
+    def add_info(self, cnx, entity, source, extid):
         """add type and source info for an eid into the system table"""
         # begin by inserting eid/type/source/extid into the entities table
         if extid is not None:
