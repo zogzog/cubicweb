@@ -242,9 +242,9 @@ class FormRenderer(AppObject):
             except KeyError:
                 self.warning('no such fieldset: %s (%s)', fieldset, form)
                 continue
-            w(u'<fieldset class="%s">\n' % (fieldset or u'default'))
+            w(u'<fieldset>\n')
             if fieldset:
-                w(u'<legend>%s</legend>' % self._cw._(fieldset))
+                w(u'<legend>%s</legend>' % self._cw.__(fieldset))
             w(u'<table class="%s">\n' % self.table_class)
             for field in fields:
                 w(u'<tr class="%s_%s_row">\n' % (field.name, field.role))

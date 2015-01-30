@@ -815,8 +815,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         srels_by_cat = self.editable_relations()
         if not srels_by_cat:
             raise f.FieldNotFound('_cw_generic_field')
-        fieldset = u'%s :' % self._cw.__('This %s' % self.edited_entity.e_schema)
-        fieldset = fieldset.capitalize()
+        fieldset = 'This %s:' % self.edited_entity.e_schema
         return GenericRelationsField(self.editable_relations(),
                                      fieldset=fieldset, label=None)
 

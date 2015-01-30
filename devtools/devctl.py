@@ -165,7 +165,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
             add_msg(w, etype)
             add_msg(w, '%s_plural' % etype)
             if not eschema.final:
-                add_msg(w, 'This %s' % etype)
+                add_msg(w, 'This %s:' % etype)
                 add_msg(w, 'New %s' % etype)
             if eschema.description and not eschema.description in done:
                 done.add(eschema.description)

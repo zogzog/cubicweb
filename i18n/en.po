@@ -756,86 +756,86 @@ msgstr ""
 msgid "There is no default workflow"
 msgstr ""
 
-msgid "This BaseTransition"
-msgstr "This abstract transition"
+msgid "This BaseTransition:"
+msgstr "This abstract transition:"
 
-msgid "This Bookmark"
-msgstr "This bookmark"
+msgid "This Bookmark:"
+msgstr "This bookmark:"
 
-msgid "This CWAttribute"
-msgstr "This attribute"
+msgid "This CWAttribute:"
+msgstr "This attribute:"
 
-msgid "This CWCache"
-msgstr "This cache"
+msgid "This CWCache:"
+msgstr "This cache:"
 
-msgid "This CWComputedRType"
-msgstr "This virtual relation"
+msgid "This CWComputedRType:"
+msgstr "This virtual relation:"
 
-msgid "This CWConstraint"
-msgstr "This constraint"
+msgid "This CWConstraint:"
+msgstr "This constraint:"
 
-msgid "This CWConstraintType"
-msgstr "This constraint type"
+msgid "This CWConstraintType:"
+msgstr "This constraint type:"
 
-msgid "This CWDataImport"
-msgstr "This data import"
+msgid "This CWDataImport:"
+msgstr "This data import:"
 
-msgid "This CWEType"
-msgstr "This entity type"
+msgid "This CWEType:"
+msgstr "This entity type:"
 
-msgid "This CWGroup"
-msgstr "This group"
+msgid "This CWGroup:"
+msgstr "This group:"
 
-msgid "This CWProperty"
-msgstr "This property"
+msgid "This CWProperty:"
+msgstr "This property:"
 
-msgid "This CWRType"
-msgstr "This relation type"
+msgid "This CWRType:"
+msgstr "This relation type:"
 
-msgid "This CWRelation"
-msgstr "This relation"
+msgid "This CWRelation:"
+msgstr "This relation:"
 
-msgid "This CWSource"
-msgstr "This data source"
+msgid "This CWSource:"
+msgstr "This data source:"
 
-msgid "This CWSourceHostConfig"
-msgstr "This source host configuration"
+msgid "This CWSourceHostConfig:"
+msgstr "This source host configuration:"
 
-msgid "This CWSourceSchemaConfig"
-msgstr "This source schema configuration"
+msgid "This CWSourceSchemaConfig:"
+msgstr "This source schema configuration:"
 
-msgid "This CWUniqueTogetherConstraint"
-msgstr "This unicity constraint"
+msgid "This CWUniqueTogetherConstraint:"
+msgstr "This unicity constraint:"
 
-msgid "This CWUser"
-msgstr "This user"
+msgid "This CWUser:"
+msgstr "This user:"
 
-msgid "This EmailAddress"
-msgstr "This email address"
+msgid "This EmailAddress:"
+msgstr "This email address:"
 
-msgid "This ExternalUri"
-msgstr "This external URI"
+msgid "This ExternalUri:"
+msgstr "This external URI:"
 
-msgid "This RQLExpression"
-msgstr "This RQL expression"
+msgid "This RQLExpression:"
+msgstr "This RQL expression:"
 
-msgid "This State"
-msgstr "This state"
+msgid "This State:"
+msgstr "This state:"
 
-msgid "This SubWorkflowExitPoint"
-msgstr "This subworkflow exit-point"
+msgid "This SubWorkflowExitPoint:"
+msgstr "This subworkflow exit-point:"
 
-msgid "This TrInfo"
-msgstr "This transition information"
+msgid "This TrInfo:"
+msgstr "This transition information:"
 
-msgid "This Transition"
-msgstr "This transition"
+msgid "This Transition:"
+msgstr "This transition:"
 
-msgid "This Workflow"
-msgstr "This workflow"
+msgid "This Workflow:"
+msgstr "This workflow:"
 
-msgid "This WorkflowTransition"
-msgstr "This workflow-transition"
+msgid "This WorkflowTransition:"
+msgstr "This workflow-transition:"
 
 msgid ""
 "This action is forbidden. If you think it should be allowed, please contact "

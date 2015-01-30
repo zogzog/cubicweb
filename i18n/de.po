@@ -780,86 +780,86 @@ msgstr "Die Ansicht %s konnte nicht gefunden werden."
 msgid "There is no default workflow"
 msgstr "Dieser Entitätstyp hat standardmäßig keinen Workflow."
 
-msgid "This BaseTransition"
-msgstr "Diese abstracte Transition"
+msgid "This BaseTransition:"
+msgstr "Diese abstracte Transition:"
 
-msgid "This Bookmark"
-msgstr "Dieses Lesezeichen"
+msgid "This Bookmark:"
+msgstr "Dieses Lesezeichen:"
 
-msgid "This CWAttribute"
-msgstr "diese finale Relationsdefinition"
+msgid "This CWAttribute:"
+msgstr "diese finale Relationsdefinition:"
 
-msgid "This CWCache"
-msgstr "Dieser Anwendungs-Cache"
+msgid "This CWCache:"
+msgstr "Dieser Anwendungs-Cache:"
 
-msgid "This CWComputedRType"
+msgid "This CWComputedRType:"
 msgstr ""
 
-msgid "This CWConstraint"
-msgstr "diese Einschränkung"
+msgid "This CWConstraint:"
+msgstr "diese Einschränkung:"
 
-msgid "This CWConstraintType"
-msgstr "Dieser Einschränkungstyp"
+msgid "This CWConstraintType:"
+msgstr "Dieser Einschränkungstyp:"
 
-msgid "This CWDataImport"
+msgid "This CWDataImport:"
 msgstr ""
 
-msgid "This CWEType"
-msgstr "Dieser Entitätstyp"
+msgid "This CWEType:"
+msgstr "Dieser Entitätstyp:"
 
-msgid "This CWGroup"
-msgstr "Diese Gruppe"
+msgid "This CWGroup:"
+msgstr "Diese Gruppe:"
 
-msgid "This CWProperty"
-msgstr "Diese Eigenschaft"
+msgid "This CWProperty:"
+msgstr "Diese Eigenschaft:"
 
-msgid "This CWRType"
-msgstr "Dieser Relationstyp"
+msgid "This CWRType:"
+msgstr "Dieser Relationstyp:"
 
-msgid "This CWRelation"
-msgstr "Diese Relation"
+msgid "This CWRelation:"
+msgstr "Diese Relation:"
 
-msgid "This CWSource"
+msgid "This CWSource:"
 msgstr ""
 
-msgid "This CWSourceHostConfig"
+msgid "This CWSourceHostConfig:"
 msgstr ""
 
-msgid "This CWSourceSchemaConfig"
+msgid "This CWSourceSchemaConfig:"
 msgstr ""
 
-msgid "This CWUniqueTogetherConstraint"
-msgstr "Diese unique-together-Einschränkung"
+msgid "This CWUniqueTogetherConstraint:"
+msgstr "Diese unique-together-Einschränkung:"
 
-msgid "This CWUser"
-msgstr "Dieser Nutzer"
+msgid "This CWUser:"
+msgstr "Dieser Nutzer:"
 
-msgid "This EmailAddress"
-msgstr "Diese E-Mail-Adresse"
+msgid "This EmailAddress:"
+msgstr "Diese E-Mail-Adresse:"
 
-msgid "This ExternalUri"
-msgstr "dieser externe URI"
+msgid "This ExternalUri:"
+msgstr "dieser externe URI:"
 
-msgid "This RQLExpression"
-msgstr "Dieser RQL-Ausdruck"
+msgid "This RQLExpression:"
+msgstr "Dieser RQL-Ausdruck:"
 
-msgid "This State"
-msgstr "Dieser Zustand"
+msgid "This State:"
+msgstr "Dieser Zustand:"
 
-msgid "This SubWorkflowExitPoint"
-msgstr "Dieser Subworkflow Endpunkt"
+msgid "This SubWorkflowExitPoint:"
+msgstr "Dieser Subworkflow Endpunkt:"
 
-msgid "This TrInfo"
-msgstr "Diese Übergangs-Information"
+msgid "This TrInfo:"
+msgstr "Diese Übergangs-Information:"
 
-msgid "This Transition"
-msgstr "Dieser Übergang"
+msgid "This Transition:"
+msgstr "Dieser Übergang:"
 
-msgid "This Workflow"
-msgstr "Dieser Workflow"
+msgid "This Workflow:"
+msgstr "Dieser Workflow:"
 
-msgid "This WorkflowTransition"
-msgstr "Dieser Workflow-Übergang"
+msgid "This WorkflowTransition:"
+msgstr "Dieser Workflow-Übergang:"
 
 msgid ""
 "This action is forbidden. If you think it should be allowed, please contact "

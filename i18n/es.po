@@ -790,86 +790,86 @@ msgstr "La vista %s no ha podido ser encontrada"
 msgid "There is no default workflow"
 msgstr "Esta entidad no posee workflow por defecto"
 
-msgid "This BaseTransition"
-msgstr "Esta transición abstracta"
+msgid "This BaseTransition:"
+msgstr "Esta transición abstracta:"
 
-msgid "This Bookmark"
-msgstr "Este favorito"
+msgid "This Bookmark:"
+msgstr "Este favorito:"
 
-msgid "This CWAttribute"
-msgstr "Esta definición de relación final"
+msgid "This CWAttribute:"
+msgstr "Esta definición de relación final:"
 
-msgid "This CWCache"
-msgstr "Este Caché"
+msgid "This CWCache:"
+msgstr "Este Caché:"
 
-msgid "This CWComputedRType"
+msgid "This CWComputedRType:"
 msgstr ""
 
-msgid "This CWConstraint"
-msgstr "Esta Restricción"
+msgid "This CWConstraint:"
+msgstr "Esta Restricción:"
 
-msgid "This CWConstraintType"
-msgstr "Este tipo de Restricción"
+msgid "This CWConstraintType:"
+msgstr "Este tipo de Restricción:"
 
-msgid "This CWDataImport"
-msgstr "Esta importación de datos"
+msgid "This CWDataImport:"
+msgstr "Esta importación de datos:"
 
-msgid "This CWEType"
-msgstr "Este tipo de Entidad"
+msgid "This CWEType:"
+msgstr "Este tipo de Entidad:"
 
-msgid "This CWGroup"
-msgstr "Este grupo"
+msgid "This CWGroup:"
+msgstr "Este grupo:"
 
-msgid "This CWProperty"
-msgstr "Esta propiedad"
+msgid "This CWProperty:"
+msgstr "Esta propiedad:"
 
-msgid "This CWRType"
-msgstr "Este tipo de relación"
+msgid "This CWRType:"
+msgstr "Este tipo de relación:"
 
-msgid "This CWRelation"
-msgstr "Esta definición de relación no final"
+msgid "This CWRelation:"
+msgstr "Esta definición de relación no final:"
 
-msgid "This CWSource"
-msgstr "Esta fuente"
+msgid "This CWSource:"
+msgstr "Esta fuente:"
 
-msgid "This CWSourceHostConfig"
-msgstr "Esta configuración de fuente"
+msgid "This CWSourceHostConfig:"
+msgstr "Esta configuración de fuente:"
 
-msgid "This CWSourceSchemaConfig"
-msgstr "Esta parte de mapeo de fuente"
+msgid "This CWSourceSchemaConfig:"
+msgstr "Esta parte de mapeo de fuente:"
 
-msgid "This CWUniqueTogetherConstraint"
-msgstr "Esta restricción de singularidad"
+msgid "This CWUniqueTogetherConstraint:"
+msgstr "Esta restricción de singularidad:"
 
-msgid "This CWUser"
-msgstr "Este usuario"
+msgid "This CWUser:"
+msgstr "Este usuario:"
 
-msgid "This EmailAddress"
-msgstr "Esta dirección electrónica"
+msgid "This EmailAddress:"
+msgstr "Esta dirección electrónica:"
 
-msgid "This ExternalUri"
-msgstr "Este Uri externo"
+msgid "This ExternalUri:"
+msgstr "Este Uri externo:"
 
-msgid "This RQLExpression"
-msgstr "Esta expresión RQL"
+msgid "This RQLExpression:"
+msgstr "Esta expresión RQL:"
 
-msgid "This State"
-msgstr "Este estado"
+msgid "This State:"
+msgstr "Este estado:"
 
-msgid "This SubWorkflowExitPoint"
-msgstr "Esta Salida de sub-workflow"
+msgid "This SubWorkflowExitPoint:"
+msgstr "Esta Salida de sub-workflow:"
 
-msgid "This TrInfo"
-msgstr "Esta información de transición"
+msgid "This TrInfo:"
+msgstr "Esta información de transición:"
 
-msgid "This Transition"
-msgstr "Esta transición"
+msgid "This Transition:"
+msgstr "Esta transición:"
 
-msgid "This Workflow"
-msgstr "Este Workflow"
+msgid "This Workflow:"
+msgstr "Este Workflow:"
 
-msgid "This WorkflowTransition"
-msgstr "Esta transición de Workflow"
+msgid "This WorkflowTransition:"
+msgstr "Esta transición de Workflow:"
 
 msgid ""
 "This action is forbidden. If you think it should be allowed, please contact "

@@ -786,86 +786,86 @@ msgstr "La vue %s est introuvable"
 msgid "There is no default workflow"
 msgstr "Ce type d'entité n'a pas de workflow par défault"
 
-msgid "This BaseTransition"
-msgstr "Cette transition abstraite"
+msgid "This BaseTransition:"
+msgstr "Cette transition abstraite :"
 
-msgid "This Bookmark"
-msgstr "Ce signet"
+msgid "This Bookmark:"
+msgstr "Ce signet :"
 
-msgid "This CWAttribute"
-msgstr "Cette définition de relation finale"
+msgid "This CWAttribute:"
+msgstr "Cette définition de relation finale :"
 
-msgid "This CWCache"
-msgstr "Ce cache applicatif"
+msgid "This CWCache:"
+msgstr "Ce cache applicatif :"
 
-msgid "This CWComputedRType"
-msgstr "Cette relation virtuelle"
+msgid "This CWComputedRType:"
+msgstr "Cette relation virtuelle :"
 
-msgid "This CWConstraint"
-msgstr "Cette contrainte"
+msgid "This CWConstraint:"
+msgstr "Cette contrainte :"
 
-msgid "This CWConstraintType"
-msgstr "Ce type de contrainte"
+msgid "This CWConstraintType:"
+msgstr "Ce type de contrainte :"
 
-msgid "This CWDataImport"
-msgstr "Cet import de données"
+msgid "This CWDataImport:"
+msgstr "Cet import de données :"
 
-msgid "This CWEType"
-msgstr "Ce type d'entité"
+msgid "This CWEType:"
+msgstr "Ce type d'entité :"
 
-msgid "This CWGroup"
-msgstr "Ce groupe"
+msgid "This CWGroup:"
+msgstr "Ce groupe :"
 
-msgid "This CWProperty"
-msgstr "Cette propriété"
+msgid "This CWProperty:"
+msgstr "Cette propriété :"
 
-msgid "This CWRType"
-msgstr "Ce type de relation"
+msgid "This CWRType:"
+msgstr "Ce type de relation :"
 
-msgid "This CWRelation"
-msgstr "Cette définition de relation"
+msgid "This CWRelation:"
+msgstr "Cette définition de relation :"
 
-msgid "This CWSource"
-msgstr "Cette source"
+msgid "This CWSource:"
+msgstr "Cette source :"
 
-msgid "This CWSourceHostConfig"
-msgstr "Cette configuration de source"
+msgid "This CWSourceHostConfig:"
+msgstr "Cette configuration de source :"
 
-msgid "This CWSourceSchemaConfig"
-msgstr "Cette partie de mapping de source"
+msgid "This CWSourceSchemaConfig:"
+msgstr "Cette partie de mapping de source :"
 
-msgid "This CWUniqueTogetherConstraint"
-msgstr "Cette contrainte unique_together"
+msgid "This CWUniqueTogetherConstraint:"
+msgstr "Cette contrainte unique_together :"
 
-msgid "This CWUser"
-msgstr "Cet utilisateur"
+msgid "This CWUser:"
+msgstr "Cet utilisateur :"
 
-msgid "This EmailAddress"
-msgstr "Cette adresse électronique"
+msgid "This EmailAddress:"
+msgstr "Cette adresse électronique :"
 
-msgid "This ExternalUri"
-msgstr "Cette Uri externe"
+msgid "This ExternalUri:"
+msgstr "Cette Uri externe :"
 
-msgid "This RQLExpression"
-msgstr "Cette expression RQL"
+msgid "This RQLExpression:"
+msgstr "Cette expression RQL :"
 
-msgid "This State"
-msgstr "Cet état"
+msgid "This State:"
+msgstr "Cet état :"
 
-msgid "This SubWorkflowExitPoint"
-msgstr "Cette sortie de sous-workflow"
+msgid "This SubWorkflowExitPoint:"
+msgstr "Cette sortie de sous-workflow :"
 
-msgid "This TrInfo"
-msgstr "Cette information de transition"
+msgid "This TrInfo:"
+msgstr "Cette information de transition :"
 
-msgid "This Transition"
-msgstr "Cette transition"
+msgid "This Transition:"
+msgstr "Cette transition :"
 
-msgid "This Workflow"
-msgstr "Ce workflow"
+msgid "This Workflow:"
+msgstr "Ce workflow :"
 
-msgid "This WorkflowTransition"
-msgstr "Cette transition workflow"
+msgid "This WorkflowTransition:"
+msgstr "Cette transition workflow :"
 
 msgid ""
 "This action is forbidden. If you think it should be allowed, please contact "
