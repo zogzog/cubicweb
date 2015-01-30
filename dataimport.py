@@ -765,20 +765,20 @@ class CWImportController(object):
 class NoHookRQLObjectStore(RQLObjectStore):
     """ObjectStore that works with an actual RQL repository (production mode)"""
 
-    def __init__(self, session, metagen=None, baseurl=None):
-        super(NoHookRQLObjectStore, self).__init__(session)
-        self.source = session.repo.system_source
-        self.rschema = session.repo.schema.rschema
+    def __init__(self, cnx, metagen=None, baseurl=None):
+        super(NoHookRQLObjectStore, self).__init__(cnx)
+        self.source = cnx.repo.system_source
+        self.rschema = cnx.repo.schema.rschema
         self.add_relation = self.source.add_relation
         if metagen is None:
-            metagen = MetaGenerator(session, baseurl)
+            metagen = MetaGenerator(cnx, baseurl)
         self.metagen = metagen
         self._nb_inserted_entities = 0
         self._nb_inserted_types = 0
         self._nb_inserted_relations = 0
         # deactivate security
-        session.read_security = False
-        session.write_security = False
+        cnx.read_security = False
+        cnx.write_security = False
 
     def create_entity(self, etype, **kwargs):
         for k, v in kwargs.iteritems():
@@ -790,9 +790,9 @@ class NoHookRQLObjectStore(RQLObjectStore):
         entity.cw_clear_relation_cache()
         self.metagen.init_entity(entity)
         entity.cw_edited.update(kwargs, skipsec=False)
-        session = self.session
-        self.source.add_entity(session, entity)
-        self.source.add_info(session, entity, self.source, None, complete=False)
+        cnx = self._cnx
+        self.source.add_entity(cnx, entity)
+        self.source.add_info(cnx, entity, self.source, None, complete=False)
         kwargs = dict()
         if inspect.getargspec(self.add_relation).keywords:
             kwargs['subjtype'] = entity.cw_etype
@@ -801,20 +801,20 @@ class NoHookRQLObjectStore(RQLObjectStore):
             inlined = self.rschema(rtype).inlined
             try:
                 for targeteid in targeteids:
-                    self.add_relation(session, entity.eid, rtype, targeteid,
+                    self.add_relation(cnx, entity.eid, rtype, targeteid,
                                       inlined, **kwargs)
             except TypeError:
-                self.add_relation(session, entity.eid, rtype, targeteids,
+                self.add_relation(cnx, entity.eid, rtype, targeteids,
                                   inlined, **kwargs)
         self._nb_inserted_entities += 1
         return entity
 
     def relate(self, eid_from, rtype, eid_to, **kwargs):
         assert not rtype.startswith('reverse_')
-        self.add_relation(self.session, eid_from, rtype, eid_to,
+        self.add_relation(self._cnx, eid_from, rtype, eid_to,
                           self.rschema(rtype).inlined)
         if self.rschema(rtype).symmetric:
-            self.add_relation(self.session, eid_to, rtype, eid_from,
+            self.add_relation(self._cnx, eid_to, rtype, eid_from,
                               self.rschema(rtype).inlined)
         self._nb_inserted_relations += 1
 
@@ -835,12 +835,12 @@ class MetaGenerator(object):
                       - set(('eid', 'cwuri',
                              'is', 'is_instance_of', 'cw_source')))
 
-    def __init__(self, session, baseurl=None):
-        self.session = session
-        self.source = session.repo.system_source
+    def __init__(self, cnx, baseurl=None):
+        self._cnx = cnx
+        self.source = cnx.repo.system_source
         self.time = datetime.now()
         if baseurl is None:
-            config = session.vreg.config
+            config = cnx.vreg.config
             baseurl = config['base-url'] or config.default_base_url()
         if not baseurl[-1] == '/':
             baseurl += '/'
@@ -851,7 +851,7 @@ class MetaGenerator(object):
         # attributes/relations specific to each entity
         self.entity_attrs = ['cwuri']
         #self.entity_rels = [] XXX not handled (YAGNI?)
-        schema = session.vreg.schema
+        schema = cnx.vreg.schema
         rschema = schema.rschema
         for rtype in self.META_RELATIONS:
             if rschema(rtype).final:
@@ -861,7 +861,7 @@ class MetaGenerator(object):
 
     @cached
     def base_etype_dicts(self, etype):
-        entity = self.session.vreg['etypes'].etype_class(etype)(self.session)
+        entity = self._cnx.vreg['etypes'].etype_class(etype)(self._cnx)
         # entity are "surface" copied, avoid shared dict between copies
         del entity.cw_extra_kwargs
         entity.cw_edited = EditedEntity(entity)
@@ -877,7 +877,7 @@ class MetaGenerator(object):
         return entity, rels
 
     def init_entity(self, entity):
-        entity.eid = self.source.create_eid(self.session)
+        entity.eid = self.source.create_eid(self._cnx)
         for attr in self.entity_attrs:
             genfunc = self.generate(attr)
             if genfunc:
@@ -896,10 +896,10 @@ class MetaGenerator(object):
         return self.time
 
     def gen_created_by(self, entity):
-        return self.session.user.eid
+        return self._cnx.user.eid
 
     def gen_owned_by(self, entity):
-        return self.session.user.eid
+        return self._cnx.user.eid
 
 
 ###########################################################################
@@ -909,27 +909,27 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
     """Controller of the data import process. This version is based
     on direct insertions throught SQL command (COPY FROM or execute many).
 
-    >>> store = SQLGenObjectStore(session)
+    >>> store = SQLGenObjectStore(cnx)
     >>> store.create_entity('Person', ...)
     >>> store.flush()
     """
 
-    def __init__(self, session, dump_output_dir=None, nb_threads_statement=3):
+    def __init__(self, cnx, dump_output_dir=None, nb_threads_statement=3):
         """
         Initialize a SQLGenObjectStore.
 
         Parameters:
 
-          - session: session on the cubicweb instance
+          - cnx: connection on the cubicweb instance
           - dump_output_dir: a directory to dump failed statements
             for easier recovery. Default is None (no dump).
           - nb_threads_statement: number of threads used
             for SQL insertion (default is 3).
         """
-        super(SQLGenObjectStore, self).__init__(session)
+        super(SQLGenObjectStore, self).__init__(cnx)
         ### hijack default source
         self.source = SQLGenSourceWrapper(
-            self.source, session.vreg.schema,
+            self.source, cnx.vreg.schema,
             dump_output_dir=dump_output_dir,
             nb_threads_statement=nb_threads_statement)
         ### XXX This is done in super().__init__(), but should be
@@ -945,16 +945,16 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
         if subj_eid is None or obj_eid is None:
             return
         # XXX Could subjtype be inferred ?
-        self.source.add_relation(self.session, subj_eid, rtype, obj_eid,
+        self.source.add_relation(self._cnx, subj_eid, rtype, obj_eid,
                                  self.rschema(rtype).inlined, **kwargs)
         if self.rschema(rtype).symmetric:
-            self.source.add_relation(self.session, obj_eid, rtype, subj_eid,
+            self.source.add_relation(self._cnx, obj_eid, rtype, subj_eid,
                                      self.rschema(rtype).inlined, **kwargs)
 
     def drop_indexes(self, etype):
         """Drop indexes for a given entity type"""
         if etype not in self.indexes_etypes:
-            cu = self.session.cnxset.cu
+            cu = self._cnx.cnxset.cu
             def index_to_attr(index):
                 """turn an index name to (database) attribute name"""
                 return index.replace(etype.lower(), '').replace('idx', '').strip('_')
@@ -964,13 +964,13 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
                        if not index.endswith('key')]
             self.indexes_etypes[etype] = indices
         for index, attr in self.indexes_etypes[etype]:
-            self.session.system_sql('DROP INDEX %s' % index)
+            self._cnx.system_sql('DROP INDEX %s' % index)
 
     def create_indexes(self, etype):
         """Recreate indexes for a given entity type"""
         for index, attr in self.indexes_etypes.get(etype, []):
             sql = 'CREATE INDEX %s ON cw_%s(%s)' % (index, etype, attr)
-            self.session.system_sql(sql)
+            self._cnx.system_sql(sql)
 
 
 ###########################################################################
@@ -1066,7 +1066,7 @@ class SQLGenSourceWrapper(object):
             _insertdicts.clear()
             _inlined_relations_sql.clear()
 
-    def add_relation(self, session, subject, rtype, object,
+    def add_relation(self, cnx, subject, rtype, object,
                      inlined=False, **kwargs):
         if inlined:
             _sql = self._sql.inlined_relations
@@ -1095,7 +1095,7 @@ class SQLGenSourceWrapper(object):
         else:
             _sql[statement] = [data]
 
-    def add_entity(self, session, entity):
+    def add_entity(self, cnx, entity):
         with self._storage_handler(entity, 'added'):
             attrs = self.preprocess_entity(entity)
             rtypes = self._inlined_rtypes_cache.get(entity.cw_etype, ())
@@ -1111,25 +1111,25 @@ class SQLGenSourceWrapper(object):
     def _append_to_entities(self, sql, attrs):
         self._sql.entities[sql].append(attrs)
 
-    def _handle_insert_entity_sql(self, session, sql, attrs):
+    def _handle_insert_entity_sql(self, cnx, sql, attrs):
         # We have to overwrite the source given in parameters
         # as here, we directly use the system source
         attrs['asource'] = self.system_source.uri
         self._append_to_entities(sql, attrs)
 
-    def _handle_is_relation_sql(self, session, sql, attrs):
+    def _handle_is_relation_sql(self, cnx, sql, attrs):
         self._append_to_entities(sql, attrs)
 
-    def _handle_is_instance_of_sql(self, session, sql, attrs):
+    def _handle_is_instance_of_sql(self, cnx, sql, attrs):
         self._append_to_entities(sql, attrs)
 
-    def _handle_source_relation_sql(self, session, sql, attrs):
+    def _handle_source_relation_sql(self, cnx, sql, attrs):
         self._append_to_entities(sql, attrs)
 
     # add_info is _copypasted_ from the one in NativeSQLSource. We want it
     # there because it will use the _handlers of the SQLGenSourceWrapper, which
     # are not like the ones in the native source.
-    def add_info(self, session, entity, source, extid, complete):
+    def add_info(self, cnx, entity, source, extid, complete):
         """add type and source info for an eid into the system table"""
         # begin by inserting eid/type/source/extid into the entities table
         if extid is not None:
@@ -1137,24 +1137,24 @@ class SQLGenSourceWrapper(object):
             extid = b64encode(extid)
         attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
                  'asource': source.uri}
-        self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
+        self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:
-            self._handle_is_relation_sql(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                         (entity.eid, eschema_eid(session, entity.e_schema)))
+            self._handle_is_relation_sql(cnx, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                         (entity.eid, eschema_eid(cnx, entity.e_schema)))
         except IndexError:
             # during schema serialization, skip
             pass
         else:
             for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-                self._handle_is_relation_sql(session,
+                self._handle_is_relation_sql(cnx,
                                              'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                             (entity.eid, eschema_eid(session, eschema)))
+                                             (entity.eid, eschema_eid(cnx, eschema)))
         if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
-            self._handle_is_relation_sql(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
+            self._handle_is_relation_sql(cnx, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
                                          (entity.eid, source.eid))
         # now we can update the full text index
         if self.do_fti and self.need_fti_indexation(entity.cw_etype):
             if complete:
                 entity.complete(entity.e_schema.indexable_attributes())
-            self.index_entity(session, entity=entity)
+            self.index_entity(cnx, entity=entity)
