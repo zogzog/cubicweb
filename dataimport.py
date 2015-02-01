@@ -789,11 +789,11 @@ class NoHookRQLObjectStore(RQLObjectStore):
         entity = copy(entity)
         entity.cw_edited = copy(entity.cw_edited)
         entity.cw_clear_relation_cache()
-        self.metagen.init_entity(entity)
         entity.cw_edited.update(kwargs, skipsec=False)
+        entity_source, extid = self.metagen.init_entity(entity)
         cnx = self._cnx
         self.source.add_entity(cnx, entity)
-        self.source.add_info(cnx, entity, self.source, None)
+        self.source.add_info(cnx, entity, entity_source, extid)
         kwargs = dict()
         if inspect.getargspec(self.add_relation).keywords:
             kwargs['subjtype'] = entity.cw_etype
@@ -836,16 +836,19 @@ class MetaGenerator(object):
                       - set(('eid', 'cwuri',
                              'is', 'is_instance_of', 'cw_source')))
 
-    def __init__(self, cnx, baseurl=None):
+    def __init__(self, cnx, baseurl=None, source=None):
         self._cnx = cnx
-        self.source = cnx.repo.system_source
-        self.time = datetime.now()
         if baseurl is None:
             config = cnx.vreg.config
             baseurl = config['base-url'] or config.default_base_url()
         if not baseurl[-1] == '/':
             baseurl += '/'
-        self.baseurl =  baseurl
+        self.baseurl = baseurl
+        if source is None:
+            source = cnx.repo.system_source
+        self.source = source
+        self.create_eid = cnx.repo.system_source.create_eid
+        self.time = datetime.now()
         # attributes/relations shared by all entities of the same type
         self.etype_attrs = []
         self.etype_rels = []
@@ -881,7 +884,8 @@ class MetaGenerator(object):
         return entity, rels
 
     def init_entity(self, entity):
-        entity.eid = self.source.create_eid(self._cnx)
+        entity.eid = self.create_eid(self._cnx)
+        extid = entity.cw_edited.get('cwuri')
         for attr in self.entity_attrs:
             if attr in entity.cw_edited:
                 # already set, skip this attribute
@@ -889,6 +893,9 @@ class MetaGenerator(object):
             genfunc = self.generate(attr)
             if genfunc:
                 entity.cw_edited.edited_attribute(attr, genfunc(entity))
+        if isinstance(extid, unicode):
+            extid = extid.encode('utf-8')
+        return self.source, extid
 
     def generate(self, rtype):
         return getattr(self, 'gen_%s' % rtype, None)
