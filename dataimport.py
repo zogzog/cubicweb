@@ -883,6 +883,9 @@ class MetaGenerator(object):
     def init_entity(self, entity):
         entity.eid = self.source.create_eid(self._cnx)
         for attr in self.entity_attrs:
+            if attr in entity.cw_edited:
+                # already set, skip this attribute
+                continue
             genfunc = self.generate(attr)
             if genfunc:
                 entity.cw_edited.edited_attribute(attr, genfunc(entity))
@@ -891,6 +894,7 @@ class MetaGenerator(object):
         return getattr(self, 'gen_%s' % rtype, None)
 
     def gen_cwuri(self, entity):
+        assert self.baseurl, 'baseurl is None while generating cwuri'
         return u'%s%s' % (self.baseurl, entity.eid)
 
     def gen_creation_date(self, entity):

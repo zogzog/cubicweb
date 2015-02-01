@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+
 import datetime as DT
 from StringIO import StringIO
+
 from logilab.common.testlib import TestCase, unittest_main
+
 from cubicweb import dataimport
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -23,6 +26,7 @@ class RQLObjectStoreTC(CubicWebTC):
             groups = cnx.execute('CWGroup X WHERE U in_group X, U login "lgn"')
             self.assertEqual(1, len(users))
             self.assertEqual(group_eid, groups.one().eid)
+
 
 class CreateCopyFromBufferTC(TestCase):
 
@@ -135,8 +139,8 @@ class UcsvreaderTC(TestCase):
 
 
 class MetaGeneratorTC(CubicWebTC):
+
     def test_dont_generate_relation_to_internal_manager(self):
-        from cubicweb.server.edition import EditedEntity
         with self.admin_access.repo_cnx() as cnx:
             metagen = dataimport.MetaGenerator(cnx)
             self.assertIn('created_by', metagen.etype_rels)
@@ -145,6 +149,19 @@ class MetaGeneratorTC(CubicWebTC):
             metagen = dataimport.MetaGenerator(cnx)
             self.assertNotIn('created_by', metagen.etype_rels)
             self.assertNotIn('owned_by', metagen.etype_rels)
+
+    def test_dont_generate_specified_values(self):
+        with self.admin_access.repo_cnx() as cnx:
+            metagen = dataimport.MetaGenerator(cnx)
+            # hijack gen_modification_date to ensure we don't go through it
+            metagen.gen_modification_date = None
+            md = DT.datetime.now() - DT.timedelta(days=1)
+            entity, rels = metagen.base_etype_dicts('CWUser')
+            entity.cw_edited.update(dict(modification_date=md))
+            with cnx.ensure_cnx_set:
+                metagen.init_entity(entity)
+            self.assertEqual(entity.cw_edited['modification_date'], md)
+
 
 if __name__ == '__main__':
     unittest_main()
