@@ -29,3 +29,18 @@ class Person(EntityType):
 class Societe(EntityType):
     nom = String()
     salaire_total = Int(formula='Any SUM(SA) GROUPBY X WHERE P travaille X, P salaire SA')
+
+
+class Agent(EntityType):
+    asalae_id = String(formula='Any E WHERE M mirror_of X, M extid E')
+
+class MirrorEntity(EntityType):
+    extid = String(required=True, unique=True,
+                   description=_('external identifier of the object'))
+
+
+class mirror_of(RelationDefinition):
+    subject  = 'MirrorEntity'
+    object = ('Agent', 'Societe')
+    cardinality = '?*'
+    inlined = True

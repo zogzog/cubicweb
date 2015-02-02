@@ -1072,6 +1072,7 @@ class CubicWebSchema(Schema):
         for rdef in self.iter_computed_attributes():
             rqlst = parse(rdef.formula)
             select = rqlst.children[0]
+            select.add_type_restriction(select.defined_vars['X'], str(rdef.subject))
             analyzer.visit(select)
             _check_valid_formula(rdef, rqlst)
             rdef.formula_select = select # avoid later recomputation

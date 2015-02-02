@@ -299,6 +299,10 @@ class SchemaReaderClassTest(TestCase):
                                        'P works_for X, P salary SA')
         good_schema = build_schema_from_namespace(vars().items())
 
+        # ensure 'X is Company' is added to the rqlst to avoid ambiguities, see #4901163
+        self.assertEqual(str(good_schema['Company'].rdef('total_salary').formula_select),
+                         'Any SUM(SA) GROUPBY X WHERE P works_for X, P salary SA, X is Company')
+
         class Company(EntityType):
             total_salary = String(formula='Any SUM(SA) GROUPBY X WHERE '
                                           'P works_for X, P salary SA')

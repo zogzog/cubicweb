@@ -134,6 +134,13 @@ class ComputedAttributeTC(CubicWebTC):
             self.assertEqual(rset[0][0], 2014 - 1990)
 
 
+    def test_recompute_on_ambiguous_relation(self):
+        # check we don't end up with TypeResolverException as in #4901163
+        with self.admin_access.client_cnx() as cnx:
+            societe = cnx.create_entity('Societe', nom=u'Foo')
+            cnx.create_entity('MirrorEntity', mirror_of=societe, extid=u'1')
+            cnx.commit()
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

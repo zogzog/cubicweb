@@ -161,6 +161,8 @@ class _FormulaDependenciesMatrix(object):
             # expected to have been set by finalize_computed_attributes
             select = rdef.formula_select
             for rel_node in select.get_nodes(nodes.Relation):
+                if rel_node.is_types_restriction():
+                    continue
                 rschema = schema.rschema(rel_node.r_type)
                 lhs, rhs = rel_node.get_variable_parts()
                 for sol in select.solutions:
