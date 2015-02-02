@@ -14,6 +14,7 @@ Build-Depends:
  python-logilab-common,
  python-unittest2 | python (>= 2.7),
  python-logilab-mtconverter,
+ python-markdown,
  python-rql,
  python-yams (>= 0.40.0),
  python-lxml,
