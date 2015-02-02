@@ -90,8 +90,8 @@ def deserialize_schema(schema, cnx):
 
     # Computed Rtype
     with cnx.ensure_cnx_set:
-        tables = set(dbhelper.list_tables(cnx.cnxset.cu))
-        has_computed_relations = 'cw_CWComputedRType' in tables
+        tables = set(t.lower() for t in dbhelper.list_tables(cnx.cnxset.cu))
+        has_computed_relations = 'cw_cwcomputedrtype' in tables
     if has_computed_relations:
         rset = cnx.execute(
             'Any X, N, R, D WHERE X is CWComputedRType, X name N, '
