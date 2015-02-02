@@ -167,6 +167,11 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
             if not eschema.final:
                 add_msg(w, 'This %s:' % etype)
                 add_msg(w, 'New %s' % etype)
+                if libconfig is not None:  # processing a cube
+                    # As of 3.20.3 we no longer use it, but keeping this string
+                    # allows developers to run i18ncube with new cubicweb and still
+                    # have the right translations at runtime for older versions
+                    add_msg(w, 'This %s' % etype)
             if eschema.description and not eschema.description in done:
                 done.add(eschema.description)
                 add_msg(w, eschema.description)

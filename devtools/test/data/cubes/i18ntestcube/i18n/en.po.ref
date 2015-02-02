@@ -21,6 +21,9 @@ msgstr ""
 msgid "Forum_plural"
 msgstr ""
 
+msgid "This Forum"
+msgstr ""
+
 msgid "This Forum:"
 msgstr ""
 
@@ -45,6 +48,9 @@ msgid "ForumThread"
 msgstr ""
 
 msgid "ForumThread_plural"
+msgstr ""
+
+msgid "This ForumThread"
 msgstr ""
 
 msgid "This ForumThread:"
