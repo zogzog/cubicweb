@@ -1094,7 +1094,10 @@ class CubicWebSchema(Schema):
                 if self[objtype].final:
                     raise BadSchemaDefinition('computed relations cannot be final')
                 rdef = ybo.RelationDefinition(
-                    subjtype, rschema.type, objtype)
+                    subjtype, rschema.type, objtype,
+                    __permissions__={'add': (),
+                                     'delete': (),
+                                     'read': ('managers', 'users', 'guests')})
                 rdef.infered = True
                 self.add_relation_def(rdef)
 

@@ -298,10 +298,14 @@ class SchemaReaderClassTest(TestCase):
             total_salary = Int(formula='Any SUM(SA) GROUPBY X WHERE '
                                        'P works_for X, P salary SA')
         good_schema = build_schema_from_namespace(vars().items())
-
+        rdef = good_schema['Company'].rdef('total_salary')
         # ensure 'X is Company' is added to the rqlst to avoid ambiguities, see #4901163
-        self.assertEqual(str(good_schema['Company'].rdef('total_salary').formula_select),
+        self.assertEqual(str(rdef.formula_select),
                          'Any SUM(SA) GROUPBY X WHERE P works_for X, P salary SA, X is Company')
+        # check relation definition permissions
+        self.assertEqual(rdef.permissions,
+                         {'add': (), 'update': (),
+                          'read': ('managers', 'users', 'guests')})
 
         class Company(EntityType):
             total_salary = String(formula='Any SUM(SA) GROUPBY X WHERE '
@@ -358,11 +362,15 @@ class SchemaReaderComputedRelationAndAttributesTest(TestCase):
                          schema['produces_and_buys2'].rdefs.keys())
         self.assertEqual([('Company', 'Service'), ('Person', 'Service')],
                          schema['reproduce'].rdefs.keys())
-        # check relations as marked infered
-        self.assertTrue(
-            schema['produces_and_buys'].rdefs[('Person','Service')].infered)
+        # check relation definitions are marked infered
+        rdef = schema['produces_and_buys'].rdefs[('Person','Service')]
+        self.assertTrue(rdef.infered)
+        # and have no add/delete permissions
+        self.assertEqual(rdef.permissions,
+                         {'add': (),
+                          'delete': (),
+                          'read': ('managers', 'users', 'guests')})
 
-        del schema
         class autoname(ComputedRelation):
             rule = 'S produce X, X name O'
 
