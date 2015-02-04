@@ -511,7 +511,8 @@ function removeBookmark(beid) {
     d.addCallback(function(boxcontent) {
         $('#bookmarks_box').loadxhtml(AJAX_BASE_URL,
                                       ajaxFuncArgs('render', null, 'ctxcomponents',
-                                                   'bookmarks_box'));
+                                                   'bookmarks_box'),
+                                      null, 'swap');
         document.location.hash = '#header';
         updateMessage(_("bookmark has been removed"));
     });

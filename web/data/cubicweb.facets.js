@@ -116,7 +116,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
                 $node.loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {
                     'rql': rql
                 },
-                'ctxcomponents', 'breadcrumbs'));
+                'ctxcomponents', 'breadcrumbs'), null, 'swap');
             }
         }
         var mainvar = null;

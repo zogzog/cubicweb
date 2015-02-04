@@ -17,7 +17,7 @@ function ajaxBoxValidateSelectorInput(boxid, eid, separator, fname, msg) {
     d.addCallback(function() {
             $('#' + holderid).empty();
             var formparams = ajaxFuncArgs('render', null, 'ctxcomponents', boxid, eid);
-            $('#' + cw.utils.domid(boxid) + eid).loadxhtml(AJAX_BASE_URL, formparams);
+            $('#' + cw.utils.domid(boxid) + eid).loadxhtml(AJAX_BASE_URL, formparams, null, 'swap');
             if (msg) {
                 document.location.hash = '#header';
                 updateMessage(msg);
@@ -29,7 +29,7 @@ function ajaxBoxRemoveLinkedEntity(boxid, eid, relatedeid, delfname, msg) {
     var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs(delfname, null, eid, relatedeid));
     d.addCallback(function() {
             var formparams = ajaxFuncArgs('render', null, 'ctxcomponents', boxid, eid);
-            $('#' + cw.utils.domid(boxid) + eid).loadxhtml(AJAX_BASE_URL, formparams);
+            $('#' + cw.utils.domid(boxid) + eid).loadxhtml(AJAX_BASE_URL, formparams, null, 'swap');
             if (msg) {
                 document.location.hash = '#header';
                 updateMessage(msg);

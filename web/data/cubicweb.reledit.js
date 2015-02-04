@@ -53,7 +53,7 @@ jQuery.extend(cw.reledit, {
                 return;
             }
         }
-        jQuery('#'+params.divid+'-reledit').loadxhtml(AJAX_BASE_URL, params, 'post');
+        jQuery('#'+params.divid+'-reledit').loadxhtml(AJAX_BASE_URL, params, 'post', 'swap');
         jQuery(cw).trigger('reledit-reloaded', params);
     },
 
@@ -69,7 +69,7 @@ jQuery.extend(cw.reledit, {
                     pageid: pageid, action: action,
                     eid: eid, divid: divid, formid: formid,
                     reload: reload, vid: vid};
-        var d = jQuery('#'+divid+'-reledit').loadxhtml(AJAX_BASE_URL, args, 'post');
+        var d = jQuery('#'+divid+'-reledit').loadxhtml(AJAX_BASE_URL, args, 'post', 'swap');
         d.addCallback(function () {cw.reledit.showInlineEditionForm(divid);});
     }
 });
