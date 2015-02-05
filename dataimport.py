@@ -1155,6 +1155,4 @@ class SQLGenSourceWrapper(object):
                                          (entity.eid, source.eid))
         # now we can update the full text index
         if self.do_fti and self.need_fti_indexation(entity.cw_etype):
-            if complete:
-                entity.complete(entity.e_schema.indexable_attributes())
             self.index_entity(cnx, entity=entity)
