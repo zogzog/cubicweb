@@ -93,6 +93,10 @@ class SetOwnershipHook(MetaDataHook):
 class SyncOwnersOp(hook.DataOperationMixIn, hook.Operation):
     def precommit_event(self):
         for compositeeid, composedeid in self.get_data():
+            if self.cnx.deleted_in_transaction(compositeeid):
+                continue
+            if self.cnx.deleted_in_transaction(composedeid):
+                continue
             self.cnx.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
                                  'NOT EXISTS(X owned_by U, X eid %(x)s)',
                                  {'c': compositeeid, 'x': composedeid})

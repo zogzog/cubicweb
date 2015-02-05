@@ -521,6 +521,7 @@ class ResultSet(object):
     def _rset_structure(self, eschema, entity_col):
         eid_col = col = entity_col
         rqlst = self.syntax_tree()
+        get_rschema = eschema.schema.rschema
         attr_cols = {}
         rel_cols = {}
         if rqlst.TYPE == 'select':
@@ -532,10 +533,7 @@ class ResultSet(object):
         # take care, due to outer join support, we may find None
         # values for non final relation
         for i, attr, role in attr_desc_iterator(select, col, entity_col):
-            if role == 'subject':
-                rschema = eschema.subjrels[attr]
-            else:
-                rschema = eschema.objrels[attr]
+            rschema = get_rschema(attr)
             if rschema.final:
                 if attr == 'eid':
                     eid_col = i
