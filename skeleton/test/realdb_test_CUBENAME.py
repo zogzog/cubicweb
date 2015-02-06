@@ -13,13 +13,14 @@
 # FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
 # details.
 #
-# You should have received a copy of the GNU Lesser General Public License along
-# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU Lesser General Public License
+# along with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 """
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.realdbtest import buildconfig, loadconfig
+
 
 def setUpModule(options):
     if options.source:
@@ -28,13 +29,13 @@ def setUpModule(options):
         raise Exception('either <sourcefile> or <dbname> options are required')
     else:
         configcls = buildconfig(options.dbuser, options.dbpassword,
-                                               options.dbname, options.euser,
-                                               options.epassword)
+                                options.dbname,
+                                options.euser, options.epassword)
     RealDatabaseTC.configcls = configcls
 
 
 class RealDatabaseTC(CubicWebTC):
-    configcls = None # set by setUpModule()
+    configcls = None  # set by setUpModule()
 
     def test_all_primaries(self):
         for rset in self.iter_individual_rsets(limit=50):
