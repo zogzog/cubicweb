@@ -354,14 +354,14 @@ class _CubicWebRequestBase(RequestSessionBase):
 
     def _load_search_state(self, searchstate):
         if searchstate is None or searchstate == 'normal':
-            self._search_state = (searchstate or 'normal',)
+            self._search_state = ('normal',)
         else:
             self._search_state = ('linksearch', searchstate.split(':'))
             assert len(self._search_state[-1]) == 4, 'invalid searchstate'
 
     @property
     def search_state(self):
-        """search state: 'normal' or 'linksearch' (eg searching for an object
+        """search state: 'normal' or 'linksearch' (i.e. searching for an object
         to create a relation with another)"""
         if self._search_state is None:
             searchstate = self.session.data.get('search_state', 'normal')
