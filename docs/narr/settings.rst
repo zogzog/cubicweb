@@ -31,7 +31,7 @@ in the cubicweb configuration (a.k.a. `all-in-one.conf`):
 
     .. code-block:: ini
 
-        pyramid-session-secret = <some other very secret passphrase>
+        pyramid-auth-secret = <some other very secret passphrase>
 
 
 .. _pyramid_settings:
