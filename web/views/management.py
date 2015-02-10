@@ -182,6 +182,13 @@ class CwStats(View):
 
     def call(self):
         stats = self._cw.call_service('repo_stats')
+        stats['looping_tasks'] = ', '.join('%s (%s seconds)' % (n, i) for n, i in stats['looping_tasks'])
+        stats['threads'] = ', '.join(sorted(stats['threads']))
+        for k in stats:
+            if k in ('extid_cache_size', 'type_source_cache_size'):
+                continue
+            if k.endswith('_cache_size'):
+                stats[k] = '%s / %s' % (stats[k]['size'], stats[k]['maxsize'])
         results = []
         for element in stats:
             results.append(u'%s %s' % (element, stats[element]))

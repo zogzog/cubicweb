@@ -43,7 +43,7 @@ class StatsService(Service):
             (len(source._cache), repo.config['rql-cache-size'],
             source.cache_hit, source.cache_miss, 'sql'),
             ):
-            results['%s_cache_size' % title] = '%s / %s' % (size, maxsize)
+            results['%s_cache_size' % title] = {'size': size, 'maxsize': maxsize}
             results['%s_cache_hit' % title] = hits
             results['%s_cache_miss' % title] = misses
             results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
@@ -53,9 +53,9 @@ class StatsService(Service):
         results['nb_open_sessions'] = len(repo._sessions)
         results['nb_active_threads'] = threading.activeCount()
         looping_tasks = repo._tasks_manager._looping_tasks
-        results['looping_tasks'] = ', '.join(str(t) for t in looping_tasks)
+        results['looping_tasks'] = [(t.name, t.interval) for t in looping_tasks]
         results['available_cnxsets'] = repo._cnxsets_pool.qsize()
-        results['threads'] = ', '.join(sorted(str(t) for t in threading.enumerate()))
+        results['threads'] = [t.name for t in threading.enumerate()]
         return results
 
 class GcStatsService(Service):
