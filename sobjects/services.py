@@ -100,7 +100,7 @@ class GcStatsService(Service):
         results['lookupclasses'] = values
         values = sorted(ocounters.iteritems(), key=lambda x: x[1], reverse=True)[:nmax]
         results['referenced'] = values
-        results['unreachable'] = len(garbage)
+        results['unreachable'] = garbage
         return results
 
 
