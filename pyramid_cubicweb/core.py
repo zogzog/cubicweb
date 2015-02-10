@@ -1,3 +1,5 @@
+import itertools
+
 from contextlib import contextmanager
 from warnings import warn
 from cgi import FieldStorage
@@ -70,6 +72,12 @@ class Session(cwsession.Session):
             self._protect_data_access = False
 
 
+def cw_headers(request):
+    return itertools.chain(
+        *[[(k, item) for item in v]
+          for k, v in request.cw_request.headers_out.getAllRawHeaders()])
+
+
 @contextmanager
 def cw_to_pyramid(request):
     """ Context manager to wrap a call to the cubicweb API.
@@ -80,7 +88,8 @@ def cw_to_pyramid(request):
         yield
     except cubicweb.web.Redirect as ex:
         assert 300 <= ex.status < 400
-        raise httpexceptions.status_map[ex.status](ex.location)
+        raise httpexceptions.status_map[ex.status](
+            ex.location, headers=cw_headers(request))
     except cubicweb.web.StatusResponse as ex:
         warn('[3.16] StatusResponse is deprecated use req.status_out',
              DeprecationWarning, stacklevel=2)
@@ -91,13 +100,15 @@ def cw_to_pyramid(request):
             request.cw_request._(
                 'You\'re not authorized to access this page. '
                 'If you think you should, please contact the site '
-                'administrator.'))
+                'administrator.'),
+            headers=cw_headers(request))
     except cubicweb.web.Forbidden:
         raise httpexceptions.HTTPForbidden(
             request.cw_request._(
                 'This action is forbidden. '
                 'If you think it should be allowed, please contact the site '
-                'administrator.'))
+                'administrator.'),
+            headers=cw_headers(request))
     except (rql.BadRQLQuery, cubicweb.web.RequestError) as ex:
         raise
 
