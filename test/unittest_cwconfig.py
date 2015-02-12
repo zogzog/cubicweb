@@ -104,11 +104,14 @@ class CubicWebConfigurationTC(TestCase):
     def test_appobjects_path(self):
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
         self.config.adjust_sys_path()
-        self.assertEqual([unabsolutize(p) for p in self.config.appobjects_path()],
-                          ['entities', 'web/views', 'sobjects', 'hooks',
-                           'file/entities', 'file/views.py', 'file/hooks',
-                           'email/entities.py', 'email/views', 'email/hooks.py',
-                           'test/data/entities.py', 'test/data/views.py'])
+        path = [unabsolutize(p) for p in self.config.appobjects_path()]
+        self.assertEqual(path[0], 'entities')
+        self.assertCountEqual(path[1:4], ['web/views', 'sobjects', 'hooks'])
+        self.assertEqual(path[4], 'file/entities')
+        self.assertCountEqual(path[5:7], ['file/views.py', 'file/hooks'])
+        self.assertEqual(path[7], 'email/entities.py')
+        self.assertCountEqual(path[8:10], ['email/views', 'email/hooks.py'])
+        self.assertEqual(path[10:], ['test/data/entities.py', 'test/data/views.py'])
 
     def test_cubes_path(self):
         # make sure we don't import the email cube, but the stdlib email package
