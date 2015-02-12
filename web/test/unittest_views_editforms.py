@@ -41,7 +41,7 @@ class AutomaticEntityFormTC(CubicWebTC):
         with self.admin_access.web_request() as req:
             AFFK.tag_subject_of(('CWUser', 'login', '*'),
                                 {'widget': AutoCompletionWidget(autocomplete_initfunc='get_logins')})
-            form = self.vreg['forms'].select('edition', req, entity=self.user(req))
+            form = self.vreg['forms'].select('edition', req, entity=req.user)
             field = form.field_by_name('login', 'subject')
             self.assertIsInstance(field.widget, AutoCompletionWidget)
             AFFK.del_rtag('CWUser', 'login', '*', 'subject')
