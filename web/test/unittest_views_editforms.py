@@ -52,18 +52,18 @@ class AutomaticEntityFormTC(CubicWebTC):
             e = self.vreg['etypes'].etype_class('CWUser')(req)
             # see custom configuration in views.cwuser
             self.assertEqual(rbc(e, 'main', 'attributes'),
-                              [('login', 'subject'),
-                               ('upassword', 'subject'),
-                               ('firstname', 'subject'),
-                               ('surname', 'subject'),
-                               ('in_group', 'subject'),
-                               ])
-            self.assertListEqual(rbc(e, 'muledit', 'attributes'),
+                             [('login', 'subject'),
+                              ('upassword', 'subject'),
+                              ('firstname', 'subject'),
+                              ('surname', 'subject'),
+                              ('in_group', 'subject'),
+                              ])
+            self.assertEqual(rbc(e, 'muledit', 'attributes'),
                                   [('login', 'subject'),
                                    ('upassword', 'subject'),
                                    ('in_group', 'subject'),
                                    ])
-            self.assertListEqual(rbc(e, 'main', 'metadata'),
+            self.assertCountEqual(rbc(e, 'main', 'metadata'),
                                   [('last_login_time', 'subject'),
                                    ('cw_source', 'subject'),
                                    ('creation_date', 'subject'),
@@ -76,7 +76,7 @@ class AutomaticEntityFormTC(CubicWebTC):
             # XXX skip 'tags' relation here and in the hidden category because
             # of some test interdependancy when pytest is launched on whole cw
             # (appears here while expected in hidden
-            self.assertListEqual([x for x in rbc(e, 'main', 'relations')
+            self.assertCountEqual([x for x in rbc(e, 'main', 'relations')
                                    if x != ('tags', 'object')],
                                   [('connait', 'subject'),
                                    ('custom_workflow', 'subject'),
@@ -124,7 +124,7 @@ class AutomaticEntityFormTC(CubicWebTC):
             self.assertListEqual(rbc(e, 'muledit', 'attributes'),
                                   [('nom', 'subject'),
                                    ])
-            self.assertListEqual(rbc(e, 'main', 'metadata'),
+            self.assertCountEqual(rbc(e, 'main', 'metadata'),
                                   [('cw_source', 'subject'),
                                    ('creation_date', 'subject'),
                                    ('cwuri', 'subject'),
@@ -132,7 +132,7 @@ class AutomaticEntityFormTC(CubicWebTC):
                                    ('created_by', 'subject'),
                                    ('owned_by', 'subject'),
                                    ])
-            self.assertListEqual(rbc(e, 'main', 'relations'),
+            self.assertCountEqual(rbc(e, 'main', 'relations'),
                                   [('travaille', 'subject'),
                                    ('manager', 'object'),
                                    ('connait', 'object'),
