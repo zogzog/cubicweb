@@ -151,15 +151,15 @@ class AutomaticEntityFormTC(CubicWebTC):
     def test_attribute_add_permissions(self):
         # https://www.cubicweb.org/ticket/4342844
         with self.admin_access.repo_cnx() as cnx:
-            self.create_user(cnx, 'toto')
+            self.create_user(cnx, u'toto')
             cnx.commit()
-        with self.new_access('toto').web_request() as req:
+        with self.new_access(u'toto').web_request() as req:
             e = self.vreg['etypes'].etype_class('Personne')(req)
             cform = self.vreg['forms'].select('edition', req, entity=e)
             self.assertIn('sexe',
                           [rschema.type
                            for rschema, _ in cform.editable_attributes()])
-            with self.new_access('toto').repo_cnx() as cnx:
+            with self.new_access(u'toto').repo_cnx() as cnx:
                 person_eid = cnx.create_entity('Personne', nom=u'Robert').eid
                 cnx.commit()
             person = req.entity_from_eid(person_eid)
