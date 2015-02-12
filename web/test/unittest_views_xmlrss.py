@@ -11,13 +11,13 @@ class EntityXMLViewTC(CubicWebTC):
                 req.user.view('xml'),
                 '''\
 <CWUser eid="6" cwuri="http://testing.fr/cubicweb/6" cwsource="system">
-  <login>admin</login>
-  <upassword/>
-  <firstname/>
-  <surname/>
-  <last_login_time/>
   <creation_date>%(cdate)s</creation_date>
+  <firstname/>
+  <last_login_time/>
+  <login>admin</login>
   <modification_date>%(mdate)s</modification_date>
+  <surname/>
+  <upassword/>
   <tags role="object">
   </tags>
   <in_group role="subject">

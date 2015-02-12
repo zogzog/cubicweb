@@ -79,7 +79,7 @@ class XMLItemView(EntityView):
         self.w(u'<%s eid="%s" cwuri="%s" cwsource="%s">\n'
                % (entity.cw_etype, entity.eid, xml_escape(entity.cwuri),
                   xml_escape(source)))
-        for rschema, attrschema in entity.e_schema.attribute_definitions():
+        for rschema, attrschema in sorted(entity.e_schema.attribute_definitions()):
             attr = rschema.type
             if attr in ('eid', 'cwuri'):
                 continue
