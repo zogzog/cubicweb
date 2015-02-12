@@ -251,7 +251,7 @@ class ApptestConfiguration(BaseApptestConfiguration):
     skip_db_create_and_restore = False
 
     def __init__(self, appid, apphome=None,
-                 log_threshold=logging.CRITICAL, sourcefile=None):
+                 log_threshold=logging.WARNING, sourcefile=None):
         BaseApptestConfiguration.__init__(self, appid, apphome,
                                           log_threshold=log_threshold)
         self.init_repository = sourcefile is None
