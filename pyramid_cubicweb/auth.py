@@ -2,29 +2,37 @@ import datetime
 import logging
 import warnings
 
+from zope.interface import implementer
+
+from pyramid.settings import asbool
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid_cubicweb.core import get_principals
+from pyramid_multiauth import MultiAuthenticationPolicy
 
 from pyramid.authentication import AuthTktAuthenticationPolicy
+
+from pyramid.interfaces import IAuthenticationPolicy
 
 log = logging.getLogger(__name__)
 
 
-class CubicWebAuthTktAuthenticationPolicy(AuthTktAuthenticationPolicy):
+@implementer(IAuthenticationPolicy)
+class UpdateLoginTimeAuthenticationPolicy(object):
     """An authentication policy that update the user last_login_time.
 
-    The update is done in the 'remember' method, which is called on login,
-    and each time the authentication ticket is reissued.
-
-    Meaning, the last_login_time is updated reissue_time seconds (maximum)
-    before the last request by the user.
+    The update is done in the 'remember' method, which is called by the login
+    views login,
 
     Usually used via :func:`includeme`.
     """
 
+    def authenticated_userid(self, request):
+        pass
+
+    def effective_principals(self, request):
+        return ()
+
     def remember(self, request, principal, **kw):
-        headers = super(CubicWebAuthTktAuthenticationPolicy, self).remember(
-            request, principal, **kw)
         try:
             repo = request.registry['cubicweb.repository']
             with repo.internal_cnx() as cnx:
@@ -35,7 +43,10 @@ class CubicWebAuthTktAuthenticationPolicy(AuthTktAuthenticationPolicy):
                 cnx.commit()
         except:
             log.exception("Failed to update last_login_time")
-        return headers
+        return ()
+
+    def forget(self, request):
+        return ()
 
 
 def includeme(config):
@@ -45,25 +56,41 @@ def includeme(config):
 
     See also :ref:`defaults_module`
     """
-    secret = config.registry['cubicweb.config']['pyramid-auth-secret']
+    settings = config.registry.settings
 
-    if not secret:
-        secret = 'notsosecret'
-        warnings.warn('''
+    policies = []
 
-            !! WARNING !! !! WARNING !!
+    if asbool(settings.get('cubicweb.auth.update_login_time', True)):
+        policies.append(UpdateLoginTimeAuthenticationPolicy())
 
-            The authentication cookies are signed with a static secret key.
-            To put your own secret key, edit your all-in-one.conf file
-            and set the 'pyramid-auth-secret' key.
+    if asbool(settings.get('cubicweb.auth.authtkt', True)):
+        secret = config.registry['cubicweb.config']['pyramid-auth-secret']
 
-            YOU SHOULD STOP THIS INSTANCE unless your really know what you
-            are doing !!
+        if not secret:
+            secret = 'notsosecret'
+            warnings.warn('''
 
-        ''')
+                !! WARNING !! !! WARNING !!
 
-    config.set_authentication_policy(
-        CubicWebAuthTktAuthenticationPolicy(
-            secret, callback=get_principals, hashalg='sha512',
-            reissue_time=3600))
+                The authentication cookies are signed with a static secret key.
+                To put your own secret key, edit your all-in-one.conf file
+                and set the 'pyramid-auth-secret' key.
+
+                YOU SHOULD STOP THIS INSTANCE unless your really know what you
+                are doing !!
+
+            ''')
+
+        policies.append(
+            AuthTktAuthenticationPolicy(
+                secret, hashalg='sha512', reissue_time=3600))
+
+    kw = {}
+    if asbool(settings.get('cubicweb.auth.groups_principals', True)):
+        kw['callback'] = get_principals
+
+    authpolicy = MultiAuthenticationPolicy(policies, **kw)
+    config.registry['cubicweb.authpolicy'] = authpolicy
+
+    config.set_authentication_policy(authpolicy)
     config.set_authorization_policy(ACLAuthorizationPolicy())
