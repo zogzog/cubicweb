@@ -570,7 +570,7 @@ class QuerierHelper(object):
             except UnknownEid:
                 # we want queries such as "Any X WHERE X eid 9999" return an
                 # empty result instead of raising UnknownEid
-                return empty_rset(rql, args, rqlst)
+                return empty_rset(rql, args)
             if args and rql not in self._rql_ck_cache:
                 self._rql_ck_cache[rql] = eidkeys
                 if eidkeys:
