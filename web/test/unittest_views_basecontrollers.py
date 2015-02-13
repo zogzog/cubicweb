@@ -548,7 +548,7 @@ class EditControllerTC(CubicWebTC):
             self.assertIn('_cwmsgid', params)
             eid = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
             req.execute('SET X use_email E WHERE E eid %(e)s, X eid %(x)s',
-                        {'x': self.session.user.eid, 'e': eid})
+                        {'x': req.user.eid, 'e': eid})
             req.cnx.commit()
             req.form = {'eid': unicode(eid), '__type:%s'%eid: 'EmailAddress',
                         '__action_delete': ''}
