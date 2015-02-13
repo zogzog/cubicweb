@@ -319,8 +319,12 @@ class CWRTypeUpdateOp(MemSchemaOperation):
         if 'fulltext_container' in self.values:
             op = UpdateFTIndexOp.get_instance(cnx)
             for subjtype, objtype in rschema.rdefs:
-                op.add_data(subjtype)
-                op.add_data(objtype)
+                if self.values['fulltext_container'] == 'subject':
+                    op.add_data(subjtype)
+                    op.add_data(objtype)
+                else:
+                    op.add_data(objtype)
+                    op.add_data(subjtype)
         # update the in-memory schema first
         self.oldvalues = dict( (attr, getattr(rschema, attr)) for attr in self.values)
         self.rschema.__dict__.update(self.values)
@@ -1313,6 +1317,7 @@ class UpdateFTIndexOp(hook.DataOperationMixIn, hook.SingleLastOperation):
     We wait after the commit to as the schema in memory is only updated after
     the commit.
     """
+    containercls = list
 
     def postcommit_event(self):
         cnx = self.cnx
