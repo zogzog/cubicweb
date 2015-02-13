@@ -31,9 +31,9 @@ class BaseSecurityTC(CubicWebTC):
     def setup_database(self):
         super(BaseSecurityTC, self).setup_database()
         with self.admin_access.client_cnx() as cnx:
-            self.create_user(cnx, 'iaminusersgrouponly')
+            self.create_user(cnx, u'iaminusersgrouponly')
             hash = _CRYPTO_CTX.encrypt('oldpassword', scheme='des_crypt')
-            self.create_user(cnx, 'oldpassword', password=Binary(hash))
+            self.create_user(cnx, u'oldpassword', password=Binary(hash))
 
 class LowLevelSecurityFunctionTC(BaseSecurityTC):
 
@@ -45,7 +45,7 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
             with self.admin_access.repo_cnx() as cnx:
                 self.repo.vreg.solutions(cnx, rqlst, None)
                 check_relations_read_access(cnx, rqlst, {})
-            with self.new_access('anon').repo_cnx() as cnx:
+            with self.new_access(u'anon').repo_cnx() as cnx:
                 self.assertRaises(Unauthorized,
                                   check_relations_read_access,
                                   cnx, rqlst, {})
@@ -60,7 +60,7 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
                 solution = rqlst.solutions[0]
                 localchecks = get_local_checks(cnx, rqlst, solution)
                 self.assertEqual({}, localchecks)
-            with self.new_access('anon').repo_cnx() as cnx:
+            with self.new_access(u'anon').repo_cnx() as cnx:
                 self.assertRaises(Unauthorized,
                                   get_local_checks,
                                   cnx, rqlst, solution)
@@ -70,7 +70,7 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
         with self.admin_access.repo_cnx() as cnx:
             self.assertRaises(Unauthorized,
                               cnx.execute, 'Any X,P WHERE X is CWUser, X upassword P')
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             self.assertRaises(Unauthorized,
                               cnx.execute, 'Any X,P WHERE X is CWUser, X upassword P')
 
@@ -104,7 +104,7 @@ class SecurityRewritingTC(BaseSecurityTC):
         super(SecurityRewritingTC, self).tearDown()
 
     def test_not_relation_read_security(self):
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             self.hijack_source_execute()
             cnx.execute('Any U WHERE NOT A todo_by U, A is Affaire')
             self.assertEqual(self.query[0][1].as_string(),
@@ -126,13 +126,13 @@ class SecurityTC(BaseSecurityTC):
             cnx.commit()
 
     def test_insert_security(self):
-        with self.new_access('anon').repo_cnx() as cnx:
+        with self.new_access(u'anon').repo_cnx() as cnx:
             cnx.execute("INSERT Personne X: X nom 'bidule'")
             self.assertRaises(Unauthorized, cnx.commit)
             self.assertEqual(cnx.execute('Personne X').rowcount, 1)
 
     def test_insert_security_2(self):
-        with self.new_access('anon').repo_cnx() as cnx:
+        with self.new_access(u'anon').repo_cnx() as cnx:
             cnx.execute("INSERT Affaire X")
             self.assertRaises(Unauthorized, cnx.commit)
             # anon has no read permission on Affaire entities, so
@@ -141,20 +141,20 @@ class SecurityTC(BaseSecurityTC):
 
     def test_insert_rql_permission(self):
         # test user can only add une affaire related to a societe he owns
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute("INSERT Affaire X: X sujet 'cool'")
             self.assertRaises(Unauthorized, cnx.commit)
         # test nothing has actually been inserted
         with self.admin_access.repo_cnx() as cnx:
             self.assertEqual(cnx.execute('Affaire X').rowcount, 1)
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute("INSERT Affaire X: X sujet 'cool'")
             cnx.execute("INSERT Societe X: X nom 'chouette'")
             cnx.execute("SET A concerne S WHERE A sujet 'cool', S nom 'chouette'")
             cnx.commit()
 
     def test_update_security_1(self):
-        with self.new_access('anon').repo_cnx() as cnx:
+        with self.new_access(u'anon').repo_cnx() as cnx:
             # local security check
             cnx.execute( "SET X nom 'bidulechouette' WHERE X is Personne")
             self.assertRaises(Unauthorized, cnx.commit)
@@ -164,7 +164,7 @@ class SecurityTC(BaseSecurityTC):
     def test_update_security_2(self):
         with self.temporary_permissions(Personne={'read': ('users', 'managers'),
                                                   'add': ('guests', 'users', 'managers')}):
-            with self.new_access('anon').repo_cnx() as cnx:
+            with self.new_access(u'anon').repo_cnx() as cnx:
                 self.assertRaises(Unauthorized, cnx.execute,
                                   "SET X nom 'bidulechouette' WHERE X is Personne")
         # test nothing has actually been inserted
@@ -172,7 +172,7 @@ class SecurityTC(BaseSecurityTC):
             self.assertEqual(cnx.execute('Personne X WHERE X nom "bidulechouette"').rowcount, 0)
 
     def test_update_security_3(self):
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute("INSERT Personne X: X nom 'biduuule'")
             cnx.execute("INSERT Societe X: X nom 'looogilab'")
             cnx.execute("SET X travaille S WHERE X nom 'biduuule', S nom 'looogilab'")
@@ -191,7 +191,7 @@ class SecurityTC(BaseSecurityTC):
             cnx.execute("SET A concerne S WHERE A is Affaire, S is Societe")
             cnx.commit()
         # test user can only update une affaire related to a societe he owns
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute("SET X sujet 'pascool' WHERE X is Affaire")
             # this won't actually do anything since the selection query won't return anything
             cnx.commit()
@@ -212,7 +212,7 @@ class SecurityTC(BaseSecurityTC):
         #self.assertRaises(Unauthorized,
         #                  self.o.execute, user, "DELETE CWUser X WHERE X login 'bidule'")
         # check local security
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             self.assertRaises(Unauthorized, cnx.execute, "DELETE CWGroup Y WHERE Y name 'staff'")
 
     def test_delete_rql_permission(self):
@@ -220,7 +220,7 @@ class SecurityTC(BaseSecurityTC):
             cnx.execute("SET A concerne S WHERE A is Affaire, S is Societe")
             cnx.commit()
         # test user can only dele une affaire related to a societe he owns
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             # this won't actually do anything since the selection query won't return anything
             cnx.execute("DELETE Affaire X")
             cnx.commit()
@@ -239,7 +239,7 @@ class SecurityTC(BaseSecurityTC):
             cnx.commit()
 
     def test_insert_relation_rql_permission(self):
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute("SET A concerne S WHERE A is Affaire, S is Societe")
             # should raise Unauthorized since user don't own S though this won't
             # actually do anything since the selection query won't return
@@ -266,7 +266,7 @@ class SecurityTC(BaseSecurityTC):
         with self.admin_access.repo_cnx() as cnx:
             cnx.execute("SET A concerne S WHERE A is Affaire, S is Societe")
             cnx.commit()
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             # this won't actually do anything since the selection query won't return anything
             cnx.execute("DELETE A concerne S")
             cnx.commit()
@@ -277,7 +277,7 @@ class SecurityTC(BaseSecurityTC):
                          {'x': eid})
             cnx.execute("SET A concerne S WHERE A sujet 'pascool', S is Societe")
             cnx.commit()
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             self.assertRaises(Unauthorized, cnx.execute, "DELETE A concerne S")
             self.assertRaises(QueryError, cnx.commit) # can't commit anymore
             cnx.rollback()
@@ -290,8 +290,8 @@ class SecurityTC(BaseSecurityTC):
 
     def test_user_can_change_its_upassword(self):
         with self.admin_access.repo_cnx() as cnx:
-            ueid = self.create_user(cnx, 'user').eid
-        with self.new_access('user').repo_cnx() as cnx:
+            ueid = self.create_user(cnx, u'user').eid
+        with self.new_access(u'user').repo_cnx() as cnx:
             cnx.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
                        {'x': ueid, 'passwd': 'newpwd'})
             cnx.commit()
@@ -299,8 +299,8 @@ class SecurityTC(BaseSecurityTC):
 
     def test_user_cant_change_other_upassword(self):
         with self.admin_access.repo_cnx() as cnx:
-            ueid = self.create_user(cnx, 'otheruser').eid
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+            ueid = self.create_user(cnx, u'otheruser').eid
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
                        {'x': ueid, 'passwd': 'newpwd'})
             self.assertRaises(Unauthorized, cnx.commit)
@@ -309,7 +309,7 @@ class SecurityTC(BaseSecurityTC):
 
     def test_read_base(self):
         with self.temporary_permissions(Personne={'read': ('users', 'managers')}):
-            with self.new_access('anon').repo_cnx() as cnx:
+            with self.new_access(u'anon').repo_cnx() as cnx:
                 self.assertRaises(Unauthorized,
                                   cnx.execute, 'Personne U where U nom "managers"')
 
@@ -317,7 +317,7 @@ class SecurityTC(BaseSecurityTC):
         with self.admin_access.repo_cnx() as cnx:
             eid = cnx.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
             cnx.commit()
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             rset = cnx.execute('Affaire X')
             self.assertEqual(rset.rows, [])
             self.assertRaises(Unauthorized, cnx.execute, 'Any X WHERE X eid %(x)s', {'x': eid})
@@ -342,7 +342,7 @@ class SecurityTC(BaseSecurityTC):
     def test_entity_created_in_transaction(self):
         affschema = self.schema['Affaire']
         with self.temporary_permissions(Affaire={'read': affschema.permissions['add']}):
-            with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+            with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
                 aff2 = cnx.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
                 # entity created in transaction are readable *by eid*
                 self.assertTrue(cnx.execute('Any X WHERE X eid %(x)s', {'x':aff2}))
@@ -358,7 +358,7 @@ class SecurityTC(BaseSecurityTC):
             cnx.execute('SET X owned_by U WHERE X eid %(x)s, U login "iaminusersgrouponly"',
                         {'x': card1})
             cnx.commit()
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             aff2 = cnx.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
             soc1 = cnx.execute("INSERT Societe X: X nom 'chouette'")[0][0]
             cnx.execute("SET A concerne S WHERE A eid %(a)s, S eid %(s)s", {'a': aff2, 's': soc1})
@@ -376,7 +376,7 @@ class SecurityTC(BaseSecurityTC):
             cnx.execute("INSERT Societe X: X nom 'bidule'")
             cnx.commit()
         with self.temporary_permissions(Personne={'read': ('managers',)}):
-            with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+            with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
                 rset = cnx.execute('Any N WHERE N has_text "bidule"')
                 self.assertEqual(len(rset.rows), 1, rset.rows)
                 rset = cnx.execute('Any N WITH N BEING (Any N WHERE N has_text "bidule")')
@@ -388,7 +388,7 @@ class SecurityTC(BaseSecurityTC):
             cnx.execute("INSERT Societe X: X nom 'bidule'")
             cnx.commit()
         with self.temporary_permissions(Personne={'read': ('managers',)}):
-            with self.new_access('anon').repo_cnx() as cnx:
+            with self.new_access(u'anon').repo_cnx() as cnx:
                 rset = cnx.execute('Any N,U WHERE N has_text "bidule", N owned_by U?')
                 self.assertEqual(len(rset.rows), 1, rset.rows)
 
@@ -396,7 +396,7 @@ class SecurityTC(BaseSecurityTC):
         with self.admin_access.repo_cnx() as cnx:
             cnx.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
             cnx.commit()
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             rset = cnx.execute('Any COUNT(X) WHERE X is Affaire')
             self.assertEqual(rset.rows, [[0]])
             aff2 = cnx.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
@@ -424,7 +424,7 @@ class SecurityTC(BaseSecurityTC):
                                "X web 'http://www.debian.org', X test TRUE")[0][0]
             cnx.execute('SET X test FALSE WHERE X eid %(x)s', {'x': eid})
             cnx.commit()
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute("INSERT Personne X: X nom 'bidule', "
                        "X web 'http://www.debian.org', X test TRUE")
             self.assertRaises(Unauthorized, cnx.commit)
@@ -440,7 +440,7 @@ class SecurityTC(BaseSecurityTC):
             self.assertRaises(Unauthorized, cnx.commit)
             cnx.execute('SET X web "http://www.logilab.org" WHERE X eid %(x)s', {'x': eid})
             cnx.commit()
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute('INSERT Frozable F: F name "Foo"')
             cnx.commit()
             cnx.execute('SET F name "Bar" WHERE F is Frozable')
@@ -464,7 +464,7 @@ class SecurityTC(BaseSecurityTC):
             note.cw_adapt_to('IWorkflowable').fire_transition('markasdone')
             cnx.execute('SET X para "truc" WHERE X eid %(x)s', {'x': note.eid})
             cnx.commit()
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute("SET X para 'chouette' WHERE X eid %(x)s", {'x': note.eid})
             self.assertRaises(Unauthorized, cnx.commit)
             note2 = cnx.execute("INSERT Note X: X para 'bidule'").get_entity(0, 0)
@@ -496,7 +496,7 @@ class SecurityTC(BaseSecurityTC):
         login_rdef = self.repo.schema['CWUser'].rdef('login')
         with self.temporary_permissions((login_rdef, {'read': ('users', 'managers')}),
                                         CWUser={'read': ('guests', 'users', 'managers')}):
-            with self.new_access('anon').repo_cnx() as cnx:
+            with self.new_access(u'anon').repo_cnx() as cnx:
                 rset = cnx.execute('CWUser X')
                 self.assertTrue(rset)
                 x = rset.get_entity(0, 0)
@@ -510,7 +510,7 @@ class SecurityTC(BaseSecurityTC):
     def test_yams_inheritance_and_security_bug(self):
         with self.temporary_permissions(Division={'read': ('managers',
                                                            ERQLExpression('X owned_by U'))}):
-            with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+            with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
                 querier = cnx.repo.querier
                 rqlst = querier.parse('Any X WHERE X is_instance_of Societe')
                 querier.solutions(cnx, rqlst, {})
@@ -528,7 +528,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
 
     def test_user_can_delete_object_he_created(self):
         # even if some other user have changed object'state
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             # due to security test, affaire has to concerne a societe the user owns
             cnx.execute('INSERT Societe X: X nom "ARCTIA"')
             cnx.execute('INSERT Affaire X: X ref "ARCT01", X concerne S WHERE S nom "ARCTIA"')
@@ -542,7 +542,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             self.assertEqual(len(cnx.execute('TrInfo X WHERE X wf_info_for A, A ref "ARCT01",'
                                               'X owned_by U, U login "admin"')),
                              1) # TrInfo at the above state change
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute('DELETE Affaire X WHERE X ref "ARCT01"')
             cnx.commit()
             self.assertFalse(cnx.execute('Affaire X'))
@@ -550,7 +550,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
     def test_users_and_groups_non_readable_by_guests(self):
         with self.repo.internal_cnx() as cnx:
             admineid = cnx.execute('CWUser U WHERE U login "admin"').rows[0][0]
-        with self.new_access('anon').repo_cnx() as cnx:
+        with self.new_access(u'anon').repo_cnx() as cnx:
             anon = cnx.user
             # anonymous user can only read itself
             rset = cnx.execute('Any L WHERE X owned_by U, U login L')
@@ -569,7 +569,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             self.assertRaises(Unauthorized, cnx.commit)
 
     def test_in_group_relation(self):
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             rql = u"DELETE U in_group G WHERE U login 'admin'"
             self.assertRaises(Unauthorized, cnx.execute, rql)
             rql = u"SET U in_group G WHERE U login 'admin', G name 'users'"
@@ -579,7 +579,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         with self.admin_access.repo_cnx() as cnx:
             cnx.execute("INSERT Personne X: X nom 'bidule'")
             cnx.commit()
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             rql = u"SET X owned_by U WHERE U login 'iaminusersgrouponly', X is Personne"
             self.assertRaises(Unauthorized, cnx.execute, rql)
 
@@ -589,7 +589,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             beid2 = cnx.execute('INSERT Bookmark B: B path "?vid=index", B title "index", '
                                 'B bookmarked_by U WHERE U login "anon"')[0][0]
             cnx.commit()
-        with self.new_access('anon').repo_cnx() as cnx:
+        with self.new_access(u'anon').repo_cnx() as cnx:
             anoneid = cnx.user.eid
             self.assertEqual(cnx.execute('Any T,P ORDERBY lower(T) WHERE B is Bookmark,B title T,B path P,'
                                          'B bookmarked_by U, U eid %s' % anoneid).rows,
@@ -606,7 +606,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
                               {'x': anoneid, 'b': beid1})
 
     def test_ambigous_ordered(self):
-        with self.new_access('anon').repo_cnx() as cnx:
+        with self.new_access(u'anon').repo_cnx() as cnx:
             names = [t for t, in cnx.execute('Any N ORDERBY lower(N) WHERE X name N')]
             self.assertEqual(names, sorted(names, key=lambda x: x.lower()))
 
@@ -617,7 +617,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         with self.admin_access.repo_cnx() as cnx:
             eid = cnx.execute('INSERT Affaire X: X ref "ARCT01"')[0][0]
             cnx.commit()
-        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+        with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             # needed to remove rql expr granting update perm to the user
             affschema = self.schema['Affaire']
             with self.temporary_permissions(Affaire={'update': affschema.get_groups('update'),
@@ -675,7 +675,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
                          'U use_email X WHERE U login "anon"').get_entity(0, 0)
             cnx.commit()
             self.assertEqual(len(cnx.execute('Any X WHERE X is EmailAddress')), 2)
-        with self.new_access('anon').repo_cnx() as cnx:
+        with self.new_access(u'anon').repo_cnx() as cnx:
             self.assertEqual(len(cnx.execute('Any X WHERE X is EmailAddress')), 1)
 
 if __name__ == '__main__':
