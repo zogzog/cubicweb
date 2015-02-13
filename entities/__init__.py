@@ -53,7 +53,7 @@ class AnyEntity(Entity):
         """
         restrictions = ['X is %s' % cls.__regid__]
         selected = ['X']
-        for attrschema in cls.e_schema.indexable_attributes():
+        for attrschema in sorted(cls.e_schema.indexable_attributes()):
             varname = attrschema.type.upper()
             restrictions.append('X %s %s' % (attrschema, varname))
             selected.append(varname)

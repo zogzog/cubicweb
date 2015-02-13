@@ -66,8 +66,8 @@ class MetadataTC(BaseEntityTC):
     def test_fti_rql_method(self):
         with self.admin_access.web_request() as req:
             eclass = self.vreg['etypes'].etype_class('EmailAddress')
-            self.assertEqual(['Any X, ALIAS, ADDRESS WHERE X is EmailAddress, '
-                              'X alias ALIAS, X address ADDRESS'],
+            self.assertEqual(['Any X, ADDRESS, ALIAS WHERE X is EmailAddress, '
+                              'X address ADDRESS, X alias ALIAS'],
                              eclass.cw_fti_index_rql_queries(req))
 
 
