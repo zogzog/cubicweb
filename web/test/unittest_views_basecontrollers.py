@@ -836,9 +836,9 @@ class AjaxControllerTC(CubicWebTC):
             deletes = get_pending_deletes(req)
             self.assertEqual(deletes, [])
             inserts = get_pending_inserts(req)
-            self.assertEqual(inserts, ['12:tags:13', '12:tags:14'])
+            self.assertCountEqual(inserts, ['12:tags:13', '12:tags:14'])
             inserts = get_pending_inserts(req, 12)
-            self.assertEqual(inserts, ['12:tags:13', '12:tags:14'])
+            self.assertCountEqual(inserts, ['12:tags:13', '12:tags:14'])
             inserts = get_pending_inserts(req, 13)
             self.assertEqual(inserts, ['12:tags:13'])
             inserts = get_pending_inserts(req, 14)
@@ -855,9 +855,9 @@ class AjaxControllerTC(CubicWebTC):
             inserts = get_pending_inserts(req)
             self.assertEqual(inserts, [])
             deletes = get_pending_deletes(req)
-            self.assertEqual(deletes, ['12:tags:13', '12:tags:14'])
+            self.assertCountEqual(deletes, ['12:tags:13', '12:tags:14'])
             deletes = get_pending_deletes(req, 12)
-            self.assertEqual(deletes, ['12:tags:13', '12:tags:14'])
+            self.assertCountEqual(deletes, ['12:tags:13', '12:tags:14'])
             deletes = get_pending_deletes(req, 13)
             self.assertEqual(deletes, ['12:tags:13'])
             deletes = get_pending_deletes(req, 14)
@@ -880,7 +880,7 @@ class AjaxControllerTC(CubicWebTC):
         with self.remote_calling('add_pending_inserts',
                                  [('12', 'tags', '13'), ('12', 'tags', '14')]) as (_, req):
             inserts = get_pending_inserts(req)
-            self.assertEqual(inserts, ['12:tags:13', '12:tags:14'])
+            self.assertCountEqual(inserts, ['12:tags:13', '12:tags:14'])
             req.remove_pending_operations()
 
 
