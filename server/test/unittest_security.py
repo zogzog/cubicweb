@@ -519,7 +519,7 @@ class SecurityTC(BaseSecurityTC):
                 plan.preprocess(rqlst)
                 self.assertEqual(
                     rqlst.as_string(),
-                    '(Any X WHERE X is IN(SubDivision, Societe)) UNION '
+                    '(Any X WHERE X is IN(Societe, SubDivision)) UNION '
                     '(Any X WHERE X is Division, EXISTS(X owned_by %(B)s))')
 
 

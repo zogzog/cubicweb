@@ -89,7 +89,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                 mytyperel.r_type = 'is'
                 if len(possibletypes) > 1:
                     node = n.Function('IN')
-                    for etype in possibletypes:
+                    for etype in sorted(possibletypes):
                         node.append(n.Constant(etype, 'etype'))
                 else:
                     etype = iter(possibletypes).next()
