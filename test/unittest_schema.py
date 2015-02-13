@@ -360,8 +360,8 @@ class SchemaReaderComputedRelationAndAttributesTest(TestCase):
                          schema['produces_and_buys'].rdefs.keys())
         self.assertEqual([('Person','Service')],
                          schema['produces_and_buys2'].rdefs.keys())
-        self.assertEqual([('Company', 'Service'), ('Person', 'Service')],
-                         schema['reproduce'].rdefs.keys())
+        self.assertCountEqual([('Company', 'Service'), ('Person', 'Service')],
+                              schema['reproduce'].rdefs.keys())
         # check relation definitions are marked infered
         rdef = schema['produces_and_buys'].rdefs[('Person','Service')]
         self.assertTrue(rdef.infered)
