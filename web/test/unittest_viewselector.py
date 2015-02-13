@@ -172,7 +172,7 @@ class VRegistryTC(ViewSelectorTC):
             self.assertTrue(self.vreg['views'].select('propertiesform', req, rset=rset2))
 
     def test_propertiesform_anon(self):
-        with self.new_access('anon').web_request() as req:
+        with self.new_access(u'anon').web_request() as req:
             rset1 = req.execute('CWUser X WHERE X login "admin"')
             self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'propertiesform', req, rset=None)
             self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'propertiesform', req, rset=rset1)
@@ -181,9 +181,9 @@ class VRegistryTC(ViewSelectorTC):
 
     def test_propertiesform_jdoe(self):
         with self.admin_access.repo_cnx() as cnx:
-            self.create_user(cnx, 'jdoe')
+            self.create_user(cnx, u'jdoe')
             cnx.commit()
-        with self.new_access('jdoe').web_request() as req:
+        with self.new_access(u'jdoe').web_request() as req:
             rset1 = req.execute('CWUser X WHERE X login "admin"')
             rset2 = req.execute('CWUser X WHERE X login "jdoe"')
             self.assertTrue(self.vreg['views'].select('propertiesform', req, rset=None))
