@@ -156,9 +156,9 @@ class EditControllerTC(CubicWebTC):
 
     def test_user_can_change_its_password(self):
         with self.admin_access.repo_cnx() as cnx:
-            self.create_user(cnx, 'user')
+            self.create_user(cnx, u'user')
             cnx.commit()
-        with self.new_access('user').web_request() as req:
+        with self.new_access(u'user').web_request() as req:
             eid = unicode(req.user.eid)
             req.form = {
                 'eid': eid, '__maineid' : eid,
@@ -287,7 +287,7 @@ class EditControllerTC(CubicWebTC):
 
     def test_edit_multiple_linked(self):
         with self.admin_access.web_request() as req:
-            peid = unicode(self.create_user(req, 'adim').eid)
+            peid = unicode(self.create_user(req, u'adim').eid)
             req.form = {'eid': [peid, 'Y'], '__maineid': peid,
 
                         '__type:'+peid: u'CWUser',
@@ -692,7 +692,7 @@ class EditControllerTC(CubicWebTC):
 
     def test_nonregr_rollback_on_validation_error(self):
         with self.admin_access.web_request() as req:
-            p = self.create_user(req, "doe")
+            p = self.create_user(req, u"doe")
             # do not try to skip 'primary_email' for this test
             old_skips = p.__class__.skip_copy_for
             p.__class__.skip_copy_for = ()
@@ -754,10 +754,10 @@ class EditControllerTC(CubicWebTC):
 class ReportBugControllerTC(CubicWebTC):
 
     def test_usable_by_guest(self):
-        with self.new_access('anon').web_request() as req:
+        with self.new_access(u'anon').web_request() as req:
             self.assertRaises(NoSelectableObject,
                               self.vreg['controllers'].select, 'reportbug', req)
-        with self.new_access('anon').web_request(description='hop') as req:
+        with self.new_access(u'anon').web_request(description='hop') as req:
             self.vreg['controllers'].select('reportbug', req)
 
 
@@ -1016,8 +1016,8 @@ class UndoControllerTC(CubicWebTC):
 
     def setup_database(self):
         with self.admin_access.repo_cnx() as cnx:
-            self.toto = self.create_user(cnx, 'toto',
-                                         password='toto',
+            self.toto = self.create_user(cnx, u'toto',
+                                         password=u'toto',
                                          groups=('users',),
                                          commit=False)
             self.txuuid_toto = cnx.commit()
