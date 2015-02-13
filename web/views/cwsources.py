@@ -231,6 +231,7 @@ class ManageSourcesAction(actions.ManagersAction):
     __regid__ = 'cwsource'
     title = _('data sources')
     category = 'manage'
+    order = 100
 
 
 class CWSourcesManagementView(StartupView):
