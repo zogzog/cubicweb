@@ -357,7 +357,7 @@ class RequestSessionBase(object):
         for key, val in sorted(newparams.iteritems()):
             query[key] = (self.url_quote(val),)
         query = '&'.join(u'%s=%s' % (param, value)
-                         for param, values in query.items()
+                         for param, values in sorted(query.items())
                          for value in values)
         return urlunsplit((schema, netloc, path, query, fragment))
 
