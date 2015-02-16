@@ -552,8 +552,12 @@ class JSString(str):
     """
 
 def _dict2js(d, predictable=False):
+    if predictable:
+        it = sorted(d.iteritems())
+    else:
+        it = d.iteritems()
     res = [key + ': ' + js_dumps(val, predictable)
-           for key, val in d.iteritems()]
+           for key, val in it]
     return '{%s}' % ', '.join(res)
 
 def _list2js(l, predictable=False):
@@ -577,7 +581,7 @@ def js_dumps(something, predictable=False):
         return _list2js(something, predictable)
     if isinstance(something, JSString):
         return something
-    return json_dumps(something)
+    return json_dumps(something, sort_keys=predictable)
 
 PERCENT_IN_URLQUOTE_RE = re.compile(r'%(?=[0-9a-fA-F]{2})')
 def js_href(javascript_code):
