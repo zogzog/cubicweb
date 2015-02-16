@@ -315,6 +315,7 @@ class CubicWebTC(TestCase):
         """provide a new RepoAccess object for a given user
 
         The access is automatically closed at the end of the test."""
+        login = unicode(login)
         access = RepoAccess(self.repo, login, self.requestcls)
         self._open_access.add(access)
         return access
@@ -646,9 +647,11 @@ class CubicWebTC(TestCase):
             login = req
             assert not isinstance(self, type)
             req = self._admin_clt_cnx
+        if login is not None:
+            login = unicode(login)
         if password is None:
-            password = login.encode('utf8')
-        user = req.create_entity('CWUser', login=unicode(login),
+            password = login
+        user = req.create_entity('CWUser', login=login,
                                  upassword=password, **kwargs)
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
                     % ','.join(repr(str(g)) for g in groups),
