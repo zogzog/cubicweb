@@ -614,8 +614,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             sql = self.sqlgen.insert(SQL_PREFIX + entity.cw_etype, attrs)
             self.doexec(cnx, sql, attrs)
             if cnx.ertype_supports_undo(entity.cw_etype):
-                self._record_tx_action(cnx, 'tx_entity_actions', 'C',
-                                       etype=entity.cw_etype, eid=entity.eid)
+                self._record_tx_action(cnx, 'tx_entity_actions', u'C',
+                                       etype=unicode(entity.cw_etype), eid=entity.eid)
 
     def update_entity(self, cnx, entity):
         """replace an entity in the source"""
@@ -623,8 +623,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             attrs = self.preprocess_entity(entity)
             if cnx.ertype_supports_undo(entity.cw_etype):
                 changes = self._save_attrs(cnx, entity, attrs)
-                self._record_tx_action(cnx, 'tx_entity_actions', 'U',
-                                       etype=entity.cw_etype, eid=entity.eid,
+                self._record_tx_action(cnx, 'tx_entity_actions', u'U',
+                                       etype=unicode(entity.cw_etype), eid=entity.eid,
                                        changes=self._binary(dumps(changes)))
             sql = self.sqlgen.update(SQL_PREFIX + entity.cw_etype, attrs,
                                      ['cw_eid'])
@@ -638,8 +638,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                          for r in entity.e_schema.subject_relations()
                          if (r.final or r.inlined) and not r in VIRTUAL_RTYPES]
                 changes = self._save_attrs(cnx, entity, attrs)
-                self._record_tx_action(cnx, 'tx_entity_actions', 'D',
-                                       etype=entity.cw_etype, eid=entity.eid,
+                self._record_tx_action(cnx, 'tx_entity_actions', u'D',
+                                       etype=unicode(entity.cw_etype), eid=entity.eid,
                                        changes=self._binary(dumps(changes)))
             attrs = {'cw_eid': entity.eid}
             sql = self.sqlgen.delete(SQL_PREFIX + entity.cw_etype, attrs)
@@ -649,16 +649,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """add a relation to the source"""
         self._add_relations(cnx,  rtype, [(subject, object)], inlined)
         if cnx.ertype_supports_undo(rtype):
-            self._record_tx_action(cnx, 'tx_relation_actions', 'A',
-                                   eid_from=subject, rtype=rtype, eid_to=object)
+            self._record_tx_action(cnx, 'tx_relation_actions', u'A',
+                                   eid_from=subject, rtype=unicode(rtype), eid_to=object)
 
     def add_relations(self, cnx,  rtype, subj_obj_list, inlined=False):
         """add a relations to the source"""
         self._add_relations(cnx, rtype, subj_obj_list, inlined)
         if cnx.ertype_supports_undo(rtype):
             for subject, object in subj_obj_list:
-                self._record_tx_action(cnx, 'tx_relation_actions', 'A',
-                                       eid_from=subject, rtype=rtype, eid_to=object)
+                self._record_tx_action(cnx, 'tx_relation_actions', u'A',
+                                       eid_from=subject, rtype=unicode(rtype), eid_to=object)
 
     def _add_relations(self, cnx, rtype, subj_obj_list, inlined=False):
         """add a relation to the source"""
@@ -689,8 +689,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         rschema = self.schema.rschema(rtype)
         self._delete_relation(cnx, subject, rtype, object, rschema.inlined)
         if cnx.ertype_supports_undo(rtype):
-            self._record_tx_action(cnx, 'tx_relation_actions', 'R',
-                                   eid_from=subject, rtype=rtype, eid_to=object)
+            self._record_tx_action(cnx, 'tx_relation_actions', u'R',
+                                   eid_from=subject, rtype=unicode(rtype), eid_to=object)
 
     def _delete_relation(self, cnx, subject, rtype, object, inlined=False):
         """delete a relation from the source"""
@@ -977,7 +977,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     # only, and with no eid specified
                     assert actionfilters.get('action', 'C') in 'CUD'
                     assert not 'eid' in actionfilters
-                    tearestr['etype'] = val
+                    tearestr['etype'] = unicode(val)
                 elif key == 'eid':
                     # eid filter may apply to 'eid' of tx_entity_actions or to
                     # 'eid_from' OR 'eid_to' of tx_relation_actions
@@ -988,10 +988,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         trarestr['eid_to'] = val
                 elif key == 'action':
                     if val in 'CUD':
-                        tearestr['txa_action'] = val
+                        tearestr['txa_action'] = unicode(val)
                     else:
                         assert val in 'AR'
-                        trarestr['txa_action'] = val
+                        trarestr['txa_action'] = unicode(val)
                 else:
                     raise AssertionError('unknow filter %s' % key)
             assert trarestr or tearestr, "can't only filter on 'public'"
@@ -1026,10 +1026,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def tx_info(self, cnx, txuuid):
         """See :class:`cubicweb.repoapi.ClientConnection.transaction_info`"""
-        return tx.Transaction(txuuid, *self._tx_info(cnx, txuuid))
+        return tx.Transaction(txuuid, *self._tx_info(cnx, unicode(txuuid)))
 
     def tx_actions(self, cnx, txuuid, public):
         """See :class:`cubicweb.repoapi.ClientConnection.transaction_actions`"""
+        txuuid = unicode(txuuid)
         self._tx_info(cnx, txuuid)
         restr = {'tx_uuid': txuuid}
         if public:
