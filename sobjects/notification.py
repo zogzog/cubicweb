@@ -266,7 +266,7 @@ class EntityUpdatedNotificationView(NotificationView):
     """
     __abstract__ = True
     __regid__ = 'notif_entity_updated'
-    msgid_timestamp = False
+    msgid_timestamp = True
     message = _('updated')
     no_detailed_change_attrs = ()
     content = """
