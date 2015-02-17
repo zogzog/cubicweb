@@ -78,6 +78,8 @@ class INotifiableAdapter(view.EntityAdapter):
         itree = self.entity.cw_adapt_to('ITree')
         if itree is not None:
             return itree.path()[:-1]
+        if view.msgid_timestamp:
+            return (self.entity.eid,)
         return ()
 
 
