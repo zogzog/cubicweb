@@ -48,7 +48,6 @@ class UndoableTransactionTC(CubicWebTC):
 
     def tearDown(self):
         cubicweb.server.session.Connection = OldConnection
-        self.restore_connection()
         super(UndoableTransactionTC, self).tearDown()
 
     def check_transaction_deleted(self, cnx, txuuid):
@@ -210,10 +209,10 @@ class UndoableTransactionTC(CubicWebTC):
                               ['CWUser'])
             # undoing shouldn't be visble in undoable transaction, and the undone
             # transaction should be removed
-            txs = self.cnx.undoable_transactions()
+            txs = cnx.undoable_transactions()
             self.assertEqual(len(txs), 2)
             self.assertRaises(NoSuchTransaction,
-                              self.cnx.transaction_info, txuuid)
+                              cnx.transaction_info, txuuid)
         with self.admin_access.repo_cnx() as cnx:
             with cnx.ensure_cnx_set:
                 self.check_transaction_deleted(cnx, txuuid)
