@@ -47,6 +47,8 @@ if rdflib is not None:
         __regid__ = 'rdf'
         title = _('rdf export')
         templatable = False
+        binary = True
+        format = 'xml'
         content_type = 'text/xml' # +rdf
 
         def call(self):
@@ -57,7 +59,7 @@ if rdflib is not None:
             for i in xrange(self.cw_rset.rowcount):
                 entity = self.cw_rset.complete_entity(i, 0)
                 self.entity2graph(graph, entity)
-            self.w(graph.serialize().decode('utf-8'))
+            self.w(graph.serialize(format=self.format))
 
         def entity_call(self, entity):
             self.call()
@@ -100,3 +102,8 @@ if rdflib is not None:
                             else:
                                 add( (URIRef(related.cwuri), CW[rtype], cwuri) )
 
+
+    class RDFN3View(RDFView):
+        __regid__ = 'n3rdf'
+        format = 'n3'
+        content_type = 'text/n3'
