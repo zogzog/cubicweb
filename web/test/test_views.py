@@ -55,9 +55,11 @@ class ManualCubicWebTCs(AutoPopulateTest):
 
     def test_sortable_js_added(self):
         with self.admin_access.web_request() as req:
-            rset = req.execute('CWUser X')
             # sortable.js should not be included by default
-            self.assertFalse('jquery.tablesorter.js' in self.view('oneline', rset, req=req))
+            rset = req.execute('CWUser X')
+            self.assertNotIn('jquery.tablesorter.js', self.view('oneline', rset, req=req).source)
+
+        with self.admin_access.web_request() as req:
             # but should be included by the tableview
             rset = req.execute('Any P,F,S LIMIT 1 WHERE P is CWUser, P firstname F, P surname S')
             self.assertIn('jquery.tablesorter.js', self.view('table', rset, req=req).source)
