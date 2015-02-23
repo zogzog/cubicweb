@@ -1465,15 +1465,17 @@ class HasRelationFacet(AbstractFacet):
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
-        self.select.set_distinct(True) # XXX
         value = self._cw.form.get(self.__regid__)
         if not value: # no value sent for this facet
             return
+        exists = nodes.Exists()
+        self.select.add_restriction(exists)
         var = self.select.make_variable()
         if self.role == 'subject':
-            self.select.add_relation(self.filtered_variable, self.rtype, var)
+            subj, obj = self.filtered_variable, var
         else:
-            self.select.add_relation(var, self.rtype, self.filtered_variable)
+            subj, obj = var, self.filtered_variable
+        exists.add_relation(subj, self.rtype, obj)
 
 
 class BitFieldFacet(AttributeFacet):

@@ -129,8 +129,6 @@ class BaseFacetTC(CubicWebTC):
             self.assertEqual(f.select.as_string(),
                               'DISTINCT Any  WHERE X is CWUser')
 
-
-
     def test_relationattribute(self):
         with self.admin_access.web_request() as req:
             f, (guests, managers) = self._in_group_facet(req, cls=facet.RelationAttributeFacet)
@@ -149,6 +147,20 @@ class BaseFacetTC(CubicWebTC):
             # is not in real life)
             self.assertEqual(f.select.as_string(),
                               "DISTINCT Any  WHERE X is CWUser, X in_group E, E name 'guests'")
+
+    def test_hasrelation(self):
+        with self.admin_access.web_request() as req:
+            rset, rqlst, filtered_variable = self.prepare_rqlst(req)
+            f = facet.HasRelationFacet(req, rset=rset,
+                                       select=rqlst.children[0],
+                                       filtered_variable=filtered_variable)
+            f.__regid__ = 'has_group'
+            f.rtype = 'in_group'
+            f.role = 'subject'
+            f._cw.form[f.__regid__] = 'feed me'
+            f.add_rql_restrictions()
+            self.assertEqual(f.select.as_string(),
+                             'DISTINCT Any  WHERE X is CWUser, EXISTS(X in_group A)')
 
     def test_daterange(self):
         with self.admin_access.web_request() as req:
