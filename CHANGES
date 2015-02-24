@@ -1,7 +1,21 @@
-0.2.2 (next)
+0.3.0 (next)
 ------------
 
--   Performance improvements
+-   Don't commit `'uncommitable'` connexions anymore (:issue:`5343870`).
+-   Debug mode enables pyramid.reload_templates.
+-   Testcases can override pyramid settings (:issue:`5307426`).
+-   Implement the CW message API on top of the Pyramid :ref:`flash_messages`.
+-   Reorganize the authentication stack around on pyramid_multiauth_
+    (:issue:`4985962`).
+-   pyramid_debugtoolbar is not mandatory anymore (:issue:`5310434`).
+-   Add unit tests (coverage 79%).
+-   Performance improvements (:issue:`4891437` & :issue:`4870347`).
+-   Documentation improvements
+-   Set response headers on exceptions (:issue:`4939219`).
+-   Rename the package name from 'pyramid_cubicweb' to 'pyramid-cubicweb', for
+    consistency with other pyramid extensions.
+
+.. _pyramid_multiauth: https://github.com/mozilla-services/pyramid_multiauth
 
 0.2.1 (2015-01-23)
 ------------------
