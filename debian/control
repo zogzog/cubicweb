@@ -9,7 +9,7 @@ Build-Depends:
  debhelper (>= 9),
 Standards-Version: 3.9.6
 Maintainer: Julien Cristau <julien.cristau@logilab.fr>
-Homepage: https://www.cubicweb.org/project/pyramid_cubicweb
+Homepage: https://www.cubicweb.org/project/pyramid-cubicweb
 Vcs-Browser: http://hg.logilab.org/master/pyramid_cubicweb
 Vcs-Hg: http://hg.logilab.org/master/pyramid_cubicweb
 
