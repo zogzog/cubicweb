@@ -7,6 +7,6 @@
 
     .. autofunction:: includeme
 
-    .. autoclass:: CubicWebAuthTktAuthenticationPolicy
+    .. autoclass:: UpdateLoginTimeAuthenticationPolicy
         :show-inheritance:
         :members:

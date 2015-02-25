@@ -23,6 +23,7 @@ Narrative Documentation
     narr/quickstart
     narr/ctl
     narr/settings
+    narr/auth
     narr/profiling
 
 Api Documentation

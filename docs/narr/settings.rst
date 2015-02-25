@@ -86,3 +86,57 @@ The Pyramid CubicWeb specific configuration entries are:
 .. confval:: cubicweb.profile (bool)
 
     (False) Enable/disable profiling. See :ref:`profiling`.
+
+.. confval:: cubicweb.auth.update_login_time (bool)
+
+    (True) Add a :class:`pyramid_cubicweb.auth.UpdateLoginTimeAuthenticationPolicy`
+    policy, that update the CWUser.login_time attribute when a user login.
+    
+.. confval:: cubicweb.auth.authtkt (bool)
+
+    (True) Enables the 2 cookie-base auth policies, which activate/deactivate
+    depending on the `persistent` argument passed to `remember`.
+
+    The default login views set persistent to True if a `__setauthcookie`
+    parameters is passed to them, and evals to True in
+    :func:`pyramid.settings.asbool`.
+
+    The configuration values of the policies are arguments for
+    :class:`pyramid.authentication.AuthTktAuthenticationPolicy`.
+
+    The first policy handles session authentication. It doesn't get
+    activated if `remember()` is called with `persistent=False`:
+
+    .. confval:: cubicweb.auth.authtkt.session.cookie_name (str)
+
+        ('auth_tkt') The cookie name. Must be different from the persistent
+        authentication cookie name.
+
+    .. confval:: cubicweb.auth.authtkt.session.timeout (int)
+
+        (1200) Cookie timeout.
+
+    .. confval:: cubicweb.auth.authtkt.session.reissue_time (int)
+
+        (120) Reissue time.
+
+    The second policy handles persistent authentication. It doesn't get
+    activated if `remember()` is called with `persistent=True`:
+
+    .. confval:: cubicweb.auth.authtkt.persistent.cookie_name (str)
+
+        ('auth_tkt') The cookie name. Must be different from the session
+        authentication cookie name.
+
+    .. confval:: cubicweb.auth.authtkt.persistent.max_age (int)
+
+        (30 days) Max age in seconds.
+
+    .. confval:: cubicweb.auth.authtkt.persistent.reissue_time (int)
+
+        (1 day) Reissue time in seconds.
+
+.. confval:: cubicweb.auth.groups_principals (bool)
+
+    (True) Setup a callback on the authentication stack that inject the user
+    groups in the principals.
