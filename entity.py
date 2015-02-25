@@ -425,7 +425,7 @@ class Entity(AppObject):
         else:
             for rschema in cls.e_schema.subject_relations():
                 if (rschema.final
-                    and rschema != 'eid'
+                    and rschema not in ('eid', 'cwuri')
                     and cls.e_schema.has_unique_values(rschema)
                     and cls.e_schema.rdef(rschema.type).cardinality[0] == '1'):
                     mainattr = str(rschema)
