@@ -2,6 +2,7 @@
 from pyramid import security
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
+from pyramid.settings import asbool
 
 import cubicweb
 
@@ -52,10 +53,9 @@ def login_password_login(request):
         del request.cw_request.post['__password']
         return login_form(request)
 
-    max_age = None
-    if request.params.get('__setauthcookie') == '1':
-        max_age = 604800
-    headers = security.remember(request, user_eid, max_age=max_age)
+    headers = security.remember(
+        request, user_eid,
+        persistent=asbool(request.params.get('__setauthcookie', False)))
 
     new_path = request.params.get('postlogin_path', '/')
 

@@ -49,6 +49,27 @@ class UpdateLoginTimeAuthenticationPolicy(object):
         return ()
 
 
+class CWAuthTktAuthenticationPolicy(AuthTktAuthenticationPolicy):
+    """
+    An authentication policy that inhibate the call the 'remember' if a
+    'persistent' argument is passed to it, and is equal to the value that
+    was passed to the constructor.
+
+    This allow to combine two policies with different settings and select them
+    by just setting this argument.
+    """
+    def __init__(self, secret, persistent, **kw):
+        self.persistent = persistent
+        super(CWAuthTktAuthenticationPolicy, self).__init__(secret, **kw)
+
+    def remember(self, request, principals, **kw):
+        if 'persistent' not in kw or kw.pop('persistent') == self.persistent:
+            return super(CWAuthTktAuthenticationPolicy, self).remember(
+                request, principals, **kw)
+        else:
+            return ()
+
+
 def includeme(config):
     """ Activate the CubicWeb AuthTkt authentication policy.
 
@@ -82,8 +103,36 @@ def includeme(config):
             ''')
 
         policies.append(
-            AuthTktAuthenticationPolicy(
-                secret, hashalg='sha512', reissue_time=3600))
+            CWAuthTktAuthenticationPolicy(
+                secret, False, hashalg='sha512',
+                cookie_name=settings.get(
+                    'cubicweb.auth.authtkt.session.cookie_name',
+                    'auth_tkt'),
+                timeout=int(settings.get(
+                    'cubicweb.auth.authtkt.session.timeout',
+                    1200)),
+                reissue_time=int(settings.get(
+                    'cubicweb.auth.authtkt.session.reissue_time',
+                    120))
+            )
+        )
+
+        policies.append(
+            CWAuthTktAuthenticationPolicy(
+                secret, True, hashalg='sha512',
+                cookie_name=settings.get(
+                    'cubicweb.auth.authtkt.persistent.cookie_name',
+                    'pauth_tkt'),
+                max_age=int(settings.get(
+                    'cubicweb.auth.authtkt.persistent.max_age',
+                    3600*24*30  # defaults to 1 month
+                )),
+                reissue_time=int(settings.get(
+                    'cubicweb.auth.authtkt.persistent.reissue_time',
+                    3600*24
+                ))
+            )
+        )
 
     kw = {}
     if asbool(settings.get('cubicweb.auth.groups_principals', True)):

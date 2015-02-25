@@ -18,17 +18,24 @@ class LoginTest(PyramidCWTest):
         res = self.webapp.post('/login', {
             '__login': self.admlogin, '__password': self.admpassword})
         self.assertEqual(res.status_int, 303)
-        cookie = self.webapp.cookiejar._cookies[
-            'localhost.local']['/']['auth_tkt']
-        self.assertIsNone(cookie.expires)
+
+        cookies = self.webapp.cookiejar._cookies['localhost.local']['/']
+        self.assertNotIn('pauth_tkt', cookies)
+        self.assertIn('auth_tkt', cookies)
+        self.assertIsNone(cookies['auth_tkt'].expires)
 
         res = self.webapp.get('/logout')
         self.assertEqual(res.status_int, 303)
+
+        self.assertNotIn('auth_tkt', cookies)
+        self.assertNotIn('pauth_tkt', cookies)
 
         res = self.webapp.post('/login', {
             '__login': self.admlogin, '__password': self.admpassword,
             '__setauthcookie': 1})
         self.assertEqual(res.status_int, 303)
-        cookie = self.webapp.cookiejar._cookies[
-            'localhost.local']['/']['auth_tkt']
-        self.assertIsNotNone(cookie.expires)
+
+        cookies = self.webapp.cookiejar._cookies['localhost.local']['/']
+        self.assertNotIn('auth_tkt', cookies)
+        self.assertIn('pauth_tkt', cookies)
+        self.assertIsNotNone(cookies['pauth_tkt'].expires)
