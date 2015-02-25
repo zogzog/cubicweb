@@ -44,7 +44,7 @@ from cubicweb import (ValidationError, NoSelectableObject, AuthenticationError,
 from cubicweb import cwconfig, devtools, web, server, repoapi
 from cubicweb.utils import json
 from cubicweb.sobjects import notification
-from cubicweb.web import Redirect, application
+from cubicweb.web import Redirect, application, eid_param
 from cubicweb.server.hook import SendMailOp
 from cubicweb.server.session import Session
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
@@ -882,6 +882,43 @@ class CubicWebTC(TestCase):
             req.cnx.commit()
             raise
         return result
+
+    @staticmethod
+    def fake_form(formid, field_dict=None, entity_field_dicts=()):
+        """Build _cw.form dictionnary to fake posting of some standard cubicweb form
+
+        * `formid`, the form id, usually form's __regid__
+
+        * `field_dict`, dictionary of name:value for fields that are not tied to an entity
+
+        * `entity_field_dicts`, list of (entity, dictionary) where dictionary contains name:value
+          for fields that are not tied to the given entity
+        """
+        assert field_dict or entity_field_dicts, \
+                'field_dict and entity_field_dicts arguments must not be both unspecified'
+        if field_dict is None:
+            field_dict = {}
+        form = {'__form_id': formid}
+        fields = []
+        for field, value in field_dict.items():
+            fields.append(field)
+            form[field] = value
+        def _add_entity_field(entity, field, value):
+            entity_fields.append(field)
+            form[eid_param(field, entity.eid)] = value
+        for entity, field_dict in entity_field_dicts:
+            if '__maineid' not in form:
+                form['__maineid'] = entity.eid
+            entity_fields = []
+            form.setdefault('eid', []).append(entity.eid)
+            _add_entity_field(entity, '__type', entity.cw_etype)
+            for field, value in field_dict.items():
+                _add_entity_field(entity, field, value)
+            if entity_fields:
+                form[eid_param('_cw_entity_fields', entity.eid)] = ','.join(entity_fields)
+        if fields:
+            form['_cw_fields'] = ','.join(fields)
+        return form
 
     @deprecated('[3.19] use .admin_request_from_url instead')
     def req_from_url(self, url):
