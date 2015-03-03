@@ -237,10 +237,6 @@ class BaseApptestConfiguration(TestServerConfiguration, WebConfigurationBase):
     def available_languages(self, *args):
         return self.cw_languages()
 
-    def pyro_enabled(self):
-        # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and
-        # threads
-        return True
 
 # XXX merge with BaseApptestConfiguration ?
 class ApptestConfiguration(BaseApptestConfiguration):

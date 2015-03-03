@@ -110,32 +110,6 @@ RQL server configuration
     file where all requests RQL executed by the server are written
 
 
-Pyro configuration for the instance
------------------------------------
-Web server side:
-
-:`pyro.pyro-instance-id`:
-    pyro identifier of RQL server (e.g. the instance name)
-
-RQL server side:
-
-:`main.pyro-server`:
-    boolean to switch on/off pyro server-side
-
-:`pyro.pyro-host`:
-    pyro host:port number. If no port is specified, it is assigned
-    automatically.
-
-RQL and web servers side:
-
-:`pyro.pyro-ns-host`:
-    hostname hosting pyro server name. If no value is
-    specified, it is located by a request from broadcast
-
-:`pyro.pyro-ns-group`:
-    pyro group in which to save the instance (will default to 'cubicweb')
-
-
 Configuring e-mail
 ------------------
 RQL and web server side:

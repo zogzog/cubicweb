@@ -14,7 +14,6 @@ You can `configure the database`_ system of your choice:
 
 For advanced features, have a look to:
 
-  - `Pyro configuration`_
   - `Cubicweb resources configuration`_
 
 .. _`configure the database`: DatabaseInstallation_
@@ -22,7 +21,6 @@ For advanced features, have a look to:
 .. _`MySql configuration`: MySqlConfiguration_
 .. _`SQLServer configuration`: SQLServerConfiguration_
 .. _`SQLite configuration`: SQLiteConfiguration_
-.. _`Pyro configuration`: PyroConfiguration_
 .. _`Cubicweb resources configuration`: RessourcesConfiguration_
 
 
@@ -228,30 +226,4 @@ anything for db-user and db-password, they will be ignore anyway.
 .. Note::
   SQLite is great for testing and to play with cubicweb but is not suited for
   production environments.
-
-
-.. _PyroConfiguration:
-
-Pyro configuration
-------------------
-
-Pyro name server
-~~~~~~~~~~~~~~~~
-
-If you want to use Pyro to access your instance remotely, or to have multi-source
-or distributed configuration, it is required to have a Pyro name server running
-on your network. By default it is detected by a broadcast request, but you can
-specify a location in the instance's configuration file.
-
-To do so, you need to :
-
-* be sure to have installed it (see :ref:`InstallDependencies`)
-
-* launch the pyro name server with `pyro-nsd start` before starting cubicweb
-
-* under debian, edit the file :file:`/etc/default/pyro-nsd` so that the name
-  server pyro will be launched automatically when the machine fire up
-
-Note that you can use the pyro server without a running pyro nameserver.
-Refer to `pyro-ns-host` server configuration option for details.
 

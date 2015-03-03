@@ -1,4 +1,4 @@
-# copyright 2013-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2013-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -41,7 +41,7 @@ def get_repository(uri=None, config=None, vreg=None):
     loading the repository for a client, eg web server, configuration).
 
     The returned repository may be an in-memory repository or a proxy object
-    using a specific RPC method, depending on the given URI (pyro or zmq).
+    using a specific RPC method, depending on the given URI.
     """
     if uri is None:
         return _get_inmemory_repo(config, vreg)
@@ -51,25 +51,6 @@ def get_repository(uri=None, config=None, vreg=None):
     if protocol == 'inmemory':
         # me may have been called with a dummy 'inmemory://' uri ...
         return _get_inmemory_repo(config, vreg)
-
-    if protocol == 'pyroloc':  # direct connection to the instance
-        from logilab.common.pyro_ext import get_proxy
-        uri = uri.replace('pyroloc', 'PYRO')
-        return get_proxy(uri)
-
-    if protocol == 'pyro':  # connection mediated through the pyro ns
-        from logilab.common.pyro_ext import ns_get_proxy
-        path = appid.strip('/')
-        if not path:
-            raise ConnectionError(
-                "can't find instance name in %s (expected to be the path component)"
-                % uri)
-        if '.' in path:
-            nsgroup, nsid = path.rsplit('.', 1)
-        else:
-            nsgroup = 'cubicweb'
-            nsid = path
-        return ns_get_proxy(nsid, defaultnsgroup=nsgroup, nshost=hostport)
 
     if protocol.startswith('zmqpickle-'):
         from cubicweb.zmqclient import ZMQRepositoryClient

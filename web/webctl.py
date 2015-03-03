@@ -46,9 +46,6 @@ class WebCreateHandler(CommandHandler):
         if not automatic:
             print '\n' + underline_title('Generic web configuration')
             config = self.config
-            if config['repository-uri'].startswith('pyro://') or config.pyro_enabled():
-                print '\n' + underline_title('Pyro configuration')
-                config.input_config('pyro', inputlevel)
             config.input_config('web', inputlevel)
             if ASK.confirm('Allow anonymous access ?', False):
                 config.global_set_option('anonymous-user', 'anon')

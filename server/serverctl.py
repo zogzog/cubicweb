@@ -167,11 +167,6 @@ class RepositoryCreateHandler(CommandHandler):
         if not automatic:
             print underline_title('Configuring the repository')
             config.input_config('email', inputlevel)
-            # ask for pyro configuration if pyro is activated and we're not
-            # using a all-in-one config, in which case this is done by the web
-            # side command handler
-            if config.pyro_enabled() and config.name != 'all-in-one':
-                config.input_config('pyro', inputlevel)
             print '\n'+underline_title('Configuring the sources')
         sourcesfile = config.sources_file()
         # hack to make Method('default_instance_id') usable in db option defs
@@ -321,12 +316,7 @@ class RepositoryStopHandler(CommandHandler):
     cfgname = 'repository'
 
     def poststop(self):
-        """if pyro is enabled, ensure the repository is correctly unregistered
-        """
-        if self.config.pyro_enabled():
-            from cubicweb.server.repository import pyro_unregister
-            pyro_unregister(self.config)
-
+        pass
 
 # repository specific commands ################################################
 
@@ -689,7 +679,7 @@ class ResetAdminPasswordCommand(Command):
 class StartRepositoryCommand(Command):
     """Start a CubicWeb RQL server for a given instance.
 
-    The server will be remotely accessible through pyro or ZMQ
+    The server will be remotely accessible through ZMQ
 
     <instance>
       the identifier of the instance to initialize.
@@ -709,23 +699,18 @@ class StartRepositoryCommand(Command):
         ('address',
          {'short': 'a', 'type': 'string', 'metavar': '<protocol>://<host>:<port>',
           'default': '',
-          'help': ('specify a ZMQ URI on which to bind, or use "pyro://"'
-                   'to create a pyro-based repository'),
+          'help': ('specify a ZMQ URI on which to bind'),
           }),
         )
 
     def create_repo(self, config):
         address = self['address']
         if not address:
-            address = config.get('zmq-repository-address') or 'pyro://'
-        if address.startswith('pyro://'):
-            from cubicweb.server.server import RepositoryServer
-            return RepositoryServer(config), config['host']
-        else:
-            from cubicweb.server.utils import TasksManager
-            from cubicweb.server.cwzmq import ZMQRepositoryServer
-            repo = Repository(config, TasksManager())
-            return ZMQRepositoryServer(repo), address
+            address = config.get('zmq-repository-address')
+        from cubicweb.server.utils import TasksManager
+        from cubicweb.server.cwzmq import ZMQRepositoryServer
+        repo = Repository(config, TasksManager())
+        return ZMQRepositoryServer(repo), address
 
     def run(self, args):
         from logilab.common.daemon import daemonize, setugid

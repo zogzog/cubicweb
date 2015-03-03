@@ -58,7 +58,6 @@ Depends:
  | python-pysqlite2,
  python-passlib
 Recommends:
- pyro (<< 4.0.0),
  cubicweb-documentation (= ${source:Version})
 Suggests:
  python-zmq
@@ -109,7 +108,6 @@ Depends:
  cubicweb-ctl (= ${source:Version}),
  python-twisted-web
 Recommends:
- pyro (<< 4.0.0),
  cubicweb-documentation (= ${source:Version})
 Description: twisted-based web interface for the CubicWeb framework
  CubicWeb is a semantic web application framework.

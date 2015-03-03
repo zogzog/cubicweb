@@ -45,7 +45,6 @@ Instance configuration and maintainance
 | configuration - user / groups handling                             | 3  | 1  |
 | configuration - site configuration                                 | 3  | 1  |
 | configuration - distributed configuration                          | 2  | 1  |
-| configuration - pyro                                               | 2  | 2  |
 +--------------------------------------------------------------------+----+----+
 | multi-sources - capabilities                                       | NA | 0  |
 | multi-sources - configuration                                      | 2  | 0  |

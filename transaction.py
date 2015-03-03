@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,13 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""undoable transaction objects.
-
-
-This module is in the cubicweb package and not in cubicweb.server because those
-objects should be accessible to client through pyro, where the cubicweb.server
-package may not be installed.
-"""
+""" undoable transaction objects. """
 __docformat__ = "restructuredtext en"
 _ = unicode
 

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,9 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """twisted server configurations:
-
-* the "twisted" configuration to get a web instance running in a standalone
-  twisted web server which talk to a repository server using Pyro
 
 * the "all-in-one" configuration to get a web instance running in a twisted
   web server integrating a repository server in the same process (only available
@@ -82,13 +79,6 @@ class WebConfigurationBase(WebConfiguration):
 the repository rather than the user running the command',
           'group': 'main', 'level': WebConfiguration.mode == 'system'
           }),
-        ('pyro-server',
-         {'type' : 'yn',
-          # pyro is only a recommends by default, so don't activate it here
-          'default': False,
-          'help': 'run a pyro server',
-          'group': 'main', 'level': 1,
-          }),
         ('webserver-threadpool-size',
          {'type': 'int',
           'default': 4,
@@ -117,9 +107,6 @@ try:
 
         cubicweb_appobject_path = WebConfigurationBase.cubicweb_appobject_path | ServerConfiguration.cubicweb_appobject_path
         cube_appobject_path = WebConfigurationBase.cube_appobject_path | ServerConfiguration.cube_appobject_path
-        def pyro_enabled(self):
-            """tell if pyro is activated for the in memory repository"""
-            return self['pyro-server']
 
 
     CONFIGURATIONS.append(AllInOneConfiguration)

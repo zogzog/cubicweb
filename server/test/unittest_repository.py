@@ -312,55 +312,6 @@ class RepositoryTC(CubicWebTC):
         ownedby = schema.rschema('owned_by')
         self.assertEqual(ownedby.objects('CWEType'), ('CWUser',))
 
-    def test_pyro(self):
-        import Pyro
-        Pyro.config.PYRO_MULTITHREADED = 0
-        done = []
-        self.repo.config.global_set_option('pyro-ns-host', 'NO_PYRONS')
-        daemon = self.repo.pyro_register()
-        try:
-            uri = self.repo.pyro_uri.replace('PYRO', 'pyroloc')
-            # the client part has to be in the thread due to sqlite limitations
-            t = threading.Thread(target=self._pyro_client, args=(uri, done))
-            t.start()
-            while not done:
-                daemon.handleRequests(1.0)
-            t.join(1)
-            if t.isAlive():
-                self.fail('something went wrong, thread still alive')
-        finally:
-            repository.pyro_unregister(self.repo.config)
-            from logilab.common import pyro_ext
-            pyro_ext._DAEMONS.clear()
-
-
-    def _pyro_client(self, uri, done):
-        cnx = connect(uri,
-                      u'admin', password='gingkow',
-                      initlog=False) # don't reset logging configuration
-        try:
-            cnx.load_appobjects(subpath=('entities',))
-            # check we can get the schema
-            schema = cnx.get_schema()
-            self.assertTrue(cnx.vreg)
-            self.assertTrue('etypes'in cnx.vreg)
-            cu = cnx.cursor()
-            rset = cu.execute('Any U,G WHERE U in_group G')
-            user = iter(rset.entities()).next()
-            self.assertTrue(user._cw)
-            self.assertTrue(user._cw.vreg)
-            from cubicweb.entities import authobjs
-            self.assertIsInstance(user._cw.user, authobjs.CWUser)
-            # make sure the tcp connection is closed properly; yes, it's disgusting.
-            adapter = cnx._repo.adapter
-            cnx.close()
-            adapter.release()
-            done.append(True)
-        finally:
-            # connect monkey patch some method by default, remove them
-            multiple_connections_unfix()
-
-
     def test_zmq(self):
         try:
             import zmq

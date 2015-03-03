@@ -21,7 +21,6 @@ from __future__ import division
 
 __docformat__ = "restructuredtext en"
 
-import sys
 import decimal
 import datetime
 import random
@@ -608,7 +607,6 @@ def parse_repo_uri(uri):
     """ transform a command line uri into a (protocol, hostport, appid), e.g:
     <myapp>                      -> 'inmemory', None, '<myapp>'
     inmemory://<myapp>           -> 'inmemory', None, '<myapp>'
-    pyro://[host][:port]         -> 'pyro', 'host:port', None
     zmqpickle://[host][:port]    -> 'zmqpickle', 'host:port', None
     """
     parseduri = urlparse(uri)
@@ -617,7 +615,7 @@ def parse_repo_uri(uri):
         return ('inmemory', None, parseduri.path)
     if scheme == 'inmemory':
         return (scheme, None, parseduri.netloc)
-    if scheme in ('pyro', 'pyroloc') or scheme.startswith('zmqpickle-'):
+    if scheme.startswith('zmqpickle-'):
         return (scheme, parseduri.netloc, parseduri.path)
     raise NotImplementedError('URI protocol not implemented for `%s`' % uri)
 

@@ -119,13 +119,7 @@ def connect(database, login=None,
     * a simple instance id for in-memory connection
 
     * a uri like scheme://host:port/instanceid where scheme may be one of
-      'pyro', 'inmemory' or 'zmqpickle'
-
-      * if scheme is 'pyro', <host:port> determine the name server address. If
-        not specified (e.g. 'pyro:///instanceid'), it will be detected through a
-        broadcast query. The instance id is the name of the instance in the name
-        server and may be prefixed by a group (e.g.
-        'pyro:///:cubicweb.instanceid')
+      'inmemory' or 'zmqpickle'
 
       * if scheme is handled by ZMQ (eg 'tcp'), you should not specify an
         instance id
@@ -137,8 +131,7 @@ def connect(database, login=None,
 
     :cnxprops:
       a :class:`ConnectionProperties` instance, allowing to specify
-      the connection method (eg in memory or pyro). A Pyro connection will be
-      established if you don't specify that argument.
+      the connection method (eg in memory or zmq).
 
     :setvreg:
       flag telling if a registry should be initialized for the connection.
@@ -166,14 +159,6 @@ def connect(database, login=None,
             database = kwargs.pop('host')
         elif cnxprops and cnxprops.cnxtype == 'inmemory':
             database = 'inmemory://' + database
-        else:
-            host = kwargs.pop('host', None)
-            if host is None:
-                host = ''
-            group = kwargs.pop('group', None)
-            if group is None:
-                group = 'cubicweb'
-            database = 'pyro://%s/%s.%s' % (host, group, database)
     puri = urlparse(database)
     method = puri.scheme.lower()
     if method == 'inmemory':
@@ -735,10 +720,6 @@ class Connection(object):
     @check_not_closed
     def cursor(self, req=None):
         """Return a new Cursor Object using the connection.
-
-        On pyro connection, you should get cursor after calling if
-        load_appobjects method if desired (which you should call if you intend
-        to use ORM abilities).
         """
         if req is None:
             req = self.request()

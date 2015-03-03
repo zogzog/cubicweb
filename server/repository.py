@@ -24,7 +24,6 @@ repository mainly:
 * brings these classes all together to provide a single access
   point to a cubicweb instance.
 * handles session management
-* provides method for pyro registration, to call if pyro is enabled
 """
 __docformat__ = "restructuredtext en"
 
@@ -151,8 +150,6 @@ class NullEventBus(object):
 class Repository(object):
     """a repository provides access to a set of persistent storages for
     entities and relations
-
-    XXX protect pyro access
     """
 
     def __init__(self, config, tasks_manager=None, vreg=None):
@@ -162,16 +159,10 @@ class Repository(object):
         self.vreg = vreg
         self._tasks_manager = tasks_manager
 
-        self.pyro_registered = False
-        self.pyro_uri = None
-        # every pyro client is handled in its own thread; map these threads to
-        # the session we opened for them so we can clean up when they go away
-        self._pyro_sessions = {}
         self.app_instances_bus = NullEventBus()
         self.info('starting repository from %s', self.config.apphome)
         # dictionary of opened sessions
         self._sessions = {}
-
 
         # list of functions to be called at regular interval
         # list of running threads
@@ -435,10 +426,6 @@ class Repository(object):
             except Exception:
                 self.exception('error while closing %s' % cnxset)
                 continue
-        if self.pyro_registered:
-            if self._use_pyrons():
-                pyro_unregister(self.config)
-            self.pyro_uri = None
         hits, misses = self.querier.cache_hit, self.querier.cache_miss
         try:
             self.info('rql st cache hit/miss: %s/%s (%s%% hits)', hits, misses,
@@ -662,12 +649,6 @@ class Repository(object):
             # try to get a user object
             user = self.authenticate_user(cnx, login, **kwargs)
         session = Session(user, self, cnxprops)
-        if threading.currentThread() in self._pyro_sessions:
-            # assume no pyro client does one get_repository followed by
-            # multiple repo.connect
-            assert self._pyro_sessions[threading.currentThread()] == None
-            self.debug('record session %s', session)
-            self._pyro_sessions[threading.currentThread()] = session
         user._cw = user.cw_rset.req = session
         user.cw_clear_relation_cache()
         self._sessions[session.sessionid] = session
@@ -697,10 +678,6 @@ class Repository(object):
             try:
                 rset = self.querier.execute(session, rqlstring, args,
                                             build_descr)
-                # NOTE: the web front will (re)build it when needed
-                #       e.g in facets
-                #       Zeroed to avoid useless overhead with pyro
-                rset._rqlst = None
                 return rset
             except (ValidationError, Unauthorized, RQLSyntaxError):
                 raise
@@ -810,8 +787,6 @@ class Repository(object):
             # done during `session_close` hooks
             cnx.commit()
         session.close()
-        if threading.currentThread() in self._pyro_sessions:
-            self._pyro_sessions[threading.currentThread()] = None
         del self._sessions[sessionid]
         self.info('closed session %s for user %s', sessionid, session.user.login)
 
@@ -1349,78 +1324,11 @@ class Repository(object):
                            eidfrom=subject, rtype=rtype, eidto=object)
 
 
-    # pyro handling ###########################################################
-
-    @property
-    @cached
-    def pyro_appid(self):
-        from logilab.common import pyro_ext as pyro
-        config = self.config
-        appid = '%s.%s' % pyro.ns_group_and_id(
-            config['pyro-instance-id'] or config.appid,
-            config['pyro-ns-group'])
-        # ensure config['pyro-instance-id'] is a full qualified pyro name
-        config['pyro-instance-id'] = appid
-        return appid
-
-    def _use_pyrons(self):
-        """return True if the pyro-ns-host is set to something else
-        than NO_PYRONS, meaning we want to go through a pyro
-        nameserver"""
-        return self.config['pyro-ns-host'] != 'NO_PYRONS'
-
-    def pyro_register(self, host=''):
-        """register the repository as a pyro object"""
-        from logilab.common import pyro_ext as pyro
-        daemon = pyro.register_object(self, self.pyro_appid,
-                                      daemonhost=self.config['pyro-host'],
-                                      nshost=self.config['pyro-ns-host'],
-                                      use_pyrons=self._use_pyrons())
-        self.info('repository registered as a pyro object %s', self.pyro_appid)
-        self.pyro_uri =  pyro.get_object_uri(self.pyro_appid)
-        self.info('pyro uri is: %s', self.pyro_uri)
-        self.pyro_registered = True
-        # register a looping task to regularly ensure we're still registered
-        # into the pyro name server
-        if self._use_pyrons():
-            self.looping_task(60*10, self._ensure_pyro_ns)
-        pyro_sessions = self._pyro_sessions
-        # install hacky function to free cnxset
-        def handleConnection(conn, tcpserver, sessions=pyro_sessions):
-            sessions[threading.currentThread()] = None
-            return tcpserver.getAdapter().__class__.handleConnection(tcpserver.getAdapter(), conn, tcpserver)
-        daemon.getAdapter().handleConnection = handleConnection
-        def removeConnection(conn, sessions=pyro_sessions):
-            daemon.__class__.removeConnection(daemon, conn)
-            session = sessions.pop(threading.currentThread(), None)
-            if session is None:
-                # client was not yet connected to the repo
-                return
-            if not session.closed:
-                self.close(session.sessionid)
-        daemon.removeConnection = removeConnection
-        return daemon
-
-    def _ensure_pyro_ns(self):
-        if not self._use_pyrons():
-            return
-        from logilab.common import pyro_ext as pyro
-        pyro.ns_reregister(self.pyro_appid, nshost=self.config['pyro-ns-host'])
-        self.info('repository re-registered as a pyro object %s',
-                  self.pyro_appid)
 
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
-
-
-def pyro_unregister(config):
-    """unregister the repository from the pyro name server"""
-    from logilab.common.pyro_ext import ns_unregister
-    appid = config['pyro-instance-id'] or config.appid
-    ns_unregister(appid, config['pyro-ns-group'], config['pyro-ns-host'])
-
 
 from logging import getLogger
 from cubicweb import set_log_methods

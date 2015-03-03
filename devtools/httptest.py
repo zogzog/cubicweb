@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -78,8 +78,6 @@ class CubicWebServerConfig(ApptestConfiguration):
         self.global_set_option('port', port) # force rewrite here
         return 'http://127.0.0.1:%d/' % self['port']
 
-    def pyro_enabled(self):
-        return False
 
 
 class CubicWebServerTC(CubicWebTC):

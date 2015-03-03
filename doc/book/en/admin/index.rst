@@ -22,7 +22,6 @@ instances based on that framework.
    site-config
    multisources
    ldap
-   pyro
    migration
    additional-tips
    rql-logs

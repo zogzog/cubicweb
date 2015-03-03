@@ -65,14 +65,6 @@ class CubicWebRootResource(resource.Resource):
         # when we have an in-memory repository, clean unused sessions every XX
         # seconds and properly shutdown the server
         if config['repository-uri'] == 'inmemory://':
-            if config.pyro_enabled():
-                # if pyro is enabled, we have to register to the pyro name
-                # server, create a pyro daemon, and create a task to handle pyro
-                # requests
-                self.appli.repo.warning('remote repository access through pyro is deprecated')
-                self.pyro_daemon = self.appli.repo.pyro_register()
-                self.pyro_listen_timeout = 0.02
-                self.appli.repo.looping_task(1, self.pyro_loop_event)
             if config.mode != 'test':
                 reactor.addSystemEventTrigger('before', 'shutdown',
                                               self.shutdown_event)
@@ -92,13 +84,6 @@ class CubicWebRootResource(resource.Resource):
         clean opened sessions
         """
         self.appli.repo.shutdown()
-
-    def pyro_loop_event(self):
-        """listen for pyro events"""
-        try:
-            self.pyro_daemon.handleRequests(self.pyro_listen_timeout)
-        except select.error:
-            return
 
     def getChild(self, path, request):
         """Indicate which resource to use to process down the URL's path"""

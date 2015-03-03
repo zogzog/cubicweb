@@ -23,7 +23,6 @@ from logilab.common.testlib import TestCase, unittest_main
 class ImportTC(TestCase):
     def test(self):
         # the minimal test: module is importable...
-        import cubicweb.server.server
         import cubicweb.server.checkintegrity
         import cubicweb.server.serverctl
 

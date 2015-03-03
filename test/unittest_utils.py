@@ -58,10 +58,6 @@ class TestParseRepoUri(TestCase):
                          parse_repo_uri('myapp'))
         self.assertEqual(('inmemory', None, 'myapp'),
                          parse_repo_uri('inmemory://myapp'))
-        self.assertEqual(('pyro', 'pyro-ns-host:pyro-ns-port', '/myapp'),
-                         parse_repo_uri('pyro://pyro-ns-host:pyro-ns-port/myapp'))
-        self.assertEqual(('pyroloc', 'host:port', '/appkey'),
-                         parse_repo_uri('pyroloc://host:port/appkey'))
         self.assertEqual(('zmqpickle-tcp', '127.0.0.1:666', ''),
                          parse_repo_uri('zmqpickle-tcp://127.0.0.1:666'))
         with self.assertRaises(NotImplementedError):

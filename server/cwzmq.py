@@ -19,6 +19,7 @@
 
 import cPickle
 import traceback
+from time import localtime, mktime
 from threading import Thread
 from logging import getLogger
 
@@ -27,7 +28,6 @@ from zmq.eventloop import ioloop
 import zmq.eventloop.zmqstream
 
 from cubicweb import set_log_methods
-from cubicweb.server.server import QuitEvent, Finished
 
 ctx = zmq.Context()
 
@@ -37,6 +37,51 @@ def cwproto_to_zmqaddr(address):
     """
     assert address.startswith('zmqpickle-'), 'bad protocol string %s' % address
     return address.split('-', 1)[1] # chop the `zmqpickle-` prefix
+
+
+class Finished(Exception):
+    """raise to remove an event from the event loop"""
+
+class TimeEvent:
+    """base event"""
+    # timefunc = staticmethod(localtime)
+    timefunc = localtime
+
+    def __init__(self, absolute=None, period=None):
+        # local time tuple
+        if absolute is None:
+            absolute = self.timefunc()
+        self.absolute = absolute
+        # optional period in seconds
+        self.period = period
+
+    def is_ready(self):
+        """return  true if the event is ready to be fired"""
+        now = self.timefunc()
+        if self.absolute <= now:
+            return True
+        return False
+
+    def fire(self, server):
+        """fire the event
+        must be overridden by concrete events
+        """
+        raise NotImplementedError()
+
+    def update(self):
+        """update the absolute date for the event or raise a finished exception
+        """
+        if self.period is None:
+            raise Finished
+        self.absolute = localtime(mktime(self.absolute) + self.period)
+
+
+class QuitEvent(TimeEvent):
+    """stop the server"""
+    def fire(self, server):
+        server.repo.shutdown()
+        server.quiting = True
+
 
 class ZMQComm(object):
     """

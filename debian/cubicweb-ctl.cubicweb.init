@@ -4,16 +4,14 @@
 # Provides:          cubicweb
 # Required-Start:    $remote_fs $syslog $local_fs $network
 # Required-Stop:     $remote_fs $syslog $local_fs $network
-# Should-Start:      postgresql pyro-nsd
-# Should-Stop:       postgresql pyro-nsd
+# Should-Start:      postgresql
+# Should-Stop:       postgresql
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start cubicweb application at boot time
 ### END INIT INFO
 
 # FIXME Seems to be inadequate here
-# FIXME If related to pyro, try instead:
-# export PYRO_STORAGE="/tmp"
 cd /tmp
 
 # FIXME Work-around about the following lintian error
