@@ -384,6 +384,8 @@ class RepositoryTC(CubicWebTC):
         t2.join(1)
         t.join(1)
 
+        self.assertTrue(done[0])
+
         if t.isAlive():
             self.fail('something went wrong, thread still alive')
 
