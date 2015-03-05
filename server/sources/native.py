@@ -757,7 +757,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         it's a function just so that it shows up in profiling
         """
         if server.DEBUG & server.DBG_SQL:
-            print 'execmany', query, 'with', len(args), 'arguments'
+            print 'execmany', query, 'with', len(args), 'arguments', cnx.cnxset.cnx
         cursor = cnx.cnxset.cu
         try:
             # str(query) to avoid error if it's a unicode string
