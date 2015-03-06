@@ -38,6 +38,12 @@ msgstr ""
 msgid "add ForumThread in_forum Forum object"
 msgstr ""
 
+msgid "add a Forum"
+msgstr ""
+
+msgid "add a ForumThread"
+msgstr ""
+
 msgid "creating ForumThread (ForumThread in_forum Forum %(linkto)s)"
 msgstr ""
 
