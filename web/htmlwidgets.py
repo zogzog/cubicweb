@@ -141,7 +141,7 @@ class MenuWidget(BoxWidget):
 
 
 class RawBoxItem(HTMLWidget): # XXX deprecated
-    """a simpe box item displaying raw data"""
+    """a simple box item displaying raw data"""
 
     def __init__(self, label, liclass=None):
         self.label = label
