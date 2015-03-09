@@ -353,7 +353,7 @@ class CtxComponent(LayoutableMixIn, AppObject):
         has some content to display. If not, you can still raise
         :exc:`EmptyComponent` to inform it should be skipped.
 
-        Also, :exc:`Unauthorized` will be catched, logged, then the component
+        Also, :exc:`Unauthorized` will be caught, logged, then the component
         will be skipped.
         """
         self.items = []

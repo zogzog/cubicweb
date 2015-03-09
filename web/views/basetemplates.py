@@ -490,7 +490,7 @@ class LogForm(BaseLogForm):
 
 
 class LogFormView(View):
-    # XXX an awfull lot of hardcoded assumptions there
+    # XXX an awful lot of hardcoded assumptions there
     #     makes it unobvious to reuse/specialize
     __regid__ = 'logform'
     __select__ = match_kwargs('id', 'klass')

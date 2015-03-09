@@ -646,7 +646,7 @@ class QueryCache(object):
 
     Occasional elements can be buggy requests (server-side) or
     end-user (web-ui provided) requests. These have to be cleaned up
-    when they fill the cache, without evicting the usefull, frequently
+    when they fill the cache, without evicting the useful, frequently
     used entries.
     """
     # quite arbitrary, but we want to never

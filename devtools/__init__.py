@@ -783,7 +783,7 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         dbfile = self.absolute_dbfile()
         backup_file = self.absolute_backup_file(db_id, 'sqlite')
         shutil.copy(dbfile, backup_file)
-        # Usefull to debug WHO write a database
+        # Useful to debug WHO writes a database
         # backup_stack = self.absolute_backup_file(db_id, '.stack')
         #with open(backup_stack, 'w') as backup_stack_file:
         #    import traceback

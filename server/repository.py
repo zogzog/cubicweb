@@ -1078,7 +1078,7 @@ class Repository(object):
                     continue
                 # take care to relation of cardinality '?1', as all eids will
                 # be inserted later, we've remove duplicated eids since they
-                # won't be catched by `del_existing_rel_if_needed`
+                # won't be caught by `del_existing_rel_if_needed`
                 rdef = cnx.rtype_eids_rdef(rtype, subjeid, objeid)
                 card = rdef.cardinality
                 if card[0] in '?1':
