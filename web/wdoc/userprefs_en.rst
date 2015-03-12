@@ -7,4 +7,4 @@ Each user can as well customize the site appearance using the "user's
 preferences" link in this menu. This will show you a form to configure which
 boxes are displayed, in which order, etc...
 
-.. image:: doc/images/userprefs
+.. image:: images/userprefs

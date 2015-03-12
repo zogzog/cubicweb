@@ -103,7 +103,7 @@ much greater than connection-poolsize",
 
     def default_base_url(self):
         from socket import getfqdn
-        return 'http://%s:%s/' % (self['host'] or getfqdn(), self['port'] or 8080)
+        return 'http://%s:%s/' % (self['host'] or getfqdn().lower(), self['port'] or 8080)
 
 
 try:

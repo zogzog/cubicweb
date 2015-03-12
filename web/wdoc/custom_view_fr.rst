@@ -9,10 +9,10 @@ n'est pas affichée par défaut, vous pouvez l'activer dans vos `préférences
 utilisateur`_). Une fois que vous êtes satisfait, ajoutez un `signet`_ si vous
 voulez réutiliser votre vue plus tard.
 
-.. _`tutoriel RQL`: doc/tut_rql
-.. _`schéma`: schema
-.. _`préférences utilisateur`: myprefs
-.. _`signet`: doc/bookmarks
+.. _`tutoriel RQL`: tut_rql
+.. _`schéma`: ../schema
+.. _`préférences utilisateur`: ../myprefs
+.. _`signet`: bookmarks
 
 
 Ci-dessous quelques exemples de ce que l'on peut faire...
