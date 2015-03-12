@@ -150,7 +150,7 @@ class MoreFieldsTC(CubicWebTC):
             self.assertEqual(description_format_field.internationalizable, True)
             self.assertEqual(description_format_field.sort, True)
             # unlike below, initial is bound to form.form_field_format
-            self.assertEqual(description_format_field.value(form), 'text/html')
+            self.assertEqual(description_format_field.value(form), 'text/plain')
             req.cnx.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
             req.cnx.commit()
             self.assertEqual(description_format_field.value(form), 'text/rest')

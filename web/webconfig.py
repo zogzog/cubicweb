@@ -49,7 +49,7 @@ register_persistent_options( (
       }),
     # user web ui configuration
     ('fckeditor',
-     {'type' : 'yn', 'default': True,
+     {'type' : 'yn', 'default': False,
       'help': _('should html fields being edited using fckeditor (a HTML '
                 'WYSIWYG editor).  You should also select text/html as default '
                 'text format to actually get fckeditor.'),

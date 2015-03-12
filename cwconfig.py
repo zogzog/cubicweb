@@ -279,7 +279,7 @@ PERSISTENT_OPTIONS = (
     ('default-text-format',
      {'type' : 'choice',
       'choices': ('text/plain', 'text/rest', 'text/html', 'text/markdown'),
-      'default': 'text/html', # use fckeditor in the web ui
+      'default': 'text/plain',
       'help': _('default text format for rich text fields.'),
       'group': 'ui',
       }),
