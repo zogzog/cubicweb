@@ -1105,6 +1105,30 @@ msgstr "Subworkflow Exit-Punkt"
 msgid "add WorkflowTransition transition_of Workflow object"
 msgstr "Workflow-Übergang"
 
+msgid "add a BaseTransition"
+msgstr ""
+
+msgid "add a Bookmark"
+msgstr ""
+
+msgid "add a CWAttribute"
+msgstr ""
+
+msgid "add a CWCache"
+msgstr ""
+
+msgid "add a CWConstraint"
+msgstr ""
+
+msgid "add a CWConstraintType"
+msgstr ""
+
+msgid "add a CWDataImport"
+msgstr ""
+
+msgid "add a CWEType"
+msgstr ""
+
 msgctxt "inlined:CWRelation.from_entity.subject"
 msgid "add a CWEType"
 msgstr "einen Entitätstyp hinzufügen"
@@ -1113,13 +1137,67 @@ msgctxt "inlined:CWRelation.to_entity.subject"
 msgid "add a CWEType"
 msgstr "einen Entitätstyp hinzufügen"
 
+msgid "add a CWGroup"
+msgstr ""
+
+msgid "add a CWProperty"
+msgstr ""
+
+msgid "add a CWRType"
+msgstr ""
+
 msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "einen Relationstyp hinzufügen"
 
+msgid "add a CWRelation"
+msgstr ""
+
+msgid "add a CWSource"
+msgstr ""
+
+msgid "add a CWSourceHostConfig"
+msgstr ""
+
+msgid "add a CWSourceSchemaConfig"
+msgstr ""
+
+msgid "add a CWUniqueTogetherConstraint"
+msgstr ""
+
+msgid "add a CWUser"
+msgstr ""
+
+msgid "add a EmailAddress"
+msgstr ""
+
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "Email-Adresse hinzufügen"
+
+msgid "add a ExternalUri"
+msgstr ""
+
+msgid "add a RQLExpression"
+msgstr ""
+
+msgid "add a State"
+msgstr ""
+
+msgid "add a SubWorkflowExitPoint"
+msgstr ""
+
+msgid "add a TrInfo"
+msgstr ""
+
+msgid "add a Transition"
+msgstr ""
+
+msgid "add a Workflow"
+msgstr ""
+
+msgid "add a WorkflowTransition"
+msgstr ""
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
