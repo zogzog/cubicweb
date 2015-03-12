@@ -1,3 +1,9 @@
+cubicweb (3.19.10-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Rémi Cardona <remi.cardona@logilab.fr>  Thu, 12 Mar 2015 11:52:01 +0100
+
 cubicweb (3.19.9-1) unstable; urgency=low
 
   * new upstream release
