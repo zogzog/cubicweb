@@ -295,28 +295,6 @@ class RepositoryDeleteHandler(CommandHandler):
                     raise ExecutionError(str(exc))
 
 
-class RepositoryStartHandler(CommandHandler):
-    cmdname = 'start'
-    cfgname = 'repository'
-
-    def start_server(self, config):
-        command = ['cubicweb-ctl', 'start-repository']
-        if config.debugmode:
-            command.append('--debug')
-        command.append('--loglevel')
-        command.append(config['log-threshold'].lower())
-        command.append(config.appid)
-        subprocess.call(command)
-        return 1
-
-
-class RepositoryStopHandler(CommandHandler):
-    cmdname = 'stop'
-    cfgname = 'repository'
-
-    def poststop(self):
-        pass
-
 # repository specific commands ################################################
 
 def createdb(helper, source, dbcnx, cursor, **kwargs):

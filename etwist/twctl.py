@@ -71,10 +71,13 @@ try:
         cfgname = 'all-in-one'
         subcommand = 'cubicweb-twisted'
 
-    class AllInOneStopHandler(serverctl.RepositoryStopHandler):
+    class AllInOneStopHandler(CommandHandler):
         cmdname = 'stop'
         cfgname = 'all-in-one'
         subcommand = 'cubicweb-twisted'
+
+        def poststop(self):
+            pass
 
     class AllInOneUpgradeHandler(TWUpgradeHandler):
         cfgname = 'all-in-one'

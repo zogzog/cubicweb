@@ -17,4 +17,9 @@ Deprecated code drops
 
 * the `Pyro` and `Zmq-pickle` remote repository access methods have
   been entirely removed (emerging alternatives such as rqlcontroller
-  and cwclientlib should be used instead)
+  and cwclientlib should be used instead).  Note that as a side effect,
+  "repository-only" instances (i.e. without a http component) are no
+  longer possible.  If you have any such instances, you will need to
+  rename the configuration file from repository.conf to all-in-one.conf
+  and run ``cubicweb-ctl upgrade`` to update it.
+
