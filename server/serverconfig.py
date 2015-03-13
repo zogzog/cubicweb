@@ -345,6 +345,3 @@ notified of every changes.',
         return ServerMigrationHelper(self, schema, interactive=interactive,
                                      cnx=cnx, repo=repo, connect=connect,
                                      verbosity=verbosity)
-
-
-CONFIGURATIONS.append(ServerConfiguration)
