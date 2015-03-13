@@ -58,8 +58,6 @@ class TestParseRepoUri(TestCase):
                          parse_repo_uri('myapp'))
         self.assertEqual(('inmemory', None, 'myapp'),
                          parse_repo_uri('inmemory://myapp'))
-        self.assertEqual(('zmqpickle-tcp', '127.0.0.1:666', ''),
-                         parse_repo_uri('zmqpickle-tcp://127.0.0.1:666'))
         with self.assertRaises(NotImplementedError):
             parse_repo_uri('foo://bar')
 

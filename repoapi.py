@@ -52,11 +52,7 @@ def get_repository(uri=None, config=None, vreg=None):
         # me may have been called with a dummy 'inmemory://' uri ...
         return _get_inmemory_repo(config, vreg)
 
-    if protocol.startswith('zmqpickle-'):
-        from cubicweb.zmqclient import ZMQRepositoryClient
-        return ZMQRepositoryClient(uri)
-    else:
-        raise ConnectionError('unknown protocol: `%s`' % protocol)
+    raise ConnectionError('unknown protocol: `%s`' % protocol)
 
 def connect(repo, login, **kwargs):
     """Take credential and return associated ClientConnection.

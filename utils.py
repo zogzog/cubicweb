@@ -607,7 +607,6 @@ def parse_repo_uri(uri):
     """ transform a command line uri into a (protocol, hostport, appid), e.g:
     <myapp>                      -> 'inmemory', None, '<myapp>'
     inmemory://<myapp>           -> 'inmemory', None, '<myapp>'
-    zmqpickle://[host][:port]    -> 'zmqpickle', 'host:port', None
     """
     parseduri = urlparse(uri)
     scheme = parseduri.scheme
@@ -615,8 +614,6 @@ def parse_repo_uri(uri):
         return ('inmemory', None, parseduri.path)
     if scheme == 'inmemory':
         return (scheme, None, parseduri.netloc)
-    if scheme.startswith('zmqpickle-'):
-        return (scheme, parseduri.netloc, parseduri.path)
     raise NotImplementedError('URI protocol not implemented for `%s`' % uri)
 
 

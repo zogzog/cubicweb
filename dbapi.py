@@ -118,11 +118,8 @@ def connect(database, login=None,
 
     * a simple instance id for in-memory connection
 
-    * a uri like scheme://host:port/instanceid where scheme may be one of
-      'inmemory' or 'zmqpickle'
-
-      * if scheme is handled by ZMQ (eg 'tcp'), you should not specify an
-        instance id
+    * a uri like scheme://host:port/instanceid where scheme must be
+      'inmemory'
 
     Other arguments:
 
@@ -131,7 +128,7 @@ def connect(database, login=None,
 
     :cnxprops:
       a :class:`ConnectionProperties` instance, allowing to specify
-      the connection method (eg in memory or zmq).
+      the connection method (eg in memory).
 
     :setvreg:
       flag telling if a registry should be initialized for the connection.
@@ -150,36 +147,18 @@ def connect(database, login=None,
     :kwargs:
       there goes authentication tokens. You usually have to specify a password
       for the given user, using a named 'password' argument.
+
     """
     if not urlparse(database).scheme:
         warn('[3.16] give an qualified URI as database instead of using '
              'host/cnxprops to specify the connection method',
              DeprecationWarning, stacklevel=2)
-        if cnxprops and cnxprops.cnxtype == 'zmq':
-            database = kwargs.pop('host')
-        elif cnxprops and cnxprops.cnxtype == 'inmemory':
-            database = 'inmemory://' + database
     puri = urlparse(database)
     method = puri.scheme.lower()
-    if method == 'inmemory':
-        config = cwconfig.instance_configuration(puri.netloc)
-    else:
-        config = cwconfig.CubicWebNoAppConfiguration()
+    assert method == 'inmemory'
+    config = cwconfig.instance_configuration(puri.netloc)
     repo = get_repository(database, config=config)
-    if method == 'inmemory':
-        vreg = repo.vreg
-    elif setvreg:
-        if mulcnx:
-            multiple_connections_fix()
-        vreg = cwvreg.CWRegistryStore(config, initlog=initlog)
-        schema = repo.get_schema()
-        for oldetype, newetype in ETYPE_NAME_MAP.items():
-            if oldetype in schema:
-                print 'aliasing', newetype, 'to', oldetype
-                schema._entities[newetype] = schema._entities[oldetype]
-        vreg.set_schema(schema)
-    else:
-        vreg = None
+    vreg = repo.vreg
     cnx = _repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
     cnx.vreg = vreg
     return cnx

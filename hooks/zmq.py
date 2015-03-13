@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -49,31 +49,4 @@ class ZMQStartHook(hook.Hook):
             self.repo.app_instances_bus.add_subscriber(address)
         self.repo.app_instances_bus.start()
 
-
-class ZMQRepositoryServerStopHook(hook.Hook):
-    __regid__ = 'zmqrepositoryserverstop'
-    events = ('server_shutdown',)
-
-    def __call__(self):
-        server = getattr(self.repo, 'zmq_repo_server', None)
-        if server:
-            self.repo.zmq_repo_server.quit()
-
-class ZMQRepositoryServerStartHook(hook.Hook):
-    __regid__ = 'zmqrepositoryserverstart'
-    events = ('server_startup',)
-
-    def __call__(self):
-        config = self.repo.config
-        if config.name == 'repository':
-            # start-repository command already starts a zmq repo
-            return
-        address = config.get('zmq-repository-address')
-        if not address:
-            return
-        self.repo.warning('remote access to the repository via zmq/pickle is deprecated')
-        from cubicweb.server import cwzmq
-        self.repo.zmq_repo_server = server = cwzmq.ZMQRepositoryServer(self.repo)
-        server.connect(address)
-        self.repo.threaded_task(server.run)
 

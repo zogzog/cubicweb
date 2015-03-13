@@ -38,7 +38,6 @@ from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
 from cubicweb.cwctl import CWCTL, check_options_consistency, ConfigureInstanceCommand
 from cubicweb.server import SOURCE_TYPES
-from cubicweb.server.repository import Repository
 from cubicweb.server.serverconfig import (
     USER_OPTIONS, ServerConfiguration, SourceConfiguration,
     ask_source_config, generate_source_config)
@@ -676,72 +675,6 @@ class ResetAdminPasswordCommand(Command):
         cnx.close()
 
 
-class StartRepositoryCommand(Command):
-    """Start a CubicWeb RQL server for a given instance.
-
-    The server will be remotely accessible through ZMQ
-
-    <instance>
-      the identifier of the instance to initialize.
-    """
-    name = 'start-repository'
-    arguments = '<instance>'
-    min_args = max_args = 1
-    options = (
-        ('debug',
-         {'short': 'D', 'action' : 'store_true',
-          'help': 'start server in debug mode.'}),
-        ('loglevel',
-         {'short': 'l', 'type' : 'choice', 'metavar': '<log level>',
-          'default': None, 'choices': ('debug', 'info', 'warning', 'error'),
-          'help': 'debug if -D is set, error otherwise',
-          }),
-        ('address',
-         {'short': 'a', 'type': 'string', 'metavar': '<protocol>://<host>:<port>',
-          'default': '',
-          'help': ('specify a ZMQ URI on which to bind'),
-          }),
-        )
-
-    def create_repo(self, config):
-        address = self['address']
-        if not address:
-            address = config.get('zmq-repository-address')
-        from cubicweb.server.utils import TasksManager
-        from cubicweb.server.cwzmq import ZMQRepositoryServer
-        repo = Repository(config, TasksManager())
-        return ZMQRepositoryServer(repo), address
-
-    def run(self, args):
-        from logilab.common.daemon import daemonize, setugid
-        from cubicweb.cwctl import init_cmdline_log_threshold
-        print 'WARNING: Standalone repository with pyro or zmq access is deprecated'
-        appid = args[0]
-        debug = self['debug']
-        if sys.platform == 'win32' and not debug:
-            logger = logging.getLogger('cubicweb.ctl')
-            logger.info('Forcing debug mode on win32 platform')
-            debug = True
-        config = ServerConfiguration.config_for(appid, debugmode=debug)
-        init_cmdline_log_threshold(config, self['loglevel'])
-        # create the server
-        server, address = self.create_repo(config)
-        # ensure the directory where the pid-file should be set exists (for
-        # instance /var/run/cubicweb may be deleted on computer restart)
-        pidfile = config['pid-file']
-        piddir = os.path.dirname(pidfile)
-        # go ! (don't daemonize in debug mode)
-        if not os.path.exists(piddir):
-            os.makedirs(piddir)
-        if not debug and daemonize(pidfile, umask=config['umask']):
-            return
-        uid = config['uid']
-        if uid is not None:
-            setugid(uid)
-        server.install_sig_handlers()
-        server.connect(address)
-        server.run()
-
 
 def _remote_dump(host, appid, output, sudo=False):
     # XXX generate unique/portable file name
@@ -1125,7 +1058,6 @@ class SchemaDiffCommand(Command):
 
 for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
                  GrantUserOnInstanceCommand, ResetAdminPasswordCommand,
-                 StartRepositoryCommand,
                  DBDumpCommand, DBRestoreCommand, DBCopyCommand,
                  AddSourceCommand, CheckRepositoryCommand, RebuildFTICommand,
                  SynchronizeSourceCommand, SchemaDiffCommand,

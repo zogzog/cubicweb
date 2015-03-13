@@ -31,10 +31,9 @@ from cubicweb import (BadConnectionId, ValidationError,
                       UnknownEid, AuthenticationError, Unauthorized, QueryError)
 from cubicweb.predicates import is_instance
 from cubicweb.schema import RQLConstraint
-from cubicweb.dbapi import connect, multiple_connections_unfix
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify
-from cubicweb.server import repository, hook
+from cubicweb.server import hook
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.hook import Hook
 from cubicweb.server.sources import native
@@ -311,64 +310,6 @@ class RepositoryTC(CubicWebTC):
 
         ownedby = schema.rschema('owned_by')
         self.assertEqual(ownedby.objects('CWEType'), ('CWUser',))
-
-    def test_zmq(self):
-        try:
-            import zmq
-        except ImportError:
-            self.skipTest("zmq in not available")
-        done = []
-        from cubicweb.devtools import TestServerConfiguration as ServerConfiguration
-        from cubicweb.server.cwzmq import ZMQRepositoryServer
-        # the client part has to be in a thread due to sqlite limitations
-        t = threading.Thread(target=self._zmq_client, args=(done,))
-        t.start()
-
-        zmq_server = ZMQRepositoryServer(self.repo)
-        zmq_server.connect('zmqpickle-tcp://127.0.0.1:41415')
-
-        t2 = threading.Thread(target=self._zmq_quit, args=(done, zmq_server,))
-        t2.start()
-
-        zmq_server.run()
-
-        t2.join(1)
-        t.join(1)
-
-        self.assertTrue(done[0])
-
-        if t.isAlive():
-            self.fail('something went wrong, thread still alive')
-
-    def _zmq_quit(self, done, srv):
-        while not done:
-            time.sleep(0.1)
-        srv.quit()
-
-    def _zmq_client(self, done):
-        try:
-            cnx = connect('zmqpickle-tcp://127.0.0.1:41415', u'admin', password=u'gingkow',
-                          initlog=False) # don't reset logging configuration
-            try:
-                cnx.load_appobjects(subpath=('entities',))
-                # check we can get the schema
-                schema = cnx.get_schema()
-                self.assertTrue(cnx.vreg)
-                self.assertTrue('etypes'in cnx.vreg)
-                cu = cnx.cursor()
-                rset = cu.execute('Any U,G WHERE U in_group G')
-                user = iter(rset.entities()).next()
-                self.assertTrue(user._cw)
-                self.assertTrue(user._cw.vreg)
-                from cubicweb.entities import authobjs
-                self.assertIsInstance(user._cw.user, authobjs.CWUser)
-                cnx.close()
-                done.append(True)
-            finally:
-                # connect monkey patch some method by default, remove them
-                multiple_connections_unfix()
-        finally:
-            done.append(False)
 
     def test_internal_api(self):
         repo = self.repo

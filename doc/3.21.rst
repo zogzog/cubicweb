@@ -15,6 +15,6 @@ Deprecated code drops
 * the user_callback api has been removed; people should use plain
   ajax functions instead
 
-* the Pyro remote repository access method has been entirely removed
-  (emerging alternatives such as rqlcontroller and cwclientlib should
-  be used instead)
+* the `Pyro` and `Zmq-pickle` remote repository access methods have
+  been entirely removed (emerging alternatives such as rqlcontroller
+  and cwclientlib should be used instead)
