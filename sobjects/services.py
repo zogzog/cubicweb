@@ -79,13 +79,11 @@ class GcStatsService(Service):
         from cubicweb._gcdebug import gc_info
         from cubicweb.appobject import AppObject
         from cubicweb.rset import ResultSet
-        from cubicweb.dbapi import Connection, Cursor
         from cubicweb.web.request import CubicWebRequestBase
         from rql.stmts import Union
 
         lookupclasses = (AppObject,
                          Union, ResultSet,
-                         Connection, Cursor,
                          CubicWebRequestBase)
         try:
             from cubicweb.server.session import Session, InternalSession
