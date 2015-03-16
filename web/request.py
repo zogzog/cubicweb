@@ -45,7 +45,7 @@ from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
-from cubicweb.web.httpcache import GMTOFFSET, get_validators
+from cubicweb.web.httpcache import get_validators
 from cubicweb.web.http_headers import Headers, Cookie, parseDateTime
 
 _MARKER = object()
@@ -536,8 +536,8 @@ class _CubicWebRequestBase(RequestSessionBase):
             # we don't want to handle times before the EPOCH (cause bug on
             # windows). Also use > and not >= else expires == 0 and Cookie think
             # that means no expire...
-            assert expires + GMTOFFSET > date(1970, 1, 1)
-            expires = timegm((expires + GMTOFFSET).timetuple())
+            assert expires > date(1970, 1, 1)
+            expires = timegm(expires.timetuple())
         else:
             expires = None
         # make sure cookie is set on the correct path

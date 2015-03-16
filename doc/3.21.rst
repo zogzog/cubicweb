@@ -9,6 +9,14 @@ and static-timeline views) has moved to a standalone cube_
 
 .. _cube: https://www.cubicweb.org/project/cubicweb-timeline
 
+API changes
+-----------
+
+* req.set_cookie's "expires" argument, if not None, is expected to be a
+  date or a datetime in UTC.  It was previously interpreted as localtime
+  with the UTC offset the server started in, which was inconsistent (we
+  are not aware of any users of that API).
+
 Deprecated code drops
 ---------------------
 

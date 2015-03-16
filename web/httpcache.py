@@ -22,10 +22,6 @@ __docformat__ = "restructuredtext en"
 from time import mktime
 from datetime import datetime
 
-# time delta usable to convert localized time to GMT time
-# XXX this become erroneous after a DST transition!!!
-GMTOFFSET = - (datetime.now() - datetime.utcnow())
-
 class NoHTTPCacheManager(object):
     """default cache manager: set no-cache cache control policy"""
     def __init__(self, view):
