@@ -491,7 +491,6 @@ class DataHelpersTC(CubicWebTC):
                 self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', None)])
                 self.repo._delete_cascade_multi(cnx, [entity])
                 self.repo.system_source.delete_info_multi(cnx, [entity])
-                #self.repo.commit()
                 cu = cnx.system_sql('SELECT * FROM entities WHERE eid = -1')
                 data = cu.fetchall()
                 self.assertEqual(data, [])

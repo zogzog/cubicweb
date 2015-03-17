@@ -694,30 +694,6 @@ class Repository(object):
         session = self._get_session(sessionid, setcnxset=False)
         session.set_shared_data(key, value, txdata)
 
-    def commit(self, sessionid, txid=None):
-        """commit transaction for the session with the given id"""
-        self.debug('begin commit for session %s', sessionid)
-        try:
-            session = self._get_session(sessionid)
-            session.set_cnx(txid)
-            return session.commit()
-        except (ValidationError, Unauthorized):
-            raise
-        except Exception:
-            self.exception('unexpected error')
-            raise
-
-    def rollback(self, sessionid, txid=None):
-        """commit transaction for the session with the given id"""
-        self.debug('begin rollback for session %s', sessionid)
-        try:
-            session = self._get_session(sessionid)
-            session.set_cnx(txid)
-            session.rollback()
-        except Exception:
-            self.exception('unexpected error')
-            raise
-
     def close(self, sessionid, txid=None, checkshuttingdown=True):
         """close the session with the given id"""
         session = self._get_session(sessionid, txid=txid,
