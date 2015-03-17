@@ -710,40 +710,6 @@ class Repository(object):
         del self._sessions[sessionid]
         self.info('closed session %s for user %s', sessionid, session.user.login)
 
-    def undoable_transactions(self, sessionid, ueid=None, txid=None,
-                              **actionfilters):
-        """See :class:`cubicweb.dbapi.Connection.undoable_transactions`"""
-        session = self._get_session(sessionid, setcnxset=True, txid=txid)
-        try:
-            return self.system_source.undoable_transactions(session, ueid,
-                                                            **actionfilters)
-        finally:
-            session.free_cnxset()
-
-    def transaction_info(self, sessionid, txuuid, txid=None):
-        """See :class:`cubicweb.dbapi.Connection.transaction_info`"""
-        session = self._get_session(sessionid, setcnxset=True, txid=txid)
-        try:
-            return self.system_source.tx_info(session, txuuid)
-        finally:
-            session.free_cnxset()
-
-    def transaction_actions(self, sessionid, txuuid, public=True, txid=None):
-        """See :class:`cubicweb.dbapi.Connection.transaction_actions`"""
-        session = self._get_session(sessionid, setcnxset=True, txid=txid)
-        try:
-            return self.system_source.tx_actions(session, txuuid, public)
-        finally:
-            session.free_cnxset()
-
-    def undo_transaction(self, sessionid, txuuid, txid=None):
-        """See :class:`cubicweb.dbapi.Connection.undo_transaction`"""
-        session = self._get_session(sessionid, setcnxset=True, txid=txid)
-        try:
-            return self.system_source.undo_transaction(session, txuuid)
-        finally:
-            session.free_cnxset()
-
     # session handling ########################################################
 
     def close_sessions(self):
