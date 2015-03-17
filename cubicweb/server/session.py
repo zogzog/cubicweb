@@ -116,10 +116,8 @@ class _hooks_control(object):
             self.changes = self.cnx.enable_hook_categories(*self.categories)
         else:
             self.changes = self.cnx.disable_hook_categories(*self.categories)
-        self.cnx.ctx_count += 1
 
     def __exit__(self, exctype, exc, traceback):
-        self.cnx.ctx_count -= 1
         try:
             if self.categories:
                 if self.mode is HOOKS_DENY_ALL:
@@ -158,10 +156,8 @@ class _security_enabled(object):
         else:
             self.oldwrite = self.cnx.write_security
             self.cnx.write_security = self.write
-        self.cnx.ctx_count += 1
 
     def __exit__(self, exctype, exc, traceback):
-        self.cnx.ctx_count -= 1
         if self.oldread is not None:
             self.cnx.read_security = self.oldread
         if self.oldwrite is not None:
@@ -259,8 +255,6 @@ class Connection(RequestSessionBase):
         self.connectionid = '%s-%s' % (session.sessionid, uuid4().hex)
         self.session = session
         self.sessionid = session.sessionid
-        #: reentrance handling
-        self.ctx_count = 0
 
         #: server.Repository object
         self.repo = session.repo
