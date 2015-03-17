@@ -302,7 +302,7 @@ class NotEditableWidget(FieldWidget):
         domid = field.dom_id(form)
         value = '<span class="value" id="%s">%s</span>' % (domid, self.value)
         if self.msg:
-            value + '<div class="helper">%s</div>' % self.msg
+            value += '<div class="helper">%s</div>' % self.msg
         return value
 
 
@@ -355,6 +355,7 @@ class PropertyValueField(StringField):
             msg = form._cw._('you should probably delete that property')
             self.widget = NotEditableWidget(entity.printable_value('value'),
                                             '%s (%s)' % (msg, ex))
+            return
         if entity.pkey.startswith('system.'):
             msg = form._cw._('value associated to this key is not editable '
                              'manually')
