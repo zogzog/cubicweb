@@ -426,10 +426,10 @@ def prop_widget(self, propkey, varname, tabindex=None):
     """specific method for CWProperty handling"""
     entity = self._cw.vreg['etypes'].etype_class('CWProperty')(self._cw)
     entity.eid = varname
-    entity['pkey'] = propkey
+    entity.pkey = propkey
     form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
     form.build_context()
-    vfield = form.field_by_name('value')
+    vfield = form.field_by_name('value', 'subject')
     renderer = formrenderers.FormRenderer(self._cw)
     return vfield.render(form, renderer, tabindex=tabindex) \
            + renderer.render_help(form, vfield)
