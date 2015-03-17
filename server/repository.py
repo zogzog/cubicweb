@@ -664,38 +664,6 @@ class Repository(object):
         """open a new session for a given user and return its sessionid """
         return self.new_session(login, **kwargs).sessionid
 
-    @deprecated('[3.19] use .entity_metas(sessionid, eid, txid) instead')
-    def describe(self, sessionid, eid, txid=None):
-        """return a tuple `(type, physical source uri, extid, actual source
-        uri)` for the entity of the given `eid`
-
-        As of 3.19, physical source uri is always the system source.
-        """
-        session = self._get_session(sessionid, setcnxset=True, txid=txid)
-        try:
-            etype, extid, source = self.type_and_source_from_eid(eid, session)
-            return etype, source, extid, source
-        finally:
-            session.free_cnxset()
-
-    def entity_metas(self, sessionid, eid, txid=None):
-        """return a dictionary containing meta-datas for the entity of the given
-        `eid`. Available keys are:
-
-        * 'type', the entity's type name,
-
-        * 'source', the name of the source from which this entity's coming from,
-
-        * 'extid', the identifierfor this entity in its originating source, as
-          an encoded string or `None` for entities from the 'system' source.
-        """
-        session = self._get_session(sessionid, setcnxset=True, txid=txid)
-        try:
-            etype, extid, source = self.type_and_source_from_eid(eid, session)
-            return {'type': etype, 'source': source, 'extid': extid}
-        finally:
-            session.free_cnxset()
-
     def check_session(self, sessionid):
         """raise `BadConnectionId` if the connection is no more valid, else
         return its latest activity timestamp.

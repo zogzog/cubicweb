@@ -240,12 +240,8 @@ class RepositoryTC(CubicWebTC):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         self.assertEqual(repo.user_info(cnxid), (6, 'admin', set([u'managers']), {}))
-        self.assertEqual({'type': u'CWGroup', 'extid': None, 'source': 'system'},
-                         repo.entity_metas(cnxid, 2))
-        self.assertEqual(repo.describe(cnxid, 2), (u'CWGroup', 'system', None, 'system'))
         repo.close(cnxid)
         self.assertRaises(BadConnectionId, repo.user_info, cnxid)
-        self.assertRaises(BadConnectionId, repo.describe, cnxid, 1)
 
     def test_shared_data_api(self):
         repo = self.repo
