@@ -236,13 +236,6 @@ class RepositoryTC(CubicWebTC):
         # .properties() return a result set
         self.assertEqual(self.repo.properties().rql, 'Any K,V WHERE P is CWProperty,P pkey K, P value V, NOT P for_user U')
 
-    def test_session_api(self):
-        repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        self.assertEqual(repo.user_info(cnxid), (6, 'admin', set([u'managers']), {}))
-        repo.close(cnxid)
-        self.assertRaises(BadConnectionId, repo.user_info, cnxid)
-
     def test_shared_data_api(self):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)

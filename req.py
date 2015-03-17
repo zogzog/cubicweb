@@ -81,7 +81,6 @@ class RequestSessionBase(object):
         A special method is needed to ensure the linked user is linked to the
         connection too.
         """
-        # cnx validity is checked by the call to .user_info
         rset = self.eid_rset(orig_user.eid, 'CWUser')
         user_cls = self.vreg['etypes'].etype_class('CWUser')
         user = user_cls(self, rset, row=0, groups=orig_user.groups,

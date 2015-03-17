@@ -743,15 +743,6 @@ class Repository(object):
         session = self._get_session(sessionid)
         return session._cnx.call_service(regid, **kwargs)
 
-    def user_info(self, sessionid, props=None):
-        """this method should be used by client to:
-        * check session id validity
-        * update user information on each user's request (i.e. groups and
-          custom properties)
-        """
-        user = self._get_session(sessionid, setcnxset=False).user
-        return user.eid, user.login, user.groups, user.properties
-
     def undoable_transactions(self, sessionid, ueid=None, txid=None,
                               **actionfilters):
         """See :class:`cubicweb.dbapi.Connection.undoable_transactions`"""
