@@ -710,15 +710,6 @@ class Repository(object):
         del self._sessions[sessionid]
         self.info('closed session %s for user %s', sessionid, session.user.login)
 
-    def call_service(self, sessionid, regid, **kwargs):
-        """
-        See :class:`cubicweb.dbapi.Connection.call_service`
-        and :class:`cubicweb.server.Service`
-        """
-        # XXX lack a txid
-        session = self._get_session(sessionid)
-        return session._cnx.call_service(regid, **kwargs)
-
     def undoable_transactions(self, sessionid, ueid=None, txid=None,
                               **actionfilters):
         """See :class:`cubicweb.dbapi.Connection.undoable_transactions`"""
