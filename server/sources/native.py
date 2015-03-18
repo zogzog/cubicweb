@@ -862,7 +862,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             res = list(res)
         if res[-1] is not None:
             res[-1] = b64decode(res[-1])
-        res.append(res[1])
+        res.append("system")
         return res
 
     def extid2eid(self, cnx, extid):

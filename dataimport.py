@@ -69,6 +69,7 @@ import warnings
 import cPickle
 import os.path as osp
 import inspect
+from base64 import b64encode
 from collections import defaultdict
 from copy import copy
 from datetime import date, datetime, time
