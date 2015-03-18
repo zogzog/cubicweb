@@ -46,6 +46,10 @@ msgid "%(KEY-cstr)s constraint failed for value %(KEY-value)r"
 msgstr ""
 
 #, python-format
+msgid "%(KEY-rtype)s is part of violated unicity constraint"
+msgstr ""
+
+#, python-format
 msgid "%(KEY-value)r doesn't match the %(KEY-regexp)r regular expression"
 msgstr ""
 
@@ -103,10 +107,6 @@ msgstr ""
 
 #, python-format
 msgid "%s error report"
-msgstr ""
-
-#, python-format
-msgid "%s is part of violated unicity constraint"
 msgstr ""
 
 #, python-format

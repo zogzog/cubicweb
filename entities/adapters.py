@@ -20,6 +20,7 @@ framework itself.
 """
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from itertools import chain
 from warnings import warn
@@ -359,11 +360,13 @@ class IUserFriendlyUniqueTogether(IUserFriendlyError):
     __select__ = match_exception(UniqueTogetherError)
 
     def raise_user_exception(self):
-        _ = self._cw._
         rtypes = self.exc.rtypes
-        rtypes_msg = {}
+        errors = {}
+        msgargs = {}
+        i18nvalues = []
         for rtype in rtypes:
-            rtypes_msg[rtype] = _('%s is part of violated unicity constraint') % rtype
-        globalmsg = _('some relations violate a unicity constraint')
-        rtypes_msg['unicity constraint'] = globalmsg
-        raise ValidationError(self.entity.eid, rtypes_msg)
+            errors[rtype] = _('%(KEY-rtype)s is part of violated unicity constraint')
+            msgargs[rtype + '-rtype'] = rtype
+            i18nvalues.append(rtype + '-rtype')
+        errors[''] = _('some relations violate a unicity constraint')
+        raise ValidationError(self.entity.eid, errors, msgargs=msgargs, i18nvalues=i18nvalues)

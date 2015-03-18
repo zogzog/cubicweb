@@ -60,6 +60,10 @@ msgid "%(KEY-cstr)s constraint failed for value %(KEY-value)r"
 msgstr "%(KEY-cstr)s restricción errónea para el valor %(KEY-value)r"
 
 #, python-format
+msgid "%(KEY-rtype)s is part of violated unicity constraint"
+msgstr "%(KEY-rtype)s pertenece a una restricción de unidad no respectada"
+
+#, python-format
 msgid "%(KEY-value)r doesn't match the %(KEY-regexp)r regular expression"
 msgstr "%(KEY-value)r no corresponde a la expresión regular %(KEY-regexp)r"
 
@@ -118,10 +122,6 @@ msgstr "%s podría ser mantenido"
 #, python-format
 msgid "%s error report"
 msgstr "%s reporte de errores"
-
-#, python-format
-msgid "%s is part of violated unicity constraint"
-msgstr "%s pertenece a una restricción de unidad no respectada"
 
 #, python-format
 msgid "%s software version of the database"

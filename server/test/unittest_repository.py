@@ -52,10 +52,10 @@ class RepositoryTC(CubicWebTC):
             with self.assertRaises(ValidationError) as wraperr:
                 cnx.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
             self.assertEqual(
-                {'cp': u'cp is part of violated unicity constraint',
-                 'nom': u'nom is part of violated unicity constraint',
-                 'type': u'type is part of violated unicity constraint',
-                 'unicity constraint': u'some relations violate a unicity constraint'},
+                {'cp': u'%(KEY-rtype)s is part of violated unicity constraint',
+                 'nom': u'%(KEY-rtype)s is part of violated unicity constraint',
+                 'type': u'%(KEY-rtype)s is part of violated unicity constraint',
+                 '': u'some relations violate a unicity constraint'},
                 wraperr.exception.args[1])
 
     def test_unique_together_schema(self):

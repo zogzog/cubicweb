@@ -23,7 +23,7 @@ from warnings import warn
 
 from logilab.common.decorators import cachedproperty
 
-from yams import ValidationError as ValidationError
+from yams import ValidationError
 
 # abstract exceptions #########################################################
 
