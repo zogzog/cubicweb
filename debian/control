@@ -200,6 +200,7 @@ Depends:
  ${python:Depends},
  cubicweb-server (= ${source:Version}),
  cubicweb-web (= ${source:Version}),
+ cubicweb-etwist (= ${source:Version}),
  python-pysqlite2
 Suggests:
  w3c-dtd-xhtml,
