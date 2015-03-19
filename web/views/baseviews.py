@@ -401,10 +401,11 @@ class SameETypeListView(EntityView):
         showtitle = kwargs.pop('showtitle', not 'vtitle' in self._cw.form)
         if showtitle:
             self.w(u'<h1>%s</h1>' % self.title)
-        super(SameETypeListView, self).call(**kwargs)
+        subvid = self._cw.form.pop('subvid', None)
+        super(SameETypeListView, self).call(vid=subvid, **kwargs)
 
-    def cell_call(self, row, col=0, **kwargs):
-        self.wview(self.item_vid, self.cw_rset, row=row, col=col, **kwargs)
+    def cell_call(self, row, col=0, vid=None, **kwargs):
+        self.wview(self.item_vid, self.cw_rset, row=row, col=col, vid=vid, **kwargs)
 
 
 class SameETypeListItemView(EntityView):
