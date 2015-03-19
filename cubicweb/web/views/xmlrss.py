@@ -94,10 +94,8 @@ class XMLItemView(EntityView):
             if value is None:
                 self.w(u'  <%s/>\n' % attr)
             else:
-                try:
+                if attrschema in SERIALIZERS:
                     value = SERIALIZERS[attrschema](value)
-                except KeyError:
-                    pass
                 self.w(u'  <%s>%s</%s>\n' % (attr, value, attr))
         for relstr in self._cw.list_form_param('relation'):
             try:
@@ -175,7 +173,7 @@ class XMLRsetView(AnyRsetView):
                     val = self._cw.view('final', rset, row=rowindex,
                                         col=colindex, format='text/plain')
                 w(simple_sgml_tag(tag, val, **attrs))
-            w(u' </row>\n')
+            w(u'\n </row>\n')
         w(u'</%s>\n' % self.xml_root)
 
 
