@@ -52,6 +52,7 @@ CREATE TABLE Datetest(
  d2 date,
  t1 time,
  t2 time
+, CONSTRAINT cstredd407706bdfbd2285714dd689e8fcc0 CHECK(d1 <= CAST(clock_timestamp() AS DATE))
 );
 
 CREATE TABLE Division(
