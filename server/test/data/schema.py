@@ -89,7 +89,7 @@ CWUser.get_relations('login').next().fulltextindexed = True
 
 class Note(WorkflowableEntityType):
     date = String(maxsize=10)
-    type = String(maxsize=6)
+    type = String(vocabulary=[u'todo', u'a', u'b', u'T', u'lalala'])
     para = String(maxsize=512,
                   __permissions__ = {
                       'add': ('managers', ERQLExpression('X in_state S, S name "todo"')),

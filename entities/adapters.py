@@ -24,11 +24,13 @@ _ = unicode
 
 from itertools import chain
 from warnings import warn
+from hashlib import md5
 
 from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
 
-from cubicweb import ValidationError, view
+from cubicweb import ValidationError, view, ViolatedConstraint
+from cubicweb.schema import CONSTRAINTS
 from cubicweb.predicates import is_instance, relation_possible, match_exception
 
 
@@ -372,3 +374,25 @@ class IUserFriendlyUniqueTogether(IUserFriendlyError):
             i18nvalues.append(rtype + '-rtype')
         errors[''] = _('some relations violate a unicity constraint')
         raise ValidationError(self.entity.eid, errors, msgargs=msgargs, i18nvalues=i18nvalues)
+
+
+class IUserFriendlyCheckConstraint(IUserFriendlyError):
+    __select__ = match_exception(ViolatedConstraint)
+
+    def raise_user_exception(self):
+        _ = self._cw._
+        cstrname = self.exc.cstrname
+        eschema = self.entity.e_schema
+        for rschema, attrschema in eschema.attribute_definitions():
+            rdef = rschema.rdef(eschema, attrschema)
+            for constraint in rdef.constraints:
+                if cstrname == 'cstr' + md5(eschema.type + rschema.type + constraint.type() + (constraint.serialize() or '')).hexdigest():
+                    break
+            else:
+                continue
+            break
+        else:
+            assert 0
+        key = rschema.type + '-subject'
+        msg, args = constraint.failed_message(key, self.entity.cw_edited[rschema.type])
+        raise ValidationError(self.entity.eid, {key: msg}, args)

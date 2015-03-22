@@ -46,7 +46,7 @@ from logilab.database import get_db_helper, sqlgen
 from yams.schema import role_name
 
 from cubicweb import (UnknownEid, AuthenticationError, ValidationError, Binary,
-                      UniqueTogetherError, UndoTransactionException)
+                      UniqueTogetherError, UndoTransactionException, ViolatedConstraint)
 from cubicweb import transaction as tx, server, neg_role
 from cubicweb.utils import QueryCache
 from cubicweb.schema import VIRTUAL_RTYPES
@@ -731,6 +731,18 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         columns = arg.split(':', 1)[1].split(',')
                         rtypes = [c.split('.', 1)[1].strip()[3:] for c in columns]
                         raise UniqueTogetherError(cnx, rtypes=rtypes)
+
+                    mo = re.search('"cstr[a-f0-9]{32}"', arg)
+                    if mo is not None:
+                        # postgresql
+                        raise ViolatedConstraint(cnx, cstrname=mo.group(0)[1:-1])
+                    if arg.startswith('CHECK constraint failed:'):
+                        # sqlite3 (new)
+                        raise ViolatedConstraint(cnx, cstrname=arg.split(':', 1)[1].strip())
+                    mo = re.match('^constraint (cstr.*) failed$', arg)
+                    if mo is not None:
+                        # sqlite3 (old)
+                        raise ViolatedConstraint(cnx, cstrname=mo.group(1))
             raise
         return cursor
 

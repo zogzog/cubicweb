@@ -22,6 +22,7 @@ from threading import Thread
 
 from logilab.common.testlib import SkipTest
 
+from cubicweb import ValidationError
 from cubicweb.devtools import PostgresApptestConfiguration, startpgcluster, stoppgcluster
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.predicates import is_instance
@@ -123,6 +124,18 @@ class PostgresFTITC(CubicWebTC):
             self.assertEqual(datenaiss.tzinfo, None)
             self.assertEqual(datenaiss.utctimetuple()[:5], (1977, 6, 7, 2, 0))
 
+    def test_constraint_validationerror(self):
+        with self.admin_access.repo_cnx() as cnx:
+            with cnx.allow_all_hooks_but('integrity'):
+                with self.assertRaises(ValidationError) as cm:
+                    cnx.execute("INSERT Note N: N type 'nogood'")
+                self.assertEqual(cm.exception.errors,
+                        {'type-subject': u'invalid value %(KEY-value)s, it must be one of %(KEY-choices)s'})
+                self.assertEqual(cm.exception.msgargs,
+                        {'type-subject-value': u'"nogood"',
+                         'type-subject-choices': u'"todo", "a", "b", "T", "lalala"'})
+
+
 class PostgresLimitSizeTC(CubicWebTC):
     configcls = PostgresApptestConfiguration
 
@@ -140,6 +153,7 @@ class PostgresLimitSizeTC(CubicWebTC):
                 'he...'
             yield self.assertEqual, sql("SELECT limit_size('<span>a>b</span>', 'text/html', 2)"), \
                 'a>...'
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

@@ -102,6 +102,12 @@ class UniqueTogetherError(RepositoryError):
         return None, self.rtypes
 
 
+class ViolatedConstraint(RepositoryError):
+    def __init__(self, cnx, cstrname):
+        self.cnx = cnx
+        self.cstrname = cstrname
+
+
 # security exceptions #########################################################
 
 class Unauthorized(SecurityError):

@@ -43,7 +43,7 @@ from rql.utils import rqlvar_maker
 from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
                       BadConnectionId, ValidationError,
-                      UniqueTogetherError, onevent)
+                      UniqueTogetherError, onevent, ViolatedConstraint)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import ShuttingDown, utils, hook, querier, sources
 from cubicweb.server.session import Session, InternalManager
@@ -927,7 +927,7 @@ class Repository(object):
         self.add_info(cnx, entity, source, extid)
         try:
             source.add_entity(cnx, entity)
-        except UniqueTogetherError as exc:
+        except (UniqueTogetherError, ViolatedConstraint) as exc:
             userhdlr = cnx.vreg['adapters'].select(
                 'IUserFriendlyError', cnx, entity=entity, exc=exc)
             userhdlr.raise_user_exception()
@@ -990,7 +990,7 @@ class Repository(object):
             try:
                 source.update_entity(cnx, entity)
                 edited.saved = True
-            except UniqueTogetherError as exc:
+            except (UniqueTogetherError, ViolatedConstraint) as exc:
                 userhdlr = cnx.vreg['adapters'].select(
                     'IUserFriendlyError', cnx, entity=entity, exc=exc)
                 userhdlr.raise_user_exception()
