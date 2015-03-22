@@ -35,7 +35,8 @@ from logilab.common.graph import get_cycles
 from yams import BadSchemaDefinition, buildobjs as ybo
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema, \
      RelationDefinitionSchema, PermissionMixIn, role_name
-from yams.constraints import BaseConstraint, FormatConstraint
+from yams.constraints import (BaseConstraint, FormatConstraint, BoundaryConstraint,
+                              IntervalBoundConstraint, StaticVocabularyConstraint)
 from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
                          obsolete as yobsolete, cleanup_sys_modules,
                          fill_schema_from_namespace)
@@ -1107,6 +1108,12 @@ class CubicWebSchema(Schema):
 
 
 # additional cw specific constraints ###########################################
+
+# these are implemented as CHECK constraints in sql, don't do the work
+# twice
+StaticVocabularyConstraint.check = lambda *args: True
+IntervalBoundConstraint.check = lambda *args: True
+BoundaryConstraint.check = lambda *args: True
 
 class BaseRQLConstraint(RRQLExpression, BaseConstraint):
     """base class for rql constraints"""
