@@ -134,5 +134,17 @@ class UcsvreaderTC(TestCase):
                           [u'1', u'2', u'3', u'4', u'']])
 
 
+class MetaGeneratorTC(CubicWebTC):
+    def test_dont_generate_relation_to_internal_manager(self):
+        from cubicweb.server.edition import EditedEntity
+        with self.admin_access.repo_cnx() as cnx:
+            metagen = dataimport.MetaGenerator(cnx)
+            self.assertIn('created_by', metagen.etype_rels)
+            self.assertIn('owned_by', metagen.etype_rels)
+        with self.repo.internal_cnx() as cnx:
+            metagen = dataimport.MetaGenerator(cnx)
+            self.assertNotIn('created_by', metagen.etype_rels)
+            self.assertNotIn('owned_by', metagen.etype_rels)
+
 if __name__ == '__main__':
     unittest_main()

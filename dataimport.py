@@ -855,6 +855,9 @@ class MetaGenerator(object):
         schema = cnx.vreg.schema
         rschema = schema.rschema
         for rtype in self.META_RELATIONS:
+            # skip owned_by / created_by if user is the internal manager
+            if cnx.user.eid == -1 and rtype in ('owned_by', 'created_by'):
+                continue
             if rschema(rtype).final:
                 self.etype_attrs.append(rtype)
             else:
