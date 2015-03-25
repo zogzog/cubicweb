@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
+from yams.buildobjs import (EntityType, RelationType, RelationDefinition, ComputedRelation,
                             SubjectRelation, RichString, String, Int, Float,
                             Boolean, Datetime, TZDatetime, Bytes)
 from yams.constraints import SizeConstraint
@@ -274,3 +274,7 @@ class ambiguous_inlined(RelationDefinition):
     object = 'CWUser'
     inlined = True
     cardinality = '?*'
+
+
+class user_login(ComputedRelation):
+    rule = 'O login_user S'

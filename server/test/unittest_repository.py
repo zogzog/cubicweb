@@ -499,6 +499,13 @@ class RepositoryTC(CubicWebTC):
             cnx.commit()
             self.assertEqual(len(c.reverse_fiche), 1)
 
+    def test_delete_computed_relation_nonregr(self):
+        with self.admin_access.repo_cnx() as cnx:
+            c = cnx.create_entity('Personne', nom=u'Adam', login_user=cnx.user.eid)
+            cnx.commit()
+            c.cw_delete()
+            cnx.commit()
+
     def test_cw_set_in_before_update(self):
         # local hook
         class DummyBeforeHook(Hook):
