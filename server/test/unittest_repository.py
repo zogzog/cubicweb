@@ -654,7 +654,6 @@ class DBInitTC(CubicWebTC):
                               u'system.version.cubicweb',
                               u'system.version.email',
                               u'system.version.file',
-                              u'system.version.folder',
                               u'system.version.localperms',
                               u'system.version.tag'])
 

@@ -165,6 +165,15 @@ class ecrit_par(RelationType):
 # `login_user` rdef is gone
 # `ambiguous_inlined` rdef is gone
 
+class Folder(EntityType):
+    """folders are used to classify entities. They may be defined as a tree.
+    """
+    name = String(required=True, indexed=True, internationalizable=True,
+                  maxsize=64)
+    description = RichString(fulltextindexed=True)
+    filed_under = SubjectRelation('Folder', description=_('parent folder'))
+
+
 # New
 class Text(Para):
     __specializes_schema__ = True

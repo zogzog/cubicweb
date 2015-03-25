@@ -240,6 +240,14 @@ class tags(RelationDefinition):
     subject = 'Tag'
     object = ('CWUser', 'CWGroup', 'State', 'Note', 'Card', 'Affaire')
 
+class Folder(EntityType):
+    """folders are used to classify entities. They may be defined as a tree.
+    """
+    name = String(required=True, indexed=True, internationalizable=True,
+                  maxsize=64)
+    description = RichString(fulltextindexed=True)
+    filed_under = SubjectRelation('Folder', description=_('parent folder'))
+
 class filed_under(RelationDefinition):
     subject = ('Note', 'Affaire')
     object = 'Folder'
