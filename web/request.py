@@ -368,6 +368,10 @@ class _CubicWebRequestBase(RequestSessionBase):
             self._load_search_state(searchstate)
         return self._search_state
 
+    @search_state.setter
+    def search_state(self, searchstate):
+        self._search_state = searchstate
+
     def update_search_state(self):
         """update the current search state if needed"""
         searchstate = self.form.get('__mode')
