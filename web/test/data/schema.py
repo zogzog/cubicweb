@@ -93,9 +93,9 @@ class Ticket(EntityType):
     title = String(maxsize=32, required=True, fulltextindexed=True)
     concerns = SubjectRelation('Project', composite='object')
 
-# used by windmill for `test_edit_relation`
-from cubes.folder.schema import Folder
-
+class Folder(EntityType):
+    name = String(required=True)
+    filed_under = SubjectRelation('Folder', description=_('parent folder'))
 
 class TreeNode(EntityType):
     name = String(required=True)

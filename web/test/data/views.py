@@ -16,7 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
+from cubicweb.predicates import has_related_entities
 from cubicweb.web.views.ajaxcontroller import ajaxfunc
+from cubicweb.web.views.ibreadcrumbs import IBreadCrumbsAdapter
 
 def _recursive_replace_stream_by_content(tree):
     """ Search for streams (i.e. object that have a 'read' method) in a tree
@@ -46,3 +48,10 @@ def fileupload(self):
     except Exception, ex:
         import traceback as tb
         tb.print_exc(ex)
+
+
+class FolderIBreadCrumbsAdapter(IBreadCrumbsAdapter):
+    __select__ = IBreadCrumbsAdapter.__select__ & has_related_entities('filed_under')
+
+    def parent_entity(self):
+        return self.entity.filed_under[0]
