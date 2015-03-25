@@ -326,8 +326,11 @@ class CubicWebTC(TestCase):
 
         Configuration is cached on the test class.
         """
+        if cls is CubicWebTC:
+            # Prevent direct use of CubicWebTC directly to avoid database
+            # caching issues
+            return None
         try:
-            assert not cls is CubicWebTC, "Don't use CubicWebTC directly to prevent database caching issue"
             return cls.__dict__['_config']
         except KeyError:
             home = abspath(join(dirname(sys.modules[cls.__module__].__file__), cls.appid))
@@ -1256,7 +1259,10 @@ class AutomaticWebTest(AutoPopulateTest):
     tags = AutoPopulateTest.tags | Tags('web', 'generated')
 
     def setUp(self):
-        assert not self.__class__ is AutomaticWebTest, 'Please subclass AutomaticWebTest to prevent database caching issue'
+        if self.__class__ is AutomaticWebTest:
+            # Prevent direct use of AutomaticWebTest to avoid database caching
+            # issues.
+            return
         super(AutomaticWebTest, self).setUp()
 
         # access to self.app for proper initialization of the authentication
