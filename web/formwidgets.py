@@ -679,14 +679,36 @@ class DateTimePicker(TextInput):
 class JQueryDatePicker(FieldWidget):
     """Use jquery.ui.datepicker to define a date picker. Will return the date as
     a unicode string.
+
+    You can couple DatePickers by using the min_of and/or max_of parameters.
+    The DatePicker identified by the value of min_of(/max_of) will force the user to
+    choose a date anterior(/posterior) to this DatePicker.
+
+    example:
+    start and end are two JQueryDatePicker and start must always be before end
+        affk.set_field_kwargs(etype, 'start_date', widget=JQueryDatePicker(min_of='end_date'))
+        affk.set_field_kwargs(etype, 'end_date', widget=JQueryDatePicker(max_of='start_date'))
+    That way, on change of end(/start) value a new max(/min) will be set for start(/end)
+    The invalid dates will be gray colored in the datepicker
     """
     needs_js = ('jquery.ui.js', )
     needs_css = ('jquery.ui.css',)
     default_size = 10
 
-    def __init__(self, datestr=None, **kwargs):
+    def __init__(self, datestr=None, min_of=None, max_of=None, **kwargs):
         super(JQueryDatePicker, self).__init__(**kwargs)
+        self.min_of = min_of
+        self.max_of = max_of
         self.value = datestr
+
+    def attributes(self, form, field):
+        form._cw.add_js('cubicweb.widgets.js')
+        attrs = super(JQueryDatePicker, self).attributes(form, field)
+        if self.max_of:
+            attrs['data-max-of'] = '%s-subject:%s' % (self.max_of, form.edited_entity.eid)
+        if self.min_of:
+            attrs['data-min-of'] = '%s-subject:%s' % (self.min_of, form.edited_entity.eid)
+        return attrs
 
     def _render(self, form, field, renderer):
         req = form._cw
@@ -695,11 +717,19 @@ class JQueryDatePicker(FieldWidget):
         domid = field.dom_id(form, self.suffix)
         # XXX find a way to understand every format
         fmt = req.property_value('ui.date-format')
-        fmt = fmt.replace('%Y', 'yy').replace('%m', 'mm').replace('%d', 'dd')
-        req.add_onload(u'cw.jqNode("%s").datepicker('
-                       '{buttonImage: "%s", dateFormat: "%s", firstDay: 1,'
-                       ' showOn: "button", buttonImageOnly: true})' % (
-                           domid, req.uiprops['CALENDAR_ICON'], fmt))
+        picker_fmt = fmt.replace('%Y', 'yy').replace('%m', 'mm').replace('%d', 'dd')
+        max_date = min_date = None
+        if self.min_of:
+            current = getattr(form.edited_entity, self.min_of)
+            if current is not None:
+                max_date = current.strftime(fmt)
+        if self.max_of:
+            current = getattr(form.edited_entity, self.max_of)
+            if current is not None:
+                min_date = current.strftime(fmt)
+        req.add_onload(u'renderJQueryDatePicker("%s", "%s", "%s", %s, %s);'
+                       % (domid, req.uiprops['CALENDAR_ICON'], picker_fmt, json_dumps(min_date),
+                          json_dumps(max_date)))
         return self._render_input(form, field)
 
     def _render_input(self, form, field):
