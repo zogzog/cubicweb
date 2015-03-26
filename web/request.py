@@ -811,8 +811,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         """
         mtime = self.get_header('If-modified-since', raw=False)
         if mtime:
-            # :/ twisted is returned a localized time stamp
-            return datetime.fromtimestamp(mtime) + GMTOFFSET
+            return datetime.utcfromtimestamp(mtime)
         return None
 
     ### outcoming headers
