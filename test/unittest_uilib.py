@@ -30,7 +30,7 @@ except ImportError:
 
 from logilab.common.testlib import DocTest, TestCase, unittest_main
 
-from cubicweb import uilib
+from cubicweb import uilib, utils as cwutils
 
 lxml_version = pkg_resources.get_distribution('lxml').version.split('.')
 
@@ -171,6 +171,11 @@ quis nostrud exercitation ullamco laboris nisi"),
                           'cw.pouet(1,"2")')
         self.assertEqual(str(uilib.js.cw.pouet(1, "2").pouet(None)),
                           'cw.pouet(1,"2").pouet(null)')
+        self.assertEqual(str(uilib.js.cw.pouet(1, cwutils.JSString("$")).pouet(None)),
+                         'cw.pouet(1,$).pouet(null)')
+        self.assertEqual(str(uilib.js.cw.pouet(1, {'callback': cwutils.JSString("cw.cb")}).pouet(None)),
+                         'cw.pouet(1,{callback: cw.cb}).pouet(null)')
+
 
     def test_embedded_css(self):
         incoming = u"""voir le ticket <style type="text/css">@font-face { font-family: "Cambria"; }p.MsoNormal, li.MsoNormal, div.MsoNormal { margin: 0cm 0cm 10pt; font-size: 12pt; font-family: "Times New Roman"; }a:link, span.MsoHyperlink { color: blue; text-decoration: underline; }a:visited, span.MsoHyperlinkFollowed { color: purple; text-decoration: underline; }div.Section1 { page: Section1; }</style></p><p class="MsoNormal">text</p>"""

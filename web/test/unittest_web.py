@@ -50,7 +50,7 @@ class AjaxReplaceUrlTC(TestCase):
         cbname = url.split()[1][:-2]
         self.assertMultiLineEqual(
             'function %s() { $("#foo").loadxhtml("http://testing.fr/cubicweb/ajax?%s",'
-            '{"pageid": "%s"},"get","replace"); }' %
+            '{pageid: "%s"},"get","replace"); }' %
             (cbname, qs, req.pageid),
             req.html_headers.post_inlined_scripts[0])
 
