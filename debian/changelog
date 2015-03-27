@@ -1,3 +1,9 @@
+cubicweb (3.20.5-2) unstable; urgency=low
+
+  * Fix cubicweb-dev dependencies.
+
+ -- Julien Cristau <julien.cristau@logilab.fr>  Fri, 27 Mar 2015 17:22:53 +0100
+
 cubicweb (3.20.5-1) unstable; urgency=low
 
   * new upstream release
