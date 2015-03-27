@@ -1,3 +1,9 @@
+cubicweb (3.19.11-2) UNRELEASED; urgency=low
+
+  * Fix cubicweb-dev dependencies.
+
+ -- Julien Cristau <julien.cristau@logilab.fr>  Fri, 27 Mar 2015 16:53:20 +0100
+
 cubicweb (3.19.11-1) unstable; urgency=low
 
   * new upstream release
