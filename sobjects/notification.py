@@ -81,7 +81,11 @@ class NotificationView(EntityView):
     # this is usually the method to call
     def render_and_send(self, **kwargs):
         """generate and send email messages for this view"""
-        self._cw.vreg.config.sendmails(self.render_emails(**kwargs))
+        # render_emails changes self._cw so cache it here so all mails are sent
+        # after we commit our transaction.
+        cnx = self._cw
+        for msg, recipients in self.render_emails(**kwargs):
+            SendMailOp(cnx, recipients=recipients, msg=msg)
 
     def cell_call(self, row, col=0, **kwargs):
         self.w(self._cw._(self.content) % self.context(**kwargs))
