@@ -365,12 +365,6 @@ class CubicWebPublisher(object):
                 # several cubes like registration or forgotten password rely on
                 # this principle.
 
-            # DENY https acces for anonymous_user
-            if (req.https
-                and req.session.anonymous_session
-                and self.vreg.config['https-deny-anonymous']):
-                # don't allow anonymous on https connection
-                raise AuthenticationError()
             # nested try to allow LogOut to delegate logic to AuthenticationError
             # handler
             try:
