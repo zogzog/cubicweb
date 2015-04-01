@@ -422,6 +422,7 @@ class CSVView(SimpleListView):
     """
     __regid__ = 'csv'
     redirect_vid = 'incontext'
+    separator = u', '
 
     def call(self, subvid=None, **kwargs):
         kwargs['vid'] = subvid
@@ -429,7 +430,7 @@ class CSVView(SimpleListView):
         for i in xrange(len(rset)):
             self.cell_call(i, 0, **kwargs)
             if i < rset.rowcount-1:
-                self.w(u", ")
+                self.w(self.separator)
 
 
 # XXX to be documented views ###################################################
