@@ -124,6 +124,13 @@ class WebConfiguration(CubicWebConfiguration):
           'where the cubicweb web server is listening on port 8080.',
           'group': 'main', 'level': 3,
           }),
+        ('datadir-url',
+         {'type': 'string', 'default': None,
+          'help': ('base url for static data, if different from "${base-url}/data/".  '
+                   'If served from a different domain, that domain should allow '
+                   'cross-origin requests.'),
+          'group': 'web',
+          }),
         ('auth-mode',
          {'type' : 'choice',
           'choices' : ('cookie', 'http'),
@@ -382,6 +389,14 @@ have the python imaging library installed to use captcha)',
             baseurl += '/'
         if not (self.repairing or self.creating):
             self.global_set_option('base-url', baseurl)
+        self.datadir_url = self['datadir-url']
+        if self.datadir_url:
+            if self.datadir_url[-1] != '/':
+                self.datadir_url += '/'
+            if self.mode != 'test':
+                self.datadir_url += '%s/' % self.instance_md5_version()
+            self.https_datadir_url = self.datadir_url
+            return
         httpsurl = self['https-url']
         data_relpath = self.data_relpath()
         if httpsurl:
