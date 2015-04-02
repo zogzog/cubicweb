@@ -1,6 +1,12 @@
 What's new in CubicWeb 3.21?
 ============================
 
+New features
+------------
+
+* the datadir-url configuration option lets one choose where static data files
+  are served (instead of the default ${base-url}/data/)
+
 Code movement
 -------------
 
