@@ -736,7 +736,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     if mo is not None:
                         raise UniqueTogetherError(cnx, cstrname=mo.group(0))
                     # old sqlite
-                    mo = re.search('columns (.*) are not unique', arg)
+                    mo = re.search('columns? (.*) (?:is|are) not unique', arg)
                     if mo is not None: # sqlite in use
                         # we left chop the 'cw_' prefix of attribute names
                         rtypes = [c.strip()[3:]
