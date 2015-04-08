@@ -241,10 +241,7 @@ class FieldsForm(form.Form):
 
     _default_form_action_path = 'edit'
     def form_action(self):
-        try:
-            action = self.get_action() # avoid spurious warning w/ autoform bw compat property
-        except AttributeError:
-            action = self.action
+        action = self.action
         if action is None:
             return self._cw.build_url(self._default_form_action_path)
         return action

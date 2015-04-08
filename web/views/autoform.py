@@ -726,15 +726,6 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # action on the form tag
     _default_form_action_path = 'validateform'
 
-    @deprecated('[3.18] you should override form_action()')
-    def set_action(self, action):
-        self._action = action
-
-    @deprecated('[3.18] use form_action()')
-    def get_action(self):
-        return self._action
-
-
     @iclassmethod
     def field_by_name(cls_or_self, name, role=None, eschema=None):
         """return field with the given name and role. If field is not explicitly
