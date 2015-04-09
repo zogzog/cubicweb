@@ -15,7 +15,7 @@ from cubicweb.server import session as cwsession
 
 from pyramid import httpexceptions
 
-from pyramid_cubicweb import authplugin, tools
+from pyramid_cubicweb import tools
 
 import logging
 
@@ -337,8 +337,6 @@ def includeme(config):
         login = config.registry['cubicweb.config'].anonymous_user()[0]
         config.registry['cubicweb.anonymous_eid'] = cnx.find(
             'CWUser', login=login).one().eid
-
-    repo.system_source.add_authentifier(authplugin.DirectAuthentifier())
 
     config.add_request_method(
         _cw_session, name='cw_session', property=True, reify=True)
