@@ -241,8 +241,11 @@ class ApplicationTC(CubicWebTC):
             self.assertIsInstance(forminfo['eidmap']['X'], int)
             self.assertIsInstance(forminfo['eidmap']['Y'], int)
             self.assertEqual(forminfo['error'].entity, forminfo['eidmap']['X'])
-            self.assertEqual(forminfo['error'].errors,
-                             {'login-subject': u'the value "admin" is already used, use another one'})
+            expected_errors = {
+                '': u'some relations violate a unicity constraint',
+                'login': u'login is part of violated unicity constraint',
+            }
+            self.assertEqual(forminfo['error'].errors, expected_errors)
             self.assertEqual(forminfo['values'], req.form)
 
     def _edit_parent(self, dir_eid, parent_eid, role='subject',

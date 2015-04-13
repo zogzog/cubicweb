@@ -244,25 +244,6 @@ class CheckAttributeConstraintHook(IntegrityHook):
                         (self.entity.eid, attr, None, constraints))
 
 
-class CheckUniqueHook(IntegrityHook):
-    __regid__ = 'checkunique'
-    events = ('before_add_entity', 'before_update_entity')
-
-    def __call__(self):
-        entity = self.entity
-        eschema = entity.e_schema
-        for attr, val in entity.cw_edited.items():
-            if eschema.subjrels[attr].final and eschema.has_unique_values(attr):
-                if val is None:
-                    continue
-                rql = '%s X WHERE X %s %%(val)s' % (entity.e_schema, attr)
-                rset = self._cw.execute(rql, {'val': val})
-                if rset and rset[0][0] != entity.eid:
-                    msg = _('the value "%s" is already used, use another one')
-                    raise validation_error(entity, {(attr, 'subject'): msg},
-                                           (val,))
-
-
 class DontRemoveOwnersGroupHook(IntegrityHook):
     """delete the composed of a composite relation when this relation is deleted
     """

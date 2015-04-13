@@ -96,9 +96,12 @@ class EditControllerTC(CubicWebTC):
                     }
             with self.assertRaises(ValidationError) as cm:
                 self.ctrl_publish(req)
-                cm.exception.translate(text_type)
-                self.assertEqual({'login-subject': 'the value "admin" is already used, use another one'},
-                                 cm.exception.errors)
+            cm.exception.translate(text_type)
+            expected = {
+                '': u'some relations violate a unicity constraint',
+                'login': u'login is part of violated unicity constraint',
+            }
+            self.assertEqual(cm.exception.errors, expected)
 
     def test_simultaneous_edition_only_one_commit(self):
         """ Allow two simultaneous edit view of the same entity as long as only one commits

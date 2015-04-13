@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,7 +27,8 @@ from datetime import datetime
 from six import text_type
 
 from pytz import utc
-from cubicweb import ValidationError, AuthenticationError, BadConnectionId
+
+from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 
 
@@ -213,7 +214,9 @@ class SchemaHooksTC(CubicWebTC):
             ex = cm.exception
             ex.translate(text_type)
             self.assertIsInstance(ex.entity, int)
-            self.assertEqual(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
+            self.assertEqual(ex.errors,
+                             {'': u'some relations violate a unicity constraint',
+                              'login': u'login is part of violated unicity constraint'})
 
 
 if __name__ == '__main__':
