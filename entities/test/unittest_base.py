@@ -137,6 +137,12 @@ class CWUserTC(BaseEntityTC):
             self.assertEqual(e.dc_title(), 'member')
             self.assertEqual(e.name(), u'bouah lôt')
 
+    def test_falsey_dc_title(self):
+        with self.admin_access.repo_cnx() as cnx:
+            e = cnx.create_entity('Company', order=0, name=u'pythonian')
+            cnx.commit()
+            self.assertEqual(u'0', e.dc_title())
+
     def test_allowed_massmail_keys(self):
         with self.admin_access.repo_cnx() as cnx:
             e = cnx.execute('CWUser U WHERE U login "member"').get_entity(0, 0)

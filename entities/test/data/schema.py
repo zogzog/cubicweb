@@ -17,10 +17,11 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """entities tests schema"""
 
-from yams.buildobjs import EntityType, String, RichString
+from yams.buildobjs import EntityType, String, RichString, Int
 from cubicweb.schema import make_workflowable
 
 class Company(EntityType):
+    order = Int()
     name = String()
     description = RichString()
 
