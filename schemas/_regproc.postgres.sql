@@ -11,6 +11,7 @@ CREATE FUNCTION comma_join (anyarray) RETURNS text AS $$
 $$ LANGUAGE SQL;;
 
 
+DROP FUNCTION IF EXISTS cw_array_append_unique (anyarray, anyelement) CASCADE;
 CREATE FUNCTION cw_array_append_unique (anyarray, anyelement) RETURNS anyarray AS $$
     SELECT array_append($1, (SELECT $2 WHERE $2 <> ALL($1)))
 $$ LANGUAGE SQL;;
