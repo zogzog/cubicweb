@@ -244,6 +244,8 @@ class TreeViewItemView(EntityView):
         entity = self.cw_rset.get_entity(row, col)
         itree = entity.cw_adapt_to('ITree')
         liclasses = []
+        if self._cw.url(includeparams=False) == entity.absolute_url():
+            liclasses.append(u'selected')
         is_open = self.open_state(entity.eid, treeid)
         is_leaf = itree is None or itree.is_leaf()
         if is_leaf:
