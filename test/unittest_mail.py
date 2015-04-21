@@ -21,6 +21,7 @@
 """
 
 import os
+import re
 import sys
 
 from logilab.common.testlib import unittest_main
@@ -51,7 +52,9 @@ class EmailTC(CubicWebTC):
         mail = format_mail({'name': 'oim', 'email': 'oim@logilab.fr'},
                            ['test@logilab.fr'], u'un petit cöucou', u'bïjour',
                            config=self.config)
-        self.assertMultiLineEqual(mail.as_string(), """\
+        result = mail.as_string()
+        result = re.sub('^Date: .*$', 'Date: now', result, flags=re.MULTILINE)
+        self.assertMultiLineEqual(result, """\
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
@@ -60,6 +63,7 @@ From: =?utf-8?q?oim?= <oim@logilab.fr>
 Reply-to: =?utf-8?q?oim?= <oim@logilab.fr>, =?utf-8?q?BimBam?= <bim@boum.fr>
 X-CW: data
 To: test@logilab.fr
+Date: now
 
 dW4gcGV0aXQgY8O2dWNvdQ==
 """)
@@ -74,7 +78,9 @@ dW4gcGV0aXQgY8O2dWNvdQ==
     def test_format_mail_euro(self):
         mail = format_mail({'name': u'oîm', 'email': u'oim@logilab.fr'},
                            ['test@logilab.fr'], u'un petit cöucou €', u'bïjour €')
-        self.assertMultiLineEqual(mail.as_string(), """\
+        result = mail.as_string()
+        result = re.sub('^Date: .*$', 'Date: now', result, flags=re.MULTILINE)
+        self.assertMultiLineEqual(result, """\
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
@@ -82,6 +88,7 @@ Subject: =?utf-8?b?YsOvam91ciDigqw=?=
 From: =?utf-8?q?o=C3=AEm?= <oim@logilab.fr>
 Reply-to: =?utf-8?q?o=C3=AEm?= <oim@logilab.fr>
 To: test@logilab.fr
+Date: now
 
 dW4gcGV0aXQgY8O2dWNvdSDigqw=
 """)
