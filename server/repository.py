@@ -670,30 +670,6 @@ class Repository(object):
         """
         return self._get_session(sessionid, setcnxset=False).timestamp
 
-    @deprecated('[3.19] use session or transaction data')
-    def get_shared_data(self, sessionid, key, default=None, pop=False, txdata=False):
-        """return value associated to key in the session's data dictionary or
-        session's transaction's data if `txdata` is true.
-
-        If pop is True, value will be removed from the dictionary.
-
-        If key isn't defined in the dictionary, value specified by the
-        `default` argument will be returned.
-        """
-        session = self._get_session(sessionid, setcnxset=False)
-        return session.get_shared_data(key, default, pop, txdata)
-
-    @deprecated('[3.19] use session or transaction data')
-    def set_shared_data(self, sessionid, key, value, txdata=False):
-        """set value associated to `key` in shared data
-
-        if `txdata` is true, the value will be added to the repository session's
-        transaction's data which are cleared on commit/rollback of the current
-        transaction.
-        """
-        session = self._get_session(sessionid, setcnxset=False)
-        session.set_shared_data(key, value, txdata)
-
     def close(self, sessionid, txid=None, checkshuttingdown=True):
         """close the session with the given id"""
         session = self._get_session(sessionid, txid=txid,

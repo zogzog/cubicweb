@@ -148,26 +148,6 @@ class RepositoryTC(CubicWebTC):
         self.assert_(cnxid)
         repo.close(cnxid)
 
-    def test_shared_data(self):
-        repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        repo.set_shared_data(cnxid, 'data', 4)
-        cnxid2 = repo.connect(self.admlogin, password=self.admpassword)
-        self.assertEqual(repo.get_shared_data(cnxid, 'data'), 4)
-        self.assertEqual(repo.get_shared_data(cnxid2, 'data'), None)
-        repo.set_shared_data(cnxid2, 'data', 5)
-        self.assertEqual(repo.get_shared_data(cnxid, 'data'), 4)
-        self.assertEqual(repo.get_shared_data(cnxid2, 'data'), 5)
-        repo.get_shared_data(cnxid2, 'data', pop=True)
-        self.assertEqual(repo.get_shared_data(cnxid, 'data'), 4)
-        self.assertEqual(repo.get_shared_data(cnxid2, 'data'), None)
-        repo.close(cnxid)
-        repo.close(cnxid2)
-        self.assertRaises(BadConnectionId, repo.get_shared_data, cnxid, 'data')
-        self.assertRaises(BadConnectionId, repo.get_shared_data, cnxid2, 'data')
-        self.assertRaises(BadConnectionId, repo.set_shared_data, cnxid, 'data', 1)
-        self.assertRaises(BadConnectionId, repo.set_shared_data, cnxid2, 'data', 1)
-
     def test_check_session(self):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
@@ -235,19 +215,6 @@ class RepositoryTC(CubicWebTC):
                                                   })
         # .properties() return a result set
         self.assertEqual(self.repo.properties().rql, 'Any K,V WHERE P is CWProperty,P pkey K, P value V, NOT P for_user U')
-
-    def test_shared_data_api(self):
-        repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        self.assertEqual(repo.get_shared_data(cnxid, 'data'), None)
-        repo.set_shared_data(cnxid, 'data', 4)
-        self.assertEqual(repo.get_shared_data(cnxid, 'data'), 4)
-        repo.get_shared_data(cnxid, 'data', pop=True)
-        repo.get_shared_data(cnxid, 'whatever', pop=True)
-        self.assertEqual(repo.get_shared_data(cnxid, 'data'), None)
-        repo.close(cnxid)
-        self.assertRaises(BadConnectionId, repo.set_shared_data, cnxid, 'data', 0)
-        self.assertRaises(BadConnectionId, repo.get_shared_data, cnxid, 'data')
 
     def test_schema_is_relation(self):
         with self.admin_access.repo_cnx() as cnx:
