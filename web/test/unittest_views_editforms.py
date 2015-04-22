@@ -148,6 +148,13 @@ class AutomaticEntityFormTC(CubicWebTC):
             self.vreg['forms'].select('edition', req, entity=rset.get_entity(0, 0))
             self.assertFalse(any(f for f in form.fields if f is None))
 
+    def test_edition_form_with_action(self):
+        with self.admin_access.web_request() as req:
+            rset = req.execute('CWUser X LIMIT 1')
+            form = self.vreg['forms'].select('edition', req, rset=rset, row=0,
+                                             col=0, action='my_custom_action')
+            self.assertEqual(form.form_action(), 'my_custom_action')
+
     def test_attribute_add_permissions(self):
         # https://www.cubicweb.org/ticket/4342844
         with self.admin_access.repo_cnx() as cnx:

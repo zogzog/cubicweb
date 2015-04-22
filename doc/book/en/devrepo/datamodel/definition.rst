@@ -244,8 +244,14 @@ General Constraints
 
 .. sourcecode:: python
 
-   from yams.constraints import BoundaryConstraint, TODAY
-   BoundaryConstraint('<=', TODAY())
+   from yams.constraints import BoundaryConstraint, TODAY, NOW, Attribute
+
+   class DatedEntity(EntityType):
+      start = Date(constraints=[BoundaryConstraint('>=', TODAY())])
+      end = Date(constraints=[BoundaryConstraint('>=', Attribute('start'))])
+
+   class Before(EntityType);
+      last_time = DateTime(constraints=[BoundaryConstraint('<=', NOW())])
 
 * `IntervalBoundConstraint`: allows to specify an interval with
   included values
@@ -259,7 +265,12 @@ General Constraints
 
 * `StaticVocabularyConstraint`: identical to "vocabulary=(...)"
 
-.. XXX Attribute, NOW
+Constraints can be dependent on a fixed value (90, Date(2015,3,23)) or a variable.
+In this second case, yams can handle :
+
+* `Attribute`: compare to the value of another attribute.
+* `TODAY`: compare to the current Date.
+* `NOW`: compare to the current Datetime.
 
 RQL Based Constraints
 ......................

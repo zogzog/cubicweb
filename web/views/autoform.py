@@ -732,10 +732,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
     @deprecated('[3.18] use form_action()')
     def get_action(self):
-        try:
-            return self._action
-        except AttributeError:
-            return self._cw.build_url(self._default_form_action_path)
+        return self._action
 
 
     @iclassmethod

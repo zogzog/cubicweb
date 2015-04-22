@@ -27,4 +27,4 @@ ceux-ci n'apparaîtront pas dans le formulaire de modification à moins que vous
 ayez le droit de les modifier.
 
 
-.. _`préférences utilisateurs`: myprefs
+.. _`préférences utilisateurs`: ../myprefs

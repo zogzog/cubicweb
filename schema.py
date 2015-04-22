@@ -891,7 +891,7 @@ class CubicWebRelationSchema(RelationSchema):
         return False
 
     def has_perm(self, _cw, action, **kwargs):
-        """return true if the action is granted globaly or localy"""
+        """return true if the action is granted globally or locally"""
         if self.final:
             assert not ('fromeid' in kwargs or 'toeid' in kwargs), kwargs
             assert action in ('read', 'update')

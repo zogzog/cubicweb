@@ -995,8 +995,8 @@ class Connection(RequestSessionBase):
         etype, extid, source = self.repo.type_and_source_from_eid(eid, self)
         metas = {'type': etype, 'source': source, 'extid': extid}
         if asdict:
-            metas['asource'] = meta['source'] # XXX pre 3.19 client compat
-            return meta
+            metas['asource'] = metas['source'] # XXX pre 3.19 client compat
+            return metas
         return etype, source, extid
 
     @_with_cnx_set

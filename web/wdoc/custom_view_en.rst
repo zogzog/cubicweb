@@ -6,10 +6,10 @@ isn't displayed by default, but you can activate it in your `user
 preferences`_). Once you're satified, add a `bookmark`_ if you want to reuse
 this view later.
 
-.. _`RQL tutorial`: doc/tut_rql
-.. _`schema`: schema
-.. _`user preferences`: myprefs
-.. _`bookmark`: doc/bookmarks
+.. _`RQL tutorial`: tut_rql
+.. _`schema`: ../schema
+.. _`user preferences`: ../myprefs
+.. _`bookmark`: bookmarks
 
 
 Below are some example of what can be acheived...

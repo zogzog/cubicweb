@@ -94,7 +94,7 @@ if rdflib is not None:
                                 add( (cwuri, CW[rtype], URIRef(related.cwuri)) )
                                 try:
                                     for item in xy.xeq('%s %s' % (entity.e_schema.type, rtype)):
-                                        add( (cwuri, urijoin(item), URIRef(related.cwuri)) )
+                                        add( (cwuri, urijoin(item[1]), URIRef(related.cwuri)) )
                                 except xy.UnsupportedVocabulary:
                                     pass
                             else:

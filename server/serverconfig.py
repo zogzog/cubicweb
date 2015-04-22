@@ -199,7 +199,7 @@ notified of every changes.',
           }),
          ('zmq-address-sub',
           {'type' : 'csv',
-           'default' : None,
+           'default' : (),
            'help': ('List of ZMQ addresses to subscribe to (requires pyzmq) '
                     '(of the form `tcp://<ipaddr>:<port>`)'),
            'group': 'zmq', 'level': 1,

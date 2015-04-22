@@ -24,7 +24,7 @@ schéma est toujours disponible dans l'application par le lien `schéma`, dans l
 boîte affichée en cliquant sur le lien de l'utilisateur connectée (en haut à droite).
 Vous pouvez également le voir en cliquant ici_.
 
-.. _ici: schema
+.. _ici: ../schema
 
 
 Un peu de théorie

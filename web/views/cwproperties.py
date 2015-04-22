@@ -302,7 +302,7 @@ class NotEditableWidget(FieldWidget):
         domid = field.dom_id(form)
         value = '<span class="value" id="%s">%s</span>' % (domid, self.value)
         if self.msg:
-            value + '<div class="helper">%s</div>' % self.msg
+            value += '<div class="helper">%s</div>' % self.msg
         return value
 
 
@@ -355,6 +355,7 @@ class PropertyValueField(StringField):
             msg = form._cw._('you should probably delete that property')
             self.widget = NotEditableWidget(entity.printable_value('value'),
                                             '%s (%s)' % (msg, ex))
+            return
         if entity.pkey.startswith('system.'):
             msg = form._cw._('value associated to this key is not editable '
                              'manually')
@@ -425,10 +426,10 @@ def prop_widget(self, propkey, varname, tabindex=None):
     """specific method for CWProperty handling"""
     entity = self._cw.vreg['etypes'].etype_class('CWProperty')(self._cw)
     entity.eid = varname
-    entity['pkey'] = propkey
+    entity.pkey = propkey
     form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
     form.build_context()
-    vfield = form.field_by_name('value')
+    vfield = form.field_by_name('value', 'subject')
     renderer = formrenderers.FormRenderer(self._cw)
     return vfield.render(form, renderer, tabindex=tabindex) \
            + renderer.render_help(form, vfield)

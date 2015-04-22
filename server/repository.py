@@ -1059,6 +1059,8 @@ class Repository(object):
         with session.security_enabled(read=False, write=False):
             in_eids = ','.join([str(_e.eid) for _e in entities])
             for rschema, _, role in entities[0].e_schema.relation_definitions():
+                if rschema.rule:
+                    continue # computed relation
                 rtype = rschema.type
                 if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
                     continue

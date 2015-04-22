@@ -524,6 +524,9 @@ class ServerMigrationHelper(MigrationHelper):
                     subjtypes, objtypes = targettypes, [etype]
                 self._synchronize_rschema(rschema, syncrdefs=False,
                                           syncprops=syncprops, syncperms=syncperms)
+                if rschema.rule: # rdef for computed rtype are infered hence should not be
+                                 # synchronized
+                    continue
                 reporschema = self.repo.schema.rschema(rschema)
                 for subj in subjtypes:
                     for obj in objtypes:

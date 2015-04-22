@@ -52,9 +52,9 @@ class WorkflowBuildingTC(CubicWebTC):
             shell.commit()
             with self.assertRaises(ValidationError) as cm:
                 wf.add_state(u'foo')
-            self.assertEqual({'name': u'name is part of violated unicity constraint',
-                              'state_of': u'state_of is part of violated unicity constraint',
-                              'unicity constraint': u'some relations violate a unicity constraint'},
+            self.assertEqual({'name': u'%(KEY-rtype)s is part of violated unicity constraint',
+                              'state_of': u'%(KEY-rtype)s is part of violated unicity constraint',
+                              '': u'some relations violate a unicity constraint'},
                              cm.exception.errors)
             shell.rollback()
             # no pb if not in the same workflow
@@ -67,9 +67,9 @@ class WorkflowBuildingTC(CubicWebTC):
             with self.assertRaises(ValidationError) as cm:
                 bar.cw_set(name=u'foo')
             shell.rollback()
-            self.assertEqual({'name': u'name is part of violated unicity constraint',
-                              'state_of': u'state_of is part of violated unicity constraint',
-                              'unicity constraint': u'some relations violate a unicity constraint'},
+            self.assertEqual({'name': u'%(KEY-rtype)s is part of violated unicity constraint',
+                              'state_of': u'%(KEY-rtype)s is part of violated unicity constraint',
+                              '': u'some relations violate a unicity constraint'},
                              cm.exception.errors)
 
     def test_duplicated_transition(self):
@@ -80,9 +80,9 @@ class WorkflowBuildingTC(CubicWebTC):
             wf.add_transition(u'baz', (foo,), bar, ('managers',))
             with self.assertRaises(ValidationError) as cm:
                 wf.add_transition(u'baz', (bar,), foo)
-            self.assertEqual({'name': u'name is part of violated unicity constraint',
-                              'transition_of': u'transition_of is part of violated unicity constraint',
-                              'unicity constraint': u'some relations violate a unicity constraint'},
+            self.assertEqual({'name': u'%(KEY-rtype)s is part of violated unicity constraint',
+                              'transition_of': u'%(KEY-rtype)s is part of violated unicity constraint',
+                              '': u'some relations violate a unicity constraint'},
                              cm.exception.errors)
             shell.rollback()
             # no pb if not in the same workflow
@@ -97,9 +97,9 @@ class WorkflowBuildingTC(CubicWebTC):
             with self.assertRaises(ValidationError) as cm:
                 biz.cw_set(name=u'baz')
             shell.rollback()
-            self.assertEqual({'name': u'name is part of violated unicity constraint',
-                              'transition_of': u'transition_of is part of violated unicity constraint',
-                              'unicity constraint': u'some relations violate a unicity constraint'},
+            self.assertEqual({'name': u'%(KEY-rtype)s is part of violated unicity constraint',
+                              'transition_of': u'%(KEY-rtype)s is part of violated unicity constraint',
+                              '': u'some relations violate a unicity constraint'},
                              cm.exception.errors)
 
 

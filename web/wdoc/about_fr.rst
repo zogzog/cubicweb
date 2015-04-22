@@ -25,4 +25,4 @@ Formats supportés: |microformats|_ - JSON_ - |rss|_ - |dublincore|_
 .. _dublincore: http://dublincore.org
 
 .. _Logilab: http://www.logilab.fr/
-.. _schéma: schema
+.. _schéma: ../schema

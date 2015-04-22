@@ -6,7 +6,7 @@ menu, cliquez sur "information personnelles" pour modifier vos données
 personnelles (y compris le mot de passe d'accès à l'application).
 
 Chaque utilisateur peut également personaliser l'apparence du site via le lien
-"préférences utilisateur"_. Ce formulaire permet notamment de configurer les
+`préférences utilisateur`_. Ce formulaire permet notamment de configurer les
 boîtes qui seront affichées, leur ordre, etc...
 
 L'administrateur possède quant à lui un menu "configuration du site" qui reprend l'ensemble des préférences utilisateurs mais les applique par défaut au site.
@@ -42,6 +42,6 @@ Il est possible d'afficher les requêtes RQL_ en jeu pour l'affichage d'une page
 
 Il est alors possible d'éditer et de relancer toute requête
 
-.. _"préférences utilisateur: myprefs
-.. _RQL: doc/tut_rql
-.. image:: doc/images/userprefs
+.. _`préférences utilisateur`: ../myprefs
+.. _RQL: tut_rql
+.. image:: images/userprefs
