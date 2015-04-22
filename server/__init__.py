@@ -229,42 +229,47 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
     sourcescfg = config.read_sources_file()
     source = sourcescfg['system']
     driver = source['db-driver']
-    sqlcnx = repo.system_source.get_connection()
-    sqlcursor = sqlcnx.cursor()
-    execute = sqlcursor.execute
-    if drop:
-        helper = database.get_db_helper(driver)
-        dropsql = sql_drop_all_user_tables(helper, sqlcursor)
-        # We may fail dropping some tables because of table dependencies, in a first pass.
-        # So, we try a second drop sequence to drop remaining tables if needed.
-        # Note that 2 passes is an arbitrary choice as it seems enougth for our usecases.
-        # (looping may induce infinite recursion when user have no right for example)
-        # Here we try to keep code simple and backend independant. That why we don't try to
-        # distinguish remaining tables (wrong right, dependencies, ...).
-        failed = sqlexec(dropsql, execute, cnx=sqlcnx,
-                         pbtitle='-> dropping tables (first pass)')
+    with repo.internal_cnx() as cnx:
+        sqlcnx = cnx.cnxset.cnx
+        sqlcursor = cnx.cnxset.cu
+        execute = sqlcursor.execute
+        if drop:
+            helper = database.get_db_helper(driver)
+            dropsql = sql_drop_all_user_tables(helper, sqlcursor)
+            # We may fail dropping some tables because of table dependencies, in a first pass.
+            # So, we try a second drop sequence to drop remaining tables if needed.
+            # Note that 2 passes is an arbitrary choice as it seems enough for our usecases
+            # (looping may induce infinite recursion when user have no rights for example).
+            # Here we try to keep code simple and backend independent. That's why we don't try to
+            # distinguish remaining tables (missing privileges, dependencies, ...).
+            failed = sqlexec(dropsql, execute, cnx=sqlcnx,
+                             pbtitle='-> dropping tables (first pass)')
+            if failed:
+                failed = sqlexec(failed, execute, cnx=sqlcnx,
+                                 pbtitle='-> dropping tables (second pass)')
+                remainings = list(filter(drop_filter, helper.list_tables(sqlcursor)))
+                assert not remainings, 'Remaining tables: %s' % ', '.join(remainings)
+        handler = config.migration_handler(schema, interactive=False, repo=repo, cnx=cnx)
+        # install additional driver specific sql files
+        handler.cmd_install_custom_sql_scripts()
+        for cube in reversed(config.cubes()):
+            handler.cmd_install_custom_sql_scripts(cube)
+        _title = '-> creating tables '
+        print(_title, end=' ')
+        # schema entities and relations tables
+        # can't skip entities table even if system source doesn't support them,
+        # they are used sometimes by generated sql. Keeping them empty is much
+        # simpler than fixing this...
+        schemasql = sqlschema(schema, driver)
+        #skip_entities=[str(e) for e in schema.entities()
+        #               if not repo.system_source.support_entity(str(e))])
+        failed = sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
         if failed:
-            failed = sqlexec(failed, execute, cnx=sqlcnx,
-                             pbtitle='-> dropping tables (second pass)')
-            remainings = list(filter(drop_filter, helper.list_tables(sqlcursor)))
-            assert not remainings, 'Remaining tables: %s' % ', '.join(remainings)
-    _title = '-> creating tables '
-    print(_title, end=' ')
-    # schema entities and relations tables
-    # can't skip entities table even if system source doesn't support them,
-    # they are used sometimes by generated sql. Keeping them empty is much
-    # simpler than fixing this...
-    schemasql = sqlschema(schema, driver)
-    #skip_entities=[str(e) for e in schema.entities()
-    #               if not repo.system_source.support_entity(str(e))])
-    failed = sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
-    if failed:
-        print('The following SQL statements failed. You should check your schema.')
-        print(failed)
-        raise Exception('execution of the sql schema failed, you should check your schema')
-    sqlcursor.close()
-    sqlcnx.commit()
-    sqlcnx.close()
+            print('The following SQL statements failed. You should check your schema.')
+            print(failed)
+            raise Exception('execution of the sql schema failed, you should check your schema')
+        sqlcursor.close()
+        sqlcnx.commit()
     with repo.internal_cnx() as cnx:
         # insert entity representing the system source
         ssource = cnx.create_entity('CWSource', type=u'native', name=u'system')
@@ -289,7 +294,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
                         {'u': admin.eid})
         cnx.commit()
     repo.shutdown()
-    # reloging using the admin user
+    # re-login using the admin user
     config._cubes = None # avoid assertion error
     repo = get_repository(config=config)
     with connect(repo, login, password=pwd) as cnx:
@@ -297,10 +302,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
             repo.system_source.eid = ssource.eid # redo this manually
             handler = config.migration_handler(schema, interactive=False,
                                                cnx=cnx, repo=repo)
-            # install additional driver specific sql files
-            handler.cmd_install_custom_sql_scripts()
-            for cube in reversed(config.cubes()):
-                handler.cmd_install_custom_sql_scripts(cube)
             # serialize the schema
             initialize_schema(config, schema, handler)
             # yoo !
