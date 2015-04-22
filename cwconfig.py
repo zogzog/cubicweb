@@ -870,6 +870,18 @@ repository.',
 the repository',
           'group': 'email', 'level': 1,
           }),
+        ('logstat-interval',
+         {'type' : 'int',
+          'default': 0,
+          'help': 'interval (in seconds) at which stats are dumped in the logstat file; set 0 to disable',
+          'group': 'main', 'level': 2,
+          }),
+        ('logstat-file',
+         {'type' : 'string',
+          'default': Method('default_stats_file'),
+          'help': 'file where stats for the instance should be written',
+          'group': 'main', 'level': 2,
+          }),
         )
 
     @classmethod
@@ -953,6 +965,13 @@ the repository',
             log_path = os.path.join(_INSTALL_PREFIX, 'var', 'log', 'cubicweb', '%s-%s.log')
             return log_path % (self.appid, self.name)
 
+    def default_stats_file(self):
+        """return default path to the stats file of the instance'server"""
+        logfile = self.default_log_file()
+        if logfile.endswith('.log'):
+            logfile = logfile[:-4]
+        return logfile + '.stats'
+        
     def default_pid_file(self):
         """return default path to the pid file of the instance'server"""
         if self.mode == 'system':

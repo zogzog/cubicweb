@@ -77,6 +77,8 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
         pass
     def default_log_file(self):
         return None
+    def default_stats_file(self):
+        return None
 
 
 def cleanup_sys_modules(config):
