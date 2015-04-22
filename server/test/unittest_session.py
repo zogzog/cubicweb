@@ -21,22 +21,6 @@ from cubicweb.server.session import HOOKS_ALLOW_ALL, HOOKS_DENY_ALL
 from cubicweb.server import hook
 from cubicweb.predicates import is_instance
 
-class InternalSessionTC(CubicWebTC):
-    def test_dbapi_query(self):
-        session = self.repo.internal_session()
-        self.assertFalse(session.running_dbapi_query)
-        session.close()
-
-    def test_integrity_hooks(self):
-        with self.repo.internal_session() as session:
-            self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode)
-            self.assertEqual(set(('integrity', 'security')), session.disabled_hook_categories)
-            self.assertEqual(set(), session.enabled_hook_categories)
-            session.commit()
-            self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode)
-            self.assertEqual(set(('integrity', 'security')), session.disabled_hook_categories)
-            self.assertEqual(set(), session.enabled_hook_categories)
-
 class SessionTC(CubicWebTC):
 
     def test_hooks_control(self):

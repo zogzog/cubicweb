@@ -34,7 +34,6 @@ from cubicweb import QueryError, schema, server, ProgrammingError
 from cubicweb.req import RequestSessionBase
 from cubicweb.utils import make_uid
 from cubicweb.rqlrewrite import RQLRewriter
-from cubicweb.server import ShuttingDown
 from cubicweb.server.edition import EditedEntity
 
 
@@ -483,7 +482,7 @@ class Connection(RequestSessionBase):
         #: is this connection from a client or internal to the repo
         self.running_dbapi_query = True
         # internal (root) session
-        self.is_internal_session = session.is_internal_session
+        self.is_internal_session = isinstance(session.user, InternalManager)
 
         #: dict containing arbitrary data cleared at the end of the transaction
         self.transaction_data = {}
@@ -506,7 +505,7 @@ class Connection(RequestSessionBase):
 
         # undo control
         config = session.repo.config
-        if config.creating or config.repairing or session.is_internal_session:
+        if config.creating or config.repairing or self.is_internal_session:
             self.undo_actions = False
         else:
             self.undo_actions = config['undo-enabled']
@@ -1340,7 +1339,6 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
 
     """
     is_request = False
-    is_internal_session = False
 
     def __init__(self, user, repo, cnxprops=None, _id=None):
         super(Session, self).__init__(repo.vreg)
@@ -1747,37 +1745,12 @@ Session.HOOKS_DENY_ALL = HOOKS_DENY_ALL
 Session.DEFAULT_SECURITY = DEFAULT_SECURITY
 
 
-
-class InternalSession(Session):
-    """special session created internally by the repository"""
-    is_internal_session = True
-    running_dbapi_query = False
-
-    def __init__(self, repo, cnxprops=None, safe=False):
-        super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
-                                              _id='internal')
-        self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exctype, excvalue, tb):
-        self.close()
-
-    @property
-    def cnxset(self):
-        """connections set, set according to transaction mode for each query"""
-        if self.repo.shutting_down:
-            self.free_cnxset(True)
-            raise ShuttingDown('repository is shutting down')
-        return self._cnx.cnxset
-
-
 class InternalManager(object):
     """a manager user with all access rights used internally for task such as
     bootstrapping the repository or creating regular users according to
     repository content
     """
+
     def __init__(self, lang='en'):
         self.eid = -1
         self.login = u'__internal_manager__'

@@ -49,7 +49,7 @@ from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UniqueTogetherError, onevent)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import ShuttingDown, utils, hook, querier, sources
-from cubicweb.server.session import Session, InternalSession, InternalManager
+from cubicweb.server.session import Session, InternalManager
 from cubicweb.server.ssplanner import EditedEntity
 
 NO_CACHE_RELATIONS = set( [('owned_by', 'object'),
@@ -627,14 +627,14 @@ class Repository(object):
         for k in chain(fetch_attrs, query_attrs):
             if k not in cwuserattrs:
                 raise Exception('bad input for find_user')
-        with self.internal_session() as session:
+        with self.internal_cnx() as cnx:
             varmaker = rqlvar_maker()
             vars = [(attr, varmaker.next()) for attr in fetch_attrs]
             rql = 'Any %s WHERE X is CWUser, ' % ','.join(var[1] for var in vars)
             rql += ','.join('X %s %s' % (var[0], var[1]) for var in vars) + ','
-            rset = session.execute(rql + ','.join('X %s %%(%s)s' % (attr, attr)
-                                                  for attr in query_attrs),
-                                   query_attrs)
+            rset = cnx.execute(rql + ','.join('X %s %%(%s)s' % (attr, attr)
+                                              for attr in query_attrs),
+                               query_attrs)
             return rset.rows
 
     def new_session(self, login, **kwargs):
@@ -710,27 +710,6 @@ class Repository(object):
                 nbclosed += 1
         return nbclosed
 
-    @deprecated("[3.19] use internal_cnx now\n"
-                "(Beware that integrity hook are now enabled by default)")
-    def internal_session(self, cnxprops=None, safe=False):
-        """return a dbapi like connection/cursor using internal user which have
-        every rights on the repository. The `safe` argument is a boolean flag
-        telling if integrity hooks should be activated or not.
-
-        /!\ the safe argument is False by default.
-
-        *YOU HAVE TO* commit/rollback or close (rollback implicitly) the
-        session once the job's done, else you'll leak connections set up to the
-        time where no one is available, causing irremediable freeze...
-        """
-        session = InternalSession(self, cnxprops)
-        if not safe:
-            session.disable_hook_categories('integrity')
-        session.disable_hook_categories('security')
-        session._cnx.ctx_count += 1
-        session.set_cnxset()
-        return session
-
     @contextmanager
     def internal_cnx(self):
         """Context manager returning a Connection using internal user which have
@@ -739,7 +718,7 @@ class Repository(object):
         Beware that unlike the older :meth:`internal_session`, internal
         connections have all hooks beside security enabled.
         """
-        with InternalSession(self) as session:
+        with Session(InternalManager(), self) as session:
             with session.new_cnx() as cnx:
                 with cnx.security_enabled(read=False, write=False):
                     with cnx.ensure_cnx_set:
