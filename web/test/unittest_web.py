@@ -126,16 +126,23 @@ class LanguageTC(CubicWebServerTC):
         self.assertIn('HttpOnly', webreq.getheader('set-cookie'))
 
 
-class LogQueriesTC(CubicWebServerTC):
+class MiscOptionsTC(CubicWebServerTC):
     @classmethod
     def init_config(cls, config):
-        super(LogQueriesTC, cls).init_config(config)
+        super(MiscOptionsTC, cls).init_config(config)
         cls.logfile = tempfile.NamedTemporaryFile()
         config.global_set_option('query-log-file', cls.logfile.name)
+        config.global_set_option('datadir-url', '//static.testing.fr/')
+        # call load_configuration again to let the config reset its datadir_url
+        config.load_configuration()
 
     def test_log_queries(self):
         self.web_request()
         self.assertTrue(self.logfile.read())
+
+    def test_datadir_url(self):
+        webreq = self.web_request()
+        self.assertNotIn('/data/', webreq.read())
 
     @classmethod
     def tearDownClass(cls):
