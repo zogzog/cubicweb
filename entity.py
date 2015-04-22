@@ -1147,9 +1147,7 @@ class Entity(AppObject):
         self._cw.vreg.solutions(self._cw, select, args)
         # insert RQL expressions for schema constraints into the rql syntax tree
         if vocabconstraints:
-            # RQLConstraint is a subclass for RQLVocabularyConstraint, so they
-            # will be included as well
-            cstrcls = RQLVocabularyConstraint
+            cstrcls = (RQLVocabularyConstraint, RQLConstraint)
         else:
             cstrcls = RQLConstraint
         lt_infos = pruned_lt_info(self.e_schema, lt_infos or {})

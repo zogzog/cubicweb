@@ -105,10 +105,9 @@ class CubicWebSchemaTC(TestCase):
         #
         # isinstance(cstr, RQLConstraint)
         # -> expected to return RQLConstraint instances but not
-        #    RRQLVocabularyConstraint and QLUniqueConstraint
+        #    RQLVocabularyConstraint and RQLUniqueConstraint
         self.assertFalse(issubclass(RQLUniqueConstraint, RQLVocabularyConstraint))
         self.assertFalse(issubclass(RQLUniqueConstraint, RQLConstraint))
-        self.assertTrue(issubclass(RQLConstraint, RQLVocabularyConstraint))
 
     def test_entity_perms(self):
         self.assertEqual(eperson.get_groups('read'), set(('managers', 'users', 'guests')))

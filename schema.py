@@ -1257,7 +1257,7 @@ class RepoEnforcedRQLConstraintMixIn(object):
         return _cw.execute(rql, args, build_descr=False)
 
 
-class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
+class RQLConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
     """the rql constraint is similar to the RQLVocabularyConstraint but
     are also enforced at the repository level
     """
