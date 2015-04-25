@@ -185,6 +185,27 @@ class CubicWebPyramidRequest(CubicWebRequestBase):
 
     status_out = property(_get_status_out, _set_status_out)
 
+    @property
+    def message(self):
+        """Returns a '<br>' joined list of the cubicweb current message and the
+        default pyramid flash queue messages.
+        """
+        return u'\n<br>\n'.join(
+            self._request.session.pop_flash()
+            + self._request.session.pop_flash('cubicweb'))
+
+    def set_message(self, msg):
+        self.reset_message()
+        self._request.session.flash(msg, 'cubicweb')
+
+    def set_message_id(self, msgid):
+        self.reset_message()
+        self.set_message(
+            self._request.session.pop(msgid, u''))
+
+    def reset_message(self):
+        self._request.session.pop_flash('cubicweb')
+
 
 def render_view(request, vid, **kwargs):
     """ Helper function to render a CubicWeb view.
