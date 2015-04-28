@@ -75,7 +75,7 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
             self.req.set_header('Cache-control', 'no-cache')
             return
         req.set_header('Cache-control',
-                       'must-revalidate;max-age=%s' % self.max_age())
+                       'must-revalidate,max-age=%s' % self.max_age())
         mdate = self.last_modified()
         # use a timestamp, not a formatted raw header, and let
         # the front-end correctly generate it
