@@ -6,6 +6,8 @@ from pyramid_cubicweb import make_cubicweb_application
 
 
 class PyramidCWTest(CubicWebTestTC):
+    settings = {}
+
     @classmethod
     def init_config(cls, config):
         super(PyramidCWTest, cls).init_config(config)
@@ -17,7 +19,7 @@ class PyramidCWTest(CubicWebTestTC):
     def setUp(self):
         # Skip CubicWebTestTC setUp
         super(CubicWebTestTC, self).setUp()
-        config = make_cubicweb_application(self.config)
+        config = make_cubicweb_application(self.config, self.settings)
         self.includeme(config)
         self.pyr_registry = config.registry
         self.webapp = webtest.TestApp(config.make_wsgi_app())

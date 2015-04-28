@@ -12,7 +12,7 @@ except ImportError:
     from ConfigParser import SafeConfigParser
 
 
-def make_cubicweb_application(cwconfig):
+def make_cubicweb_application(cwconfig, settings=None):
     """
     Create a pyramid-based CubicWeb instance from a cubicweb configuration.
 
@@ -23,7 +23,7 @@ def make_cubicweb_application(cwconfig):
     """
     settings_filenames = [os.path.join(cwconfig.apphome, 'pyramid.ini')]
 
-    settings = {}
+    settings = dict(settings) if settings else {}
 
     if cwconfig.debugmode:
         settings_filenames.insert(
