@@ -1,4 +1,5 @@
 import os
+from warnings import warn
 import wsgicors
 
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
@@ -43,7 +44,11 @@ def make_cubicweb_application(cwconfig):
 
     config = Configurator(settings=settings)
     if cwconfig.debugmode:
-        config.include('pyramid_debugtoolbar')
+        try:
+            config.include('pyramid_debugtoolbar')
+        except ImportError:
+            warn('pyramid_debugtoolbar package not available, install it to '
+                 'get UI debug features', RuntimeWarning)
     config.registry['cubicweb.config'] = cwconfig
     config.registry['cubicweb.repository'] = repo = cwconfig.repository()
     config.registry['cubicweb.registry'] = repo.vreg

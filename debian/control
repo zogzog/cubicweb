@@ -22,6 +22,8 @@ Depends:
  python-waitress (>= 0.8.9),
  cubicweb-common (>= 3.19.3),
 # XXX wsgicors?
+Recommends:
+ python-pyramid_debugtoolbar
 Description: Integrate CubicWeb with a Pyramid application
  Provides pyramid extensions to load a CubicWeb instance and serve it through
  the pyramid stack.
