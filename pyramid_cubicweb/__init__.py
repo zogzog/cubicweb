@@ -33,6 +33,7 @@ def make_cubicweb_application(cwconfig, settings=None):
             'pyramid.debug_authorization': True,
             'pyramid.debug_notfound': True,
             'pyramid.debug_routematch': True,
+            'pyramid.reload_templates': True,
         })
 
     for fname in settings_filenames:
