@@ -240,7 +240,10 @@ def _cw_cnx(request):
     :param request: A pyramid request
     :returns type: :class:`cubicweb.server.session.Connection`
     """
-    cnx = repoapi.ClientConnection(request.cw_session)
+    session = request.cw_session
+    if session is None:
+        return None
+    cnx = repoapi.ClientConnection(session)
 
     def cleanup(request):
         if (request.exception is not None and not isinstance(
@@ -286,8 +289,10 @@ def _cw_session(request):
     repo = request.registry['cubicweb.repository']
 
     if not request.authenticated_userid:
-        session = repo_connect(
-            request, repo, eid=request.registry['cubicweb.anonymous_eid'])
+        eid = request.registry.get('cubicweb.anonymous_eid')
+        if eid is None:
+            return None
+        session = repo_connect(request, repo, eid=eid)
     else:
         session = request._cw_cached_session
 
@@ -305,7 +310,9 @@ def _cw_request(request):
 
     """
     req = CubicWebPyramidRequest(request)
-    req.set_cnx(request.cw_cnx)
+    cnx = request.cw_cnx
+    if cnx is not None:
+        req.set_cnx(request.cw_cnx)
     return req
 
 
@@ -358,8 +365,9 @@ def includeme(config):
 
     with repo.internal_cnx() as cnx:
         login = config.registry['cubicweb.config'].anonymous_user()[0]
-        config.registry['cubicweb.anonymous_eid'] = cnx.find(
-            'CWUser', login=login).one().eid
+        if login is not None:
+            config.registry['cubicweb.anonymous_eid'] = cnx.find(
+                'CWUser', login=login).one().eid
 
     config.add_request_method(
         _cw_session, name='cw_session', property=True, reify=True)

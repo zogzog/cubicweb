@@ -110,8 +110,12 @@ class CubicWebPyramidHandler(object):
             # that is accessible by the pyramid views
             headers = security.forget(request)
             raise HTTPSeeOther(ex.url, headers=headers)
-        # except AuthenticationError:
-        # XXX I don't think it makes sens to catch this ex here (cdevienne)
+        except cubicweb.AuthenticationError:
+            # Will occur upon access to req.cnx which is a
+            # cubicweb.dbapi._NeedAuthAccessMock.
+            if not content:
+                content = vreg['views'].main_template(req, 'login')
+                request.response.body = content
 
         return request.response
 
