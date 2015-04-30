@@ -167,16 +167,13 @@ def update_form(**kwargs):
         return None, None
     return do_build_rset
 
-def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
+def rgx_action(rql=None, args=None, argsgroups=(), setuser=False,
                form=None, formgroups=(), transforms={}, rqlformparams=(), controller=None):
     def do_build_rset(inputurl, uri, req, schema,
-                      cachekey=cachekey # necessary to avoid UnboundLocalError
                       ):
         if rql:
             kwargs = args and args.copy() or {}
             if argsgroups:
-                if cachekey is not None and isinstance(cachekey, basestring):
-                    cachekey = (cachekey,)
                 match = inputurl.match(uri)
                 for key in argsgroups:
                     value = match.group(key)
@@ -184,13 +181,11 @@ def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
                         kwargs[key] = transforms[key](value)
                     except KeyError:
                         kwargs[key] = value
-                    if cachekey is not None and key in cachekey:
-                        kwargs[key] = int(value)
             if setuser:
                 kwargs['u'] = req.user.eid
             for param in rqlformparams:
                 kwargs.setdefault(param, req.form.get(param))
-            rset = req.execute(rql, kwargs, cachekey)
+            rset = req.execute(rql, kwargs)
         else:
             rset = None
         form2 = form and form.copy() or {}
