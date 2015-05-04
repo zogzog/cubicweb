@@ -843,6 +843,13 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
           'help': 'file where output logs should be written',
           'group': 'main', 'level': 2,
           }),
+        ('statsd-endpoint',
+         {'type' : 'string',
+          'default': '',
+          'help': 'UDP address of the statsd endpoint; it must be formatted'
+                  'like <ip>:<port>; disabled is unset.',
+          'group': 'main', 'level': 2,
+          }),
         # email configuration
         ('smtp-host',
          {'type' : 'string',
@@ -971,7 +978,7 @@ the repository',
         if logfile.endswith('.log'):
             logfile = logfile[:-4]
         return logfile + '.stats'
-        
+
     def default_pid_file(self):
         """return default path to the pid file of the instance'server"""
         if self.mode == 'system':
@@ -1121,6 +1128,17 @@ the repository',
         logconfig = join(self.apphome, 'logging.conf')
         if exists(logconfig):
             logging.config.fileConfig(logconfig)
+        # set the statsd address, if any
+        if self.get('statsd-endpoint'):
+            try:
+                address, port = self.get('statsd-endpoint').split(':')
+                port = int(port)
+            except:
+                self.error('statsd-endpoint: invalid address format ({}); '
+                           'it should be "ip:port"'.format(self.get('statsd-endpoint')))
+            else:
+                import statsd_logger
+                statsd_logger.setup('cubicweb.%s' % self.appid, (address, port))
 
     def available_languages(self, *args):
         """return available translation for an instance, by looking for

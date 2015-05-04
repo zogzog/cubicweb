@@ -60,6 +60,7 @@ from cubicweb.server.hook import CleanupDeletedEidsCacheOp
 from cubicweb.server.edition import EditedEntity
 from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 from cubicweb.server.sources.rql2sql import SQLGenerator
+from cubicweb.statsd_logger import statsd_timeit
 
 
 ATTR_MAP = {}
@@ -376,6 +377,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._cache.pop('Any X WHERE X eid %s' % eid, None)
         self._cache.pop('Any %s' % eid, None)
 
+    @statsd_timeit
     def sqlexec(self, cnx, sql, args=None):
         """execute the query and return its result"""
         return self.process_result(self.doexec(cnx, sql, args))
@@ -480,6 +482,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     # ISource interface #######################################################
 
+    @statsd_timeit
     def compile_rql(self, rql, sols):
         rqlst = self.repo.vreg.rqlhelper.parse(rql)
         rqlst.restricted_vars = ()
@@ -517,6 +520,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # can't claim not supporting a relation
         return True #not rtype == 'content_for'
 
+    @statsd_timeit
     def authenticate(self, cnx, login, **kwargs):
         """return CWUser eid for the given login and other authentication
         information found in kwargs, else raise `AuthenticationError`
@@ -687,6 +691,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             sql = self.sqlgen.delete('%s_relation' % rtype, attrs)
         self.doexec(cnx, sql, attrs)
 
+    @statsd_timeit
     def doexec(self, cnx, query, args=None, rollback=True):
         """Execute a query.
         it's a function just so that it shows up in profiling
@@ -746,6 +751,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             raise
         return cursor
 
+    @statsd_timeit
     def doexecmany(self, cnx, query, args):
         """Execute a query.
         it's a function just so that it shows up in profiling

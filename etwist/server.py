@@ -24,6 +24,7 @@ import traceback
 import threading
 from urlparse import urlsplit, urlunsplit
 from cgi import FieldStorage, parse_header
+from cubicweb.statsd_logger import statsd_timeit
 
 from twisted.internet import reactor, task, threads
 from twisted.web import http, server
@@ -103,6 +104,7 @@ class CubicWebRootResource(resource.Resource):
             deferred = threads.deferToThread(self.render_request, request)
             return NOT_DONE_YET
 
+    @statsd_timeit
     def render_request(self, request):
         try:
             # processing HUGE files (hundred of megabytes) in http.processReceived

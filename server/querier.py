@@ -37,6 +37,7 @@ from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
 from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
 from cubicweb.server.edition import EditedEntity
 from cubicweb.server.ssplanner import SSPlanner
+from cubicweb.statsd_logger import statsd_timeit, statsd_c
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
@@ -516,6 +517,7 @@ class QuerierHelper(object):
             return InsertPlan(self, rqlst, args, cnx)
         return ExecutionPlan(self, rqlst, args, cnx)
 
+    @statsd_timeit
     def execute(self, cnx, rql, args=None, build_descr=True):
         """execute a rql query, return resulting rows and their description in
         a `ResultSet` object
@@ -558,8 +560,10 @@ class QuerierHelper(object):
                         return empty_rset(rql, args)
             rqlst = self._rql_cache[cachekey]
             self.cache_hit += 1
+            statsd_c('cache_hit')
         except KeyError:
             self.cache_miss += 1
+            statsd_c('cache_miss')
             rqlst = self.parse(rql)
             try:
                 # compute solutions for rqlst and return named args in query
