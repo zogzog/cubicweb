@@ -213,8 +213,12 @@ class AutoClickAndEditFormView(EntityView):
         entity = self.entity
         if role == 'subject':
             kwargs = {'fromeid': entity.eid, 'toeid': rentity.eid}
+            cardinality = rschema.rdefs[(entity.cw_etype, rentity.cw_etype)].cardinality[0]
         else:
             kwargs = {'fromeid': rentity.eid, 'toeid': entity.eid}
+            cardinality = rschema.rdefs[(rentity.cw_etype, entity.cw_etype)].cardinality[1]
+        if cardinality in '1+':
+            return False
         # NOTE: should be sufficient given a well built schema/security
         return rschema.has_perm(self._cw, 'delete', **kwargs)
 
