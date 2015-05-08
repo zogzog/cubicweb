@@ -248,6 +248,8 @@ def _cw_cnx(request):
                 httpexceptions.HTTPSuccessful,
                 httpexceptions.HTTPRedirection))):
             cnx.rollback()
+        elif cnx._cnx.commit_state == 'uncommitable':
+            cnx.rollback()
         else:
             cnx.commit()
         cnx.__exit__(None, None, None)
