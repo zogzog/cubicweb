@@ -1,12 +1,14 @@
-0.3.0 (next)
-------------
+0.3.0 (2015-05-11)
+------------------
+
+-   Reorganize the authentication stack around on pyramid_multiauth_
+    (:issue:`4985962`).
+-   Implement the CW message API on top of the Pyramid :ref:`flash_messages`
+    (:issue:`5298654`).
 
 -   Don't commit `'uncommitable'` connexions anymore (:issue:`5343870`).
 -   Debug mode enables pyramid.reload_templates.
 -   Testcases can override pyramid settings (:issue:`5307426`).
--   Implement the CW message API on top of the Pyramid :ref:`flash_messages`.
--   Reorganize the authentication stack around on pyramid_multiauth_
-    (:issue:`4985962`).
 -   pyramid_debugtoolbar is not mandatory anymore (:issue:`5310434`).
 -   Add unit tests (coverage 79%).
 -   Performance improvements (:issue:`4891437` & :issue:`4870347`).
