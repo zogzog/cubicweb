@@ -8,6 +8,9 @@ New features
   allow to switch off internal connection pooling for use with others poolers
   such as pgbouncer_.
 
-
 .. _pgbouncer: https://pgbouncer.github.io/
 
+
+* A new way to declare workflows as simple data structure (dict/list) has been
+  introduced. Respective utility functions live in ``cubicweb.wfutils``
+  module. This handles both the creation and migration of workflows.

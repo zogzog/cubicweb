@@ -158,3 +158,11 @@ interface, next time you initialize the database you will have to
 re-create all the workflow entities. The user interface should only be
 a reference for you to view the states and transitions, but is not the
 appropriate interface to define your application workflow.
+
+
+Alternative way to declare workflows
+------------------------------------
+
+.. automodule:: cubicweb.wfutils
+
+

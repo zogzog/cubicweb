@@ -80,6 +80,7 @@ cubicweb/test/unittest_req.py
 cubicweb/test/unittest_rtags.py
 cubicweb/test/unittest_schema.py
 cubicweb/test/unittest_toolsutils.py
+cubicweb/test/unittest_wfutils.py
 cubicweb/web/formwidgets.py
 cubicweb/web/test/data/entities.py
 cubicweb/web/test/unittest_http_headers.py
@@ -112,3 +113,4 @@ cubicweb/pyramid/test/test_login.py
 cubicweb/pyramid/test/test_rest_api.py
 cubicweb/pyramid/test/test_tools.py
 cubicweb/pyramid/pyramidctl.py
+cubicweb/wfutils.py
