@@ -1,3 +1,9 @@
+pyramid-cubicweb (0.3.0-1) unstable; urgency=medium
+
+  * upstream release
+
+ -- Christophe de Vienne <christophe@unlish.com>  Mon, 11 May 2015 15:21:46 +0200
+
 pyramid-cubicweb (0.2.1-1) unstable; urgency=medium
 
   * upstream release
