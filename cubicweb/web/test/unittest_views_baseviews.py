@@ -156,5 +156,138 @@ class HTMLStreamTests(CubicWebTC):
                                       b'<head>'],
                                      source_lines[:3])
 
+class BaseViewsTC(CubicWebTC):
+
+    def test_null(self):
+        with self.admin_access.web_request() as req:
+            rset = req.execute('Any X WHERE X login "admin"')
+            result = req.view('null', rset)
+            self.assertEqual(result, u'')
+
+    def test_final(self):
+        with self.admin_access.web_request() as req:
+            rset = req.execute('Any "<script></script>"')
+            result = req.view('final', rset)
+            self.assertEqual(result, u'&lt;script&gt;&lt;/script&gt;')
+
+    def test_incontext(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            result = entity.view('incontext')
+            expected = (u'<a href="http://testing.fr/cubicweb/%d" title="">'
+                        u'&lt;script&gt;&lt;/script&gt;</a>' % entity.eid)
+            self.assertEqual(result, expected)
+
+    def test_outofcontext(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            result = entity.view('outofcontext')
+            expect = (u'<a href="http://testing.fr/cubicweb/%d" title="">'
+                      u'&lt;script&gt;&lt;/script&gt;</a>' % entity.eid)
+            self.assertEqual(result, expect)
+
+    def test_outofcontext(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            result = entity.view('oneline')
+            expect = (u'<a href="http://testing.fr/cubicweb/%d" title="">'
+                      u'&lt;script&gt;&lt;/script&gt;</a>' % entity.eid)
+            self.assertEqual(result, expect)
+
+    def test_text(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            result = entity.view('text')
+            self.assertEqual(result, u'<script></script>')
+
+    def test_textincontext(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            result = entity.view('textincontext')
+            self.assertEqual(result, u'<script></script>')
+
+    def test_textoutofcontext(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            result = entity.view('textoutofcontext')
+            self.assertEqual(result, u'<script></script>')
+
+    def test_list(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            rset = req.execute('Any X WHERE X is CWUser')
+            result = req.view('list', rset)
+            expected = u'''<ul class="section">
+<li><a href="http://testing.fr/cubicweb/%d" title="">&lt;script&gt;&lt;/script&gt;</a></li>
+<li><a href="http://testing.fr/cubicweb/cwuser/admin" title="">admin</a></li>
+<li><a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a></li>
+</ul>
+''' % entity.eid
+            self.assertEqual(result, expected)
+
+    def test_simplelist(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            rset = req.execute('Any X WHERE X is CWUser')
+            result = req.view('simplelist', rset)
+            expected = (
+                u'<div class="section">'
+                u'<a href="http://testing.fr/cubicweb/%d" title="">'
+                u'&lt;script&gt;&lt;/script&gt;</a></div>'
+                u'<div class="section">'
+                u'<a href="http://testing.fr/cubicweb/cwuser/admin" title="">admin</a></div>'
+                u'<div class="section">'
+                u'<a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a></div>'
+                % entity.eid
+            )
+            self.assertEqual(result, expected)
+
+    def test_sameetypelist(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            rset = req.execute('Any X WHERE X is CWUser')
+            result = req.view('sameetypelist', rset)
+            expected = (
+                u'<h1>CWUser_plural</h1>'
+                u'<div class="section">'
+                u'<a href="http://testing.fr/cubicweb/%d" title="">'
+                u'&lt;script&gt;&lt;/script&gt;</a></div>'
+                u'<div class="section">'
+                u'<a href="http://testing.fr/cubicweb/cwuser/admin" title="">admin</a></div>'
+                u'<div class="section">'
+                u'<a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a></div>'
+                % entity.eid
+            )
+            self.assertEqual(expected, result)
+
+    def test_sameetypelist(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            rset = req.execute('Any X WHERE X is CWUser')
+            result = req.view('csv', rset)
+            expected = (
+                u'<a href="http://testing.fr/cubicweb/%d" title="">&lt;script&gt;&lt;/script&gt;</a>, '
+                u'<a href="http://testing.fr/cubicweb/cwuser/admin" title="">admin</a>, '
+                u'<a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a>'
+                % entity.eid
+            )
+            self.assertEqual(result, expected)
+
+    def test_metadata(self):
+        with self.admin_access.web_request() as req:
+            entity = req.create_entity('CWUser', login=u'<script></script>', upassword=u'toto')
+            entity.cw_set(creation_date=u'2000-01-01 00:00:00')
+            entity.cw_set(modification_date=u'2015-01-01 00:00:00')
+            result = entity.view('metadata')
+            expected = (
+                u'<div>CWUser #%d - <span>latest update on</span>'
+                u' <span class="value">2015/01/01</span>,'
+                u' <span>created on</span>'
+                u' <span class="value">2000/01/01</span></div>'
+                % entity.eid
+            )
+            self.assertEqual(result, expected)
+
+
 if __name__ == '__main__':
     unittest_main()
