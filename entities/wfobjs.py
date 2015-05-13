@@ -174,12 +174,14 @@ class Workflow(AnyEntity):
             todelstate = self.state_by_name(todelstate)
         if not hasattr(replacement, 'eid'):
             replacement = self.state_by_name(replacement)
+        args = {'os': todelstate.eid, 'ns': replacement.eid}
         execute = self._cw.execute
-        execute('SET X in_state S WHERE S eid %(s)s', {'s': todelstate.eid})
-        execute('SET X from_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
-                {'os': todelstate.eid, 'ns': replacement.eid})
-        execute('SET X to_state NS WHERE X to_state OS, OS eid %(os)s, NS eid %(ns)s',
-                {'os': todelstate.eid, 'ns': replacement.eid})
+        execute('SET X in_state NS WHERE X in_state OS, '
+                'NS eid %(ns)s, OS eid %(os)s', args)
+        execute('SET X from_state NS WHERE X from_state OS, '
+                'OS eid %(os)s, NS eid %(ns)s', args)
+        execute('SET X to_state NS WHERE X to_state OS, '
+                'OS eid %(os)s, NS eid %(ns)s', args)
         todelstate.cw_delete()
 
 

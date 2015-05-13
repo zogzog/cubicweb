@@ -416,6 +416,32 @@ class WorkflowTC(CubicWebTC):
                 group.cw_clear_all_caches()
                 self.assertEqual(iworkflowable.state, nextstate)
 
+    def test_replace_state(self):
+        with self.admin_access.shell() as shell:
+            wf = add_wf(shell, 'CWGroup', name='groupwf', default=True)
+            s_new = wf.add_state('new', initial=True)
+            s_state1 = wf.add_state('state1')
+            wf.add_transition('tr', (s_new,), s_state1)
+            shell.commit()
+
+        with self.admin_access.repo_cnx() as cnx:
+            group = cnx.create_entity('CWGroup', name=u'grp1')
+            cnx.commit()
+
+            iwf = group.cw_adapt_to('IWorkflowable')
+            iwf.fire_transition('tr')
+            cnx.commit()
+            group.cw_clear_all_caches()
+
+            wf = cnx.entity_from_eid(wf.eid)
+            wf.add_state('state2')
+            with cnx.security_enabled(write=False):
+                wf.replace_state('state1', 'state2')
+            cnx.commit()
+
+            self.assertEqual(iwf.state, 'state2')
+            self.assertEqual(iwf.latest_trinfo().to_state[0].name, 'state2')
+
 
 class CustomWorkflowTC(CubicWebTC):
 
