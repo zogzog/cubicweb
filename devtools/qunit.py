@@ -220,9 +220,87 @@ class QUnitView(View):
 
     templatable = False
 
+    depends = None
+    test_file = None
+
     def call(self, **kwargs):
-        self.w(make_qunit_html(self.test_file, self.depends,
-                               base_url=self._cw.base_url()))
+        w = self.w
+        req = self._cw
+        data = {
+            'jquery': req.data_url('jquery.js'),
+            'web_test': req.build_url('cwsoftwareroot/devtools/data'),
+        }
+        w(u'''<!DOCTYPE html>
+        <html>
+        <head>
+        <meta http-equiv="content-type" content="application/html; charset=UTF-8"/>
+        <!-- JS lib used as testing framework -->
+        <link rel="stylesheet" type="text/css" media="all" href="%(web_test)s/qunit.css" />
+        <script src="%(jquery)s" type="text/javascript"></script>
+        <script src="%(web_test)s/cwmock.js" type="text/javascript"></script>
+        <script src="%(web_test)s/qunit.js" type="text/javascript"></script>'''
+        % data)
+        w(u'<!-- result report tools -->')
+        w(u'<script type="text/javascript">')
+        w(u"var BASE_URL = '%s';" % req.base_url())
+        w(u'''
+            QUnit.moduleStart = function (name) {
+              jQuery.ajax({
+                          url: BASE_URL + 'qunit_result',
+                         data: {"event": "module_start",
+                                "name": name},
+                         async: false});
+            }
+
+            QUnit.testDone = function (name, failures, total) {
+              jQuery.ajax({
+                          url: BASE_URL + 'qunit_result',
+                         data: {"event": "test_done",
+                                "name": name,
+                                "failures": failures,
+                                "total":total},
+                         async: false});
+            }
+
+            QUnit.done = function (failures, total) {
+              jQuery.ajax({
+                           url: BASE_URL + 'qunit_result',
+                           data: {"event": "done",
+                                  "failures": failures,
+                                  "total":total},
+                           async: false});
+              window.close();
+            }
+
+            QUnit.log = function (result, message) {
+              jQuery.ajax({
+                           url: BASE_URL + 'qunit_result',
+                           data: {"event": "log",
+                                  "result": result,
+                                  "message": message},
+                           async: false});
+            }''')
+        w(u'</script>')
+        w(u'<!-- Test script dependencies (tested code for example) -->')
+
+        prefix = len(cubicweb.CW_SOFTWARE_ROOT) + 1
+        for dep in self.depends:
+            dep = req.build_url('cwsoftwareroot/') + dep[prefix:]
+            w(u'    <script src="%s" type="text/javascript"></script>' % dep)
+
+        w(u'    <!-- Test script itself -->')
+        test_url = req.build_url('cwsoftwareroot/') + self.test_file[prefix:]
+        w(u'    <script src="%s" type="text/javascript"></script>' % test_url)
+        w(u'''  </head>
+        <body>
+        <div id="main">
+        </div>
+        <h1 id="qunit-header">QUnit example</h1>
+        <h2 id="qunit-banner"></h2>
+        <h2 id="qunit-userAgent"></h2>
+        <ol id="qunit-tests"></ol>
+        </body>
+        </html>''')
 
 
 class CWSoftwareRootStaticController(StaticFileController):
@@ -235,102 +313,6 @@ class CWSoftwareRootStaticController(StaticFileController):
 
 
 STATIC_CONTROLLERS.append(CWSoftwareRootStaticController)
-
-
-def cw_path(*paths):
-    return '/cwsoftwareroot/' + '/'.join(paths)
-
-
-def file_path(path):
-    l = len(cubicweb.CW_SOFTWARE_ROOT) + 1
-    return '/cwsoftwareroot/' + path[l:]
-
-
-def build_js_script(host):
-    return """
-    var host = '%s';
-    var BASE_URL = host;
-
-    QUnit.moduleStart = function (name) {
-      jQuery.ajax({
-                  url: host+'/qunit_result',
-                 data: {"event": "module_start",
-                        "name": name},
-                 async: false});
-    }
-
-    QUnit.testDone = function (name, failures, total) {
-      jQuery.ajax({
-                  url: host+'/qunit_result',
-                 data: {"event": "test_done",
-                        "name": name,
-                        "failures": failures,
-                        "total":total},
-                 async: false});
-    }
-
-    QUnit.done = function (failures, total) {
-      jQuery.ajax({
-                   url: host+'/qunit_result',
-                   data: {"event": "done",
-                          "failures": failures,
-                          "total":total},
-                   async: false});
-      window.close();
-    }
-
-    QUnit.log = function (result, message) {
-      jQuery.ajax({
-                   url: host+'/qunit_result',
-                   data: {"event": "log",
-                          "result": result,
-                          "message": message},
-                   async: false});
-    }
-    """ % host
-
-
-def make_qunit_html(test_file, depends=(), base_url=None):
-    """"""
-    data = {
-            'web_data': '/data',
-            'web_test': cw_path('devtools', 'data'),
-        }
-
-    html = ['''<!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="content-type" content="application/html; charset=UTF-8"/>
-    <!-- JS lib used as testing framework -->
-    <link rel="stylesheet" type="text/css" media="all" href="%(web_test)s/qunit.css" />
-    <script src="%(web_data)s/jquery.js" type="text/javascript"></script>
-    <script src="%(web_test)s/cwmock.js" type="text/javascript"></script>
-    <script src="%(web_test)s/qunit.js" type="text/javascript"></script>'''
-    % data]
-    if base_url is not None:
-        html.append('<!-- result report tools -->')
-        html.append('<script type="text/javascript">')
-        html.append(build_js_script(base_url))
-        html.append('</script>')
-    html.append('<!-- Test script dependencies (tested code for example) -->')
-
-    for dep in depends:
-        html.append('    <script src="%s" type="text/javascript"></script>' % file_path(dep))
-
-    html.append('    <!-- Test script itself -->')
-    html.append('    <script src="%s" type="text/javascript"></script>'% (file_path(test_file),))
-    html.append('''  </head>
-  <body>
-    <div id="main">
-    </div>
-    <h1 id="qunit-header">QUnit example</h1>
-    <h2 id="qunit-banner"></h2>
-    <h2 id="qunit-userAgent"></h2>
-    <ol id="qunit-tests"></ol>
-  </body>
-</html>''')
-    return u'\n'.join(html)
-
 
 
 if __name__ == '__main__':
