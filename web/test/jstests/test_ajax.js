@@ -11,7 +11,7 @@ $(document).ready(function() {
           cw.loaded_links = [];
         },
         teardown: function() {
-          $('head script[src]:gt(' + this.scriptsLength + ')').remove();
+          $('head script[src]:lt(' + ($('head script[src]').length - 1 - this.scriptsLength) + ')').remove();
           $('head link[rel=stylesheet]:gt(' + this.cssLength + ')').remove();
         }
       });
@@ -48,9 +48,9 @@ $(document).ready(function() {
                 try {
                     var origLength = scriptsIncluded.length;
                     scriptsIncluded = jsSources();
-                    // check that foo.js has been *appended* to <head>
+                    // check that foo.js has been prepended to <head>
                     equals(scriptsIncluded.length, origLength + 1);
-                    equals(scriptsIncluded[origLength].indexOf('http://foo.js'), 0);
+                    equals(scriptsIncluded.indexOf('http://foo.js'), 0);
                     // check that <div class="ajaxHtmlHead"> has been removed
                     equals(jQuery('#main').children().length, 1);
                     equals(jQuery('div.ajaxHtmlHead').length, 0);
@@ -118,7 +118,7 @@ $(document).ready(function() {
     });
 
     test('test callback after synchronous request with parameters', function() {
-        expect(2);
+        expect(3);
         var deferred = new Deferred();
         deferred.addCallback(function(data, req, arg1, arg2) {
             // add an assertion to ensure the callback is executed
@@ -206,7 +206,7 @@ $(document).ready(function() {
                 try {
                     // check that foo.js has been inserted in <head>
                     equals(scriptsIncluded.length, origLength + 1);
-                    equals(scriptsIncluded[origLength].indexOf('http://foo.js'), 0);
+                    equals(scriptsIncluded.indexOf('http://foo.js'), 0);
                     // check that <div class="ajaxHtmlHead"> has been removed
                     equals(jQuery('#main').children().length, 1);
                     equals(jQuery('div.ajaxHtmlHead').length, 0);
