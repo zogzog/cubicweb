@@ -135,7 +135,7 @@ class QUnitTestCase(CubicWebServerTC):
                 yield js_test
 
     @with_tempdir
-    def _test_qunit(self, test_file, depends=(), data_files=(), timeout=30):
+    def _test_qunit(self, test_file, depends=(), data_files=(), timeout=10):
         assert osp.exists(test_file), test_file
         for dep in depends:
             assert osp.exists(dep), dep
