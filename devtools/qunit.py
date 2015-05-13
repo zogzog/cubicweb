@@ -68,7 +68,7 @@ class FirefoxHelper(object):
         self.firefox_cmd = ['firefox', '-no-remote']
         if os.name == 'posix':
             self.firefox_cmd = [osp.join(osp.dirname(__file__), 'data', 'xvfb-run.sh'),
-                                '-a', '-s', '-noreset -screen 0 640x480x8'] + self.firefox_cmd
+                                '-a', '-s', '-noreset -screen 0 800x600x24'] + self.firefox_cmd
 
     def start(self, url):
         self.stop()
