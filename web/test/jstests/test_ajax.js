@@ -26,7 +26,7 @@ $(document).ready(function() {
         expect(3);
         equals(jQuery('#main').children().length, 0);
         stop();
-        jQuery('#main').loadxhtml('/../ajax_url0.html', {
+        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html', {
             callback: function() {
                 try {
                     equals(jQuery('#main').children().length, 1);
@@ -43,7 +43,7 @@ $(document).ready(function() {
         var scriptsIncluded = jsSources();
         equals(jQuery.inArray('http://foo.js', scriptsIncluded), - 1);
         stop();
-        jQuery('#main').loadxhtml('/../ajax_url1.html', {
+        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html', {
             callback: function() {
                 try {
                     var origLength = scriptsIncluded.length;
@@ -66,7 +66,7 @@ $(document).ready(function() {
         expect(3);
         equals(jQuery('#main').children().length, 0);
         stop();
-        var d = jQuery('#main').loadxhtml('/../ajax_url0.html');
+        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function() {
             try {
                 equals(jQuery('#main').children().length, 1);
@@ -81,7 +81,7 @@ $(document).ready(function() {
         expect(1);
         var deferred = new Deferred();
         var result = jQuery.ajax({
-            url: './ajax_url0.html',
+            url: BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html',
             async: false,
             beforeSend: function(xhr) {
                 deferred._req = xhr;
@@ -105,7 +105,7 @@ $(document).ready(function() {
         expect(3);
         equals(jQuery('#main').children().length, 0);
         stop();
-        var d = jQuery('#main').loadxhtml('/../ajax_url0.html');
+        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function(data, req, arg1, arg2) {
             try {
                 equals(arg1, 'Hello');
@@ -141,7 +141,7 @@ $(document).ready(function() {
         });
         stop();
         var result = jQuery.ajax({
-            url: '/../ajax_url0.html',
+            url: BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html',
             async: false,
             beforeSend: function(xhr) {
                 deferred._req = xhr;
@@ -155,7 +155,7 @@ $(document).ready(function() {
   test('test addErrback', function() {
         expect(1);
         stop();
-        var d = jQuery('#main').loadxhtml('/../ajax_url0.html');
+        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function() {
             // throw an exception to start errback chain
             try {
@@ -177,7 +177,7 @@ $(document).ready(function() {
         expect(4);
         var counter = 0;
         stop();
-        var d = jQuery('#main').loadxhtml('/../ajax_url0.html', {
+        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html', {
             callback: function() {
                 try {
                     equals(++counter, 1); // should be executed first
@@ -213,7 +213,7 @@ $(document).ready(function() {
         /* use endswith because in pytest context we have an absolute path */
         ok(jQuery('head link').attr('href').endswith('/qunit.css'));
         stop();
-        jQuery('#main').loadxhtml('/../ajax_url1.html', {
+        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html', {
             callback: function() {
                 var origLength = scriptsIncluded.length;
                 scriptsIncluded = jsSources();
@@ -237,7 +237,7 @@ $(document).ready(function() {
     });
 
     test('test synchronous request loadRemote', function() {
-        var res = loadRemote('/../ajaxresult.json', {},
+        var res = loadRemote(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajaxresult.json', {},
         'GET', true);
         same(res, ['foo', 'bar']);
     });
@@ -250,7 +250,7 @@ $(document).ready(function() {
             // check that server-response event on CubicWeb is triggered
             events = 'CubicWeb';
         });
-        jQuery('#main').loadxhtml('/../ajax_url0.html', {
+        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html', {
             callback: function() {
                 try {
                     equals(events, 'CubicWeb');
@@ -271,7 +271,7 @@ $(document).ready(function() {
         jQuery(CubicWeb).bind('server-response', function() {
             nodes.push('CubicWeb');
         });
-        jQuery('#main').loadxhtml('/../ajax_url0.html', {
+        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html', {
             callback: function() {
                 try {
                     equals(nodes.length, 2);

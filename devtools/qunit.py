@@ -29,7 +29,9 @@ from logilab.common.testlib import unittest_main, with_tempdir, InnerTest, Tags
 from logilab.common.shellutils import getlogin
 
 import cubicweb
+from cubicweb.view import View
 from cubicweb.web.controller import Controller
+from cubicweb.web.views.staticcontrollers import StaticFileController, STATIC_CONTROLLERS
 from cubicweb.devtools.httptest import CubicWebServerTC
 
 
@@ -102,11 +104,14 @@ class QUnitTestCase(CubicWebServerTC):
             test_queue = self.test_queue
         self._qunit_controller = MyQUnitResultController
         self.vreg.register(MyQUnitResultController)
+        self.vreg.register(QUnitView)
+        self.vreg.register(CWSoftwareRootStaticController)
 
     def tearDown(self):
         super(QUnitTestCase, self).tearDown()
         self.vreg.unregister(self._qunit_controller)
-
+        self.vreg.unregister(QUnitView)
+        self.vreg.unregister(CWSoftwareRootStaticController)
 
     def abspath(self, path):
         """use self.__module__ to build absolute path if necessary"""
@@ -137,16 +142,8 @@ class QUnitTestCase(CubicWebServerTC):
         for data in data_files:
             assert osp.exists(data), data
 
-        # generate html test file
-        jquery_dir = 'file://' + self.config.locate_resource('jquery.js')[0]
-        html_test_file = NamedTemporaryFile(suffix='.html', delete=False)
-        html_test_file.write(make_qunit_html(test_file, depends,
-                             base_url=self.config['base-url'],
-                             web_data_path=jquery_dir))
-        html_test_file.flush()
-        # copying data file
-        for data in data_files:
-            copyfile(data, tempfile.tempdir)
+        QUnitView.test_file = test_file
+        QUnitView.depends = depends
 
         while not self.test_queue.empty():
             self.test_queue.get(False)
@@ -158,7 +155,7 @@ class QUnitTestCase(CubicWebServerTC):
         import time; time.sleep(5)
         browser.stop()
         # ... then actually run the test file
-        browser.start(html_test_file.name)
+        browser.start(self.config['base-url'] + "?vid=qunit")
         test_count = 0
         error = False
         def raise_exception(cls, *data):
@@ -224,15 +221,41 @@ class QUnitResultController(Controller):
         self._log_stack.append('%s: %s' % (result, message))
 
 
+class QUnitView(View):
+    __regid__ = 'qunit'
+
+    templatable = False
+
+    def call(self, **kwargs):
+        self.w(make_qunit_html(self.test_file, self.depends,
+                               base_url=self._cw.base_url()))
+
+
+class CWSoftwareRootStaticController(StaticFileController):
+    __regid__ = 'cwsoftwareroot'
+
+    def publish(self, rset=None):
+        staticdir = cubicweb.CW_SOFTWARE_ROOT
+        relpath = self.relpath[len(self.__regid__) + 1:]
+        return self.static_file(osp.join(staticdir, relpath))
+
+
+STATIC_CONTROLLERS.append(CWSoftwareRootStaticController)
+
+
 def cw_path(*paths):
-  return file_path(osp.join(cubicweb.CW_SOFTWARE_ROOT, *paths))
+    return '/cwsoftwareroot/' + '/'.join(paths)
+
 
 def file_path(path):
-    return 'file://' + osp.abspath(path)
+    l = len(cubicweb.CW_SOFTWARE_ROOT) + 1
+    return '/cwsoftwareroot/' + path[l:]
+
 
 def build_js_script(host):
     return """
     var host = '%s';
+    var BASE_URL = host;
 
     QUnit.moduleStart = function (name) {
       jQuery.ajax({
@@ -272,11 +295,11 @@ def build_js_script(host):
     }
     """ % host
 
-def make_qunit_html(test_file, depends=(), base_url=None,
-                    web_data_path=cw_path('web', 'data')):
+
+def make_qunit_html(test_file, depends=(), base_url=None):
     """"""
     data = {
-            'web_data': web_data_path,
+            'web_data': '/data',
             'web_test': cw_path('devtools', 'data'),
         }
 
