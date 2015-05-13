@@ -26,8 +26,8 @@ $(document).ready(function() {
         expect(3);
         equals(jQuery('#main').children().length, 0);
         stop();
-        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html', {
-            callback: function() {
+        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
+        .addCallback(function() {
                 try {
                     equals(jQuery('#main').children().length, 1);
                     equals(jQuery('#main h1').html(), 'Hello');
@@ -35,7 +35,7 @@ $(document).ready(function() {
                     start();
                 };
             }
-        });
+        );
     });
 
     test('test simple html head inclusion (ajax_url1.html)', function() {
@@ -43,8 +43,8 @@ $(document).ready(function() {
         var scriptsIncluded = jsSources();
         equals(jQuery.inArray('http://foo.js', scriptsIncluded), - 1);
         stop();
-        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html', {
-            callback: function() {
+        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html')
+        .addCallback(function() {
                 try {
                     var origLength = scriptsIncluded.length;
                     scriptsIncluded = jsSources();
@@ -59,7 +59,7 @@ $(document).ready(function() {
                     start();
                 };
             }
-        });
+        );
     });
 
     test('test addCallback', function() {
@@ -177,15 +177,15 @@ $(document).ready(function() {
         expect(4);
         var counter = 0;
         stop();
-        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html', {
-            callback: function() {
+        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
+        d.addCallback(function() {
                 try {
                     equals(++counter, 1); // should be executed first
                 } finally {
                     start();
                 };
             }
-        });
+        );
         d.addCallback(function() {
             equals(++counter, 2); // should be executed and break callback chain
             throw new Error();
@@ -213,8 +213,8 @@ $(document).ready(function() {
         /* use endswith because in pytest context we have an absolute path */
         ok(jQuery('head link').attr('href').endswith('/qunit.css'));
         stop();
-        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html', {
-            callback: function() {
+        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html')
+        .addCallback(function() {
                 var origLength = scriptsIncluded.length;
                 scriptsIncluded = jsSources();
                 try {
@@ -233,7 +233,7 @@ $(document).ready(function() {
                     start();
                 }
             }
-        });
+        );
     });
 
     test('test synchronous request loadRemote', function() {
@@ -250,15 +250,15 @@ $(document).ready(function() {
             // check that server-response event on CubicWeb is triggered
             events = 'CubicWeb';
         });
-        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html', {
-            callback: function() {
+        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
+        .addCallback(function() {
                 try {
                     equals(events, 'CubicWeb');
                 } finally {
                     start();
                 };
             }
-        });
+        );
     });
 
     test('test event on node', function() {
@@ -271,8 +271,8 @@ $(document).ready(function() {
         jQuery(CubicWeb).bind('server-response', function() {
             nodes.push('CubicWeb');
         });
-        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html', {
-            callback: function() {
+        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
+        .addCallback(function() {
                 try {
                     equals(nodes.length, 2);
                     // check that server-response event on CubicWeb is triggered
@@ -283,7 +283,7 @@ $(document).ready(function() {
                     start();
                 };
             }
-        });
+        );
     });
 });
 
