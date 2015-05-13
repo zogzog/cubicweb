@@ -149,12 +149,6 @@ class QUnitTestCase(CubicWebServerTC):
             self.test_queue.get(False)
 
         browser = FirefoxHelper()
-        # start firefox once to let it init the profile (and run system-wide
-        # add-ons post setup, blegh), and then kill it ...
-        browser.start('about:blank')
-        import time; time.sleep(5)
-        browser.stop()
-        # ... then actually run the test file
         browser.start(self.config['base-url'] + "?vid=qunit")
         test_count = 0
         error = False
