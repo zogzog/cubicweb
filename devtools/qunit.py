@@ -269,7 +269,6 @@ class QUnitView(View):
                                   "failures": failures,
                                   "total":total},
                            async: false});
-              window.close();
             }
 
             QUnit.log = function (result, message) {
