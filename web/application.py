@@ -568,7 +568,6 @@ class CubicWebPublisher(object):
             req.data['ex'] = ex
             if tb:
                 req.data['excinfo'] = excinfo
-            req.form['vid'] = 'error'
             errview = self.vreg['views'].select('error', req)
             template = self.main_template_id(req)
             content = self.vreg['views'].main_template(req, template, view=errview)
