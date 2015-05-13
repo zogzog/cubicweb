@@ -155,14 +155,10 @@ $(document).ready(function() {
   test('test addErrback', function() {
         expect(1);
         stop();
-        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
+        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/nonexistent.html');
         d.addCallback(function() {
-            // throw an exception to start errback chain
-            try {
-                throw new Error();
-            } finally {
-                start();
-            };
+            // should not be executed
+            ok(false, "callback is executed");
         });
         d.addErrback(function() {
             try {
@@ -173,8 +169,8 @@ $(document).ready(function() {
         });
     });
 
-    test('test callback / errback execution order', function() {
-        expect(4);
+    test('test callback execution order', function() {
+        expect(3);
         var counter = 0;
         stop();
         var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
@@ -187,20 +183,10 @@ $(document).ready(function() {
             }
         );
         d.addCallback(function() {
-            equals(++counter, 2); // should be executed and break callback chain
-            throw new Error();
+            equals(++counter, 2);
         });
         d.addCallback(function() {
-            // should not be executed since second callback raised an error
-            ok(false, "callback is executed");
-        });
-        d.addErrback(function() {
-            // should be executed after the second callback
             equals(++counter, 3);
-        });
-        d.addErrback(function() {
-            // should be executed after the first errback
-            equals(++counter, 4);
         });
     });
 
