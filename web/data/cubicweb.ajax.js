@@ -39,7 +39,7 @@ jQuery.extend(Deferred.prototype, {
     },
 
     addCallback: function(callback) {
-        if ((this._req.readyState == 4) && this._result) {
+        if (this._req && (this._req.readyState == 4) && this._result) {
             var args = [this._result, this._req];
             jQuery.merge(args, cw.utils.sliceList(arguments, 1));
             callback.apply(null, args);
@@ -51,7 +51,7 @@ jQuery.extend(Deferred.prototype, {
     },
 
     addErrback: function(callback) {
-        if (this._req.readyState == 4 && this._error) {
+        if (this._req && this._req.readyState == 4 && this._error) {
             callback.apply(null, [this._error, this._req]);
         }
         else {
