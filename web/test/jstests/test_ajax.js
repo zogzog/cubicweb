@@ -197,7 +197,7 @@ $(document).ready(function() {
         equals(jQuery.inArray('http://foo.js', scriptsIncluded), -1);
         equals(jQuery('head link').length, 1);
         /* use endswith because in pytest context we have an absolute path */
-        ok(jQuery('head link').attr('href').endswith('/qunit.css'));
+        ok(jQuery('head link').attr('href').endswith('/qunit.css'), 'qunit.css is loaded');
         stop();
         jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html')
         .addCallback(function() {
@@ -214,7 +214,7 @@ $(document).ready(function() {
                     // qunit.css is not added twice
                     equals(jQuery('head link').length, 1);
                     /* use endswith because in pytest context we have an absolute path */
-                    ok(jQuery('head link').attr('href').endswith('/qunit.css'));
+                    ok(jQuery('head link').attr('href').endswith('/qunit.css'), 'qunit.css is loaded');
                 } finally {
                     start();
                 }
