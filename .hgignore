@@ -18,4 +18,4 @@ syntax: regexp
 ^doc/html/
 ^doc/doctrees/
 ^doc/book/en/devweb/js_api/
-data/pgdb/
+data.*/pgdb/

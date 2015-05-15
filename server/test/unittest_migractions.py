@@ -26,6 +26,7 @@ from logilab.common.testlib import unittest_main, Tags, tag
 from yams.constraints import UniqueConstraint
 
 from cubicweb import ConfigurationError, ValidationError, ExecutionError
+from cubicweb.devtools import startpgcluster, stoppgcluster
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import ServerMigrationHelper
@@ -35,6 +36,11 @@ import cubicweb.devtools
 
 HERE = osp.dirname(osp.abspath(__file__))
 
+
+def setUpModule():
+    startpgcluster(__file__)
+
+
 migrschema = None
 def tearDownModule(*args):
     global migrschema
@@ -43,10 +49,16 @@ def tearDownModule(*args):
         del MigrationCommandsTC.origschema
     if hasattr(MigrationCommandsComputedTC, 'origschema'):
         del MigrationCommandsComputedTC.origschema
+    stoppgcluster(__file__)
+
+
+class MigrationConfig(cubicweb.devtools.TestServerConfiguration):
+    default_sources = cubicweb.devtools.DEFAULT_PSQL_SOURCES
+
 
 class MigrationTC(CubicWebTC):
 
-    configcls = cubicweb.devtools.TestServerConfiguration
+    configcls = MigrationConfig
 
     tags = CubicWebTC.tags | Tags(('server', 'migration', 'migractions'))
 
@@ -78,17 +90,17 @@ class MigrationTC(CubicWebTC):
                                              interactive=False)
 
     def table_sql(self, mh, tablename):
-        result = mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' "
-                            "and name=%(table)s", {'table': tablename})
+        result = mh.sqlexec("SELECT table_name FROM information_schema.tables WHERE LOWER(table_name)=%(table)s",
+                            {'table': tablename.lower()})
         if result:
             return result[0][0]
         return None # no such table
 
     def table_schema(self, mh, tablename):
-        sql = self.table_sql(mh, tablename)
-        assert sql, 'no table %s' % tablename
-        return dict(x.split()[:2]
-                    for x in sql.split('(', 1)[1].rsplit(')', 1)[0].split(','))
+        result = mh.sqlexec("SELECT column_name, data_type, character_maximum_length FROM information_schema.columns "
+                            "WHERE LOWER(table_name) = %(table)s", {'table': tablename.lower()})
+        assert result, 'no table %s' % tablename
+        return dict((x[0], (x[1], x[2])) for x in result)
 
 
 class MigrationCommandsTC(MigrationTC):
@@ -160,7 +172,7 @@ class MigrationCommandsTC(MigrationTC):
             self.assertEqual(self.schema['shortpara'].objects(), ('String', ))
             # test created column is actually a varchar(64)
             fields = self.table_schema(mh, '%sNote' % SQL_PREFIX)
-            self.assertEqual(fields['%sshortpara' % SQL_PREFIX], 'varchar(64)')
+            self.assertEqual(fields['%sshortpara' % SQL_PREFIX], ('character varying', 64))
             # test default value set on existing entities
             self.assertEqual(cnx.execute('Note X').get_entity(0, 0).shortpara, 'hop')
             # test default value set for next entities
@@ -212,6 +224,7 @@ class MigrationCommandsTC(MigrationTC):
                                             droprequired=True):
                 mh.cmd_add_attribute('Note', 'unique_id')
                 mh.rqlexec('INSERT Note N')
+                mh.rqlexec('SET N unique_id "x"')
             # make sure the required=True was restored
             self.assertRaises(ValidationError, mh.rqlexec, 'INSERT Note N')
             mh.rollback()
@@ -779,7 +792,7 @@ class MigrationCommandsComputedTC(MigrationTC):
         self.assertEqual(self.schema['score'].rdefs['Company', 'Float'].formula,
                          'Any AVG(NN) WHERE X employees E, N concerns E, N note NN')
         fields = self.table_schema(mh, '%sCompany' % SQL_PREFIX)
-        self.assertEqual(fields['%sscore' % SQL_PREFIX], 'float')
+        self.assertEqual(fields['%sscore' % SQL_PREFIX], ('double precision', None))
         self.assertEqual([[3.0]],
                          mh.rqlexec('Any CS WHERE C score CS, C is Company').rows)
 
@@ -803,10 +816,9 @@ class MigrationCommandsComputedTC(MigrationTC):
 
     def assert_computed_attribute_dropped(self):
         self.assertNotIn('note20', self.schema)
-        # DROP COLUMN not supported by sqlite
-        #with self.mh() as (cnx, mh):
-        #    fields = self.table_schema(mh, '%sNote' % SQL_PREFIX)
-        #self.assertNotIn('%snote20' % SQL_PREFIX, fields)
+        with self.mh() as (cnx, mh):
+            fields = self.table_schema(mh, '%sNote' % SQL_PREFIX)
+        self.assertNotIn('%snote20' % SQL_PREFIX, fields)
 
     def test_computed_attribute_drop_type(self):
         self.assertIn('note20', self.schema)
