@@ -21,3 +21,16 @@ commit()
 sync_schema_props_perms('CWEType')
 
 sync_schema_props_perms('cwuri')
+
+from cubicweb.server.schema2sql import check_constraint
+
+for cwconstraint in rql('Any C WHERE R constrained_by C').entities():
+    cwrdef = cwconstraint.reverse_constrained_by[0]
+    rdef = cwrdef.yams_schema()
+    cstr = rdef.constraint_by_eid(cwconstraint.eid)
+    if cstr.type() not in ('BoundaryConstraint', 'IntervalBoundConstraint', 'StaticVocabularyConstraint'):
+        continue
+    cstrname, check = check_constraint(rdef.subject, rdef.object, rdef.rtype.type,
+            cstr, helper, prefix='cw_')
+    sql('ALTER TABLE %s%s ADD CONSTRAINT %s CHECK(%s)' % ('cw_', rdef.subject.type, cstrname, check))
+commit()
