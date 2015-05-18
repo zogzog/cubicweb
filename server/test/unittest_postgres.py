@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,17 +16,27 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
+import os.path as osp
 from datetime import datetime
 from threading import Thread
 
 from logilab.common.testlib import SkipTest
 
-from cubicweb.devtools import PostgresApptestConfiguration
+from cubicweb.devtools import PostgresApptestConfiguration, startpgcluster, stoppgcluster
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.predicates import is_instance
 from cubicweb.entities.adapters import IFTIndexableAdapter
 
 from unittest_querier import FixedOffset
+
+
+def setUpModule():
+    startpgcluster(__file__)
+
+
+def tearDownModule():
+    stoppgcluster(__file__)
+
 
 class PostgresFTITC(CubicWebTC):
     configcls = PostgresApptestConfiguration

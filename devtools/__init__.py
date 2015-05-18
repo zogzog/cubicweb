@@ -527,8 +527,10 @@ class NoCreateDropDatabaseHandler(TestDataBaseHandler):
 
 ### postgres test database handling ############################################
 
-def _startpgcluster(datadir):
-    """Start a postgresql cluster using datadir and a random port number"""
+def startpgcluster(pyfile):
+    """Start a postgresql cluster next to pyfile and using a random port number"""
+    datadir = join(os.path.dirname(pyfile), 'data',
+                   'pgdb-%s' % os.path.splitext(os.path.basename(pyfile))[0])
     if not exists(datadir):
         try:
             subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8', '--locale=C'])
@@ -559,8 +561,10 @@ def _startpgcluster(datadir):
         raise
 
 
-def _stoppgcluster(datadir):
-    """Kill the postgresql cluster running in datadir"""
+def stoppgcluster(pyfile):
+    """Kill the postgresql cluster running next to pyfile"""
+    datadir = join(os.path.dirname(pyfile), 'data',
+                   'pgdb-%s' % os.path.splitext(os.path.basename(pyfile))[0])
     subprocess.call(['pg_ctl', 'stop', '-D', datadir, '-m', 'fast'])
 
 
@@ -573,18 +577,8 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
 
     __CTL = set()
 
-    @classmethod
-    def killall(cls):
-        for datadir in cls.__CTL:
-            _stoppgcluster(datadir)
-
     def __init__(self, *args, **kwargs):
         super(PostgresTestDataBaseHandler, self).__init__(*args, **kwargs)
-        datadir = realpath(join(self.config.apphome, 'pgdb'))
-        if datadir in self.__CTL:
-            return
-        _startpgcluster(datadir)
-        self.__CTL.add(datadir)
         if 'global-db-name' not in self.system_source:
             self.system_source['global-db-name'] = self.system_source['db-name']
             self.system_source['db-name'] = self.system_source['db-name'] + str(os.getpid())
@@ -810,7 +804,6 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
 
 import atexit
 atexit.register(SQLiteTestDataBaseHandler._cleanup_all_tmpdb)
-atexit.register(PostgresTestDataBaseHandler.killall)
 
 
 def install_sqlite_patch(querier):
