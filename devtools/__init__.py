@@ -585,12 +585,19 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
             return
         _startpgcluster(datadir)
         self.__CTL.add(datadir)
+        if 'global-db-name' not in self.system_source:
+            self.system_source['global-db-name'] = self.system_source['db-name']
+            self.system_source['db-name'] = self.system_source['db-name'] + str(os.getpid())
 
     @property
     @cached
     def helper(self):
         from logilab.database import get_db_helper
         return get_db_helper('postgres')
+
+    @property
+    def dbname(self):
+        return self.system_source['global-db-name']
 
     @property
     def dbcnx(self):
@@ -624,7 +631,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         from cubicweb.server.serverctl import system_source_cnx, createdb
         # connect on the dbms system base to create our base
         try:
-            self._drop(self.dbname)
+            self._drop(self.system_source['db-name'])
             createdb(self.helper, self.system_source, self.dbcnx, self.cursor)
             self.dbcnx.commit()
             cnx = system_source_cnx(self.system_source, special_privs='LANGUAGE C',
@@ -702,7 +709,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         """Actual restore of the current database.
 
         Use the value tostored in db_cache as input """
-        self._drop(self.dbname)
+        self._drop(self.system_source['db-name'])
         createdb(self.helper, self.system_source, self.dbcnx, self.cursor,
                  template=backup_coordinates)
         self.dbcnx.commit()
