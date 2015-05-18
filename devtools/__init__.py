@@ -93,8 +93,6 @@ DEFAULT_SOURCES = {'system': {'adapter' : 'native',
 DEFAULT_PSQL_SOURCES = DEFAULT_SOURCES.copy()
 DEFAULT_PSQL_SOURCES['system'] = DEFAULT_SOURCES['system'].copy()
 DEFAULT_PSQL_SOURCES['system']['db-driver'] = 'postgres'
-DEFAULT_PSQL_SOURCES['system']['db-host'] = '/tmp'
-DEFAULT_PSQL_SOURCES['system']['db-port'] = str(random.randrange(5432, 2**16))
 DEFAULT_PSQL_SOURCES['system']['db-user'] = unicode(getpass.getuser())
 DEFAULT_PSQL_SOURCES['system']['db-password'] = None
 
@@ -529,6 +527,43 @@ class NoCreateDropDatabaseHandler(TestDataBaseHandler):
 
 ### postgres test database handling ############################################
 
+def _startpgcluster(datadir):
+    """Start a postgresql cluster using datadir and a random port number"""
+    if not exists(datadir):
+        try:
+            subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8', '--locale=C'])
+
+        except OSError, err:
+            if err.errno == errno.ENOENT:
+                raise OSError('"initdb" could not be found. '
+                              'You should add the postgresql bin folder to your PATH '
+                              '(/usr/lib/postgresql/9.1/bin for example).')
+            raise
+    datadir = os.path.abspath(datadir)
+    pgport = random.randrange(5432, 2**16)
+    env = os.environ.copy()
+    DEFAULT_PSQL_SOURCES['system']['db-host'] = datadir
+    DEFAULT_PSQL_SOURCES['system']['db-port'] = str(pgport)
+    options = '-h "" -k %s -p %s' % (datadir, pgport)
+    options += ' -c fsync=off -c full_page_writes=off'
+    options += ' -c synchronous_commit=off'
+    try:
+        subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir,
+                               '-o', options],
+                              env=env)
+    except OSError, err:
+        if err.errno == errno.ENOENT:
+            raise OSError('"pg_ctl" could not be found. '
+                          'You should add the postgresql bin folder to your PATH '
+                          '(/usr/lib/postgresql/9.1/bin for example).')
+        raise
+
+
+def _stoppgcluster(datadir):
+    """Kill the postgresql cluster running in datadir"""
+    subprocess.call(['pg_ctl', 'stop', '-D', datadir, '-m', 'fast'])
+
+
 class PostgresTestDataBaseHandler(TestDataBaseHandler):
     DRIVER = 'postgres'
 
@@ -541,41 +576,14 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
     @classmethod
     def killall(cls):
         for datadir in cls.__CTL:
-            subprocess.call(['pg_ctl', 'stop', '-D', datadir, '-m', 'fast'])
+            _stoppgcluster(datadir)
 
     def __init__(self, *args, **kwargs):
         super(PostgresTestDataBaseHandler, self).__init__(*args, **kwargs)
         datadir = realpath(join(self.config.apphome, 'pgdb'))
         if datadir in self.__CTL:
             return
-        if not exists(datadir):
-            try:
-                subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8', '--locale=C'])
-
-            except OSError, err:
-                if err.errno == errno.ENOENT:
-                    raise OSError('"initdb" could not be found. '
-                                  'You should add the postgresql bin folder to your PATH '
-                                  '(/usr/lib/postgresql/9.1/bin for example).')
-                raise
-        port = self.system_source['db-port']
-        directory = self.system_source['db-host']
-        env = os.environ.copy()
-        env['PGPORT'] = str(port)
-        env['PGHOST'] = str(directory)
-        options = '-h "" -k %s -p %s' % (directory, port)
-        options += ' -c fsync=off -c full_page_writes=off'
-        options += ' -c synchronous_commit=off'
-        try:
-            subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir,
-                                   '-o', options],
-                                  env=env)
-        except OSError, err:
-            if err.errno == errno.ENOENT:
-                raise OSError('"pg_ctl" could not be found. '
-                              'You should add the postgresql bin folder to your PATH '
-                              '(/usr/lib/postgresql/9.1/bin for example).')
-            raise
+        _startpgcluster(datadir)
         self.__CTL.add(datadir)
 
     @property
