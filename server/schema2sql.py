@@ -21,9 +21,10 @@ __docformat__ = "restructuredtext en"
 
 from hashlib import md5
 
+from six import string_types
 from six.moves import range
 
-from yams.constraints import SizeConstraint, UniqueConstraint
+from yams.constraints import SizeConstraint, UniqueConstraint, Attribute
 
 # default are usually not handled at the sql level. If you want them, set
 # SET_DEFAULT to True
@@ -122,6 +123,15 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
             w(' %s%s %s' % (prefix, rschema.type, sqltype))
         else:
             w(' %s%s %s,' % (prefix, rschema.type, sqltype))
+    for rschema, aschema in attrs:
+        if aschema is None:  # inline relation
+            continue
+        attr = rschema.type
+        rdef = rschema.rdef(eschema.type, aschema.type)
+        for constraint in rdef.constraints:
+            cstrname, check = check_constraint(eschema, aschema, attr, constraint, prefix=prefix)
+            if cstrname is not None:
+                w(', CONSTRAINT %s CHECK(%s)' % (cstrname, check))
     w(');')
     # create indexes
     for i in range(len(attrs)):
@@ -136,6 +146,40 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
     w('')
     return '\n'.join(output)
 
+def check_constraint(eschema, aschema, attr, constraint, prefix=''):
+    # XXX should find a better name
+    cstrname = 'cstr' + md5(eschema.type + attr + constraint.type() +
+                            (constraint.serialize() or '')).hexdigest()
+    if constraint.type() == 'BoundaryConstraint':
+        if isinstance(constraint.boundary, Attribute):
+            value = prefix + constraint.boundary.attr
+        else:
+            value = constraint.boundary
+        return cstrname, '%s%s %s %s' % (prefix, attr, constraint.operator, value)
+    elif constraint.type() == 'IntervalBoundConstraint':
+        condition = []
+        if constraint.minvalue is not None:
+            if isinstance(constraint.minvalue, Attribute):
+                value = prefix + constraint.minvalue.attr
+            else:
+                value = constraint.minvalue
+            condition.append('%s%s >= %s' % (prefix, attr, value))
+        if constraint.maxvalue is not None:
+            if isinstance(constraint.maxvalue, Attribute):
+                value = prefix + constraint.maxvalue.attr
+            else:
+                value = constraint.maxvalue
+            condition.append('%s%s <= %s' % (prefix, attr, value))
+        return cstrname, ' AND '.join(condition)
+    elif constraint.type() == 'StaticVocabularyConstraint':
+        sample = next(iter(constraint.vocabulary()))
+        if not isinstance(sample, string_types):
+            values = ', '.join(str(word) for word in constraint.vocabulary())
+        else:
+            # XXX better quoting?
+            values = ', '.join("'%s'" % word.replace("'", "''") for word in constraint.vocabulary())
+        return cstrname, '%s%s IN (%s)' % (prefix, attr, values)
+    return None, None
 
 def aschema2sql(dbhelper, eschema, rschema, aschema, creating=True, indent=''):
     """write an attribute schema as SQL statements to stdout"""

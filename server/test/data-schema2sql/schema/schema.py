@@ -17,6 +17,7 @@
 # with yams. If not, see <http://www.gnu.org/licenses/>.
 from yams.buildobjs import (EntityType, RelationDefinition, RelationType,
                             SubjectRelation, String, Int, Float, Date, Boolean)
+from yams.constraints import Attribute, BoundaryConstraint
 
 class Affaire(EntityType):
     sujet = String(maxsize=128)
@@ -64,7 +65,7 @@ class Societe(EntityType):
     nom  = String(maxsize=64, fulltextindexed=True)
     web = String(maxsize=128)
     tel  = Int()
-    fax  = Int()
+    fax  = Int(constraints=[BoundaryConstraint('<=', Attribute('tel'))])
     rncs = String(maxsize=32)
     ad1  = String(maxsize=128)
     ad2  = String(maxsize=128)
