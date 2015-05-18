@@ -295,6 +295,7 @@ class SchemaModificationHooksTC(CubicWebTC):
             cnx.execute('SET DEF cardinality "11" '
                          'WHERE DEF relation_type RT, DEF from_entity E,'
                          'RT name "surname", E name "CWUser"')
+            cnx.execute('SET U surname "Doe" WHERE U surname NULL')
             cnx.commit()
             # should not be able anymore to add cwuser without surname
             self.assertRaises(ValidationError, self.create_user, cnx, "toto")
