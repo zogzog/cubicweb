@@ -56,7 +56,7 @@ $(document).ready(function() {
 
   module("formContents", {
     setup: function() {
-      $('#main').append('<form id="test-form"></form>');
+      $('#qunit-fixture').append('<form id="test-form"></form>');
     }
   });
   // XXX test fckeditor

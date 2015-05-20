@@ -24,13 +24,13 @@ $(document).ready(function() {
 
     test('test simple h1 inclusion (ajax_url0.html)', function() {
         expect(3);
-        equal(jQuery('#main').children().length, 0);
+        equal(jQuery('#qunit-fixture').children().length, 0);
         stop();
-        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
+        jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
         .addCallback(function() {
                 try {
-                    equal(jQuery('#main').children().length, 1);
-                    equal(jQuery('#main h1').html(), 'Hello');
+                    equal(jQuery('#qunit-fixture').children().length, 1);
+                    equal(jQuery('#qunit-fixture h1').html(), 'Hello');
                 } finally {
                     start();
                 };
@@ -43,7 +43,7 @@ $(document).ready(function() {
         var scriptsIncluded = jsSources();
         equal(jQuery.inArray('http://foo.js', scriptsIncluded), - 1);
         stop();
-        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html')
+        jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html')
         .addCallback(function() {
                 try {
                     var origLength = scriptsIncluded.length;
@@ -52,9 +52,9 @@ $(document).ready(function() {
                     equal(scriptsIncluded.length, origLength + 1);
                     equal(scriptsIncluded.indexOf('http://foo.js'), 0);
                     // check that <div class="ajaxHtmlHead"> has been removed
-                    equal(jQuery('#main').children().length, 1);
+                    equal(jQuery('#qunit-fixture').children().length, 1);
                     equal(jQuery('div.ajaxHtmlHead').length, 0);
-                    equal(jQuery('#main h1').html(), 'Hello');
+                    equal(jQuery('#qunit-fixture h1').html(), 'Hello');
                 } finally {
                     start();
                 };
@@ -64,13 +64,13 @@ $(document).ready(function() {
 
     test('test addCallback', function() {
         expect(3);
-        equal(jQuery('#main').children().length, 0);
+        equal(jQuery('#qunit-fixture').children().length, 0);
         stop();
-        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
+        var d = jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function() {
             try {
-                equal(jQuery('#main').children().length, 1);
-                equal(jQuery('#main h1').html(), 'Hello');
+                equal(jQuery('#qunit-fixture').children().length, 1);
+                equal(jQuery('#qunit-fixture h1').html(), 'Hello');
             } finally {
                 start();
             };
@@ -103,9 +103,9 @@ $(document).ready(function() {
 
     test('test addCallback with parameters', function() {
         expect(3);
-        equal(jQuery('#main').children().length, 0);
+        equal(jQuery('#qunit-fixture').children().length, 0);
         stop();
-        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
+        var d = jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function(data, req, arg1, arg2) {
             try {
                 equal(arg1, 'Hello');
@@ -155,7 +155,7 @@ $(document).ready(function() {
   test('test addErrback', function() {
         expect(1);
         stop();
-        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/nonexistent.html');
+        var d = jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/nonexistent.html');
         d.addCallback(function() {
             // should not be executed
             ok(false, "callback is executed");
@@ -173,7 +173,7 @@ $(document).ready(function() {
         expect(3);
         var counter = 0;
         stop();
-        var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
+        var d = jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function() {
                 try {
                     equal(++counter, 1); // should be executed first
@@ -199,7 +199,7 @@ $(document).ready(function() {
         /* use endswith because in pytest context we have an absolute path */
         ok(jQuery('head link').attr('href').endswith('/qunit.css'), 'qunit.css is loaded');
         stop();
-        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html')
+        jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html')
         .addCallback(function() {
                 var origLength = scriptsIncluded.length;
                 scriptsIncluded = jsSources();
@@ -208,9 +208,9 @@ $(document).ready(function() {
                     equal(scriptsIncluded.length, origLength + 1);
                     equal(scriptsIncluded.indexOf('http://foo.js'), 0);
                     // check that <div class="ajaxHtmlHead"> has been removed
-                    equal(jQuery('#main').children().length, 1);
+                    equal(jQuery('#qunit-fixture').children().length, 1);
                     equal(jQuery('div.ajaxHtmlHead').length, 0);
-                    equal(jQuery('#main h1').html(), 'Hello');
+                    equal(jQuery('#qunit-fixture h1').html(), 'Hello');
                     // qunit.css is not added twice
                     equal(jQuery('head link').length, 1);
                     /* use endswith because in pytest context we have an absolute path */
@@ -236,7 +236,7 @@ $(document).ready(function() {
             // check that server-response event on CubicWeb is triggered
             events = 'CubicWeb';
         });
-        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
+        jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
         .addCallback(function() {
                 try {
                     equal(events, 'CubicWeb');
@@ -251,13 +251,13 @@ $(document).ready(function() {
         expect(3);
         stop();
         var nodes = [];
-        jQuery('#main').bind('server-response', function() {
+        jQuery('#qunit-fixture').bind('server-response', function() {
             nodes.push('node');
         });
         jQuery(CubicWeb).bind('server-response', function() {
             nodes.push('CubicWeb');
         });
-        jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
+        jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
         .addCallback(function() {
                 try {
                     equal(nodes.length, 2);

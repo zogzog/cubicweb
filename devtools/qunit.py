@@ -211,7 +211,7 @@ class QUnitResultController(Controller):
 
     def handle_log(self):
         result = self._cw.form['result']
-        message = self._cw.form['message']
+        message = self._cw.form.get('message', '<no message>')
         self._log_stack.append('%s: %s' % (result, message))
 
 
@@ -244,41 +244,41 @@ class QUnitView(View):
         w(u'<script type="text/javascript">')
         w(u"var BASE_URL = '%s';" % req.base_url())
         w(u'''
-            QUnit.moduleStart = function (name) {
+            QUnit.moduleStart(function (details) {
               jQuery.ajax({
                           url: BASE_URL + 'qunit_result',
                          data: {"event": "module_start",
-                                "name": name},
+                                "name": details.name},
                          async: false});
-            }
+            });
 
-            QUnit.testDone = function (name, failures, total) {
+            QUnit.testDone(function (details) {
               jQuery.ajax({
                           url: BASE_URL + 'qunit_result',
                          data: {"event": "test_done",
-                                "name": name,
-                                "failures": failures,
-                                "total":total},
+                                "name": details.name,
+                                "failures": details.failed,
+                                "total": details.total},
                          async: false});
-            }
+            });
 
-            QUnit.done = function (failures, total) {
+            QUnit.done(function (details) {
               jQuery.ajax({
                            url: BASE_URL + 'qunit_result',
                            data: {"event": "done",
-                                  "failures": failures,
-                                  "total":total},
+                                  "failures": details.failed,
+                                  "total": details.total},
                            async: false});
-            }
+            });
 
-            QUnit.log = function (result, message) {
+            QUnit.log(function (details) {
               jQuery.ajax({
                            url: BASE_URL + 'qunit_result',
                            data: {"event": "log",
-                                  "result": result,
-                                  "message": message},
+                                  "result": details.result,
+                                  "message": details.message},
                            async: false});
-            }''')
+            });''')
         w(u'</script>')
         w(u'<!-- Test script dependencies (tested code for example) -->')
 
@@ -292,12 +292,8 @@ class QUnitView(View):
         w(u'    <script src="%s" type="text/javascript"></script>' % test_url)
         w(u'''  </head>
         <body>
-        <div id="main">
-        </div>
-        <h1 id="qunit-header">QUnit example</h1>
-        <h2 id="qunit-banner"></h2>
-        <h2 id="qunit-userAgent"></h2>
-        <ol id="qunit-tests"></ol>
+        <div id="qunit-fixture"></div>
+        <div id="qunit"></div>
         </body>
         </html>''')
 

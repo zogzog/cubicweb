@@ -2,7 +2,7 @@ $(document).ready(function() {
 
     module("module2", {
       setup: function() {
-        $('#main').append('<select id="theselect" multiple="multiple" size="2">' +
+        $('#qunit-fixture').append('<select id="theselect" multiple="multiple" size="2">' +
     			'</select>');
       }
     });
@@ -27,7 +27,7 @@ $(document).ready(function() {
 
     module("visibilty");
     test('toggleVisibility', function() {
-        $('#main').append('<div id="foo"></div>');
+        $('#qunit-fixture').append('<div id="foo"></div>');
         toggleVisibility('foo');
         ok($('#foo').hasClass('hidden'), 'check hidden class is set');
     });
