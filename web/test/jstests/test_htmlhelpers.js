@@ -13,7 +13,7 @@ $(document).ready(function() {
     			     '<option value="baz">baz</option>' +
     			     '<option selected="selecetd"value="spam">spam</option>');
         var selected = firstSelected(document.getElementById("theselect"));
-        equals(selected.value, 'bar');
+        equal(selected.value, 'bar');
     });
 
     test("test first selected 2", function() {
@@ -22,7 +22,7 @@ $(document).ready(function() {
     			     '<option value="baz">baz</option>' +
     			     '<option value="spam">spam</option>');
         var selected = firstSelected(document.getElementById("theselect"));
-        equals(selected, null);
+        equal(selected, null);
     });
 
     module("visibilty");

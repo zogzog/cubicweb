@@ -24,13 +24,13 @@ $(document).ready(function() {
 
     test('test simple h1 inclusion (ajax_url0.html)', function() {
         expect(3);
-        equals(jQuery('#main').children().length, 0);
+        equal(jQuery('#main').children().length, 0);
         stop();
         jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
         .addCallback(function() {
                 try {
-                    equals(jQuery('#main').children().length, 1);
-                    equals(jQuery('#main h1').html(), 'Hello');
+                    equal(jQuery('#main').children().length, 1);
+                    equal(jQuery('#main h1').html(), 'Hello');
                 } finally {
                     start();
                 };
@@ -41,7 +41,7 @@ $(document).ready(function() {
     test('test simple html head inclusion (ajax_url1.html)', function() {
         expect(6);
         var scriptsIncluded = jsSources();
-        equals(jQuery.inArray('http://foo.js', scriptsIncluded), - 1);
+        equal(jQuery.inArray('http://foo.js', scriptsIncluded), - 1);
         stop();
         jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html')
         .addCallback(function() {
@@ -49,12 +49,12 @@ $(document).ready(function() {
                     var origLength = scriptsIncluded.length;
                     scriptsIncluded = jsSources();
                     // check that foo.js has been prepended to <head>
-                    equals(scriptsIncluded.length, origLength + 1);
-                    equals(scriptsIncluded.indexOf('http://foo.js'), 0);
+                    equal(scriptsIncluded.length, origLength + 1);
+                    equal(scriptsIncluded.indexOf('http://foo.js'), 0);
                     // check that <div class="ajaxHtmlHead"> has been removed
-                    equals(jQuery('#main').children().length, 1);
-                    equals(jQuery('div.ajaxHtmlHead').length, 0);
-                    equals(jQuery('#main h1').html(), 'Hello');
+                    equal(jQuery('#main').children().length, 1);
+                    equal(jQuery('div.ajaxHtmlHead').length, 0);
+                    equal(jQuery('#main h1').html(), 'Hello');
                 } finally {
                     start();
                 };
@@ -64,13 +64,13 @@ $(document).ready(function() {
 
     test('test addCallback', function() {
         expect(3);
-        equals(jQuery('#main').children().length, 0);
+        equal(jQuery('#main').children().length, 0);
         stop();
         var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function() {
             try {
-                equals(jQuery('#main').children().length, 1);
-                equals(jQuery('#main h1').html(), 'Hello');
+                equal(jQuery('#main').children().length, 1);
+                equal(jQuery('#main h1').html(), 'Hello');
             } finally {
                 start();
             };
@@ -103,13 +103,13 @@ $(document).ready(function() {
 
     test('test addCallback with parameters', function() {
         expect(3);
-        equals(jQuery('#main').children().length, 0);
+        equal(jQuery('#main').children().length, 0);
         stop();
         var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function(data, req, arg1, arg2) {
             try {
-                equals(arg1, 'Hello');
-                equals(arg2, 'world');
+                equal(arg1, 'Hello');
+                equal(arg2, 'world');
             } finally {
                 start();
             };
@@ -124,8 +124,8 @@ $(document).ready(function() {
             // add an assertion to ensure the callback is executed
             try {
                 ok(true, "callback is executed");
-                equals(arg1, 'Hello');
-                equals(arg2, 'world');
+                equal(arg1, 'Hello');
+                equal(arg2, 'world');
             } finally {
                 start();
             };
@@ -176,17 +176,17 @@ $(document).ready(function() {
         var d = jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function() {
                 try {
-                    equals(++counter, 1); // should be executed first
+                    equal(++counter, 1); // should be executed first
                 } finally {
                     start();
                 };
             }
         );
         d.addCallback(function() {
-            equals(++counter, 2);
+            equal(++counter, 2);
         });
         d.addCallback(function() {
-            equals(++counter, 3);
+            equal(++counter, 3);
         });
     });
 
@@ -194,8 +194,8 @@ $(document).ready(function() {
         expect(10);
         var scriptsIncluded = jsSources();
         // NOTE:
-        equals(jQuery.inArray('http://foo.js', scriptsIncluded), -1);
-        equals(jQuery('head link').length, 1);
+        equal(jQuery.inArray('http://foo.js', scriptsIncluded), -1);
+        equal(jQuery('head link').length, 1);
         /* use endswith because in pytest context we have an absolute path */
         ok(jQuery('head link').attr('href').endswith('/qunit.css'), 'qunit.css is loaded');
         stop();
@@ -205,14 +205,14 @@ $(document).ready(function() {
                 scriptsIncluded = jsSources();
                 try {
                     // check that foo.js has been inserted in <head>
-                    equals(scriptsIncluded.length, origLength + 1);
-                    equals(scriptsIncluded.indexOf('http://foo.js'), 0);
+                    equal(scriptsIncluded.length, origLength + 1);
+                    equal(scriptsIncluded.indexOf('http://foo.js'), 0);
                     // check that <div class="ajaxHtmlHead"> has been removed
-                    equals(jQuery('#main').children().length, 1);
-                    equals(jQuery('div.ajaxHtmlHead').length, 0);
-                    equals(jQuery('#main h1').html(), 'Hello');
+                    equal(jQuery('#main').children().length, 1);
+                    equal(jQuery('div.ajaxHtmlHead').length, 0);
+                    equal(jQuery('#main h1').html(), 'Hello');
                     // qunit.css is not added twice
-                    equals(jQuery('head link').length, 1);
+                    equal(jQuery('head link').length, 1);
                     /* use endswith because in pytest context we have an absolute path */
                     ok(jQuery('head link').attr('href').endswith('/qunit.css'), 'qunit.css is loaded');
                 } finally {
@@ -225,7 +225,7 @@ $(document).ready(function() {
     test('test synchronous request loadRemote', function() {
         var res = loadRemote(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajaxresult.json', {},
         'GET', true);
-        same(res, ['foo', 'bar']);
+        deepEqual(res, ['foo', 'bar']);
     });
 
     test('test event on CubicWeb', function() {
@@ -239,7 +239,7 @@ $(document).ready(function() {
         jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
         .addCallback(function() {
                 try {
-                    equals(events, 'CubicWeb');
+                    equal(events, 'CubicWeb');
                 } finally {
                     start();
                 };
@@ -260,11 +260,11 @@ $(document).ready(function() {
         jQuery('#main').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
         .addCallback(function() {
                 try {
-                    equals(nodes.length, 2);
+                    equal(nodes.length, 2);
                     // check that server-response event on CubicWeb is triggered
                     // only once and event server-response on node is triggered
-                    equals(nodes[0], 'CubicWeb');
-                    equals(nodes[1], 'node');
+                    equal(nodes[0], 'CubicWeb');
+                    equal(nodes[1], 'node');
                 } finally {
                     start();
                 };
