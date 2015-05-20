@@ -53,7 +53,7 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 
     def test_default_forms(self):
         self.skipTest('Need to check if this test should still run post reledit/doreledit merge')
-        doreledit = {'title': """<div id="title-subject-%(eid)s-reledit" onmouseout="jQuery('#title-subject-%(eid)s').addClass('invisible')" onmouseover="jQuery('#title-subject-%(eid)s').removeClass('invisible')" class="releditField"><div id="title-subject-%(eid)s-value" class="editableFieldValue">cubicweb-world-domination</div><form action="http://testing.fr/cubicweb/validateform?__onsuccess=window.parent.cw.reledit.onSuccess" method="post" enctype="application/x-www-form-urlencoded" id="title-subject-%(eid)s-form" onsubmit="return freezeFormButtons(&#39;title-subject-%(eid)s-form&#39;);" class="releditForm" cubicweb:target="eformframe">
+        doreledit = {'title': """<div id="title-subject-%(eid)s-reledit" onmouseout="jQuery('#title-subject-%(eid)s').addClass('invisible')" onmouseover="jQuery('#title-subject-%(eid)s').removeClass('invisible')" class="releditField"><div id="title-subject-%(eid)s-value" class="editableFieldValue">cubicweb-world-domination</div><form action="http://testing.fr/cubicweb/validateform?__onsuccess=window.parent.cw.reledit.onSuccess" method="post" enctype="application/x-www-form-urlencoded" id="title-subject-%(eid)s-form" onsubmit="return freezeFormButtons(&#39;title-subject-%(eid)s-form&#39;);" class="releditForm" target="eformframe">
 <fieldset>
 <input name="__form_id" type="hidden" value="base" />
 <input name="__errorurl" type="hidden" value="http://testing.fr/cubicweb/view?rql=Blop&amp;vid=blop#title-subject-%(eid)s-form" />
@@ -82,9 +82,10 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;title-subject-%(eid)s&#39;)" tabindex="3" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
 </tr></table>
 </fieldset>
+<iframe width="0px" height="0px" src="javascript: void(0);" name="eformframe" id="eformframe"></iframe>
 </form><div id="title-subject-%(eid)s" class="editableField invisible"><div id="title-subject-%(eid)s-update" class="editableField" onclick="cw.reledit.loadInlineEditionForm(&#39;base&#39;, %(eid)s, &#39;title&#39;, &#39;subject&#39;, &#39;title-subject-%(eid)s&#39;, false, &#39;&#39;);" title="click to edit this field"><img title="click to edit this field" src="http://testing.fr/cubicweb/data/pen_icon.png" alt="click to edit this field"/></div></div></div>""",
 
-                     'long_desc': """<div id="long_desc-subject-%(eid)s-reledit" onmouseout="jQuery('#long_desc-subject-%(eid)s').addClass('invisible')" onmouseover="jQuery('#long_desc-subject-%(eid)s').removeClass('invisible')" class="releditField"><div id="long_desc-subject-%(eid)s-value" class="editableFieldValue">&lt;not specified&gt;</div><form action="http://testing.fr/cubicweb/validateform?__onsuccess=window.parent.cw.reledit.onSuccess" method="post" enctype="application/x-www-form-urlencoded" id="long_desc-subject-%(eid)s-form" onsubmit="return freezeFormButtons(&#39;long_desc-subject-%(eid)s-form&#39;);" class="releditForm" cubicweb:target="eformframe">
+                     'long_desc': """<div id="long_desc-subject-%(eid)s-reledit" onmouseout="jQuery('#long_desc-subject-%(eid)s').addClass('invisible')" onmouseover="jQuery('#long_desc-subject-%(eid)s').removeClass('invisible')" class="releditField"><div id="long_desc-subject-%(eid)s-value" class="editableFieldValue">&lt;not specified&gt;</div><form action="http://testing.fr/cubicweb/validateform?__onsuccess=window.parent.cw.reledit.onSuccess" method="post" enctype="application/x-www-form-urlencoded" id="long_desc-subject-%(eid)s-form" onsubmit="return freezeFormButtons(&#39;long_desc-subject-%(eid)s-form&#39;);" class="releditForm" target="eformframe">
 <fieldset>
 <input name="__form_id" type="invisible" value="edition" />
 <input name="__errorurl" type="invisible" value="http://testing.fr/cubicweb/view?rql=Blop&amp;vid=blop#long_desc-subject-%(eid)s-form" />
@@ -126,9 +127,10 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;long_desc-subject-%(eid)s&#39;)" tabindex="8" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
 </tr></table>
 </fieldset>
+<iframe width="0px" height="0px" src="javascript: void(0);" name="eformframe" id="eformframe"></iframe>
 </form><div id="long_desc-subject-%(eid)s" class="editableField invisible"><div id="long_desc-subject-%(eid)s-add" class="editableField" onclick="cw.reledit.loadInlineEditionForm(&#39;edition&#39;, %(eid)s, &#39;long_desc&#39;, &#39;subject&#39;, &#39;long_desc-subject-%(eid)s&#39;, false, &#39;autolimited&#39;);" title="click to add a value"><img title="click to add a value" src="http://testing.fr/cubicweb/data/plus.png" alt="click to add a value"/></div></div></div>""",
 
-                     'manager': """<div id="manager-subject-%(eid)s-reledit" onmouseout="jQuery('#manager-subject-%(eid)s').addClass('invisible')" onmouseover="jQuery('#manager-subject-%(eid)s').removeClass('invisible')" class="releditField"><div id="manager-subject-%(eid)s-value" class="editableFieldValue">&lt;not specified&gt;</div><form action="http://testing.fr/cubicweb/validateform?__onsuccess=window.parent.cw.reledit.onSuccess" method="post" enctype="application/x-www-form-urlencoded" id="manager-subject-%(eid)s-form" onsubmit="return freezeFormButtons(&#39;manager-subject-%(eid)s-form&#39;);" class="releditForm" cubicweb:target="eformframe">
+                     'manager': """<div id="manager-subject-%(eid)s-reledit" onmouseout="jQuery('#manager-subject-%(eid)s').addClass('invisible')" onmouseover="jQuery('#manager-subject-%(eid)s').removeClass('invisible')" class="releditField"><div id="manager-subject-%(eid)s-value" class="editableFieldValue">&lt;not specified&gt;</div><form action="http://testing.fr/cubicweb/validateform?__onsuccess=window.parent.cw.reledit.onSuccess" method="post" enctype="application/x-www-form-urlencoded" id="manager-subject-%(eid)s-form" onsubmit="return freezeFormButtons(&#39;manager-subject-%(eid)s-form&#39;);" class="releditForm" target="eformframe">
 <fieldset>
 <input name="__form_id" type="hidden" value="base" />
 <input name="__errorurl" type="hidden" value="http://testing.fr/cubicweb/view?rql=Blop&amp;vid=blop#manager-subject-%(eid)s-form" />
@@ -162,6 +164,7 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;manager-subject-%(eid)s&#39;)" tabindex="11" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
 </tr></table>
 </fieldset>
+<iframe width="0px" height="0px" src="javascript: void(0);" name="eformframe" id="eformframe"></iframe>
 </form><div id="manager-subject-%(eid)s" class="editableField invisible"><div id="manager-subject-%(eid)s-update" class="editableField" onclick="cw.reledit.loadInlineEditionForm(&#39;base&#39;, %(eid)s, &#39;manager&#39;, &#39;subject&#39;, &#39;manager-subject-%(eid)s&#39;, false, &#39;autolimited&#39;);" title="click to edit this field"><img title="click to edit this field" src="http://testing.fr/cubicweb/data/pen_icon.png" alt="click to edit this field"/></div></div></div>""",
                      'composite_card11_2ttypes': """&lt;not specified&gt;""",
                      'concerns': """&lt;not specified&gt;"""

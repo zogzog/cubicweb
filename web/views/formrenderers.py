@@ -196,7 +196,7 @@ class FormRenderer(AppObject):
         if form.cssclass:
             attrs.setdefault('class', form.cssclass)
         if form.cwtarget:
-            attrs.setdefault('cubicweb:target', form.cwtarget)
+            attrs.setdefault('target', form.cwtarget)
         if not form.autocomplete:
             attrs.setdefault('autocomplete', 'off')
         return '<form %s>' % uilib.sgml_attributes(attrs)
@@ -206,7 +206,13 @@ class FormRenderer(AppObject):
         for form renderers overriding open_form to use something else or more than
         and <form>
         """
-        return u'</form>'
+        out = u'</form>'
+        if form.cwtarget:
+            attrs = {'name': form.cwtarget, 'id': form.cwtarget,
+                     'width': '0px', 'height': '0px',
+                     'src': 'javascript: void(0);'}
+            out =  (u'<iframe %s></iframe>\n' % uilib.sgml_attributes(attrs)) + out
+        return out
 
     def render_fields(self, w, form, values):
         fields = self._render_hidden_fields(w, form)

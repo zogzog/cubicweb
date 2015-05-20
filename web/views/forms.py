@@ -95,7 +95,7 @@ class FieldsForm(form.Form):
       value for the "style" attribute of the <form> tag
 
     :attr:`cwtarget`
-      value for the "cubicweb:target" attribute of the <form> tag
+      value for the "target" attribute of the <form> tag
 
     :attr:`redirect_path`
       relative to redirect to after submitting the form

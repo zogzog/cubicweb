@@ -60,7 +60,7 @@ The form enveloppe
  <div class="formBody">
   <form action="http://crater:9999/validateform" method="post" enctype="application/x-www-form-urlencoded"
         id="entityForm" onsubmit="return freezeFormButtons(&#39;entityForm&#39;);"
-        class="entityForm" cubicweb:target="eformframe">
+        class="entityForm" target="eformframe">
     <div id="progress">validating...</div>
     <fieldset>
       <input name="__form_id" type="hidden" value="edition" />
@@ -73,6 +73,7 @@ The form enveloppe
              value="concerns-subject,done_in-subject,priority-subject,type-subject,title-subject,description-subject,__type,_cw_generic_field" />
       ...
     </fieldset>
+    <iframe width="0px" height="0px" name="eformframe" id="eformframe" src="javascript: void(0);"></iframe>
    </form>
  </div>
 
@@ -259,36 +260,13 @@ submits the form.
 The form validation process
 ---------------------------
 
-Preparation
-~~~~~~~~~~~
-
-After the (html) document is loaded, the ``setFormsTarget`` javascript
-function dynamically transforms the DOM as follows. For all forms of
-the DOM, it:
-
-* sets the ``target`` attribute where there is a ``cubicweb:target``
-  attribute (with the same value)
-
-* appends an empty `IFRAME` element at the end
-
-Let us have a look again at the form element. We have omitted some
-irrelevant attributes.
-
-.. sourcecode::html
-
-  <form action="http://crater:9999/validateform" method="post"
-        enctype="application/x-www-form-urlencoded"
-        id="entityForm" cubicweb:target="eformframe"
-        target="eformframe">
-  ...
-  </form>
-
 Validation loop
 ~~~~~~~~~~~~~~~
 
 On form submission, the form.action is invoked. Basically, the
 ``validateform`` controller is called and its output lands in the
-specified ``target``, the iframe that was previously prepared.
+specified ``target``, an invisible ``<iframe>`` at the end of the
+form.
 
 Hence, the main page is not replaced, only the iframe contents. The
 ``validateform`` controller only outputs a tiny javascript fragment
@@ -296,7 +274,7 @@ which is then immediately executed.
 
 .. sourcecode:: html
 
- <iframe width="0px" height="0px" name="eformframe" id="eformframe" src="javascript: void(0)">
+ <iframe width="0px" height="0px" name="eformframe" id="eformframe" src="javascript: void(0);">
    <script type="text/javascript">
      window.parent.handleFormValidationResponse('entityForm', null, null,
                                                 [false, [2164, {"name-subject": "required field"}], null],

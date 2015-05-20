@@ -275,9 +275,6 @@ function _postAjaxLoad(node) {
     if (typeof roundedCorners != 'undefined') {
         roundedCorners(node);
     }
-    if (typeof setFormsTarget != 'undefined') {
-        setFormsTarget(node);
-    }
     _loadDynamicFragments(node);
     jQuery(cw).trigger('server-response', [true, node]);
     jQuery(node).trigger('server-response', [true, node]);
