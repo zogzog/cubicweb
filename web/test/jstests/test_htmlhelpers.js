@@ -7,29 +7,29 @@ $(document).ready(function() {
       }
     });
 
-    QUnit.test("test first selected", function() {
+    QUnit.test("test first selected", function (assert) {
         $('#theselect').append('<option value="foo">foo</option>' +
     			     '<option selected="selected" value="bar">bar</option>' +
     			     '<option value="baz">baz</option>' +
     			     '<option selected="selecetd"value="spam">spam</option>');
         var selected = firstSelected(document.getElementById("theselect"));
-        equal(selected.value, 'bar');
+        assert.equal(selected.value, 'bar');
     });
 
-    QUnit.test("test first selected 2", function() {
+    QUnit.test("test first selected 2", function (assert) {
         $('#theselect').append('<option value="foo">foo</option>' +
     			     '<option value="bar">bar</option>' +
     			     '<option value="baz">baz</option>' +
     			     '<option value="spam">spam</option>');
         var selected = firstSelected(document.getElementById("theselect"));
-        equal(selected, null);
+        assert.equal(selected, null);
     });
 
     QUnit.module("visibilty");
-    QUnit.test('toggleVisibility', function() {
+    QUnit.test('toggleVisibility', function (assert) {
         $('#qunit-fixture').append('<div id="foo"></div>');
         toggleVisibility('foo');
-        ok($('#foo').hasClass('hidden'), 'check hidden class is set');
+        assert.ok($('#foo').hasClass('hidden'), 'check hidden class is set');
     });
 
 });
