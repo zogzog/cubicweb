@@ -25,14 +25,14 @@ $(document).ready(function() {
     QUnit.test('test simple h1 inclusion (ajax_url0.html)', function (assert) {
         assert.expect(3);
         assert.equal(jQuery('#qunit-fixture').children().length, 0);
-        stop();
+        var done = assert.async();
         jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html')
         .addCallback(function() {
                 try {
                     assert.equal(jQuery('#qunit-fixture').children().length, 1);
                     assert.equal(jQuery('#qunit-fixture h1').html(), 'Hello');
                 } finally {
-                    start();
+                    done();
                 };
             }
         );
@@ -42,7 +42,7 @@ $(document).ready(function() {
         assert.expect(6);
         var scriptsIncluded = jsSources();
         assert.equal(jQuery.inArray('http://foo.js', scriptsIncluded), - 1);
-        stop();
+        var done = assert.async();
         jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html')
         .addCallback(function() {
                 try {
@@ -56,7 +56,7 @@ $(document).ready(function() {
                     assert.equal(jQuery('div.ajaxHtmlHead').length, 0);
                     assert.equal(jQuery('#qunit-fixture h1').html(), 'Hello');
                 } finally {
-                    start();
+                    done();
                 };
             }
         );
@@ -65,14 +65,14 @@ $(document).ready(function() {
     QUnit.test('test addCallback', function (assert) {
         assert.expect(3);
         assert.equal(jQuery('#qunit-fixture').children().length, 0);
-        stop();
+        var done = assert.async();
         var d = jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function() {
             try {
                 assert.equal(jQuery('#qunit-fixture').children().length, 1);
                 assert.equal(jQuery('#qunit-fixture h1').html(), 'Hello');
             } finally {
-                start();
+                done();
             };
         });
     });
@@ -90,13 +90,13 @@ $(document).ready(function() {
                 deferred.success(data);
             }
         });
-        stop();
+        var done = assert.async();
         deferred.addCallback(function() {
             try {
                 // add an assertion to ensure the callback is executed
                 assert.ok(true, "callback is executed");
             } finally {
-                start();
+                done();
             };
         });
     });
@@ -104,14 +104,14 @@ $(document).ready(function() {
     QUnit.test('test addCallback with parameters', function (assert) {
         assert.expect(3);
         assert.equal(jQuery('#qunit-fixture').children().length, 0);
-        stop();
+        var done = assert.async();
         var d = jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function(data, req, arg1, arg2) {
             try {
                 assert.equal(arg1, 'Hello');
                 assert.equal(arg2, 'world');
             } finally {
-                start();
+                done();
             };
         },
         'Hello', 'world');
@@ -127,7 +127,7 @@ $(document).ready(function() {
                 assert.equal(arg1, 'Hello');
                 assert.equal(arg2, 'world');
             } finally {
-                start();
+                done();
             };
         },
         'Hello', 'world');
@@ -136,10 +136,10 @@ $(document).ready(function() {
             try {
                 throw this._error;
             } finally {
-                start();
+                done();
             };
         });
-        stop();
+        var done = assert.async();
         var result = jQuery.ajax({
             url: BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html',
             async: false,
@@ -154,7 +154,7 @@ $(document).ready(function() {
 
   QUnit.test('test addErrback', function (assert) {
         assert.expect(1);
-        stop();
+        var done = assert.async();
         var d = jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/nonexistent.html');
         d.addCallback(function() {
             // should not be executed
@@ -164,7 +164,7 @@ $(document).ready(function() {
             try {
                 assert.ok(true, "errback is executed");
             } finally {
-                start();
+                done();
             };
         });
     });
@@ -172,21 +172,20 @@ $(document).ready(function() {
     QUnit.test('test callback execution order', function (assert) {
         assert.expect(3);
         var counter = 0;
-        stop();
+        var done = assert.async();
         var d = jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url0.html');
         d.addCallback(function() {
-                try {
-                    assert.equal(++counter, 1); // should be executed first
-                } finally {
-                    start();
-                };
-            }
-        );
+            assert.equal(++counter, 1); // should be executed first
+        });
         d.addCallback(function() {
             assert.equal(++counter, 2);
         });
         d.addCallback(function() {
-            assert.equal(++counter, 3);
+            try {
+                assert.equal(++counter, 3);
+            } finally {
+                done();
+            }
         });
     });
 
@@ -198,7 +197,7 @@ $(document).ready(function() {
         assert.equal(jQuery('head link').length, 1);
         /* use endswith because in pytest context we have an absolute path */
         assert.ok(jQuery('head link').attr('href').endswith('/qunit.css'), 'qunit.css is loaded');
-        stop();
+        var done = assert.async();
         jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajax_url1.html')
         .addCallback(function() {
                 var origLength = scriptsIncluded.length;
@@ -216,7 +215,7 @@ $(document).ready(function() {
                     /* use endswith because in pytest context we have an absolute path */
                     assert.ok(jQuery('head link').attr('href').endswith('/qunit.css'), 'qunit.css is loaded');
                 } finally {
-                    start();
+                    done();
                 }
             }
         );
@@ -230,7 +229,7 @@ $(document).ready(function() {
 
     QUnit.test('test event on CubicWeb', function (assert) {
         assert.expect(1);
-        stop();
+        var done = assert.async();
         var events = null;
         jQuery(CubicWeb).bind('server-response', function() {
             // check that server-response event on CubicWeb is triggered
@@ -241,7 +240,7 @@ $(document).ready(function() {
                 try {
                     assert.equal(events, 'CubicWeb');
                 } finally {
-                    start();
+                    done();
                 };
             }
         );
@@ -249,7 +248,7 @@ $(document).ready(function() {
 
     QUnit.test('test event on node', function (assert) {
         assert.expect(3);
-        stop();
+        var done = assert.async();
         var nodes = [];
         jQuery('#qunit-fixture').bind('server-response', function() {
             nodes.push('node');
@@ -266,7 +265,7 @@ $(document).ready(function() {
                     assert.equal(nodes[0], 'CubicWeb');
                     assert.equal(nodes[1], 'node');
                 } finally {
-                    start();
+                    done();
                 };
             }
         );
