@@ -1,22 +1,22 @@
 $(document).ready(function() {
 
-  module("datetime");
+  QUnit.module("datetime");
 
-  test("test full datetime", function() {
+  QUnit.test("test full datetime", function() {
       equal(cw.utils.toISOTimestamp(new Date(1986, 3, 18, 10, 30, 0, 0)),
 	     '1986-04-18 10:30:00');
   });
 
-  test("test only date", function() {
+  QUnit.test("test only date", function() {
       equal(cw.utils.toISOTimestamp(new Date(1986, 3, 18)), '1986-04-18 00:00:00');
   });
 
-  test("test null", function() {
+  QUnit.test("test null", function() {
       equal(cw.utils.toISOTimestamp(null), null);
   });
 
-  module("parsing");
-  test("test basic number parsing", function() {
+  QUnit.module("parsing");
+  QUnit.test("test basic number parsing", function() {
       var d = strptime('2008/08/08', '%Y/%m/%d');
       deepEqual(datetuple(d), [2008, 8, 8, 0, 0]);
       d = strptime('2008/8/8', '%Y/%m/%d');
@@ -31,7 +31,7 @@ $(document).ready(function() {
       deepEqual(datetuple(d), [-35000, 1, 1, 0, 0]);
   });
 
-  test("test custom format parsing", function() {
+  QUnit.test("test custom format parsing", function() {
       var d = strptime('2008-08-08', '%Y-%m-%d');
       deepEqual(datetuple(d), [2008, 8, 8, 0, 0]);
       d = strptime('2008 - !  08: 08', '%Y - !  %m: %d');
@@ -44,8 +44,8 @@ $(document).ready(function() {
       deepEqual(datetuple(d), [2008, 8, 8, 1, 14]);
   });
 
-  module("sliceList");
-  test("test slicelist", function() {
+  QUnit.module("sliceList");
+  QUnit.test("test slicelist", function() {
       var list = ['a', 'b', 'c', 'd', 'e', 'f'];
       deepEqual(cw.utils.sliceList(list, 2),  ['c', 'd', 'e', 'f']);
       deepEqual(cw.utils.sliceList(list, 2, -2), ['c', 'd']);
@@ -54,13 +54,13 @@ $(document).ready(function() {
       deepEqual(cw.utils.sliceList(list),  list);
   });
 
-  module("formContents", {
+  QUnit.module("formContents", {
     setup: function() {
       $('#qunit-fixture').append('<form id="test-form"></form>');
     }
   });
   // XXX test fckeditor
-  test("test formContents", function() {
+  QUnit.test("test formContents", function() {
       $('#test-form').append('<input name="input-text" ' +
 			     'type="text" value="toto" />');
       $('#test-form').append('<textarea rows="10" cols="30" '+

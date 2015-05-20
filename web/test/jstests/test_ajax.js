@@ -1,6 +1,6 @@
 $(document).ready(function() {
 
-    module("ajax", {
+    QUnit.module("ajax", {
         setup: function() {
           this.scriptsLength = $('head script[src]').length-1;
           this.cssLength = $('head link[rel=stylesheet]').length-1;
@@ -22,7 +22,7 @@ $(document).ready(function() {
         });
     }
 
-    test('test simple h1 inclusion (ajax_url0.html)', function() {
+    QUnit.test('test simple h1 inclusion (ajax_url0.html)', function() {
         expect(3);
         equal(jQuery('#qunit-fixture').children().length, 0);
         stop();
@@ -38,7 +38,7 @@ $(document).ready(function() {
         );
     });
 
-    test('test simple html head inclusion (ajax_url1.html)', function() {
+    QUnit.test('test simple html head inclusion (ajax_url1.html)', function() {
         expect(6);
         var scriptsIncluded = jsSources();
         equal(jQuery.inArray('http://foo.js', scriptsIncluded), - 1);
@@ -62,7 +62,7 @@ $(document).ready(function() {
         );
     });
 
-    test('test addCallback', function() {
+    QUnit.test('test addCallback', function() {
         expect(3);
         equal(jQuery('#qunit-fixture').children().length, 0);
         stop();
@@ -77,7 +77,7 @@ $(document).ready(function() {
         });
     });
 
-    test('test callback after synchronous request', function() {
+    QUnit.test('test callback after synchronous request', function() {
         expect(1);
         var deferred = new Deferred();
         var result = jQuery.ajax({
@@ -101,7 +101,7 @@ $(document).ready(function() {
         });
     });
 
-    test('test addCallback with parameters', function() {
+    QUnit.test('test addCallback with parameters', function() {
         expect(3);
         equal(jQuery('#qunit-fixture').children().length, 0);
         stop();
@@ -117,7 +117,7 @@ $(document).ready(function() {
         'Hello', 'world');
     });
 
-    test('test callback after synchronous request with parameters', function() {
+    QUnit.test('test callback after synchronous request with parameters', function() {
         expect(3);
         var deferred = new Deferred();
         deferred.addCallback(function(data, req, arg1, arg2) {
@@ -152,7 +152,7 @@ $(document).ready(function() {
         });
     });
 
-  test('test addErrback', function() {
+  QUnit.test('test addErrback', function() {
         expect(1);
         stop();
         var d = jQuery('#qunit-fixture').loadxhtml(BASE_URL + 'cwsoftwareroot/web/test/jstests/nonexistent.html');
@@ -169,7 +169,7 @@ $(document).ready(function() {
         });
     });
 
-    test('test callback execution order', function() {
+    QUnit.test('test callback execution order', function() {
         expect(3);
         var counter = 0;
         stop();
@@ -190,7 +190,7 @@ $(document).ready(function() {
         });
     });
 
-    test('test already included resources are ignored (ajax_url1.html)', function() {
+    QUnit.test('test already included resources are ignored (ajax_url1.html)', function() {
         expect(10);
         var scriptsIncluded = jsSources();
         // NOTE:
@@ -222,13 +222,13 @@ $(document).ready(function() {
         );
     });
 
-    test('test synchronous request loadRemote', function() {
+    QUnit.test('test synchronous request loadRemote', function() {
         var res = loadRemote(BASE_URL + 'cwsoftwareroot/web/test/jstests/ajaxresult.json', {},
         'GET', true);
         deepEqual(res, ['foo', 'bar']);
     });
 
-    test('test event on CubicWeb', function() {
+    QUnit.test('test event on CubicWeb', function() {
         expect(1);
         stop();
         var events = null;
@@ -247,7 +247,7 @@ $(document).ready(function() {
         );
     });
 
-    test('test event on node', function() {
+    QUnit.test('test event on node', function() {
         expect(3);
         stop();
         var nodes = [];

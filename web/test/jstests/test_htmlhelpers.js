@@ -1,13 +1,13 @@
 $(document).ready(function() {
 
-    module("module2", {
+    QUnit.module("module2", {
       setup: function() {
         $('#qunit-fixture').append('<select id="theselect" multiple="multiple" size="2">' +
     			'</select>');
       }
     });
 
-    test("test first selected", function() {
+    QUnit.test("test first selected", function() {
         $('#theselect').append('<option value="foo">foo</option>' +
     			     '<option selected="selected" value="bar">bar</option>' +
     			     '<option value="baz">baz</option>' +
@@ -16,7 +16,7 @@ $(document).ready(function() {
         equal(selected.value, 'bar');
     });
 
-    test("test first selected 2", function() {
+    QUnit.test("test first selected 2", function() {
         $('#theselect').append('<option value="foo">foo</option>' +
     			     '<option value="bar">bar</option>' +
     			     '<option value="baz">baz</option>' +
@@ -25,8 +25,8 @@ $(document).ready(function() {
         equal(selected, null);
     });
 
-    module("visibilty");
-    test('toggleVisibility', function() {
+    QUnit.module("visibilty");
+    QUnit.test('toggleVisibility', function() {
         $('#qunit-fixture').append('<div id="foo"></div>');
         toggleVisibility('foo');
         ok($('#foo').hasClass('hidden'), 'check hidden class is set');

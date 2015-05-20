@@ -1,8 +1,8 @@
 $(document).ready(function() {
 
-  module("air");
+  QUnit.module("air");
 
-  test("test 1", function() {
+  QUnit.test("test 1", function() {
       equal(b, 6);
   });
 
