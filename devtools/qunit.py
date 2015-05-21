@@ -212,7 +212,15 @@ class QUnitResultController(Controller):
     def handle_log(self):
         result = self._cw.form['result']
         message = self._cw.form.get('message', '<no message>')
-        self._log_stack.append('%s: %s' % (result, message))
+        actual = self._cw.form.get('actual')
+        expected = self._cw.form.get('expected')
+        source = self._cw.form.get('source')
+        log = '%s: %s' % (result, message)
+        if result == 'false' and actual is not None and expected is not None:
+            log += ' (got: %s, expected: %s)' % (actual, expected)
+            if source is not None:
+                log += '\n' + source
+        self._log_stack.append(log)
 
 
 class QUnitView(View):
@@ -276,6 +284,9 @@ class QUnitView(View):
                            url: BASE_URL + 'qunit_result',
                            data: {"event": "log",
                                   "result": details.result,
+                                  "actual": details.actual,
+                                  "expected": details.expected,
+                                  "source": details.source,
                                   "message": details.message},
                            async: false});
             });''')
