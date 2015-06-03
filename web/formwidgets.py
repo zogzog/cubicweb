@@ -400,6 +400,9 @@ class ButtonInput(Input):
 
 class TextArea(FieldWidget):
     """Simple <textarea>, will return a unicode string."""
+    _minrows = 2
+    _maxrows = 15
+    _columns = 80
 
     def _render(self, form, field, renderer):
         values, attrs = self.values_and_attributes(form, field)
@@ -413,9 +416,9 @@ class TextArea(FieldWidget):
         lines = value.splitlines()
         linecount = len(lines)
         for line in lines:
-            linecount += len(line) / 80
-        attrs.setdefault('cols', 80)
-        attrs.setdefault('rows', min(15, linecount + 2))
+            linecount += len(line) / self._columns
+        attrs.setdefault('cols', self._columns)
+        attrs.setdefault('rows', min(self._maxrows, linecount + self._minrows))
         return tags.textarea(value, name=field.input_name(form, self.suffix),
                              **attrs)
 
