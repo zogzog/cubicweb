@@ -104,21 +104,17 @@ Development
 How to change the instance logo ?
 ---------------------------------
 
-There are two ways of changing the logo.
+The logo is managed by css. You must provide a custom css that will contain
+the code below: 
 
-1. The easiest way to use a different logo is to replace the existing
-   ``logo.png`` in ``myapp/data`` by your prefered icon and refresh.
-   By default all instance will look for a ``logo.png`` to be
-   rendered in the logo section.
+::
+   
+     #logo {
+        background-image: url("logo.jpg");
+     }
 
-   .. image:: ../images/lax-book_06-main-template-logo_en.png
 
-2. In your cube directory, you can specify which file to use for the logo.
-   This is configurable in ``mycube/uiprops.py``: ::
-
-     LOGO = data('mylogo.gif')
-
-   ``mylogo.gif`` is in ``mycube/data`` directory.
+``logo.jpg`` is in ``mycube/data`` directory.
 
 How to create an anonymous user ?
 ---------------------------------
