@@ -433,7 +433,7 @@ that's it! Those instructions will:
 
 To migrate my instance I simply type::
 
-   cubicweb-ctl upgrade sytweb
+   cubicweb-ctl upgrade sytweb_instance
 
 You'll then be asked some questions to do the migration step by step. You should say
 YES when it asks if a backup of your database should be done, so you can get back
