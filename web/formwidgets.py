@@ -1040,11 +1040,11 @@ class Button(Input):
         self.value = ''
         self.onclick = onclick
         self.cwaction = cwaction
-        self.attrs.setdefault('class', self.css_class)
 
     def render(self, form, field=None, renderer=None):
         label = form._cw._(self.label)
         attrs = self.attrs.copy()
+        attrs.setdefault('class', self.css_class)
         if self.cwaction:
             assert self.onclick is None
             attrs['onclick'] = "postForm('__action_%s', \'%s\', \'%s\')" % (
