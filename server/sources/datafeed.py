@@ -25,7 +25,7 @@ from os.path import exists
 from datetime import datetime, timedelta
 from base64 import b64decode
 from cookielib import CookieJar
-
+import urlparse
 from lxml import etree
 
 from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, UnknownEid
@@ -313,24 +313,44 @@ class DataFeedParser(AppObject):
                 return url.replace(mappedurl, URL_MAPPING[mappedurl], 1)
         return url
 
-    def retrieve_url(self, url, data=None, headers=None):
+    def retrieve_url(self, url):
         """Return stream linked by the given url:
         * HTTP urls will be normalized (see :meth:`normalize_url`)
         * handle file:// URL
         * other will be considered as plain content, useful for testing purpose
+
+        For http URLs, it will try to find a cwclientlib config entry
+        (if available) and use it as requester.
         """
-        if headers is None:
-            headers = {}
-        if url.startswith('http'):
-            url = self.normalize_url(url)
-            if data:
-                self.source.info('POST %s %s', url, data)
-            else:
-                self.source.info('GET %s', url)
-            req = urllib2.Request(url, data, headers)
-            return _OPENER.open(req, timeout=self.source.http_timeout)
-        if url.startswith('file://'):
+        purl = urlparse.urlparse(url)
+        if purl.scheme == 'file':
             return URLLibResponseAdapter(open(url[7:]), url)
+
+        url = self.normalize_url(url)
+
+        # first, try to use cwclientlib if it's available and if the
+        # url matches a configuration entry in ~/.config/cwclientlibrc
+        try:
+            from cwclientlib import cwproxy_for
+            # parse url again since it has been normalized
+            cnx = cwproxy_for(url)
+            cnx.timeout = self.source.http_timeout
+            self.source.info('Using cwclientlib for %s' % url)
+            resp = cnx.get(url)
+            resp.raise_for_status()
+            return URLLibResponseAdapter(StringIO.StringIO(resp.text), url)
+        except (ImportError, ValueError) as exc:
+            # ImportError: not available
+            # ValueError: no config entry found
+            self.source.debug(str(exc))
+
+        # no chance with cwclientlib, fall back to former implementation
+        if purl.scheme in ('http', 'https'):
+            self.source.info('GET %s', url)
+            req = urllib2.Request(url)
+            return _OPENER.open(req, timeout=self.source.http_timeout)
+
+        # url is probably plain content
         return URLLibResponseAdapter(StringIO.StringIO(url), url)
 
     def add_schema_config(self, schemacfg, checkonly=False):
@@ -483,15 +503,31 @@ class DataFeedXMLParser(DataFeedParser):
         raise NotImplementedError
 
     def is_deleted(self, extid, etype, eid):
-        if extid.startswith('http'):
+        if exitd.startswith('file://'):
+            return exists(exitd[7:])
+
+        url = self.normalize_url(extid)
+        # first, try to use cwclientlib if it's available and if the
+        # url matches a configuration entry in ~/.config/cwclientlibrc
+        try:
+            from cwclientlib import cwproxy_for
+            # parse url again since it has been normalized
+            cnx = cwproxy_for(url)
+            cnx.timeout = self.source.http_timeout
+            self.source.info('Using cwclientlib for checking %s' % url)
+            return cnx.get(url).status_code == 404
+        except (ImportError, ValueError) as exc:
+            # ImportError: not available
+            # ValueError: no config entry found
+            self.source.debug(str(exc))
+
+        # no chance with cwclientlib, fall back to former implementation
+        if urlparse.urlparse(url).scheme in ('http', 'https'):
             try:
-                _OPENER.open(self.normalize_url(extid), # XXX HTTP HEAD request
-                             timeout=self.source.http_timeout)
+                _OPENER.open(url, timeout=self.source.http_timeout)
             except urllib2.HTTPError as ex:
                 if ex.code == 404:
                     return True
-        elif extid.startswith('file://'):
-            return exists(extid[7:])
         return False
 
 

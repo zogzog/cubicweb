@@ -58,9 +58,10 @@ Depends:
  | python-pysqlite2,
  python-passlib
 Recommends:
- cubicweb-documentation (= ${source:Version})
+ cubicweb-documentation (= ${source:Version}),
 Suggests:
- python-zmq
+ python-zmq,
+ python-cwclientlib (>= 0.4.0),
 Description: server part of the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
