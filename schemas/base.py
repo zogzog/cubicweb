@@ -26,7 +26,8 @@ from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             Boolean)
 from cubicweb.schema import (
     RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
-    PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS)
+    PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS,
+    RO_ATTR_PERMS)
 
 class CWUser(WorkflowableEntityType):
     """define a CubicWeb user"""
@@ -160,7 +161,7 @@ class modification_date(RelationType):
 
 class cwuri(RelationType):
     """internal entity uri"""
-    __permissions__ = PUB_SYSTEM_ATTR_PERMS
+    __permissions__ = RO_ATTR_PERMS
     cardinality = '11'
     subject = '*'
     object = 'String'
