@@ -32,7 +32,8 @@ Example of mapping for CWEntityXMLParser::
 """
 
 from datetime import datetime, time
-from cgi import parse_qs # in urlparse with python >= 2.6
+import urlparse
+import urllib
 
 from logilab.common.date import todate, totime
 from logilab.common.textutils import splitstrip, text_to_dict
@@ -238,20 +239,17 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         attrs = extract_typed_attrs(entity.e_schema, sourceparams['item'])
         entity.cw_edited.update(attrs)
 
-
     def normalize_url(self, url):
-        """overriden to add vid=xml"""
+        """overridden to add vid=xml if vid is not set in the qs"""
         url = super(CWEntityXMLParser, self).normalize_url(url)
-        if url.startswith('http'):
-            try:
-                url, qs = url.split('?', 1)
-            except ValueError:
-                params = {}
-            else:
-                params = parse_qs(qs)
-            if not 'vid' in params:
+        purl = urlparse.urlparse(url)
+        if purl.scheme in ('http', 'https'):
+            params = urlparse.parse_qs(purl.query)
+            if 'vid' not in params:
                 params['vid'] = ['xml']
-            return url + '?' + self._cw.build_url_params(**params)
+                purl = list(purl)
+                purl[4] = urllib.urlencode(params, doseq=True)
+                return urlparse.urlunparse(purl)
         return url
 
     def complete_url(self, url, etype=None, known_relations=None):
@@ -265,29 +263,22 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         If `known_relations` is given, it should be a dictionary of already
         known relations, so they don't get queried again.
         """
-        try:
-            url, qs = url.split('?', 1)
-        except ValueError:
-            qs = ''
-        # XXX vid will be added by later call to normalize_url (in parent class)
-        params = parse_qs(qs)
+        purl = urlparse.urlparse(url)
+        params = urlparse.parse_qs(purl.query)
         if etype is None:
-            try:
-                etype = url.rsplit('/', 1)[1]
-            except ValueError:
-                return url + '?' + self._cw.build_url_params(**params)
-            try:
-                etype = self._cw.vreg.case_insensitive_etypes[etype.lower()]
-            except KeyError:
-                return url + '?' + self._cw.build_url_params(**params)
-        relations = params.setdefault('relation', [])
+            etype = purl.path.split('/')[-1]
+        try:
+            etype = self._cw.vreg.case_insensitive_etypes[etype.lower()]
+        except KeyError:
+            return url
+        relations = params['relation'] = set(params.get('relation', ()))
         for rtype, role, _ in self.source.mapping.get(etype, ()):
             if known_relations and rtype in known_relations.get('role', ()):
                 continue
-            reldef = '%s-%s' % (rtype, role)
-            if not reldef in relations:
-                relations.append(reldef)
-        return url + '?' + self._cw.build_url_params(**params)
+            relations.add('%s-%s' % (rtype, role))
+        purl = list(purl)
+        purl[4] = urllib.urlencode(params, doseq=True)
+        return urlparse.urlunparse(purl)
 
     def complete_item(self, item, rels):
         try:
