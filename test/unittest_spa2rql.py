@@ -15,10 +15,17 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+import unittest
+
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.xy import xy
-from cubicweb.spa2rql import Sparql2rqlTranslator
+
+SKIPCAUSE = None
+try:
+    from cubicweb.spa2rql import Sparql2rqlTranslator
+except ImportError as exc:
+    SKIPCAUSE = str(exc)
 
 xy.add_equivalence('Project', 'doap:Project')
 xy.add_equivalence('Project creation_date', 'doap:Project doap:created')
@@ -31,6 +38,7 @@ config.bootstrap_cubes()
 schema = config.load_schema()
 
 
+@unittest.skipIf(SKIPCAUSE, SKIPCAUSE)
 class XYTC(TestCase):
     def setUp(self):
         self.tr = Sparql2rqlTranslator(schema)
