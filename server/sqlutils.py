@@ -28,7 +28,7 @@ from itertools import ifilter
 from logging import getLogger
 
 from logilab import database as db, common as lgc
-from logilab.common.shellutils import ProgressBar
+from logilab.common.shellutils import ProgressBar, DummyProgressBar
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 from logilab.database.sqlgen import SQLGenerator
@@ -72,7 +72,10 @@ def sqlexec(sqlstmts, cursor_or_execute, withpb=True,
         sqlstmts_as_string = True
         sqlstmts = sqlstmts.split(delimiter)
     if withpb:
-        pb = ProgressBar(len(sqlstmts), title=pbtitle)
+        if sys.stdout.isatty():
+            pb = ProgressBar(len(sqlstmts), title=pbtitle)
+        else:
+            pb = DummyProgressBar()
     failed = []
     for sql in sqlstmts:
         sql = sql.strip()
