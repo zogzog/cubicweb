@@ -727,7 +727,7 @@ msgid ""
 "the source."
 msgstr ""
 "Configuration de la source pour un hôte spécifique. Une clé=valeur par "
-"ligne, les clés autorisées dépendantes du type de source. Les valeur "
+"ligne, les clés autorisées dépendantes du type de source. Les valeurs "
 "surchargent celles définies sur la source."
 
 msgid "Startup views"
