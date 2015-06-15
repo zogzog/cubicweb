@@ -136,6 +136,19 @@ class BeforeDelEntitySecurityHook(SecurityHook):
         self.entity.cw_check_perm('delete')
 
 
+def skip_inlined_relation_security(cnx, rschema, eid):
+    """return True if security for the given inlined relation should be skipped,
+    in case where the relation has been set through modification of
+    `entity.cw_edited` in a hook
+    """
+    assert rschema.inlined
+    try:
+        entity = cnx.transaction_data['ecache'][eid]
+    except KeyError:
+        return False
+    return rschema.type in entity.cw_edited.skip_security
+
+
 class BeforeAddRelationSecurityHook(SecurityHook):
     __regid__ = 'securitybeforeaddrelation'
     events = ('before_add_relation',)
@@ -146,6 +159,9 @@ class BeforeAddRelationSecurityHook(SecurityHook):
             if (self.eidfrom, self.rtype, self.eidto) in nocheck:
                 return
             rschema = self._cw.repo.schema[self.rtype]
+            if rschema.inlined and skip_inlined_relation_security(
+                    self._cw, rschema, self.eidfrom):
+                return
             rdef = rschema.rdef(self._cw.entity_metas(self.eidfrom)['type'],
                                 self._cw.entity_metas(self.eidto)['type'])
             rdef.check_perm(self._cw, 'add', fromeid=self.eidfrom, toeid=self.eidto)
@@ -156,11 +172,14 @@ class AfterAddRelationSecurityHook(SecurityHook):
     events = ('after_add_relation',)
 
     def __call__(self):
-        if not self.rtype in BEFORE_ADD_RELATIONS:
+        if self.rtype not in BEFORE_ADD_RELATIONS:
             nocheck = self._cw.transaction_data.get('skip-security', ())
             if (self.eidfrom, self.rtype, self.eidto) in nocheck:
                 return
             rschema = self._cw.repo.schema[self.rtype]
+            if rschema.inlined and skip_inlined_relation_security(
+                    self._cw, rschema, self.eidfrom):
+                return
             if self.rtype in ON_COMMIT_ADD_RELATIONS:
                 CheckRelationPermissionOp.get_instance(self._cw).add_data(
                     ('add', rschema, self.eidfrom, self.eidto) )
@@ -179,6 +198,9 @@ class BeforeDeleteRelationSecurityHook(SecurityHook):
         if (self.eidfrom, self.rtype, self.eidto) in nocheck:
             return
         rschema = self._cw.repo.schema[self.rtype]
+        if rschema.inlined and skip_inlined_relation_security(
+                self._cw, rschema, self.eidfrom):
+            return
         rdef = rschema.rdef(self._cw.entity_metas(self.eidfrom)['type'],
                             self._cw.entity_metas(self.eidto)['type'])
         rdef.check_perm(self._cw, 'delete', fromeid=self.eidfrom, toeid=self.eidto)
