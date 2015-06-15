@@ -21,13 +21,13 @@ class EntityResource(object):
                                     'x', 'Substitute')
         if self.attrname == 'eid':
             try:
-                rset = self.request.cw_cnx.execute(
+                rset = self.request.cw_request.execute(
                     st.as_string(), {'x': int(self.value)})
             except (ValueError, TypeResolverException):
                 # conflicting eid/type
                 raise HTTPNotFound()
         else:
-            rset = self.request.cw_cnx.execute(
+            rset = self.request.cw_request.execute(
                 st.as_string(), {'x': unicode(self.value)})
         return rset
 
