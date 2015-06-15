@@ -84,12 +84,13 @@ class SecurityViewMixIn(object):
     """mixin providing methods to display security information for a entity,
     relation or relation definition schema
     """
+    cssclass = "listing schemaInfo"
 
     def permissions_table(self, erschema, permissions=None):
         self._cw.add_css('cubicweb.acl.css')
         w = self.w
         _ = self._cw._
-        w(u'<table class="listing schemaInfo">')
+        w(u'<table class="%s">' % self.cssclass)
         w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
             _("permission"), _('granted to groups'), _('rql expressions')))
         for action in erschema.ACTIONS:
