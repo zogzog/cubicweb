@@ -105,19 +105,24 @@ class ErrorView(AnyRsetView):
         """
         return self._cw._('an error occurred')
 
+    def _excinfo(self):
+        req = self._cw
+        ex = req.data.get('ex')
+        excinfo = req.data.get('excinfo')
+        if 'errmsg' in req.data:
+            errmsg = req.data['errmsg']
+            exclass = None
+        else:
+            errmsg = exc_message(ex, req.encoding)
+            exclass = ex.__class__.__name__
+        return errmsg, exclass, excinfo
+
     def call(self):
         req = self._cw.reset_headers()
         w = self.w
-        ex = req.data.get('ex')#_("unable to find exception information"))
-        excinfo = req.data.get('excinfo')
         title = self._cw._('an error occurred')
         w(u'<h2>%s</h2>' % title)
-        if 'errmsg' in req.data:
-            ex = req.data['errmsg']
-            exclass = None
-        else:
-            exclass = ex.__class__.__name__
-            ex = exc_message(ex, req.encoding)
+        ex, exclass, excinfo = self._excinfo()
         if excinfo is not None and self._cw.vreg.config['print-traceback']:
             if exclass is None:
                 w(u'<div class="tb">%s</div>'
