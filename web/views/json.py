@@ -60,11 +60,11 @@ class JsonpController(basecontrollers.ViewController):
     def _get_json_data(self, rset):
         json_data = super(JsonpController, self).publish(rset)
         if 'callback' in self._cw.form: # jsonp
-            json_padding = self._cw.form['callback']
-            # use ``application/javascript`` is ``callback`` parameter is
-            # provided, let ``application/json`` otherwise
+            json_padding = self._cw.form['callback'].encode('ascii')
+            # use ``application/javascript`` if ``callback`` parameter is
+            # provided, keep ``application/json`` otherwise
             self._cw.set_content_type('application/javascript')
-            json_data = '%s(%s)' % (json_padding, json_data)
+            json_data = b'%s(%s)' % (json_padding, json_data)
         return json_data
 
 
