@@ -1,3 +1,9 @@
+0.3.1 (2015-06-18)
+------------------
+
+-   debian: add python-wsgicors dependency (:issue:`4751889`).
+-   Handle absence of anonymous user (:issue:`4751862`).
+
 0.3.0 (2015-05-11)
 ------------------
 
