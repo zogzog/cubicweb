@@ -397,11 +397,14 @@ class StateInfo(object):
             yield 1
             return
         thisexistssols, thisexistsvars = self.existssols[exists]
+        notdone_outside_vars = set()
         # when iterating other solutions inner to an EXISTS subquery, we should
         # reset variables which have this exists node as scope at each iteration
         for var in exists.stmt.defined_vars.itervalues():
             if var.scope is exists:
                 thisexistsvars.add(var.name)
+            elif var.name not in self.done:
+                notdone_outside_vars.add(var)
         origsol = self.solution
         origtables = self.tables
         done = self.done
@@ -417,6 +420,10 @@ class StateInfo(object):
                 for var in thisexistsvars:
                     if var in done:
                         done.remove(var)
+                for var in list(notdone_outside_vars):
+                    if var.name in done and var._q_sqltable in self.tables:
+                        origtables[var._q_sqltable] = self.tables[var._q_sqltable]
+                        notdone_outside_vars.remove(var)
                 for rel in exists.iget_nodes(Relation):
                     if rel in done:
                         done.remove(rel)
