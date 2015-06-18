@@ -573,6 +573,8 @@ function setFormsTarget(node) {
                 width: '0px',
                 height: '0px'
             }));
+            form.removeAttr('cubicweb:target'); // useles from now on, pop it
+                                                // to make IE9 happy
         }
     });
 }
