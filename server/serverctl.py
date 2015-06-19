@@ -1076,13 +1076,19 @@ class SynchronizeSourceCommand(Command):
     name = 'source-sync'
     arguments = '<instance> <source>'
     min_args = max_args = 2
+    options = (
+            ('loglevel',
+             {'short': 'l', 'type' : 'choice', 'metavar': '<log level>',
+              'default': 'info', 'choices': ('debug', 'info', 'warning', 'error'),
+             }),
+    )
 
     def run(self, args):
+        from cubicweb.cwctl import init_cmdline_log_threshold
         config = ServerConfiguration.config_for(args[0])
         config.global_set_option('log-file', None)
         config.log_format = '%(levelname)s %(name)s: %(message)s'
-        logger = logging.getLogger('cubicweb.sources')
-        logger.setLevel(logging.INFO)
+        init_cmdline_log_threshold(config, self['loglevel'])
         # only retrieve cnx to trigger authentication, close it right away
         repo, cnx = repo_cnx(config)
         cnx.close()
