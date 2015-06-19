@@ -1,4 +1,10 @@
-cubicweb (3.19.11-2) UNRELEASED; urgency=low
+cubicweb (3.19.12-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Rémi Cardona <remi.cardona@logilab.fr>  Fri, 19 Jun 2015 10:51:23 +0200
+
+cubicweb (3.19.11-2) unstable; urgency=low
 
   * Fix cubicweb-dev dependencies.
 
