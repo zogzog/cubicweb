@@ -243,7 +243,7 @@ class StaticDirectoryController(StaticFileController):
 
     def publish(self, rset=None):
         staticdir = self._cw.vreg.config.static_directory
-        relpath = self.relpath
+        relpath = self.relpath[len(self.__regid__) + 1:]
         return self.static_file(osp.join(staticdir, relpath))
 
 STATIC_CONTROLLERS = [DataController, FCKEditorController,

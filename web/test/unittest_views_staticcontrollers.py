@@ -51,7 +51,17 @@ class StaticControllerCacheTC(staticfilespublishermixin, CubicWebTC):
         with self._publish_static_files('data/cubicweb.css', next_headers) as req:
             self.assertEqual(304, req.status_out)
 
+class StaticDirectoryControllerTC(staticfilespublishermixin, CubicWebTC):
 
+    def test_check_static_dir_access(self):
+        """write a file in the static directory and test the access"""
+        staticdir = osp.join(self.session.vreg.config.static_directory)
+        if not os.path.exists(staticdir):
+            os.makedirs(staticdir)
+        filename = osp.join(staticdir, 'test')
+        with open(filename, 'a') as f:
+            with self._publish_static_files('static/test') as req:
+                self.assertEqual(200, req.status_out)
 
 class DataControllerTC(staticfilespublishermixin, CubicWebTC):
     tags = CubicWebTC.tags | Tags('static_controller', 'data', 'http')
