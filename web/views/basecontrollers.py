@@ -110,10 +110,7 @@ class LogoutController(Controller):
         #   anonymous connection is allowed and the page will be displayed or
         #   we'll be redirected to the login form
         msg = self._cw._('you have been logged out')
-        # force base_url so on dual http/https configuration, we generate a URL
-        # on the http version of the site
-        return self._cw.build_url('view', vid='loggedout',
-                                  base_url=self._cw.vreg.config['base-url'])
+        return self._cw.build_url('view', vid='loggedout')
 
 
 class ViewController(Controller):
