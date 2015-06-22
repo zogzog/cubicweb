@@ -21,8 +21,9 @@ __docformat__ = "restructuredtext en"
 
 import os
 import json
+import sys
 
-from logilab.common.shellutils import ProgressBar
+from logilab.common.shellutils import ProgressBar, DummyProgressBar
 
 from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
 
@@ -348,7 +349,10 @@ def serialize_schema(cnx, schema):
     pb_size = (len(eschemas + schema.relations())
                + len(CONSTRAINTS)
                + len([x for x in eschemas if x.specializes()]))
-    pb = ProgressBar(pb_size, title=_title)
+    if sys.stdout.isatty():
+        pb = ProgressBar(pb_size, title=_title)
+    else:
+        pb = DummyProgressBar()
     groupmap = group_mapping(cnx, interactive=False)
     # serialize all entity types, assuring CWEType is serialized first for proper
     # is / is_instance_of insertion

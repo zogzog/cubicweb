@@ -43,18 +43,16 @@ class RecomputeAttributeOperation(hook.DataOperationMixIn, hook.Operation):
         for computed_attribute_rdef, eids in self.get_data().iteritems():
             attr = computed_attribute_rdef.rtype
             formula  = computed_attribute_rdef.formula
-            rql = formula.replace('Any ', 'Any X, ', 1)
-            kwargs = None
-            # add constraint on X to the formula
-            if None in eids : # recompute for all etype if None is found
-                rql += ', X is %s' % computed_attribute_rdef.subject
-            elif len(eids) == 1:
-                rql += ', X eid %(x)s'
-                kwargs = {'x': eids.pop()}
+            select = self.cnx.repo.vreg.rqlhelper.parse(formula).children[0]
+            xvar = select.get_variable('X')
+            select.add_selected(xvar, index=0)
+            select.add_group_var(xvar, index=0)
+            if None in eids:
+                select.add_type_restriction(xvar, computed_attribute_rdef.subject)
             else:
-                rql += ', X eid IN (%s)' % ', '.join((str(eid) for eid in eids))
+                select.add_eid_restriction(xvar, eids)
             update_rql = 'SET X %s %%(value)s WHERE X eid %%(x)s' % attr
-            for eid, value in self.cnx.execute(rql, kwargs):
+            for eid, value in self.cnx.execute(select.as_string()):
                 self.cnx.execute(update_rql, {'value': value, 'x': eid})
 
 

@@ -26,6 +26,7 @@ Here is the code, samples from my cube's `views.py` file:
     from cubicweb.predicates import is_instance
     from cubicweb.web import component
     from cubicweb.web.views import error
+    from cubicweb.predicates import anonymous_user
 
     class FourOhFour(error.FourOhFour):
 	__select__ = error.FourOhFour.__select__ & anonymous_user()

@@ -145,6 +145,7 @@ class RgxActionRewriteTC(CubicWebTC):
             _pmid, rset = rewriter.rewrite(req, u'/DaLToN/JoE')
             self.assertEqual(len(rset), 1)
             self.assertEqual(rset[0][0], self.p1eid)
+            self.assertEqual(rset.description[0][0], 'CWUser')
 
     def test_inheritance_precedence(self):
         RQL1 = 'Any C WHERE C is CWEType'

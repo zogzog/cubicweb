@@ -62,7 +62,7 @@ have seen last time):
 
 ::
 
-   $ cubicweb-ctl shell sytweb
+   $ cubicweb-ctl shell sytweb_instance
    entering the migration python shell
    just type migration commands or arbitrary python code and type ENTER to execute it
    type "exit" or Ctrl-D to quit the shell and resume operation
@@ -81,7 +81,7 @@ Hey, we start to have some nice features, let us give a try to this new web
 site. For instance if I have a 'photos/201005WePyrenees' containing pictures for
 a particular event, I can import it to my web site by typing ::
 
-  $ cubicweb-ctl fsimport -F sytweb photos/201005WePyrenees/
+  $ cubicweb-ctl fsimport -F sytweb_instance photos/201005WePyrenees/
   ** importing directory /home/syt/photos/201005WePyrenees
   importing IMG_8314.JPG
   importing IMG_8274.JPG

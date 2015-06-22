@@ -32,7 +32,7 @@ from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
 from logilab.common.deprecation import deprecated
 
-from cubicweb.utils import JSString, json_dumps
+from cubicweb.utils import js_dumps
 
 
 def rql_for_eid(eid):
@@ -353,10 +353,7 @@ class _JSCallArgs(_JSId):
     def __unicode__(self):
         args = []
         for arg in self.args:
-            if isinstance(arg, JSString):
-                args.append(arg)
-            else:
-                args.append(json_dumps(arg))
+            args.append(js_dumps(arg))
         if self.parent:
             return u'%s(%s)' % (self.parent, ','.join(args))
         return ','.join(args)
@@ -378,6 +375,8 @@ the given arguments (which should be correctly typed).
 'cw.pouet(1,"2").pouet(null)'
 >>> str(js.cw.pouet(1, JSString("$")).pouet(None))
 'cw.pouet(1,$).pouet(null)'
+>>> str(js.cw.pouet(1, {'callback': JSString("cw.cb")}).pouet(None))
+'cw.pouet(1,{callback: cw.cb}).pouet(null)'
 """
 
 def domid(string):

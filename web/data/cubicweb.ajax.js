@@ -363,7 +363,7 @@ jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
 }
 
 /**
- * .. function:: loadRemote(url, form, reqtype='GET', sync=false)
+ * .. function:: loadRemote(url, form, reqtype='POST', sync=false)
  *
  * Asynchronously (unless `sync` argument is set to true) load a URL or path
  * and return a deferred whose callbacks args are decoded according to the

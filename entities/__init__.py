@@ -68,7 +68,7 @@ class AnyEntity(Entity):
             if rschema.meta:
                 continue
             value = self.cw_attr_value(rschema.type)
-            if value:
+            if value is not None:
                 # make the value printable (dates, floats, bytes, etc.)
                 return self.printable_value(rschema.type, value, attrschema.type,
                                             format='text/plain')

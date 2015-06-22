@@ -20,11 +20,13 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from cubicweb.uilib import rest_traceback
+
 from cubicweb.utils import json_dumps
-from cubicweb.predicates import any_rset, empty_rset
+from cubicweb.predicates import ExpectedValuePredicate, any_rset, empty_rset
 from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.web.application import anonymized_request
-from cubicweb.web.views import basecontrollers
+from cubicweb.web.views import basecontrollers, management
 
 class JsonpController(basecontrollers.ViewController):
     """The jsonp controller is the same as a ViewController but :
@@ -58,11 +60,11 @@ class JsonpController(basecontrollers.ViewController):
     def _get_json_data(self, rset):
         json_data = super(JsonpController, self).publish(rset)
         if 'callback' in self._cw.form: # jsonp
-            json_padding = self._cw.form['callback']
-            # use ``application/javascript`` is ``callback`` parameter is
-            # provided, let ``application/json`` otherwise
+            json_padding = self._cw.form['callback'].encode('ascii')
+            # use ``application/javascript`` if ``callback`` parameter is
+            # provided, keep ``application/json`` otherwise
             self._cw.set_content_type('application/javascript')
-            json_data = '%s(%s)' % (json_padding, json_data)
+            json_data = b'%s(%s)' % (json_padding, json_data)
         return json_data
 
 
@@ -119,3 +121,31 @@ class JsonEntityView(JsonMixIn, EntityView):
                     })
             entities.append(entity)
         self.wdata(entities)
+
+
+class _requested_vid(ExpectedValuePredicate):
+    """predicate that checks vid parameter value
+
+    It differs from ``match_view`` in that it doesn't expect a ``view``
+    parameter to be given to ``select`` but will rather check
+    ``req.form['vid']`` to match expected vid.
+    """
+    def __call__(self, cls, req, rset=None, **kwargs):
+        return req.form.get('vid') in self.expected
+
+
+class JsonErrorView(JsonMixIn, management.ErrorView):
+    """custom error view selected when client asks for a json view
+
+    The returned json object will contain err / traceback informations.
+    """
+    __select__ = (management.ErrorView.__select__ &
+                  _requested_vid('jsonexport', 'ejsonexport'))
+
+    def call(self):
+        errmsg, exclass, excinfo = self._excinfo()
+        self.wdata({
+            'errmsg': errmsg,
+            'exclass': exclass,
+            'traceback': rest_traceback(excinfo, errmsg),
+            })

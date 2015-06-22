@@ -25,6 +25,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.header import Header
+from email.utils import formatdate
 from socket import gethostname
 
 def header(ustring):
@@ -110,6 +111,7 @@ def format_mail(uinfo, to_addrs, content, subject="",
         msg['Message-id'] = msgid
     if references:
         msg['References'] = ', '.join(references)
+    msg['Date'] = formatdate()
     return msg
 
 

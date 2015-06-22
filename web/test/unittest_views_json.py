@@ -43,10 +43,11 @@ class JsonViewsTC(CubicWebTC):
 
     def test_json_rsetexport_with_jsonp(self):
         with self.admin_access.web_request() as req:
-            req.form.update({'callback': 'foo',
-                             'rql': 'Any GN,COUNT(X) GROUPBY GN ORDERBY GN '
+            req.form.update({'callback': u'foo',
+                             'rql': u'Any GN,COUNT(X) GROUPBY GN ORDERBY GN '
                              'WHERE X in_group G, G name GN'})
             data = self.ctrl_publish(req, ctrl='jsonp')
+            self.assertIsInstance(data, str)
             self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/javascript'])
             # because jsonp anonymizes data, only 'guests' group should be found
             self.assertEqual(data, 'foo(%s)' % self.res_jsonp_data)

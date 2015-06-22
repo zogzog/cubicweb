@@ -11,6 +11,7 @@ CREATE FUNCTION comma_join (anyarray) RETURNS text AS $$
 $$ LANGUAGE SQL;;
 
 
+DROP FUNCTION IF EXISTS cw_array_append_unique (anyarray, anyelement) CASCADE;
 CREATE FUNCTION cw_array_append_unique (anyarray, anyelement) RETURNS anyarray AS $$
     SELECT array_append($1, (SELECT $2 WHERE $2 <> ALL($1)))
 $$ LANGUAGE SQL;;
@@ -25,7 +26,6 @@ CREATE AGGREGATE group_concat (
 );;
 
 
-
 DROP FUNCTION IF EXISTS limit_size (fulltext text, format text, maxsize integer);
 CREATE FUNCTION limit_size (fulltext text, format text, maxsize integer) RETURNS text AS $$
 DECLARE
@@ -35,7 +35,7 @@ BEGIN
        RETURN fulltext;
     END IF;
     IF format = 'text/html' OR format = 'text/xhtml' OR format = 'text/xml' THEN
-       plaintext := regexp_replace(fulltext, '<[\\w/][^>]+>', '', 'g');
+       plaintext := regexp_replace(fulltext, '<[a-zA-Z/][^>]*>', '', 'g');
     ELSE
        plaintext := fulltext;
     END IF;

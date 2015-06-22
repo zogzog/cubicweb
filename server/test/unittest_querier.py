@@ -360,7 +360,7 @@ class QuerierTC(BaseQuerierTC):
         result, descr = rset.rows, rset.description
         self.assertEqual(descr[0][0], 'String')
         self.assertEqual(descr[0][1], 'Int')
-        self.assertEqual(result[0][0], 'CWRelation') # XXX may change as schema evolve
+        self.assertEqual(result[0][0], 'RQLExpression') # XXX may change as schema evolve
 
     def test_select_groupby_orderby(self):
         rset = self.qexecute('Any N GROUPBY N ORDERBY N WHERE X is CWGroup, X name N')

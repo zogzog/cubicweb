@@ -313,8 +313,7 @@ model, in *test/unittest_sytweb.py*:
 
     class SecurityTC(CubicWebTC):
 
-	def test_visibility_propagation(self):
-
+        def test_visibility_propagation(self):
             with self.admin_access.repo_cnx() as cnx:
                 # create a user for later security checks
                 toto = self.create_user(cnx, 'toto')
@@ -322,9 +321,9 @@ model, in *test/unittest_sytweb.py*:
                 # init some data using the default manager connection
                 folder = cnx.create_entity('Folder',
                                            name=u'restricted',
-    				           visibility=u'restricted')
+                                           visibility=u'restricted')
                 photo1 = cnx.create_entity('File',
-    	                                   data_name=u'photo1.jpg',
+                                           data_name=u'photo1.jpg',
                                            data=Binary('xxx'),
                                            filed_under=folder)
                 cnx.commit()
@@ -333,29 +332,30 @@ model, in *test/unittest_sytweb.py*:
                 # unless explicitly specified
                 photo2 = cnx.create_entity('File',
                                            data_name=u'photo2.jpg',
-				           data=Binary('xxx'),
-				           visibility=u'public',
-				           filed_under=folder)
+                                           data=Binary('xxx'),
+                                           visibility=u'public',
+                                           filed_under=folder)
                 cnx.commit()
                 self.assertEquals(photo2.visibility, 'public')
-
             with self.new_access('toto').repo_cnx() as cnx:
                 # test security
                 self.assertEqual(1, len(cnx.execute('File X'))) # only the public one
                 self.assertEqual(0, len(cnx.execute('Folder X'))) # restricted...
+            with self.admin_access.repo_cnx() as cnx:
                 # may_be_read_by propagation
                 folder = cnx.entity_from_eid(folder.eid)
                 folder.cw_set(may_be_read_by=toto)
                 cnx.commit()
-                photo1 = cnx.entity_from_eid(photo1)
+            with self.new_access('toto').repo_cnx() as cnx:
+                photo1 = cnx.entity_from_eid(photo1.eid)
                 self.failUnless(photo1.may_be_read_by)
                 # test security with permissions
                 self.assertEquals(2, len(cnx.execute('File X'))) # now toto has access to photo2
                 self.assertEquals(1, len(cnx.execute('Folder X'))) # and to restricted folder
 
     if __name__ == '__main__':
-	from logilab.common.testlib import unittest_main
-	unittest_main()
+        from logilab.common.testlib import unittest_main
+        unittest_main()
 
 It's not complete, but shows most things you'll want to do in tests: adding some
 content, creating users and connecting as them in the test, etc...
@@ -433,7 +433,7 @@ that's it! Those instructions will:
 
 To migrate my instance I simply type::
 
-   cubicweb-ctl upgrade sytweb
+   cubicweb-ctl upgrade sytweb_instance
 
 You'll then be asked some questions to do the migration step by step. You should say
 YES when it asks if a backup of your database should be done, so you can get back

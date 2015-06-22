@@ -113,6 +113,24 @@ class PostgresFTITC(CubicWebTC):
             self.assertEqual(datenaiss.tzinfo, None)
             self.assertEqual(datenaiss.utctimetuple()[:5], (1977, 6, 7, 2, 0))
 
+class PostgresLimitSizeTC(CubicWebTC):
+    configcls = PostgresApptestConfiguration
+
+    def test(self):
+        with self.admin_access.repo_cnx() as cnx:
+            def sql(string):
+                return cnx.system_sql(string).fetchone()[0]
+            yield self.assertEqual, sql("SELECT limit_size('<p>hello</p>', 'text/html', 20)"), \
+                '<p>hello</p>'
+            yield self.assertEqual, sql("SELECT limit_size('<p>hello</p>', 'text/html', 2)"), \
+                'he...'
+            yield self.assertEqual, sql("SELECT limit_size('<br/>hello', 'text/html', 2)"), \
+                'he...'
+            yield self.assertEqual, sql("SELECT limit_size('<span class=\"1\">he</span>llo', 'text/html', 2)"), \
+                'he...'
+            yield self.assertEqual, sql("SELECT limit_size('<span>a>b</span>', 'text/html', 2)"), \
+                'a>...'
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

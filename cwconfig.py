@@ -1104,7 +1104,7 @@ the repository',
             self._gettext_init()
 
     def _load_site_cubicweb(self, sitefile):
-        # overriden to register cube specific options
+        # overridden to register cube specific options
         mod = super(CubicWebConfiguration, self)._load_site_cubicweb(sitefile)
         if getattr(mod, 'options', None):
             self.register_options(mod.options)
