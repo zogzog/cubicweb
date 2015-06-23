@@ -35,7 +35,7 @@
     -------------------
 
     .. autofunction:: check_doubles
-    .. autofunction:: check_doubles_not_one
+    .. autofunction:: check_doubles_not_none
 
     Object Stores
     -------------

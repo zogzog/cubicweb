@@ -129,7 +129,7 @@ If we use an RQL condition on a transition, we can use the following variables:
 * `U`, the user executing that may pass the transition
 
 
-.. image:: ../../images/03-transitions-view_en.png
+.. image:: ../../../images/03-transitions-view_en.png
 
 You can notice that in the action box of a BlogEntry, the state is now
 listed as well as the possible transitions for the current state

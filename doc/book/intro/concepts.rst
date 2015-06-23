@@ -54,7 +54,7 @@ Instances can be of three different types: all-in-one, web engine or data
 repository. For applications that support high traffic, several web (front-end)
 and data (back-end) instances can be set-up to share the load.
 
-.. image:: ../images/archi_globale_en.png
+.. image:: ../../images/archi_globale_en.png
 
 The command :command:`cubicweb-ctl list` also displays the list of instances
 installed on your system.

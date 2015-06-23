@@ -8,7 +8,7 @@ as easily as possible.
 Here is an exemple of the facets rendering picked from our
 http://www.cubicweb.org web site:
 
-.. image:: ../images/facet_overview.png
+.. image:: ../../images/facet_overview.png
 
 Facets will appear on each page presenting more than one entity that may be
 filtered according to some known criteria.

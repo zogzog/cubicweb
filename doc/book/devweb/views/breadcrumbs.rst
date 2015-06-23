@@ -16,7 +16,7 @@ separator.
 
 Here is the header section of the CubicWeb's forge:
 
-.. image:: ../../images/breadcrumbs_header.png
+.. image:: ../../../images/breadcrumbs_header.png
 
 There are three breadcrumbs components defined in
 :mod:`cubicweb.web.views.ibreadcrumbs`:

@@ -14,6 +14,7 @@ Download views
 .. autoclass:: cubicweb.web.views.idownloadable.DownloadView
 .. autoclass:: cubicweb.web.views.idownloadable.DownloadLinkView
 .. autoclass:: cubicweb.web.views.idownloadable.IDownloadablePrimaryView
+.. autoclass:: cubicweb.web.views.idownloadable.IDownloadableOneLineView
 
 Embedded views
 --------------

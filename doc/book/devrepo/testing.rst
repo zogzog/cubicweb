@@ -451,7 +451,7 @@ CubicWebTC API
 What you need to know about request and session
 -----------------------------------------------
 
-.. image:: ../images/request_session.png
+.. image:: ../../images/request_session.png
 
 First, remember to think that some code run on a client side, some
 other on the repository side. More precisely:

@@ -22,7 +22,7 @@ Layout
 
 The primary view has the following layout.
 
-.. image:: ../../images/primaryview_template.png
+.. image:: ../../../images/primaryview_template.png
 
 .. _primary_view_configuration:
 
@@ -198,7 +198,7 @@ with its own specific criterion.
 The view method ``self.w()`` is used to output data. Here `lines
 08-09` output HTML for the publication date of the entry.
 
-.. image:: ../../images/lax-book_09-new-view-blogentry_en.png
+.. image:: ../../../images/lax-book_09-new-view-blogentry_en.png
    :alt: blog entries now look much nicer
 
 Let us now improve the primary view of a blog
@@ -271,6 +271,6 @@ have to recover the entity from its (row,col)-coordinates (`line
 Assuming we added entries to the blog titled `MyLife`, displaying it
 now allows to read its description and all its entries.
 
-.. image:: ../../images/lax-book_10-blog-with-two-entries_en.png
+.. image:: ../../../images/lax-book_10-blog-with-two-entries_en.png
    :alt: a blog and all its entries
 

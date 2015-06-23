@@ -3,7 +3,7 @@
 User interface for web site configuration
 =========================================
 
-.. image:: ../images/lax-book_03-site-config-panel_en.png
+.. image:: ../../images/lax-book_03-site-config-panel_en.png
 
 This panel allows you to configure the appearance of your instance site.
 Six menus are available and we will go through each of them to explain how

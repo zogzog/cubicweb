@@ -355,7 +355,7 @@ API
 .. toctree::
     :maxdepth: 1
 
-    js_api/index
+    /js_api/index
 
 
 Testing javascript

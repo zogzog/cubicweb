@@ -60,7 +60,7 @@ Layout and sections
 
 A page is composed as indicated on the schema below :
 
-.. image:: ../../images/main_template.png
+.. image:: ../../../images/main_template.png
 
 The sections dispatches specific views:
 

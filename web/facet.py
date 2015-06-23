@@ -1210,7 +1210,7 @@ class RangeFacet(AttributeFacet):
 
     The image below display the rendering of the slider:
 
-    .. image:: ../images/facet_range.png
+    .. image:: ../../images/facet_range.png
 
     .. _jquery: http://www.jqueryui.com/
     """
@@ -1309,7 +1309,7 @@ class DateRangeFacet(RangeFacet):
 
     The image below display the rendering of the slider for a date range:
 
-    .. image:: ../images/facet_date_range.png
+    .. image:: ../../images/facet_date_range.png
     """
     target_attr_type = 'Date' # only date types are supported
 
@@ -1440,7 +1440,7 @@ class HasRelationFacet(AbstractFacet):
     Here is an example of the rendering of thos facet to filter book with image
     and the corresponding code:
 
-    .. image:: ../images/facet_has_image.png
+    .. image:: ../../images/facet_has_image.png
 
     .. sourcecode:: python
 

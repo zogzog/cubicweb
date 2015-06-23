@@ -45,14 +45,14 @@ using some of `cellvids`, `finalvid` or `nonfinalvid`.
 
 The previous example results in:
 
-.. image:: ../../images/views-table-shadow.png
+.. image:: ../../../images/views-table-shadow.png
 
 In order to activate table filter mechanism, the `display_filter` option is given
 as a layout argument. A small arrow will be displayed at the table's top right
 corner. Clicking on `show filter form` action, will display the filter form as
 below:
 
-.. image:: ../../images/views-table-filter-shadow.png
+.. image:: ../../../images/views-table-filter-shadow.png
 
 By the same way, you can display additional actions for the selected entities
 by setting `add_view_actions` layout option to `True`. This will add actions
