@@ -21,15 +21,23 @@ from logilab.common.testlib import unittest_main
 
 from cubicweb import ValidationError, Binary
 from cubicweb.schema import META_RTYPES
+from cubicweb.devtools import startpgcluster, stoppgcluster, PostgresApptestConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.devtools.repotest import schema_eids_idx
 
 
+def setUpModule():
+    startpgcluster(__file__)
+
+
 def tearDownModule(*args):
+    stoppgcluster(__file__)
     del SchemaModificationHooksTC.schema_eids
 
+
 class SchemaModificationHooksTC(CubicWebTC):
+    configcls = PostgresApptestConfiguration
 
     def setUp(self):
         super(SchemaModificationHooksTC, self).setUp()
