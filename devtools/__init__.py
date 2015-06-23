@@ -26,7 +26,6 @@ import logging
 import shutil
 import pickle
 import glob
-import random
 import subprocess
 import warnings
 import tempfile
@@ -528,7 +527,7 @@ class NoCreateDropDatabaseHandler(TestDataBaseHandler):
 ### postgres test database handling ############################################
 
 def startpgcluster(pyfile):
-    """Start a postgresql cluster next to pyfile and using a random port number"""
+    """Start a postgresql cluster next to pyfile"""
     datadir = join(os.path.dirname(pyfile), 'data',
                    'pgdb-%s' % os.path.splitext(os.path.basename(pyfile))[0])
     if not exists(datadir):
@@ -542,11 +541,12 @@ def startpgcluster(pyfile):
                               '(/usr/lib/postgresql/9.1/bin for example).')
             raise
     datadir = os.path.abspath(datadir)
-    pgport = random.randrange(5432, 2**16)
+    pgport = '5432'
     env = os.environ.copy()
-    DEFAULT_PSQL_SOURCES['system']['db-host'] = datadir
-    DEFAULT_PSQL_SOURCES['system']['db-port'] = str(pgport)
-    options = '-h "" -k %s -p %s' % (datadir, pgport)
+    sockdir = tempfile.mkdtemp(prefix='cwpg')
+    DEFAULT_PSQL_SOURCES['system']['db-host'] = sockdir
+    DEFAULT_PSQL_SOURCES['system']['db-port'] = pgport
+    options = '-h "" -k %s -p %s' % (sockdir, pgport)
     options += ' -c fsync=off -c full_page_writes=off'
     options += ' -c synchronous_commit=off'
     try:
