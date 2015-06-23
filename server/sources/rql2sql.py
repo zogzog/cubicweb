@@ -182,7 +182,7 @@ def remove_unused_solutions(rqlst, solutions, varmap, schema):
             for sol in newsols:
                 invariants.setdefault(id(sol), {})[vname] = sol.pop(vname)
         elif var.scope is not rqlst:
-            # move appart variables which are in a EXISTS scope and are variating
+            # move apart variables which are in a EXISTS scope and are variating
             try:
                 thisexistssols, thisexistsvars = existssols[var.scope]
             except KeyError:
