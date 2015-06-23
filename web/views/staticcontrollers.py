@@ -178,9 +178,9 @@ class ConcatFilesHandler(object):
 
 
 class DataController(StaticFileController):
-    """Controller in charge of serving static file in /data/
+    """Controller in charge of serving static files in /data/
 
-    Handle modeconcat like url.
+    Handles mod_concat-like URLs.
     """
 
     __regid__ = 'data'
