@@ -392,7 +392,7 @@ class Connection(RequestSessionBase):
 
     def __exit__(self, exctype=None, excvalue=None, tb=None):
         assert self._open # actually already open
-        self.clear()
+        self.rollback()
         self._open = False
         self.cnxset.cnxset_freed()
         self.repo._free_cnxset(self.cnxset)
