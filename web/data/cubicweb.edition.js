@@ -171,7 +171,7 @@ function addPendingInsert(optionNode, eid, cell, relname) {
     var entityForm = jQuery('#entityForm');
     var oid = optionNode.id.substring(2); // option id is prefixed by "id"
     loadRemote(AJAX_BASE_URL, ajaxFuncArgs('add_pending_inserts', null,
-                                           [oid.split(':')]), 'GET', true);
+                                           [oid.split(':')]), 'POST', true);
     var selectNode = optionNode.parentNode;
     // remove option node
     selectNode.removeChild(optionNode);

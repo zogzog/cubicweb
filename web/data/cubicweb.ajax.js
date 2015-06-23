@@ -500,7 +500,7 @@ function _loadDynamicFragments(node) {
 function unloadPageData() {
     // NOTE: do not make async calls on unload if you want to avoid
     //       strange bugs
-    loadRemote(AJAX_BASE_URL, ajaxFuncArgs('unload_page_data'), 'GET', true);
+    loadRemote(AJAX_BASE_URL, ajaxFuncArgs('unload_page_data'), 'POST', true);
 }
 
 function removeBookmark(beid) {
