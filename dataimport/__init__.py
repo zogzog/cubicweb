@@ -837,8 +837,8 @@ class NoHookRQLObjectStore(RQLObjectStore):
         entity.cw_edited.update(kwargs, skipsec=False)
         entity_source, extid = self.metagen.init_entity(entity)
         cnx = self._cnx
-        self.source.add_entity(cnx, entity)
         self.source.add_info(cnx, entity, entity_source, extid)
+        self.source.add_entity(cnx, entity)
         kwargs = dict()
         if inspect.getargspec(self.add_relation).keywords:
             kwargs['subjtype'] = entity.cw_etype
