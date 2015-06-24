@@ -14,18 +14,34 @@ class RQLObjectStoreTC(CubicWebTC):
     def test_all(self):
         with self.admin_access.repo_cnx() as cnx:
             store = dataimport.RQLObjectStore(cnx)
-            group_eid = store.create_entity('CWGroup', name=u'grp').eid
-            user_eid = store.create_entity('CWUser', login=u'lgn', upassword=u'pwd').eid
+            # Check data insertion
+            group_eid = store.prepare_insert_entity('CWGroup', name=u'grp')
+            user_eid = store.prepare_insert_entity('CWUser', login=u'lgn',
+                                                   upassword=u'pwd')
             store.relate(user_eid, 'in_group', group_eid)
             cnx.commit()
-
-        with self.admin_access.repo_cnx() as cnx:
             users = cnx.execute('CWUser X WHERE X login "lgn"')
             self.assertEqual(1, len(users))
             self.assertEqual(user_eid, users.one().eid)
             groups = cnx.execute('CWGroup X WHERE U in_group X, U login "lgn"')
             self.assertEqual(1, len(users))
             self.assertEqual(group_eid, groups.one().eid)
+            # Check data update
+            self.set_description('Check data update')
+            store.prepare_update_entity('CWGroup', group_eid, name=u'new_grp')
+            cnx.commit()
+            group = cnx.execute('CWGroup X WHERE X name "grp"')
+            self.assertEqual(len(group), 0)
+            group = cnx.execute('CWGroup X WHERE X name "new_grp"')
+            self.assertEqual, len(group), 1
+            # Check data update with wrong type
+            with self.assertRaises(AssertionError):
+                store.prepare_update_entity('CWUser', group_eid, name=u'new_user')
+            cnx.commit()
+            group = cnx.execute('CWGroup X WHERE X name "new_user"')
+            self.assertEqual(len(group), 0)
+            group = cnx.execute('CWGroup X WHERE X name "new_grp"')
+            self.assertEqual(len(group), 1)
 
 
 class CreateCopyFromBufferTC(TestCase):

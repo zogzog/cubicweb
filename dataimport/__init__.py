@@ -37,10 +37,10 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
           entity = mk_entity(row, USERS)
           entity['upassword'] = 'motdepasse'
           ctl.check('login', entity['login'], None)
-          entity = ctl.store.create_entity('CWUser', **entity)
-          email = ctl.store.create_entity('EmailAddress', address=row['email'])
-          ctl.store.relate(entity.eid, 'use_email', email.eid)
-          ctl.store.rql('SET U in_group G WHERE G name "users", U eid %(x)s', {'x':entity['eid']})
+          entity = ctl.store.prepare_insert_entity('CWUser', **entity)
+          email = ctl.store.prepare_insert_entity('EmailAddress', address=row['email'])
+          ctl.store.prepare_insert_relation(entity, 'use_email', email)
+          ctl.store.rql('SET U in_group G WHERE G name "users", U eid %(x)s', {'x': entity})
 
   CHK = [('login', check_doubles, 'Utilisateurs Login',
           'Deux utilisateurs ne devraient pas avoir le même login.'),
@@ -543,9 +543,9 @@ class ObjectStore(object):
     But it will not enforce the constraints of the schema and hence will miss some problems
 
     >>> store = ObjectStore()
-    >>> user = store.create_entity('CWUser', login=u'johndoe')
-    >>> group = store.create_entity('CWUser', name=u'unknown')
-    >>> store.relate(user.eid, 'in_group', group.eid)
+    >>> user = store.prepare_insert_entity('CWUser', login=u'johndoe')
+    >>> group = store.prepare_insert_entity('CWUser', name=u'unknown')
+    >>> store.prepare_insert_relation(user, 'in_group', group)
     """
     def __init__(self):
         self.items = []
@@ -554,26 +554,43 @@ class ObjectStore(object):
         self.relations = set()
         self.indexes = {}
 
-    def create_entity(self, etype, **data):
+    def prepare_insert_entity(self, etype, **data):
+        """Given an entity type, attributes and inlined relations, return an eid for the entity that
+        would be inserted with a real store.
+        """
         data = attrdict(data)
         data['eid'] = eid = len(self.items)
         self.items.append(data)
         self.eids[eid] = data
         self.types.setdefault(etype, []).append(eid)
-        return data
+        return eid
 
-    def relate(self, eid_from, rtype, eid_to, **kwargs):
-        """Add new relation"""
+    def prepare_update_entity(self, etype, eid, **kwargs):
+        """Given an entity type and eid, updates the corresponding fake entity with specified
+        attributes and inlined relations.
+        """
+        assert eid in self.types[etype], 'Trying to update with wrong type {}'.format(etype)
+        data = self.eids[eid]
+        data.update(kwargs)
+
+    def prepare_insert_relation(self, eid_from, rtype, eid_to, **kwargs):
+        """Store into the `relations` attribute that a relation ``rtype`` exists between entities
+        with eids ``eid_from`` and ``eid_to``.
+        """
         relation = eid_from, rtype, eid_to
         self.relations.add(relation)
         return relation
 
+    def flush(self):
+        """Nothing to flush for this store."""
+        pass
+
     def commit(self):
-        """this commit method does nothing by default"""
+        """Nothing to commit for this store."""
         return
 
-    def flush(self):
-        """The method is provided so that all stores share a common API"""
+    def finish(self):
+        """Nothing to do once import is terminated for this store."""
         pass
 
     @property
@@ -585,6 +602,16 @@ class ObjectStore(object):
     @property
     def nb_inserted_relations(self):
         return len(self.relations)
+
+    @deprecated('[3.21] use prepare_insert_entity instead')
+    def create_entity(self, etype, **data):
+        self.prepare_insert_entity(etype, **data)
+        return attrdict(data)
+
+    @deprecated('[3.21] use prepare_insert_relation instead')
+    def relate(self, eid_from, rtype, eid_to, **kwargs):
+        self.prepare_insert_relation(eid_from, rtype, eid_to, **kwargs)
+
 
 class RQLObjectStore(ObjectStore):
     """ObjectStore that works with an actual RQL repository (production mode)"""
@@ -599,28 +626,44 @@ class RQLObjectStore(ObjectStore):
         self._commit = commit or cnx.commit
 
     def commit(self):
+        """Commit the database transaction."""
         return self._commit()
 
     def rql(self, *args):
         return self._cnx.execute(*args)
+
+    def prepare_insert_entity(self, *args, **kwargs):
+        """Given an entity type, attributes and inlined relations, returns the inserted entity's
+        eid.
+        """
+        entity = self._cnx.create_entity(*args, **kwargs)
+        self.eids[entity.eid] = entity
+        self.types.setdefault(args[0], []).append(entity.eid)
+        return entity.eid
+
+    def prepare_update_entity(self, etype, eid, **kwargs):
+        """Given an entity type and eid, updates the corresponding entity with specified attributes
+        and inlined relations.
+        """
+        entity = self._cnx.entity_from_eid(eid)
+        assert entity.cw_etype == etype, 'Trying to update with wrong type {}'.format(etype)
+        # XXX some inlined relations may already exists
+        entity.cw_set(**kwargs)
+
+    def prepare_insert_relation(self, eid_from, rtype, eid_to, **kwargs):
+        """Insert into the database a  relation ``rtype`` between entities with eids ``eid_from``
+        and ``eid_to``.
+        """
+        eid_from, rtype, eid_to = super(RQLObjectStore, self).prepare_insert_relation(
+            eid_from, rtype, eid_to, **kwargs)
+        self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
+                 {'x': int(eid_from), 'y': int(eid_to)})
 
     @property
     def session(self):
         warnings.warn('[3.19] deprecated property.', DeprecationWarning,
                       stacklevel=2)
         return self._cnx.repo._get_session(self._cnx.sessionid)
-
-    def create_entity(self, *args, **kwargs):
-        entity = self._cnx.create_entity(*args, **kwargs)
-        self.eids[entity.eid] = entity
-        self.types.setdefault(args[0], []).append(entity.eid)
-        return entity
-
-    def relate(self, eid_from, rtype, eid_to, **kwargs):
-        eid_from, rtype, eid_to = super(RQLObjectStore, self).relate(
-            eid_from, rtype, eid_to, **kwargs)
-        self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
-                 {'x': int(eid_from), 'y': int(eid_to)})
 
     @deprecated("[3.19] use cnx.find(*args, **kwargs).entities() instead")
     def find_entities(self, *args, **kwargs):
@@ -629,6 +672,15 @@ class RQLObjectStore(ObjectStore):
     @deprecated("[3.19] use cnx.find(*args, **kwargs).one() instead")
     def find_one_entity(self, *args, **kwargs):
         return self._cnx.find(*args, **kwargs).one()
+
+    @deprecated('[3.21] use prepare_insert_entity instead')
+    def create_entity(self, *args, **kwargs):
+        eid = self.prepare_insert_entity(*args, **kwargs)
+        return self._cnx.entity_from_eid(eid)
+
+    @deprecated('[3.21] use prepare_insert_relation instead')
+    def relate(self, eid_from, rtype, eid_to, **kwargs):
+        self.prepare_insert_relation(eid_from, rtype, eid_to, **kwargs)
 
 # the import controller ########################################################
 
@@ -771,7 +823,10 @@ class NoHookRQLObjectStore(RQLObjectStore):
         cnx.read_security = False
         cnx.write_security = False
 
-    def create_entity(self, etype, **kwargs):
+    def prepare_insert_entity(self, etype, **kwargs):
+        """Given an entity type, attributes and inlined relations, returns the inserted entity's
+        eid.
+        """
         for k, v in kwargs.iteritems():
             kwargs[k] = getattr(v, 'eid', v)
         entity, rels = self.metagen.base_etype_dicts(etype)
@@ -798,9 +853,15 @@ class NoHookRQLObjectStore(RQLObjectStore):
                 self.add_relation(cnx, entity.eid, rtype, targeteids,
                                   inlined, **kwargs)
         self._nb_inserted_entities += 1
-        return entity
+        return entity.eid
 
-    def relate(self, eid_from, rtype, eid_to, **kwargs):
+    # XXX: prepare_update_entity is inherited from RQLObjectStore, it should be reimplemented to
+    # actually skip hooks as prepare_insert_entity
+
+    def prepare_insert_relation(self, eid_from, rtype, eid_to, **kwargs):
+        """Insert into the database a  relation ``rtype`` between entities with eids ``eid_from``
+        and ``eid_to``.
+        """
         assert not rtype.startswith('reverse_')
         self.add_relation(self._cnx, eid_from, rtype, eid_to,
                           self.rschema(rtype).inlined)
