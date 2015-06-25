@@ -835,7 +835,7 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
 
     # set by upgrade command
     verbosity = 0
-
+    cmdline_options = None
     options = CubicWebNoAppConfiguration.options + (
         ('log-file',
          {'type' : 'string',
@@ -1029,7 +1029,7 @@ the repository',
         # or site_cubicweb files
         self.load_file_configuration(self.main_config_file())
         # configuration initialization hook
-        self.load_configuration()
+        self.load_configuration(**(self.cmdline_options or {}))
 
     def add_cubes(self, cubes):
         """add given cubes to the list of used cubes"""
@@ -1096,9 +1096,9 @@ the repository',
         infos.append('cubicweb-%s' % str(self.cubicweb_version()))
         return md5(';'.join(infos)).hexdigest()
 
-    def load_configuration(self):
+    def load_configuration(self, **kw):
         """load instance's configuration files"""
-        super(CubicWebConfiguration, self).load_configuration()
+        super(CubicWebConfiguration, self).load_configuration(**kw)
         if self.apphome and not self.creating:
             # init gettext
             self._gettext_init()

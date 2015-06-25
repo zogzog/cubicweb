@@ -375,9 +375,9 @@ have the python imaging library installed to use captcha)',
             if exists(fpath):
                 yield join(fpath)
 
-    def load_configuration(self):
+    def load_configuration(self, **kw):
         """load instance's configuration files"""
-        super(WebConfiguration, self).load_configuration()
+        super(WebConfiguration, self).load_configuration(**kw)
         # load external resources definition
         self._init_base_url()
         self._build_ui_properties()

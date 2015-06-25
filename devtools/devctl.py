@@ -73,7 +73,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
         return None
     def init_log(self):
         pass
-    def load_configuration(self):
+    def load_configuration(self, **kw):
         pass
     def default_log_file(self):
         return None

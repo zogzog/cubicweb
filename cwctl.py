@@ -520,7 +520,12 @@ running.'}),
           'default': None, 'choices': ('debug', 'info', 'warning', 'error'),
           'help': 'debug if -D is set, error otherwise',
           }),
-        )
+        ('param',
+         {'short': 'p', 'type' : 'named', 'metavar' : 'key1:value1,key2:value2',
+          'default': {},
+          'help': 'override <key> configuration file option with <value>.',
+         }),
+       )
 
     def start_instance(self, appid):
         """start the instance's server"""
@@ -534,6 +539,8 @@ running.'}),
                 "- '{ctl} pyramid {appid}' (requires the pyramid cube)\n")
             raise ExecutionError(msg.format(ctl='cubicweb-ctl', appid=appid))
         config = cwcfg.config_for(appid, debugmode=self['debug'])
+        # override config file values with cmdline options
+        config.cmdline_options = self.config.param
         init_cmdline_log_threshold(config, self['loglevel'])
         if self['profile']:
             config.global_set_option('profile', self.config.profile)

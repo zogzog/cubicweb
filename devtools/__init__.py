@@ -173,8 +173,8 @@ class TestServerConfiguration(ServerConfiguration):
         return self._apphome
     appdatahome = apphome
 
-    def load_configuration(self):
-        super(TestServerConfiguration, self).load_configuration()
+    def load_configuration(self, **kw):
+        super(TestServerConfiguration, self).load_configuration(**kw)
         # no undo support in tests
         self.global_set_option('undo-enabled', 'n')
 
