@@ -26,8 +26,8 @@ from six.moves import range
 from logilab.common.testlib import TestCase, DocTest, unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.utils import (make_uid, UStringIO, SizeConstrainedList,
-                            RepeatList, HTMLHead, QueryCache, parse_repo_uri)
+from cubicweb.utils import (make_uid, UStringIO, RepeatList, HTMLHead,
+                            QueryCache, parse_repo_uri)
 from cubicweb.entity import Entity
 
 try:
@@ -164,25 +164,6 @@ class RepeatListTC(TestCase):
         l = RepeatList(3, (1, 3))
         l.pop(2)
         self.assertEqual(l, [(1, 3)]*2)
-
-
-class SizeConstrainedListTC(TestCase):
-
-    def test_append(self):
-        l = SizeConstrainedList(10)
-        for i in range(12):
-            l.append(i)
-        self.assertEqual(l, list(range(2, 12)))
-
-    def test_extend(self):
-        testdata = [(list(range(5)), list(range(5))),
-                    (list(range(10)), list(range(10))),
-                    (list(range(12)), list(range(2, 12))),
-                    ]
-        for extension, expected in testdata:
-            l = SizeConstrainedList(10)
-            l.extend(extension)
-            yield self.assertEqual, l, expected
 
 
 class JSONEncoderTC(TestCase):

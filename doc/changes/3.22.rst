@@ -67,3 +67,5 @@ Deprecated code drops
 * the ``cubicweb.server.hooksmanager`` module was removed
 
 * the ``Repository.pinfo()`` method was removed
+
+* the ``cubicweb.utils.SizeConstrainedList`` class was removed

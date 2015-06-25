@@ -139,39 +139,6 @@ def transitive_closure_of(entity, rtype, _seen=None):
             yield subchild
 
 
-class SizeConstrainedList(list):
-    """simple list that makes sure the list does not get bigger than a given
-    size.
-
-    when the list is full and a new element is added, the first element of the
-    list is removed before appending the new one
-
-    >>> l = SizeConstrainedList(2)
-    >>> l.append(1)
-    >>> l.append(2)
-    >>> l
-    [1, 2]
-    >>> l.append(3)
-    >>> l
-    [2, 3]
-    """
-    def __init__(self, maxsize):
-        self.maxsize = maxsize
-
-    def append(self, element):
-        if len(self) == self.maxsize:
-            del self[0]
-        super(SizeConstrainedList, self).append(element)
-
-    def extend(self, sequence):
-        super(SizeConstrainedList, self).extend(sequence)
-        keepafter = len(self) - self.maxsize
-        if keepafter > 0:
-            del self[:keepafter]
-
-    __iadd__ = extend
-
-
 class RepeatList(object):
     """fake a list with the same element in each row"""
     __slots__ = ('_size', '_item')
