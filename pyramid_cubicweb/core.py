@@ -243,19 +243,21 @@ def _cw_cnx(request):
     session = request.cw_session
     if session is None:
         return None
-    cnx = repoapi.ClientConnection(session)
+    cnx = session.new_cnx()
 
     def cleanup(request):
-        if (request.exception is not None and not isinstance(
-            request.exception, (
-                httpexceptions.HTTPSuccessful,
-                httpexceptions.HTTPRedirection))):
-            cnx.rollback()
-        elif cnx._cnx.commit_state == 'uncommitable':
-            cnx.rollback()
-        else:
-            cnx.commit()
-        cnx.__exit__(None, None, None)
+        try:
+            if (request.exception is not None and not isinstance(
+                request.exception, (
+                    httpexceptions.HTTPSuccessful,
+                    httpexceptions.HTTPRedirection))):
+                cnx.rollback()
+            elif cnx.commit_state == 'uncommitable':
+                cnx.rollback()
+            else:
+                cnx.commit()
+        finally:
+            cnx.__exit__(None, None, None)
 
     request.add_finished_callback(cleanup)
     cnx.__enter__()
