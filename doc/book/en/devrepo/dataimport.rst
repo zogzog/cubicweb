@@ -12,7 +12,24 @@ possible errors in insertion (bad data types, integrity error, ...) will be rais
 
 These data import utilities are provided in the package `cubicweb.dataimport`.
 
-All the stores have the following API::
+The API is built on top of the following concepts:
+
+* `Store`, class responsible for inserting values in the backend database
+
+* `ExtEntity`, some intermediate representation of data to import, using external identifier but no
+  eid, and usually with slightly different representation than the associated entity's schema
+
+* `Generator`, class or functions that will yield `ExtEntity` from some data source (eg RDF, CSV)
+
+* `Importer`, class responsible for turning `ExtEntity`'s extid to eid, doing creation or update
+  accordingly and may be controlling the insertion order of entities before feeding them to a
+  `Store`
+
+Stores
+~~~~~~
+
+Stores are responsible to insert properly formatted entities and relations into the database. They
+have the following API::
 
     >>> user_eid = store.prepare_insert_entity('CWUser', login=u'johndoe')
     >>> group_eid = store.prepare_insert_entity('CWUser', name=u'unknown')
@@ -73,3 +90,8 @@ SQLGenObjectStore
 This store relies on *COPY FROM*/execute many sql commands to directly push data using SQL commands
 rather than using the whole *CubicWeb* API. For now, **it only works with PostgresSQL** as it requires
 the *COPY FROM* command.
+
+ExtEntity and Importer
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: cubicweb.dataimport.importer

@@ -1,0 +1,3 @@
+# uri,name,knows
+http://www.example.org/alice,Alice,
+http://www.example.org/bob,Bob,http://www.example.org/alice
