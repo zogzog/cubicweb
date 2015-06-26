@@ -13,34 +13,17 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
-"""This module contains tools to programmatically import external data into CubicWeb. It's designed
-on top of the store concept to leverage possibility of code sharing accross various data import
-needs.
+"""Data import of external entities.
 
-The following classes are defined:
+Main entry points:
 
-* :class:`ExtEntity`: some intermediate representation of data to import, using external identifier
-  but no eid,
+.. autoclass:: ExtEntitiesImporter
+.. autoclass:: ExtEntity
 
-* :class:`ExtEntitiesImporter`: class responsible for turning ExtEntity's extid to eid, and create
-  or update CubicWeb entities accordingly (using a Store).
+Utilities:
 
-What is left to do is to write a class or a function that will yield external entities from some
-data source (eg RDF, CSV) which will be case dependant (the *generator*).  You may then plug
-arbitrary filters into the external entities stream between the generator and the importer, allowing
-to have some generic generators whose generated content is rafined by specific filters.
-
-.. code-block:: python
-
-    ext_entities = fetch(<source>) # function yielding external entities
-    log = SimpleImportLog('<source file/url/whatever>')
-    importer = ExtEntitiesImporter(cnx, store, import_log=log)
-    importer.import_entities(ext_entities)
-
-Here are the two classes that you'll have to deal with, and maybe to override:
-
-.. autoclass:: cubicweb.dataimport.importer.ExtEntitiesImporter
-.. autoclass:: cubicweb.dataimport.importer.ExtEntity
+.. autofunction:: cwuri2eid
+.. autoclass:: RelationMapping
 """
 
 from collections import defaultdict
@@ -93,14 +76,16 @@ class ExtEntity(object):
     An external entity has the following properties:
 
     * ``extid`` (external id), an identifier for the ext entity,
+
     * ``etype`` (entity type), a string which must be the name of one entity type in the schema
       (eg. ``'Person'``, ``'Animal'``, ...),
+
     * ``values``, a dictionary whose keys are attribute or relation names from the schema (eg.
       ``'first_name'``, ``'friend'``), and whose values are *sets*
 
     For instance:
 
-    ..code-block::python
+    .. code-block:: python
 
         ext_entity.extid = 'http://example.org/person/debby'
         ext_entity.etype = 'Person'
@@ -208,27 +193,26 @@ class ExtEntitiesImporter(object):
     """This class is responsible for importing externals entities, that is instances of
     :class:`ExtEntity`, into CubicWeb entities.
 
-    Parameters:
+    :param schema: the CubicWeb's instance schema
+    :param store: a CubicWeb `Store`
+    :param extid2eid: optional {extid: eid} dictionary giving information on existing entities. It
+        will be completed during import. You may want to use :func:`cwuri2eid` to build it.
+    :param existing_relation: optional {rtype: set((subj eid, obj eid))} mapping giving information on
+        existing relations of a given type. You may want to use :class:`RelationMapping` to build it.
+    :param  etypes_order_hint: optional ordered iterable on entity types, giving an hint on the order in
+        which they should be attempted to be imported
+    :param  import_log: optional object implementing the :class:`SimpleImportLog` interface to record
+        events occuring during the import
+    :param  raise_on_error: optional boolean flag - default to false, indicating whether errors should
+        be raised or logged. You usually want them to be raised during test but to be logged in
+        production.
 
-    * `schema`: the CubicWeb's instance schema
+    Instances of this class are meant to import external entities through :meth:`import_entities`
+    which handles a stream of :class:`ExtEntity`. One may then plug arbitrary filters into the
+    external entities stream.
 
-    * `store`: a CubicWeb `Store`
+    .. automethod:: import_entities
 
-    * `extid2eid`: optional {extid: eid} dictionary giving information on existing entities. It
-    will be completed during import. You may want to use :func:`cwuri2eid` to build it.
-
-    * `existing_relation`: optional {rtype: set((subj eid, obj eid))} mapping giving information on
-    existing relations of a given type. You may want to use :class:`RelationMapping` to build it.
-
-    * `etypes_order_hint`: optional ordered iterable on entity types, giving an hint on the order in
-      which they should be attempted to be imported
-
-    * `import_log`: optional object implementing the :class:`SimpleImportLog` interface to record
-      events occuring during the import
-
-    * `raise_on_error`: optional boolean flag - default to false, indicating whether errors should
-      be raised or logged. You usually want them to be raised during test but to be logged in
-      production.
     """
 
     def __init__(self, schema, store, extid2eid=None, existing_relations=None,
