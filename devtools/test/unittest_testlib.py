@@ -42,7 +42,7 @@ class FakeFormTC(TestCase):
                                 '__maineid': 0,
                                 '__type:0': 'Entity',
                                 '_cw_entity_fields:0': '__type,field',
-                                '_cw_fields': 'file,encoding',
+                                '_cw_fields': 'encoding,file',
                                 'eid': [0],
                                 'encoding': u'utf-8',
                                 'field:0': 'value',

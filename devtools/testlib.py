@@ -724,7 +724,7 @@ class CubicWebTC(TestCase):
             if entity_fields:
                 form[eid_param('_cw_entity_fields', entity.eid)] = ','.join(entity_fields)
         if fields:
-            form['_cw_fields'] = ','.join(fields)
+            form['_cw_fields'] = ','.join(sorted(fields))
         return form
 
     @deprecated('[3.19] use .admin_request_from_url instead')
