@@ -296,6 +296,14 @@ class TestDataBaseHandler(object):
         # pure consistency check
         assert self.system_source['db-driver'] == self.DRIVER
 
+        # some handlers want to store info here, avoid a warning
+        from cubicweb.server.sources.native import NativeSQLSource
+        NativeSQLSource.options += (
+            ('global-db-name',
+             {'type': 'string', 'help': 'for internal use only'
+            }),
+        )
+
     def _ensure_test_backup_db_dir(self):
         """Return path of directory for database backup.
 
