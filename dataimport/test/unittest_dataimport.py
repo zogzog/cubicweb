@@ -18,7 +18,7 @@ class RQLObjectStoreTC(CubicWebTC):
             group_eid = store.prepare_insert_entity('CWGroup', name=u'grp')
             user_eid = store.prepare_insert_entity('CWUser', login=u'lgn',
                                                    upassword=u'pwd')
-            store.relate(user_eid, 'in_group', group_eid)
+            store.prepare_insert_relation(user_eid, 'in_group', group_eid)
             cnx.commit()
             users = cnx.execute('CWUser X WHERE X login "lgn"')
             self.assertEqual(1, len(users))
