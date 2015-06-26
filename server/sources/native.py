@@ -897,7 +897,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if extid is not None:
             assert isinstance(extid, str)
             extid = b64encode(extid)
-        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid and unicode(extid),
+        attrs = {'type': unicode(entity.cw_etype), 'eid': entity.eid, 'extid': extid and unicode(extid),
                  'asource': unicode(source.uri)}
         self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source

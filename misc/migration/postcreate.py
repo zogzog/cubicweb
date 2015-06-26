@@ -38,9 +38,9 @@ userwf = add_workflow(_('default user workflow'), 'CWUser')
 activated = userwf.add_state(_('activated'), initial=True)
 deactivated = userwf.add_state(_('deactivated'))
 userwf.add_transition(_('deactivate'), (activated,), deactivated,
-                      requiredgroups=('managers',))
+                      requiredgroups=(u'managers',))
 userwf.add_transition(_('activate'), (deactivated,), activated,
-                      requiredgroups=('managers',))
+                      requiredgroups=(u'managers',))
 
 # create anonymous user if all-in-one config and anonymous user has been specified
 if hasattr(config, 'anonymous_user'):
@@ -50,7 +50,7 @@ if hasattr(config, 'anonymous_user'):
         print 'Hopefully this is not a production instance...'
     elif anonlogin:
         from cubicweb.server import create_user
-        create_user(session, unicode(anonlogin), anonpwd, 'guests')
+        create_user(session, unicode(anonlogin), anonpwd, u'guests')
 
 # need this since we already have at least one user in the database (the default admin)
 for user in rql('Any X WHERE X is CWUser').entities():
@@ -63,7 +63,7 @@ if interactive_mode:
     cfg.input_config(inputlevel=0)
     for section, options in cfg.options_by_section():
         for optname, optdict, value in options:
-            key = '%s.%s' % (section, optname)
+            key = u'%s.%s' % (section, optname)
             default = cfg.option_default(optname, optdict)
             # only record values differing from default
             if value != default:

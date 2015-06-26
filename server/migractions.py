@@ -1276,6 +1276,7 @@ class ServerMigrationHelper(MigrationHelper):
             return 'missing workflow relations, see make_workflowable(%s)' % etype
         for etype in wfof:
             eschema = self.repo.schema[etype]
+            etype = unicode(etype)
             if ensure_workflowable:
                 assert 'in_state' in eschema.subjrels, _missing_wf_rel(etype)
                 assert 'custom_workflow' in eschema.subjrels, _missing_wf_rel(etype)

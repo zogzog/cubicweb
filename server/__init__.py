@@ -280,7 +280,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
         # sort for eid predicatability as expected in some server tests
         for group in sorted(BASE_GROUPS):
             cnx.create_entity('CWGroup', name=unicode(group))
-        admin = create_user(cnx, login, pwd, 'managers')
+        admin = create_user(cnx, login, pwd, u'managers')
         cnx.execute('SET X owned_by U WHERE X is IN (CWGroup,CWSource), U eid %(u)s',
                         {'u': admin.eid})
         cnx.commit()

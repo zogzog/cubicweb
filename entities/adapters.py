@@ -143,7 +143,7 @@ class IFTIndexableAdapter(view.EntityAdapter):
                 continue
             weight = self.attr_weight.get(rschema, 'C')
             try:
-                value = entity.printable_value(rschema, format='text/plain')
+                value = entity.printable_value(rschema, format=u'text/plain')
             except TransformError:
                 continue
             except Exception:

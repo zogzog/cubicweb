@@ -414,7 +414,7 @@ class IWorkflowableAdapter(EntityAdapter):
         """return the default workflow for entities of this type"""
         # XXX CWEType method
         wfrset = self._cw.execute('Any WF WHERE ET default_workflow WF, '
-                                  'ET name %(et)s', {'et': self.entity.cw_etype})
+                                  'ET name %(et)s', {'et': unicode(self.entity.cw_etype)})
         if wfrset:
             return wfrset.get_entity(0, 0)
         self.warning("can't find any workflow for %s", self.entity.cw_etype)
