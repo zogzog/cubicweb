@@ -17,7 +17,7 @@
 # details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+# along with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Generic Setup script, takes package info from __pkginfo__.py file
 """
 __docformat__ = "restructuredtext en"
