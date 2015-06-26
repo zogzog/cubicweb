@@ -371,9 +371,6 @@ class SchemaModificationHooksTC(CubicWebTC):
         with self.admin_access.repo_cnx() as cnx:
             rdef = self.schema['Transition'].rdef('type')
             cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
-            if not getattr(cstr, 'eid', None):
-                # bug in schema reloading, constraint's eid not restored
-                self.skipTest('start me alone')
             cnx.execute('SET X value %(v)s WHERE X eid %(x)s',
                         {'x': cstr.eid, 'v': u"u'normal', u'auto', u'new'"})
             cnx.execute('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, '
