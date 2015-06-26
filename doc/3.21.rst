@@ -7,6 +7,24 @@ New features
 * the datadir-url configuration option lets one choose where static data files
   are served (instead of the default ${base-url}/data/)
 
+* some integrity checking that was previously implemented in Python was
+  moved to the SQL backend.  This includes some constraints, and
+  referential integrity.  Some consequences are that:
+
+  - disabling integrity hooks no longer disables those checks
+  - upgrades that modify constraints will fail when running on sqlite
+    (but upgrades aren't supported on sqlite anyway)
+
+* for easier instance monitoring, cubicweb can regularly dump some statistics
+  (basically those exposed by the 'info' and 'gc' views) in json format to a file
+
+User-visible changes
+--------------------
+
+* the use of fckeditor for text form fields is disabled by default
+
+* the 'https-deny-anonymous' configuration setting no longer exists
+
 Code movement
 -------------
 
@@ -23,6 +41,19 @@ API changes
   with the UTC offset the server started in, which was inconsistent (we
   are not aware of any users of that API).
 
+* the way to run tests on a postgresql backend has changed slightly, use
+  cubicweb.devtools.{start,stop}pgcluster in setUpModule and tearDownModule
+
+* the Connection and ClientConnection objects introduced in CubicWeb 3.19 have
+  been unified.  To connect to a repository, use:
+
+  session = repo.new_session(login, password=...)
+  with session.new_cnx() as cnx:
+      cnx.execute(...)
+
+  In tests, the 'repo_cnx' and 'client_cnx' methods of RepoAccess are now
+  aliases to 'cnx'.
+
 Deprecated code drops
 ---------------------
 
@@ -35,6 +66,9 @@ Deprecated code drops
   "repository-only" instances (i.e. without a http component) are no
   longer possible.  If you have any such instances, you will need to
   rename the configuration file from repository.conf to all-in-one.conf
-  and run ``cubicweb-ctl upgrade`` to update it.
+  and run ``cubicweb-ctl upgrade`` to update it.  Likewise, remote cubicweb-ctl
+  shell is no longer available.
 
 * the old (deprecated since 3.19) `DBAPI` api is completely removed
+
+* cubicweb.toolsutils.config_connect() has been removed
