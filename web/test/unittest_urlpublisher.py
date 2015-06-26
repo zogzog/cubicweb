@@ -66,8 +66,8 @@ class URLPublisherTC(CubicWebTC):
             ctrl, rset = self.process(req, 'CWEType')
             self.assertEqual(ctrl, 'view')
             self.assertEqual(rset.description[0][0], 'CWEType')
-            self.assertEqual("Any X,AA,AB ORDERBY AA WHERE X is_instance_of CWEType, "
-                             "X name AA, X modification_date AB",
+            self.assertEqual("Any X,AA,AB ORDERBY AB WHERE X is_instance_of CWEType, "
+                             "X modification_date AA, X name AB",
                              rset.printable_rql())
 
     def test_rest_path_by_attr(self):
@@ -77,8 +77,8 @@ class URLPublisherTC(CubicWebTC):
             self.assertEqual(len(rset), 1)
             self.assertEqual(rset.description[0][0], 'CWUser')
             self.assertEqual('Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, '
-                             'X login AA, X firstname AB, X surname AC, '
-                             'X modification_date AD, X login "admin"',
+                             'X firstname AA, X login AB, X modification_date AC, '
+                             'X surname AD, X login "admin"',
                              rset.printable_rql())
 
     def test_rest_path_unique_attr(self):
@@ -88,8 +88,8 @@ class URLPublisherTC(CubicWebTC):
             self.assertEqual(len(rset), 1)
             self.assertEqual(rset.description[0][0], 'CWUser')
             self.assertEqual('Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, '
-                             'X login AA, X firstname AB, X surname AC, '
-                             'X modification_date AD, X login "admin"',
+                             'X firstname AA, X login AB, X modification_date AC, '
+                             'X surname AD, X login "admin"',
                              rset.printable_rql())
 
     def test_rest_path_eid(self):
@@ -99,8 +99,8 @@ class URLPublisherTC(CubicWebTC):
             self.assertEqual(len(rset), 1)
             self.assertEqual(rset.description[0][0], 'CWUser')
             self.assertEqual('Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, '
-                             'X login AA, X firstname AB, X surname AC, '
-                             'X modification_date AD, X eid %s' % rset[0][0],
+                             'X firstname AA, X login AB, X modification_date AC, '
+                             'X surname AD, X eid %s' % rset[0][0],
                              rset.printable_rql())
 
     def test_rest_path_non_ascii_paths(self):
@@ -110,8 +110,8 @@ class URLPublisherTC(CubicWebTC):
             self.assertEqual(len(rset), 1)
             self.assertEqual(rset.description[0][0], 'CWUser')
             self.assertEqual(u'Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, '
-                             u'X login AA, X firstname AB, X surname AC, '
-                             u'X modification_date AD, X login "\xffsa\xffe"',
+                             u'X firstname AA, X login AB, X modification_date AC, '
+                             u'X surname AD, X login "\xffsa\xffe"',
                              rset.printable_rql())
 
     def test_rest_path_quoted_paths(self):
@@ -121,7 +121,7 @@ class URLPublisherTC(CubicWebTC):
             self.assertEqual(len(rset), 1)
             self.assertEqual(rset.description[0][0], 'BlogEntry')
             self.assertEqual(u'Any X,AA,AB,AC WHERE X is_instance_of BlogEntry, '
-                             'X creation_date AA, X title AB, X modification_date AC, '
+                             'X creation_date AA, X modification_date AB, X title AC, '
                              'X title "hell\'o"',
                              rset.printable_rql())
 

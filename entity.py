@@ -336,7 +336,7 @@ class Entity(AppObject):
         else:
             visited.add(eschema.type)
         _fetchattrs = []
-        for attr in fetchattrs:
+        for attr in sorted(fetchattrs):
             try:
                 rschema = eschema.subjrels[attr]
             except KeyError:
