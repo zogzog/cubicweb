@@ -24,6 +24,7 @@ Utilities:
 
 .. autofunction:: cwuri2eid
 .. autoclass:: RelationMapping
+.. autofunction:: cubicweb.dataimport.importer.use_extid_as_cwuri
 """
 
 from collections import defaultdict
@@ -47,6 +48,30 @@ def cwuri2eid(cnx, etypes, source_eid=None):
         rql += ', X cw_source S, S eid %(s)s'
         args['s'] = source_eid
     return dict(cnx.execute(rql, args))
+
+
+def use_extid_as_cwuri(extid2eid):
+    """Return a generator of :class:`ExtEntity` objects that will set `cwuri`
+    using entity's extid if the entity does not exist yet and has no `cwuri`
+    defined.
+
+    `extid2eid` is an extid to eid dictionary coming from an
+    :class:`ExtEntitiesImporter` instance.
+
+    Example usage:
+
+    .. code-block:: python
+
+        importer = SKOSExtEntitiesImporter(cnx, store, import_log)
+        set_cwuri = use_extid_as_cwuri(importer.extid2eid)
+        importer.import_entities(set_cwuri(extentities))
+    """
+    def use_extid_as_cwuri_filter(extentities):
+        for extentity in extentities:
+            if extentity.extid not in extid2eid:
+                extentity.values.setdefault('cwuri', set([unicode(extentity.extid)]))
+            yield extentity
+    return use_extid_as_cwuri_filter
 
 
 class RelationMapping(object):

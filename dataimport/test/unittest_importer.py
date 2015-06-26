@@ -18,12 +18,13 @@
 
 from collections import defaultdict
 
-from logilab.common.testlib import unittest_main
+from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.dataimport import RQLObjectStore, ucsvreader
-from cubicweb.dataimport.importer import ExtEntity, ExtEntitiesImporter, SimpleImportLog, RelationMapping
+from cubicweb.dataimport.importer import (ExtEntity, ExtEntitiesImporter, SimpleImportLog,
+                                          RelationMapping, use_extid_as_cwuri)
 
 
 class RelationMappingTC(CubicWebTC):
@@ -146,6 +147,22 @@ class ExtEntitiesImporterTC(CubicWebTC):
             self.assertEqual(len(rset), 1)
             entity = rset.get_entity(0, 0)
             self.assertEqual(entity.nom, u'Richelieu Cardinal')
+
+
+class UseExtidAsCwuriTC(TestCase):
+
+    def test(self):
+        personne = ExtEntity('Personne', 1, {'nom': set([u'de la lune']),
+                                             'prenom': set([u'Jean'])})
+        mapping = {}
+        set_cwuri = use_extid_as_cwuri(mapping)
+        list(set_cwuri((personne,)))
+        self.assertIn('cwuri', personne.values)
+        self.assertEqual(personne.values['cwuri'], set(['1']))
+        mapping[1] = 'whatever'
+        personne.values.pop('cwuri')
+        list(set_cwuri((personne,)))
+        self.assertNotIn('cwuri', personne.values)
 
 
 def extentities_from_csv(fpath):
