@@ -75,8 +75,17 @@ def setup(bucket, address):
                     couple (ip, port).
     """
     global _bucket, _address, _socket
+    packed = None
+    for family in (socket.AF_INET6, socket.AF_INET):
+        try:
+            packed = socket.inet_pton(family, address)
+            break
+        except socket.error:
+            continue
+    if packed is None:
+        return
     _bucket, _address = bucket, address
-    _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    _socket = socket.socket(family, socket.SOCK_DGRAM)
 
 
 def statsd_c(context, n=1):
