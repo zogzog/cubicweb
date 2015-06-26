@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-import os.path as osp
 from datetime import datetime
 from threading import Thread
 
