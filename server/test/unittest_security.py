@@ -500,6 +500,7 @@ class SecurityTC(BaseSecurityTC):
                 rset = cnx.execute('CWUser X')
                 self.assertTrue(rset)
                 x = rset.get_entity(0, 0)
+                x.complete()
                 self.assertEqual(x.login, None)
                 self.assertTrue(x.creation_date)
                 x = rset.get_entity(1, 0)
