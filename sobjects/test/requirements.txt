@@ -1,0 +1,2 @@
+cubicweb-card
+cubicweb-comment

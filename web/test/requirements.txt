@@ -1,0 +1,6 @@
+requests
+webtest
+Twisted
+cubicweb-blog
+cubicweb-file
+cubicweb-tag

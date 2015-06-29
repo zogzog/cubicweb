@@ -1,0 +1,7 @@
+psycopg2
+cubicweb-basket
+cubicweb-card
+cubicweb-comment
+cubicweb-file
+cubicweb-localperms
+cubicweb-tag

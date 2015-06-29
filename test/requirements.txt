@@ -1,0 +1,6 @@
+Pygments
+#fyzz XXX pip install fails
+cubicweb-card
+cubicweb-file
+cubicweb-localperms
+cubicweb-tag
