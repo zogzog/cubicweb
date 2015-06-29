@@ -826,7 +826,7 @@ class Entity(AppObject):
             attr = rschema.type
             if attr == 'eid':
                 continue
-            # password retreival is blocked at the repository server level
+            # password retrieval is blocked at the repository server level
             rdef = rschema.rdef(self.e_schema, attrschema)
             if not self._cw.user.matching_groups(rdef.get_groups('read')) \
                    or (attrschema.type == 'Password' and skip_pwd):
