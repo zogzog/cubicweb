@@ -20,8 +20,9 @@
 
 import os, os.path as osp
 import sys
+import subprocess
 
-from logilab.common.testlib import TestCase, unittest_main
+from unittest import TestCase, main
 
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 
@@ -52,28 +53,23 @@ def load_po(fname):
 class cubePotGeneratorTC(TestCase):
     """test case for i18n pot file generator"""
 
-    def setUp(self):
-        self._CUBES_PATH = CubicWebNoAppConfiguration.CUBES_PATH[:]
-        CubicWebNoAppConfiguration.CUBES_PATH.append(osp.join(DATADIR, 'cubes'))
-        CubicWebNoAppConfiguration.cls_adjust_sys_path()
-
-    def tearDown(self):
-        CubicWebNoAppConfiguration.CUBES_PATH[:] = self._CUBES_PATH
-
     def test_i18ncube(self):
-        # MUST import here to make, since the import statement fire
-        # the cube paths setup (and then must occur after the setUp)
-        from cubicweb.devtools.devctl import update_cube_catalogs
+        env = os.environ.copy()
+        env['CW_CUBES_PATH'] = osp.join(DATADIR, 'cubes')
+        if 'PYTHONPATH' in env:
+            env['PYTHONPATH'] += os.pathsep
+        else:
+            env['PYTHONPATH'] = ''
+        env['PYTHONPATH'] += DATADIR
+        cwctl = osp.abspath(osp.join(osp.dirname(__file__), '../../bin/cubicweb-ctl'))
+        with open(os.devnull, 'w') as devnull:
+            subprocess.check_call([sys.executable, cwctl, 'i18ncube', 'i18ntestcube'],
+                                  env=env, stdout=devnull)
         cube = osp.join(DATADIR, 'cubes', 'i18ntestcube')
         msgs = load_po(osp.join(cube, 'i18n', 'en.po.ref'))
-        update_cube_catalogs(cube)
         newmsgs = load_po(osp.join(cube, 'i18n', 'en.po'))
         self.assertEqual(msgs, newmsgs)
 
+
 if __name__ == '__main__':
-    # XXX dirty hack to make this test runnable using python (works
-    # fine with pytest, but not with python directly if this hack is
-    # not present)
-    # XXX to remove ASA logilab.common is fixed
-    sys.path.append('')
-    unittest_main()
+    main()
