@@ -1,3 +1,5 @@
+import sys
+
 from pyramid import security
 from pyramid import tweens
 from pyramid.httpexceptions import HTTPSeeOther
@@ -8,7 +10,7 @@ import cubicweb.web
 
 from cubicweb.web.application import CubicWebPublisher
 
-from cubicweb.web import LogOut
+from cubicweb.web import LogOut, PublishException
 
 from pyramid_cubicweb.core import cw_to_pyramid
 
@@ -92,9 +94,6 @@ class CubicWebPyramidHandler(object):
                 # for this exception) should be enough
                 # content = self.appli.ajax_error_handler(req, ex)
                 raise
-            except cubicweb.web.NotFound as ex:
-                raise httpexceptions.HTTPNotFound(ex.message)
-
             if content is not None:
                 request.response.body = content
 
@@ -117,6 +116,31 @@ class CubicWebPyramidHandler(object):
                 content = vreg['views'].main_template(req, 'login')
                 request.response.body = content
 
+        return request.response
+
+    def error_handler(self, exc, request):
+        req = request.cw_request
+        if isinstance(exc, httpexceptions.HTTPException):
+            request.response = exc
+        elif isinstance(exc, PublishException) and exc.status is not None:
+            request.response = httpexceptions.exception_response(exc.status)
+        else:
+            request.response = httpexceptions.HTTPInternalServerError()
+        request.response.cache_control = 'no-cache'
+        vreg = request.registry['cubicweb.registry']
+        excinfo = sys.exc_info()
+        req.reset_message()
+        if req.ajax_request:
+            content = self.appli.ajax_error_handler(req, exc)
+        else:
+            try:
+                req.data['ex'] = exc
+                errview = vreg['views'].select('error', req)
+                template = self.appli.main_template_id(req)
+                content = vreg['views'].main_template(req, template, view=errview)
+            except Exception:
+                content = vreg['views'].main_template(req, 'error-template')
+        request.response.body = content
         return request.response
 
 
@@ -172,3 +196,6 @@ def includeme(config):
 
     config.add_tween(
         'pyramid_cubicweb.bwcompat.TweenHandler', under=tweens.EXCVIEW)
+    config.add_view(cwhandler.error_handler, context=Exception)
+    # XXX why do i need this?
+    config.add_view(cwhandler.error_handler, context=httpexceptions.HTTPForbidden)
