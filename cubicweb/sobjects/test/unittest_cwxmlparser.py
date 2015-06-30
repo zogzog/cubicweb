@@ -310,7 +310,7 @@ class CWEntityXMLParserTC(CubicWebTC):
         dfsource = self.repo.sources_by_uri['myfeed']
         with self.repo.internal_cnx() as cnx:
             parser = dfsource._get_parser(cnx)
-            dfsource.process_urls(parser, ['''
+            parser.process_urls(['''
 <rset size="1">
  <Card eid="50" cwuri="http://pouet.org/50" cwsource="system">
   <title>how-to</title>
@@ -322,7 +322,7 @@ class CWEntityXMLParserTC(CubicWebTC):
         dfsource = self.repo.sources_by_uri['myfeed']
         with self.repo.internal_cnx() as cnx:
             parser = dfsource._get_parser(cnx)
-            dfsource.process_urls(parser, ['''
+            parser.process_urls(['''
 <rset size="1">
  <Card eid="50" cwuri="http://pouet.org/50" cwsource="system">
   <title>how-to</title>

@@ -237,7 +237,7 @@ class DataFeedSource(AbstractSource):
             parser = self._get_parser(cnx, sourceuris=myuris, import_log=importlog)
         except ObjectNotFound:
             return {}
-        if self.process_urls(parser, self.urls, raise_on_error):
+        if parser.process_urls(self.urls, raise_on_error):
             self.warning("some error occurred, don't attempt to delete entities")
         else:
             parser.handle_deletion(self.config, cnx, myuris)
@@ -250,28 +250,6 @@ class DataFeedSource(AbstractSource):
         importlog.write_log(cnx, end_timestamp=self.latest_retrieval)
         cnx.commit()
         return stats
-
-    def process_urls(self, parser, urls, raise_on_error=False):
-        error = False
-        for url in urls:
-            self.info('pulling data from %s', url)
-            try:
-                if parser.process(url, raise_on_error):
-                    error = True
-            except IOError as exc:
-                if raise_on_error:
-                    raise
-                parser.import_log.record_error(
-                    'could not pull data while processing %s: %s'
-                    % (url, exc))
-                error = True
-            except Exception as exc:
-                if raise_on_error:
-                    raise
-                self.exception('error while processing %s: %s',
-                               url, exc)
-                error = True
-        return error
 
     @deprecated('[3.21] use the new store API')
     def before_entity_insertion(self, cnx, lid, etype, eid, sourceparams):
@@ -446,11 +424,34 @@ class DataFeedParser(AppObject):
                 entity = cnx.entity_from_eid(-eid)
             except UnknownEid:
                 return None
-            self.notify_updated(entity) # avoid later update from the source's data
+            self.notify_updated(entity)  # avoid later update from the source's data
             return entity
         if self.sourceuris is not None:
             self.sourceuris.pop(str(uri), None)
         return cnx.entity_from_eid(eid, etype)
+
+    def process_urls(self, urls, raise_on_error=False):
+        error = False
+        for url in urls:
+            self.info('pulling data from %s', url)
+            try:
+                if self.process(url, raise_on_error):
+                    error = True
+            except IOError as exc:
+                if raise_on_error:
+                    raise
+                self.import_log.record_error(
+                    'could not pull data while processing %s: %s'
+                    % (url, exc))
+                error = True
+            except Exception as exc:
+                if raise_on_error:
+                    raise
+                self.import_log.record_error(str(exc))
+                self.exception('error while processing %s: %s',
+                               url, exc)
+                error = True
+        return error
 
     def process(self, url, raise_on_error=False):
         """main callback: process the url"""
