@@ -775,6 +775,7 @@ class Repository(object):
             args[key] = int(args[key])
         return tuple(cachekey)
 
+    @deprecated('[3.22] use the new store API')
     def extid2eid(self, source, extid, etype, cnx, insert=True,
                   sourceparams=None):
         """Return eid from a local id. If the eid is a negative integer, that
