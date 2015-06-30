@@ -28,7 +28,7 @@ def CWSessionFactory(
         path='/',
         domain=None,
         secure=False,
-        httponly=False,
+        httponly=True,
         set_on_exception=True,
         timeout=1200,
         reissue_time=120,
