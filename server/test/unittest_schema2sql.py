@@ -271,22 +271,13 @@ CREATE TABLE travaille_relation (
 
 CREATE INDEX travaille_relation_from_idx ON travaille_relation(eid_from);
 CREATE INDEX travaille_relation_to_idx ON travaille_relation(eid_to);
-
-CREATE TABLE works_for_relation (
-  eid_from INTEGER NOT NULL REFERENCES entities (eid),
-  eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT works_for_relation_p_key PRIMARY KEY(eid_from, eid_to)
-);
-
-CREATE INDEX works_for_relation_from_idx ON works_for_relation(eid_from);
-CREATE INDEX works_for_relation_to_idx ON works_for_relation(eid_to);
 """
 
 class SQLSchemaTC(TestCase):
 
     def test_known_values(self):
         dbhelper = get_db_helper('postgres')
-        output = schema2sql.schema2sql(dbhelper, schema)
+        output = schema2sql.schema2sql(dbhelper, schema, skip_relations=('works_for',))
         self.assertMultiLineEqual(EXPECTED_DATA_NO_DROP.strip(), output.strip())
 
 

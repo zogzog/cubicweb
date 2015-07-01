@@ -1,7 +1,7 @@
-# copyright 2004-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2004-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
-# This file is part of yams.
+# This file is part of cubicweb.
 #
 # yams is free software: you can redistribute it and/or modify it under the
 # terms of the GNU Lesser General Public License as published by the Free
@@ -31,6 +31,10 @@ from yams.constraints import (SizeConstraint, UniqueConstraint, Attribute,
 # SET_DEFAULT to True
 SET_DEFAULT = False
 
+def rschema_has_table(rschema, skip_relations):
+    """Return True if the given schema should have a table in the database"""
+    return not (rschema.final or rschema.inlined or rschema.rule or rschema.type in skip_relations)
+
 
 def schema2sql(dbhelper, schema, skip_entities=(), skip_relations=(), prefix=''):
     """write to the output stream a SQL schema to store the objects
@@ -45,9 +49,8 @@ def schema2sql(dbhelper, schema, skip_entities=(), skip_relations=(), prefix='')
         w(eschema2sql(dbhelper, eschema, skip_relations, prefix=prefix))
     for rtype in sorted(schema.relations()):
         rschema = schema.rschema(rtype)
-        if rschema.final or rschema.inlined or rschema.rule:
-            continue
-        w(rschema2sql(rschema))
+        if rschema_has_table(rschema, skip_relations):
+            w(rschema2sql(rschema))
     return '\n'.join(output)
 
 
@@ -66,9 +69,8 @@ def dropschema2sql(dbhelper, schema, skip_entities=(), skip_relations=(), prefix
             w(stmt)
     for rtype in sorted(schema.relations()):
         rschema = schema.rschema(rtype)
-        if rschema.final or rschema.inlined:
-            continue
-        w(droprschema2sql(rschema))
+        if rschema_has_table(rschema, skip_relations):
+            w(droprschema2sql(rschema))
     return '\n'.join(output)
 
 
@@ -246,7 +248,7 @@ CREATE INDEX %(table)s_to_idx ON %(table)s(eid_to);"""
 def rschema2sql(rschema):
     assert not rschema.rule
     return _SQL_SCHEMA % {'table': '%s_relation' % rschema.type}
-    
+
 
 def droprschema2sql(rschema):
     """return sql to drop a relation type's table"""
@@ -268,9 +270,8 @@ def grant_schema(schema, user, set_owner=True, skip_entities=(), prefix=''):
         w(grant_eschema(eschema, user, set_owner, prefix=prefix))
     for rtype in sorted(schema.relations()):
         rschema = schema.rschema(rtype)
-        if rschema.final or rschema.inlined:
-            continue
-        w(grant_rschema(rschema, user, set_owner))
+        if rschema_has_table(rschema, skip_relations=()):  # XXX skip_relations should be specified
+            w(grant_rschema(rschema, user, set_owner))
     return '\n'.join(output)
 
 
