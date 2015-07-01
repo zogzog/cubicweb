@@ -232,15 +232,16 @@ class DataFeedSource(AbstractSource):
 
     def _pull_data(self, cnx, force=False, raise_on_error=False, import_log_eid=None):
         importlog = self.init_import_log(cnx, import_log_eid)
-        myuris = self.source_cwuris(cnx)
+        source_uris = self.source_uris(cnx)
         try:
-            parser = self._get_parser(cnx, sourceuris=myuris, import_log=importlog)
+            parser = self._get_parser(cnx, import_log=importlog,
+                                      source_uris=source_uris)
         except ObjectNotFound:
             return {}
         if parser.process_urls(self.urls, raise_on_error):
             self.warning("some error occurred, don't attempt to delete entities")
         else:
-            parser.handle_deletion(self.config, cnx, myuris)
+            parser.handle_deletion(self.config, cnx, source_uris)
         self.update_latest_retrieval(cnx)
         stats = parser.stats
         if stats.get('created'):
@@ -287,7 +288,7 @@ class DataFeedSource(AbstractSource):
                 call_hooks('after_add_relation', cnx,
                            eidfrom=entity.eid, rtype=attr, eidto=value)
 
-    def source_cwuris(self, cnx):
+    def source_uris(self, cnx):
         sql = ('SELECT extid, eid, type FROM entities, cw_source_relation '
                'WHERE entities.eid=cw_source_relation.eid_from '
                'AND cw_source_relation.eid_to=%s' % self.eid)
@@ -310,11 +311,13 @@ class DataFeedSource(AbstractSource):
 class DataFeedParser(AppObject):
     __registry__ = 'parsers'
 
-    def __init__(self, cnx, source, sourceuris=None, import_log=None, **kwargs):
+    def __init__(self, cnx, source, import_log=None, source_uris=None, **kwargs):
         super(DataFeedParser, self).__init__(cnx, **kwargs)
         self.source = source
-        self.sourceuris = sourceuris
         self.import_log = import_log
+        if source_uris is None:
+            source_uris = {}
+        self.source_uris = source_uris
         self.stats = {'created': set(), 'updated': set(), 'checked': set()}
 
     def normalize_url(self, url):
@@ -426,8 +429,8 @@ class DataFeedParser(AppObject):
                 return None
             self.notify_updated(entity)  # avoid later update from the source's data
             return entity
-        if self.sourceuris is not None:
-            self.sourceuris.pop(str(uri), None)
+        if self.source_uris is not None:
+            self.source_uris.pop(str(uri), None)
         return cnx.entity_from_eid(eid, etype)
 
     def process_urls(self, urls, raise_on_error=False):
@@ -484,10 +487,10 @@ class DataFeedParser(AppObject):
         """
         return True
 
-    def handle_deletion(self, config, cnx, myuris):
-        if config['delete-entities'] and myuris:
+    def handle_deletion(self, config, cnx, source_uris):
+        if config['delete-entities'] and source_uris:
             byetype = {}
-            for extid, (eid, etype) in myuris.items():
+            for extid, (eid, etype) in source_uris.items():
                 if self.is_deleted(extid, etype, eid):
                     byetype.setdefault(etype, []).append(str(eid))
             for etype, eids in byetype.items():

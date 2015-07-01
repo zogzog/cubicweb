@@ -107,7 +107,7 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(self.repo._extid_cache[b'http://www.cubicweb.org/'],
                                  entity.eid)
 
-                self.assertEqual(dfsource.source_cwuris(cnx),
+                self.assertEqual(dfsource.source_uris(cnx),
                                  {b'http://www.cubicweb.org/': (entity.eid, 'Card')})
                 self.assertTrue(dfsource.latest_retrieval)
                 self.assertTrue(dfsource.fresh())

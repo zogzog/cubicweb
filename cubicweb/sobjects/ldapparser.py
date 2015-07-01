@@ -184,10 +184,10 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 # not found, create it. first forge an external id
                 extuser.values.setdefault('use_email', []).append(emailextid)
                 yield importer.ExtEntity('EmailAddress', emailextid, dict(address=[emailaddr]))
-            elif self.sourceuris:
-                # pop from sourceuris anyway, else email may be removed by the
+            elif self.source_uris:
+                # pop from source_uris anyway, else email may be removed by the
                 # source once import is finished
-                self.sourceuris.pop(emailextid, None)
+                self.source_uris.pop(emailextid, None)
             # XXX else check use_email relation?
 
     def handle_deletion(self, config, cnx, myuris):
