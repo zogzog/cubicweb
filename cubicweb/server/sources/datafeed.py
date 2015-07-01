@@ -289,11 +289,9 @@ class DataFeedSource(AbstractSource):
                            eidfrom=entity.eid, rtype=attr, eidto=value)
 
     def source_uris(self, cnx):
-        sql = ('SELECT extid, eid, type FROM entities, cw_source_relation '
-               'WHERE entities.eid=cw_source_relation.eid_from '
-               'AND cw_source_relation.eid_to=%s' % self.eid)
+        sql = 'SELECT extid, eid, type FROM entities WHERE asource=%(source)s'
         return dict((self.decode_extid(uri), (eid, type))
-                    for uri, eid, type in cnx.system_sql(sql).fetchall())
+                    for uri, eid, type in cnx.system_sql(sql, {'source': self.uri}).fetchall())
 
     def init_import_log(self, cnx, import_log_eid=None, **kwargs):
         if import_log_eid is None:
