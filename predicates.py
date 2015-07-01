@@ -394,7 +394,7 @@ class ExpectedValuePredicate(Predicate):
     """
     def __init__(self, *expected, **kwargs):
         assert expected, self
-        if len(expected) == 1 and isinstance(expected[0], set):
+        if len(expected) == 1 and isinstance(expected[0], (set, dict)):
             self.expected = expected[0]
         else:
             self.expected = frozenset(expected)
@@ -409,7 +409,21 @@ class ExpectedValuePredicate(Predicate):
 
     def __call__(self, cls, req, **kwargs):
         values = self._values_set(cls, req, **kwargs)
-        matching = len(values & self.expected)
+        if isinstance(values, dict):
+            if isinstance(self.expected, dict):
+                matching = 0
+                for key, expected_value in self.expected.items():
+                    if key in values:
+                        if (isinstance(expected_value, (list, tuple, frozenset, set))
+                            and values[key] in expected_value):
+                            matching += 1
+                        elif values[key] == expected_value:
+                            matching += 1
+            if isinstance(self.expected, (set, frozenset)):
+                values = frozenset(values)
+                matching = len(values & self.expected)
+        else:
+            matching = len(values & self.expected)
         if self.once_is_enough:
             return matching
         if matching == len(self.expected):
@@ -438,7 +452,7 @@ class match_kwargs(ExpectedValuePredicate):
     """
 
     def _values_set(self, cls, req, **kwargs):
-        return frozenset(kwargs)
+        return kwargs
 
 
 class appobject_selectable(Predicate):
@@ -1435,8 +1449,23 @@ class match_form_params(ExpectedValuePredicate):
     in which case a single matching parameter is enough.
     """
 
+    def __init__(self, *expected, **kwargs):
+        """override default __init__ to allow either named or positional
+        parameters.
+        """
+        if kwargs and expected:
+            raise ValueError("match_form_params() can't be called with both "
+                             "positional and named arguments")
+        if expected:
+            if len(expected) == 1 and not isinstance(expected[0], basestring):
+                raise ValueError("match_form_params() positional arguments "
+                                 "must be strings")
+            super(match_form_params, self).__init__(*expected)
+        else:
+            super(match_form_params, self).__init__(kwargs)
+
     def _values_set(self, cls, req, **kwargs):
-        return frozenset(req.form)
+        return req.form
 
 
 class match_http_method(ExpectedValuePredicate):

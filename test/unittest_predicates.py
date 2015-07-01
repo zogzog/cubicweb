@@ -27,7 +27,7 @@ from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.predicates import (is_instance, adaptable, match_kwargs, match_user_groups,
                                 multi_lines_rset, score_entity, is_in_state,
-                                rql_condition, relation_possible)
+                                rql_condition, relation_possible, match_form_params)
 from cubicweb.selectors import on_transition # XXX on_transition is deprecated
 from cubicweb.view import EntityAdapter
 from cubicweb.web import action
@@ -390,6 +390,102 @@ class AdaptablePredicateTC(CubicWebTC):
                 selector = adaptable('IWhatever')
                 rset = req.execute('Any X WHERE X is IN(CWGroup, CWUser)')
                 self.assertTrue(selector(None, req, rset=rset))
+
+
+class MatchFormParamsTC(CubicWebTC):
+    """tests for match_form_params predicate"""
+
+    def test_keyonly_match(self):
+        """test standard usage: ``match_form_params('param1', 'param2')``
+
+        ``param1`` and ``param2`` must be specified in request's form.
+        """
+        web_request = self.admin_access.web_request
+        vid_selector = match_form_params('vid')
+        vid_subvid_selector = match_form_params('vid', 'subvid')
+        # no parameter => KO,KO
+        with web_request() as req:
+            self.assertEqual(vid_selector(None, req), 0)
+            self.assertEqual(vid_subvid_selector(None, req), 0)
+        # one expected parameter found => OK,KO
+        with web_request(vid='foo') as req:
+            self.assertEqual(vid_selector(None, req), 1)
+            self.assertEqual(vid_subvid_selector(None, req), 0)
+        # all expected parameters found => OK,OK
+        with web_request(vid='foo', subvid='bar') as req:
+            self.assertEqual(vid_selector(None, req), 1)
+            self.assertEqual(vid_subvid_selector(None, req), 2)
+
+    def test_keyvalue_match_one_parameter(self):
+        """test dict usage: ``match_form_params(param1=value1)``
+
+        ``param1`` must be specified in the request's form and its value
+        must be ``value1``.
+        """
+        web_request = self.admin_access.web_request
+        # test both positional and named parameters
+        vid_selector = match_form_params(vid='foo')
+        # no parameter => should fail
+        with web_request() as req:
+            self.assertEqual(vid_selector(None, req), 0)
+        # expected parameter found with expected value => OK
+        with web_request(vid='foo', subvid='bar') as req:
+            self.assertEqual(vid_selector(None, req), 1)
+        # expected parameter found but value is incorrect => KO
+        with web_request(vid='bar') as req:
+            self.assertEqual(vid_selector(None, req), 0)
+
+    def test_keyvalue_match_two_parameters(self):
+        """test dict usage: ``match_form_params(param1=value1, param2=value2)``
+
+        ``param1`` and ``param2`` must be specified in the request's form and
+        their respective value must be ``value1`` and ``value2``.
+        """
+        web_request = self.admin_access.web_request
+        vid_subvid_selector = match_form_params(vid='list', subvid='tsearch')
+        # missing one expected parameter => KO
+        with web_request(vid='list') as req:
+            self.assertEqual(vid_subvid_selector(None, req), 0)
+        # expected parameters found but values are incorrect => KO
+        with web_request(vid='list', subvid='foo') as req:
+            self.assertEqual(vid_subvid_selector(None, req), 0)
+        # expected parameters found and values are correct => OK
+        with web_request(vid='list', subvid='tsearch') as req:
+            self.assertEqual(vid_subvid_selector(None, req), 2)
+
+    def test_keyvalue_multiple_match(self):
+        """test dict usage with multiple values
+
+        i.e. as in ``match_form_params(param1=('value1', 'value2'))``
+
+        ``param1`` must be specified in the request's form and its value
+        must be either ``value1`` or ``value2``.
+        """
+        web_request = self.admin_access.web_request
+        vid_subvid_selector = match_form_params(vid='list', subvid=('tsearch', 'listitem'))
+        # expected parameters found and values correct => OK
+        with web_request(vid='list', subvid='tsearch') as req:
+            self.assertEqual(vid_subvid_selector(None, req), 2)
+        with web_request(vid='list', subvid='listitem') as req:
+            self.assertEqual(vid_subvid_selector(None, req), 2)
+        # expected parameters found but values are incorrect => OK
+        with web_request(vid='list', subvid='foo') as req:
+            self.assertEqual(vid_subvid_selector(None, req), 0)
+
+    def test_invalid_calls(self):
+        """checks invalid calls raise a ValueError"""
+        # mixing named and positional arguments should fail
+        with self.assertRaises(ValueError) as cm:
+            match_form_params('list', x='1', y='2')
+        self.assertEqual(str(cm.exception),
+                         "match_form_params() can't be called with both "
+                         "positional and named arguments")
+        # using a dict as first and unique argument should fail
+        with self.assertRaises(ValueError) as cm:
+            match_form_params({'x': 1})
+        self.assertEqual(str(cm.exception),
+                         "match_form_params() positional arguments must be strings")
+
 
 if __name__ == '__main__':
     unittest_main()
