@@ -1,4 +1,4 @@
-# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -83,7 +83,7 @@ def extract_typed_attrs(eschema, stringdict, converters=DEFAULT_CONVERTERS):
     typeddict = {}
     for rschema in eschema.subject_relations():
         if rschema.final and rschema in stringdict:
-            if rschema in ('eid', 'cwuri', 'cwtype', 'cwsource'):
+            if rschema in ('eid', 'cwuri'):  # XXX really omit cwuri?
                 continue
             attrtype = eschema.destination(rschema)
             value = stringdict[rschema]
@@ -197,6 +197,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         super(CWEntityXMLParser, self).process(url, raise_on_error)
 
     def parse_etree(self, parent):
+        """Overriden from :class:`DataFeedXMLParser` to use a builder component."""
         for node in list(parent):
             builder = self._cw.vreg['components'].select(
                 'cw.entityxml.item-builder', self._cw, node=node,
@@ -294,7 +295,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             itemurl = self.complete_url(item['cwuri'], item['cwtype'], rels)
             item_rels = list(self.parse(itemurl))
             assert len(item_rels) == 1, 'url %s expected to bring back one '\
-                   'and only one entity, got %s' % (itemurl, len(item_rels))
+                'and only one entity, got %s' % (itemurl, len(item_rels))
             self._parsed_urls[item['cwuri']] = item_rels[0]
             if rels:
                 # XXX (do it better) merge relations
@@ -323,12 +324,7 @@ class CWEntityXMLItemBuilder(Component):
         item = dict(node.attrib.items())
         item['cwtype'] = text_type(node.tag)
         item.setdefault('cwsource', None)
-        try:
-            item['eid'] = int(item['eid'])
-        except KeyError:
-            # cw < 3.11 compat mode XXX
-            item['eid'] = int(node.find('eid').text)
-            item['cwuri'] = node.find('cwuri').text
+        item['eid'] = int(item['eid'])
         rels = {}
         for child in node:
             role = child.get('role')
@@ -418,7 +414,7 @@ class CWEntityXMLActionLink(CWEntityXMLActionCopy):
     __regid__ = 'cw.entityxml.action.link'
 
     def check_options(self, options, eid):
-        if not 'linkattr' in options:
+        if 'linkattr' not in options:
             msg = self._cw._("'%s' action requires 'linkattr' option") % self.action
             raise ValidationError(eid, {rn('options', 'subject'): msg})
 
@@ -477,8 +473,9 @@ class CWEntityXMLActionLinkInState(CWEntityXMLActionLink):
 
     def check_options(self, options, eid):
         super(CWEntityXMLActionLinkInState, self).check_options(options, eid)
-        if not 'name' in options['linkattr']:
-            msg = self._cw._("'%s' action for in_state relation should at least have 'linkattr=name' option") % self.action
+        if 'name' not in options['linkattr']:
+            msg = self._cw._("'%s' action for in_state relation should at least "
+                             "have 'linkattr=name' option") % self.action
             raise ValidationError(eid, {rn('options', 'subject'): msg})
 
     def _find_entities(self, item, kwargs):
