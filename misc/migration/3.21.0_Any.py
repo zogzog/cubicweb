@@ -62,19 +62,21 @@ def add_foreign_key_etype(eschema):
 
 add_foreign_keys()
 
+cu = session.cnxset.cu
 helper = repo.system_source.dbhelper
-sql('DROP INDEX entities_extid_idx')
-sql(helper.sql_create_index('entities', 'extid', True))
 
-sql('''
-CREATE TABLE moved_entities (
-  eid INTEGER PRIMARY KEY NOT NULL,
-  extid VARCHAR(256) UNIQUE
-)
-''')
+helper.drop_index(cu, 'entities', 'extid', False)
+helper.create_index(cu, 'entities', 'extid', True)
+
+if 'moved_entities' not in helper.list_tables(cu):
+    sql('''
+    CREATE TABLE moved_entities (
+      eid INTEGER PRIMARY KEY NOT NULL,
+      extid VARCHAR(256) UNIQUE
+    )
+    ''')
 
 moved_entities = sql('SELECT -eid, extid FROM entities WHERE eid < 0')
-cu = session.cnxset.cu
 cu.executemany('INSERT INTO moved_entities (eid, extid) VALUES (%s, %s)',
                moved_entities)
 sql('DELETE FROM entities WHERE eid < 0')
