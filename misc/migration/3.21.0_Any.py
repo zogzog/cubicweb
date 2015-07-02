@@ -1,3 +1,66 @@
+from cubicweb.schema import PURE_VIRTUAL_RTYPES
+from cubicweb.server.schema2sql import rschema_has_table
+
+
+def add_foreign_keys():
+    source = repo.sources_by_uri['system']
+    if not source.dbhelper.alter_column_support:
+        return
+    for rschema in schema.relations():
+        if rschema.inlined:
+            add_foreign_keys_inlined(rschema)
+        elif rschema_has_table(rschema, skip_relations=PURE_VIRTUAL_RTYPES):
+            add_foreign_keys_relation(rschema)
+    for eschema in schema.entities():
+        if eschema.final:
+            continue
+        add_foreign_key_etype(eschema)
+
+
+def add_foreign_keys_relation(rschema):
+    args = {'r': rschema.type}
+    count = sql('SELECT COUNT(*) FROM %(r)s_relation '
+                'WHERE eid_from NOT IN (SELECT eid FROM entities) '
+                'OR    eid_to   NOT IN (SELECT eid FROM entities)' % args)[0][0]
+    if count:
+        print '%s references %d unknown entities, deleting' % (rschema, count)
+        sql('DELETE FROM %(r)s_relation '
+            'WHERE eid_from NOT IN (SELECT eid FROM entities) '
+            'OR    eid_to   NOT IN (SELECT eid FROM entities)' % args)
+
+    # XXX drop if exists?
+    sql('ALTER TABLE %(r)s_relation ADD CONSTRAINT %(r)s_relation_eid_from_fkey '
+        'FOREIGN KEY (eid_from) REFERENCES entities (eid)' % args)
+    sql('ALTER TABLE %(r)s_relation ADD CONSTRAINT %(r)s_relation_eid_to_fkey '
+        'FOREIGN KEY (eid_to) REFERENCES entities (eid)' % args)
+
+
+def add_foreign_keys_inlined(rschema):
+    for eschema in rschema.subjects():
+        args = {'e': eschema.type, 'r': rschema.type}
+        args['c'] = 'cw_%(e)s_cw_%(r)s_fkey' % args
+        if sql('SELECT COUNT(*) FROM cw_%(e)s WHERE '
+               'cw_%(r)s NOT IN (SELECT eid FROM entities)' % args)[0][0]:
+            if eschema.rdef(rschema).cardinality[0] == '1':
+                assert not '%(e)s.%(r)s references unknown entities, fix manually'
+            print '%(e)s.%(r)s references unknown entities, deleting'
+            sql('UPDATE cw_%(e)s SET cw_%(r)s = NULL WHERE '
+                'cw_%(r)s NOT IN (SELECT eid FROM entities)' % args)
+
+        # XXX if exists?
+        #sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT %(c)s' % args)
+        sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s '
+            'FOREIGN KEY (cw_%(r)s) references entities(eid)'
+            % args)
+
+
+def add_foreign_key_etype(eschema):
+    args = {'e': eschema.type}
+    sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT cw_%(e)s_cw_eid_fkey '
+        'FOREIGN KEY (cw_eid) REFERENCES entities (eid)' % args)
+
+
+add_foreign_keys()
 
 helper = repo.system_source.dbhelper
 sql('DROP INDEX entities_extid_idx')
