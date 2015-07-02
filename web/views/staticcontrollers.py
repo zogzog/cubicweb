@@ -188,7 +188,6 @@ class DataController(StaticFileController):
     def __init__(self, *args, **kwargs):
         super(DataController, self).__init__(*args, **kwargs)
         config = self._cw.vreg.config
-        md5_version = config.instance_md5_version()
         self.base_datapath = config.data_relpath()
         self.data_modconcat_basepath = '%s??' % self.base_datapath
         self.concat_files_registry = ConcatFilesHandler(config)
