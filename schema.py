@@ -38,8 +38,7 @@ from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema, \
 from yams.constraints import (BaseConstraint, FormatConstraint, BoundaryConstraint,
                               IntervalBoundConstraint, StaticVocabularyConstraint)
 from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
-                         obsolete as yobsolete, cleanup_sys_modules,
-                         fill_schema_from_namespace)
+                         cleanup_sys_modules, fill_schema_from_namespace)
 
 from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 from rql.analyze import ETypeResolver
@@ -1403,13 +1402,6 @@ def vocabulary(self, entity=None, form=None):
             return self.regular_formats + tuple(NEED_PERM_FORMATS)
     return self.regular_formats
 
-# XXX monkey patch PyFileReader.import_erschema until bw_normalize_etype is
-# necessary
-orig_import_erschema = PyFileReader.import_erschema
-def bw_import_erschema(self, ertype, schemamod=None, instantiate=True):
-    return orig_import_erschema(self, bw_normalize_etype(ertype), schemamod, instantiate)
-PyFileReader.import_erschema = bw_import_erschema
-
 # XXX itou for some Statement methods
 from rql import stmts
 orig_get_etype = stmts.ScopeNode.get_etype
@@ -1431,16 +1423,3 @@ orig_set_statement_type = stmts.Select.set_statement_type
 def bw_set_statement_type(self, etype):
     return orig_set_statement_type(self, bw_normalize_etype(etype))
 stmts.Select.set_statement_type = bw_set_statement_type
-
-# XXX deprecated
-
-from yams.constraints import StaticVocabularyConstraint
-
-RichString = moved('yams.buildobjs', 'RichString')
-
-StaticVocabularyConstraint = class_moved(StaticVocabularyConstraint)
-FormatConstraint = class_moved(FormatConstraint)
-
-PyFileReader.context['ERQLExpression'] = yobsolete(ERQLExpression)
-PyFileReader.context['RRQLExpression'] = yobsolete(RRQLExpression)
-PyFileReader.context['WorkflowableEntityType'] = WorkflowableEntityType

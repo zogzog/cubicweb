@@ -21,8 +21,7 @@ To reuse an existing cube, add it to the list named
 ``__depends_cubes__`` which is defined in :file:`__pkginfo__.py`.
 This variable is used for the instance packaging (dependencies handled
 by system utility tools such as APT) and to find used cubes when the
-database for the instance is created (import_erschema('MyCube') will
-not properly work otherwise).
+database for the instance is created.
 
 On a Unix system, the available cubes are usually stored in the
 directory :file:`/usr/share/cubicweb/cubes`. If you are using the
