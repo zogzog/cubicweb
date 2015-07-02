@@ -28,7 +28,8 @@ def add_foreign_keys_relation(rschema):
             'WHERE eid_from NOT IN (SELECT eid FROM entities) '
             'OR    eid_to   NOT IN (SELECT eid FROM entities)' % args)
 
-    # XXX drop if exists?
+    sql('ALTER TABLE %(r)s_relation DROP CONSTRAINT IF EXISTS %(r)s_relation_eid_from_fkey' % args)
+    sql('ALTER TABLE %(r)s_relation DROP CONSTRAINT IF EXISTS %(r)s_relation_eid_to_fkey' % args)
     sql('ALTER TABLE %(r)s_relation ADD CONSTRAINT %(r)s_relation_eid_from_fkey '
         'FOREIGN KEY (eid_from) REFERENCES entities (eid)' % args)
     sql('ALTER TABLE %(r)s_relation ADD CONSTRAINT %(r)s_relation_eid_to_fkey '
@@ -47,8 +48,7 @@ def add_foreign_keys_inlined(rschema):
             sql('UPDATE cw_%(e)s SET cw_%(r)s = NULL WHERE '
                 'cw_%(r)s NOT IN (SELECT eid FROM entities)' % args)
 
-        # XXX if exists?
-        #sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT %(c)s' % args)
+        sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS %(c)s' % args)
         sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s '
             'FOREIGN KEY (cw_%(r)s) references entities(eid)'
             % args)
@@ -56,6 +56,7 @@ def add_foreign_keys_inlined(rschema):
 
 def add_foreign_key_etype(eschema):
     args = {'e': eschema.type}
+    sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS cw_%(e)s_cw_eid_fkey' % args)
     sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT cw_%(e)s_cw_eid_fkey '
         'FOREIGN KEY (cw_eid) REFERENCES entities (eid)' % args)
 
@@ -97,5 +98,6 @@ for cwconstraint in rql('Any C WHERE R constrained_by C').entities():
         continue
     cstrname, check = check_constraint(rdef.subject, rdef.object, rdef.rtype.type,
             cstr, helper, prefix='cw_')
+    sql('ALTER TABLE %s%s DROP CONSTRAINT IF EXISTS %s' % ('cw_', rdef.subject.type, cstrname))
     sql('ALTER TABLE %s%s ADD CONSTRAINT %s CHECK(%s)' % ('cw_', rdef.subject.type, cstrname, check))
 commit()
