@@ -1507,9 +1507,9 @@ Any P1,B,E WHERE P1 identity P2 WITH
     def test_nonregr_has_text_cache(self):
         eid1 = self.qexecute("INSERT Personne X: X nom 'bidule'")[0][0]
         eid2 = self.qexecute("INSERT Personne X: X nom 'tag'")[0][0]
-        rset = self.qexecute("Any X WHERE X has_text %(text)s", {'text': 'bidule'})
+        rset = self.qexecute("Any X WHERE X has_text %(text)s", {'text': u'bidule'})
         self.assertEqual(rset.rows, [[eid1]])
-        rset = self.qexecute("Any X WHERE X has_text %(text)s", {'text': 'tag'})
+        rset = self.qexecute("Any X WHERE X has_text %(text)s", {'text': u'tag'})
         self.assertEqual(rset.rows, [[eid2]])
 
     def test_nonregr_sortterm_management(self):
@@ -1620,9 +1620,9 @@ class NonRegressionTC(CubicWebTC):
             aff2 = cnx.create_entity('Societe', nom=u'aff2')
             cnx.commit()
         with self.new_access('user').repo_cnx() as cnx:
-            res = cnx.execute('Any X WHERE X has_text %(text)s', {'text': 'aff1'})
+            res = cnx.execute('Any X WHERE X has_text %(text)s', {'text': u'aff1'})
             self.assertEqual(res.rows, [[aff1.eid]])
-            res = cnx.execute('Any X WHERE X has_text %(text)s', {'text': 'aff2'})
+            res = cnx.execute('Any X WHERE X has_text %(text)s', {'text': u'aff2'})
             self.assertEqual(res.rows, [[aff2.eid]])
 
     def test_set_relations_eid(self):
