@@ -472,6 +472,10 @@ class Connection(RequestSessionBase):
     def ensure_cnx_set(self):
         yield
 
+    @property
+    def anonymous_connection(self):
+        return self.session.anonymous_session
+
     # Entity cache management #################################################
     #
     # The connection entity cache as held in cnx.transaction_data is removed at the
