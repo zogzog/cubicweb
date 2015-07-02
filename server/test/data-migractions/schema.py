@@ -162,22 +162,6 @@ class Old(EntityType):
     })
 
 
-class Email(EntityType):
-    subject = String(fulltextindexed=True)
-    messageid = String(required=True, indexed=True, unique=True)
-    sender = SubjectRelation('EmailAddress', cardinality='?*')
-    recipients = SubjectRelation('EmailAddress')
-    attachment = SubjectRelation('File')
-
-
-class EmailPart(EntityType):
-    pass
-
-
-class EmailThread(EntityType):
-    see_also = SubjectRelation('EmailThread')
-
-
 class connait(RelationType):
     symmetric = True
 

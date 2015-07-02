@@ -500,7 +500,6 @@ class DBInitTC(CubicWebTC):
                               u'system.version.card',
                               u'system.version.comment',
                               u'system.version.cubicweb',
-                              u'system.version.email',
                               u'system.version.file',
                               u'system.version.localperms',
                               u'system.version.tag'])

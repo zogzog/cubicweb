@@ -18,7 +18,7 @@
 """unit tests for module cubicweb.server.migractions"""
 
 from datetime import date
-import os.path as osp
+import os, os.path as osp
 from contextlib import contextmanager
 
 from logilab.common.testlib import unittest_main, Tags, tag
@@ -54,9 +54,12 @@ def tearDownModule(*args):
 
 class MigrationConfig(cubicweb.devtools.TestServerConfiguration):
     default_sources = cubicweb.devtools.DEFAULT_PSQL_SOURCES
+    CUBES_PATH = [osp.join(HERE, 'data-migractions', 'cubes')]
 
 
 class MigrationTC(CubicWebTC):
+
+    appid = 'data-migractions'
 
     configcls = MigrationConfig
 
@@ -76,10 +79,11 @@ class MigrationTC(CubicWebTC):
         config._apphome = osp.join(HERE, self.appid)
 
     def setUp(self):
-        CubicWebTC.setUp(self)
+        self.configcls.cls_adjust_sys_path()
+        super(MigrationTC, self).setUp()
 
     def tearDown(self):
-        CubicWebTC.tearDown(self)
+        super(MigrationTC, self).tearDown()
         self.repo.vreg['etypes'].clear_caches()
 
     @contextmanager
@@ -577,15 +581,15 @@ class MigrationCommandsTC(MigrationTC):
                                      ('Bookmark', 'Bookmark'), ('Bookmark', 'Note'),
                                      ('Note', 'Note'), ('Note', 'Bookmark')]))
             try:
-                mh.cmd_drop_cube('email', removedeps=True)
+                mh.cmd_drop_cube('fakeemail', removedeps=True)
                 # file was there because it's an email dependancy, should have been removed
-                self.assertNotIn('email', self.config.cubes())
-                self.assertNotIn(self.config.cube_dir('email'), self.config.cubes_path())
+                self.assertNotIn('fakeemail', self.config.cubes())
+                self.assertNotIn(self.config.cube_dir('fakeemail'), self.config.cubes_path())
                 self.assertNotIn('file', self.config.cubes())
                 self.assertNotIn(self.config.cube_dir('file'), self.config.cubes_path())
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
-                    self.assertFalse(ertype in schema, ertype)
+                    self.assertNotIn(ertype, schema)
                 self.assertEqual(sorted(schema['see_also'].rdefs.iterkeys()),
                                   sorted([('Folder', 'Folder'),
                                           ('Bookmark', 'Bookmark'),
@@ -594,17 +598,17 @@ class MigrationCommandsTC(MigrationTC):
                                           ('Note', 'Bookmark')]))
                 self.assertEqual(sorted(schema['see_also'].subjects()), ['Bookmark', 'Folder', 'Note'])
                 self.assertEqual(sorted(schema['see_also'].objects()), ['Bookmark', 'Folder', 'Note'])
-                self.assertEqual(cnx.execute('Any X WHERE X pkey "system.version.email"').rowcount, 0)
+                self.assertEqual(cnx.execute('Any X WHERE X pkey "system.version.fakeemail"').rowcount, 0)
                 self.assertEqual(cnx.execute('Any X WHERE X pkey "system.version.file"').rowcount, 0)
             finally:
-                mh.cmd_add_cube('email')
-                self.assertIn('email', self.config.cubes())
-                self.assertIn(self.config.cube_dir('email'), self.config.cubes_path())
+                mh.cmd_add_cube('fakeemail')
+                self.assertIn('fakeemail', self.config.cubes())
+                self.assertIn(self.config.cube_dir('fakeemail'), self.config.cubes_path())
                 self.assertIn('file', self.config.cubes())
                 self.assertIn(self.config.cube_dir('file'), self.config.cubes_path())
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
-                    self.assertTrue(ertype in schema, ertype)
+                    self.assertIn(ertype, schema)
                 self.assertEqual(sorted(schema['see_also'].rdefs.iterkeys()),
                                   sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                           ('Bookmark', 'Bookmark'),
@@ -613,9 +617,9 @@ class MigrationCommandsTC(MigrationTC):
                                           ('Note', 'Bookmark')]))
                 self.assertEqual(sorted(schema['see_also'].subjects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
                 self.assertEqual(sorted(schema['see_also'].objects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
-                from cubes.email.__pkginfo__ import version as email_version
+                from cubes.fakeemail.__pkginfo__ import version as email_version
                 from cubes.file.__pkginfo__ import version as file_version
-                self.assertEqual(cnx.execute('Any V WHERE X value V, X pkey "system.version.email"')[0][0],
+                self.assertEqual(cnx.execute('Any V WHERE X value V, X pkey "system.version.fakeemail"')[0][0],
                                   email_version)
                 self.assertEqual(cnx.execute('Any V WHERE X value V, X pkey "system.version.file"')[0][0],
                                   file_version)
@@ -633,16 +637,16 @@ class MigrationCommandsTC(MigrationTC):
             cubes = set(self.config.cubes())
             schema = self.repo.schema
             try:
-                mh.cmd_drop_cube('email')
-                cubes.remove('email')
-                self.assertNotIn('email', self.config.cubes())
+                mh.cmd_drop_cube('fakeemail')
+                cubes.remove('fakeemail')
+                self.assertNotIn('fakeemail', self.config.cubes())
                 self.assertIn('file', self.config.cubes())
                 for ertype in ('Email', 'EmailThread', 'EmailPart',
                                'sender', 'in_thread', 'reply_to'):
-                    self.assertFalse(ertype in schema, ertype)
+                    self.assertNotIn(ertype, schema)
             finally:
-                mh.cmd_add_cube('email')
-                self.assertIn('email', self.config.cubes())
+                mh.cmd_add_cube('fakeemail')
+                self.assertIn('fakeemail', self.config.cubes())
                 # trick: overwrite self.maxeid to avoid deletion of just reintroduced
                 #        types (and their associated tables!)
                 self.maxeid = cnx.execute('Any MAX(X)')[0][0] # XXXXXXX KILL KENNY
