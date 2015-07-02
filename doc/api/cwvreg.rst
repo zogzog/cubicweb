@@ -33,6 +33,6 @@
         :show-inheritance:
         :members:
 
-    .. autoclass:: CWRegistryStore:
+    .. autoclass:: CWRegistryStore
         :show-inheritance:
         :members:

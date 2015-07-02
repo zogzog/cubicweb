@@ -150,6 +150,7 @@ methods that are quite useful in day-to-day practice:
 
 .. autoclass:: cubicweb.rset.ResultSet
    :members:
+   :noindex:
 
 
 Authentication and management of sessions

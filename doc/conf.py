@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -69,7 +69,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'CubicWeb'
-copyright = '2001-2014, Logilab'
+copyright = '2001-2015, Logilab'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -88,9 +88,11 @@ today_fmt = '%B %d, %Y'
 # List of documents that shouldn't be included in the build.
 unused_docs = []
 
-# List of directories, relative to source directories, that shouldn't be searched
-# for source files.
-#exclude_dirs = []
+# A list of glob-style patterns that should be excluded when looking
+# for source files. [1] They are matched against the source file names
+# relative to the source directory, using slashes as directory
+# separators on all platforms.
+exclude_patterns = ['book/_maybe_to_integrate']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None

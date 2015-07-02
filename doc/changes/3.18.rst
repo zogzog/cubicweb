@@ -20,10 +20,10 @@ New functionalities
   `set_fields_order` method similar to the one available for forms
 
 * new method `ResultSet.one(col=0)` to retrive a single entity and enforce the
-  result has only one row (see `#3352314 https://www.cubicweb.org/ticket/3352314`_)
+  result has only one row (see `#3352314 <https://www.cubicweb.org/ticket/3352314>`_)
 
 * new method `RequestSessionBase.find` to look for entities
-  (see `#3361290 https://www.cubicweb.org/ticket/3361290`_)
+  (see `#3361290 <https://www.cubicweb.org/ticket/3361290>`_)
 
 * the embedded jQuery copy has been updated to version 1.10.2, and jQuery UI to
   version 1.10.3.
@@ -79,10 +79,10 @@ Deprecation
 * the old multi-source system
 
 * `find_one_entity` and `find_entities` in favor of `find`
-  (see `#3361290 https://www.cubicweb.org/ticket/3361290`_)
+  (see `#3361290 <https://www.cubicweb.org/ticket/3361290>`_)
 
-* the `TmpFileViewMixin` and `TmpPngView` classes (see `#3400448
-  https://www.cubicweb.org/ticket/3400448`_)
+* the `TmpFileViewMixin` and `TmpPngView` classes (see
+  `#3400448 <https://www.cubicweb.org/ticket/3400448>`_)
 
 Deprecated Code Drops
 ----------------------

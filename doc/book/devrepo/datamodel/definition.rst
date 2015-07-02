@@ -90,7 +90,7 @@ type.
 
 There is also a `RichString` kindof type:
 
- .. autoclass:: yams.buildobjs.RichString
+.. autofunction:: yams.buildobjs.RichString
 
 The ``__unique_together__`` class attribute is a list of tuples of names of
 attributes or inlined relations.  For each tuple, CubicWeb ensures the unicity

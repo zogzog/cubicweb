@@ -76,6 +76,7 @@ A.k.a. "The Book"
    book/additionnal_services/index
    book/annexes/index
 
+
 Tutorial
 ~~~~~~~~
 
@@ -94,6 +95,16 @@ migration scripts.
    tutorials/advanced/index
    tutorials/tools/windmill.rst
    tutorials/textreports/index
+   tutorials/dataimport/index
+
+
+Changes
+~~~~~~~
+
+.. toctree::
+   :maxdepth: 2
+
+   changes/index
 
 
 Reference documentation

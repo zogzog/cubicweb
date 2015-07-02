@@ -158,7 +158,7 @@ User interface changes
 
 
 Configuration
-------------
+-------------
 
 * Added option 'resources-concat' to make javascript/css files concatenation
   optional.

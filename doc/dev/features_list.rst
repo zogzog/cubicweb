@@ -87,7 +87,7 @@ Core development
 | vregistry - debugging selection                                    | 2  | 1  |
 +--------------------------------------------------------------------+----+----+
 | entities - interfaces                                              | 2  | ?  |
-| entities - customization (dc_,...)                                 | 2  | ?  |
+| entities - customization (`dc_`, ...)                              | 2  | ?  |
 | entities - app logic                                               | 2  | 2  |
 | entities - orm configuration                                       | 2  | 1  |
 | entities - pluggable mixins                                        | 1  | 0  |

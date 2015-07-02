@@ -137,10 +137,6 @@ interface of your instance by adding a user with in the group `guests`.
     to anonymous user, which will automatically execute what is
     decribed above.
 
-How to load data from a python script ?
----------------------------------------
-Please, refer to :ref:`UsingPyro`.
-
 
 How to format an entity date attribute ?
 ----------------------------------------

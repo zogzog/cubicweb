@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """
-.. _appobject:
 
 The `AppObject` class
 ---------------------
@@ -27,7 +26,6 @@ The AppObject class is the base class for all dynamically loaded objects
 We can find a certain number of attributes and methods defined in this class and
 common to all the application objects.
 
-.. autoclass:: AppObject
 """
 __docformat__ = "restructuredtext en"
 

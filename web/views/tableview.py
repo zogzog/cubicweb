@@ -992,8 +992,10 @@ class TableView(AnyRsetView):
 
     @cachedproperty
     def initial_load(self):
-        """We detect a bit heuristically if we are built for the first time of
-        from subsequent calls by the form filter or by the pagination hooks
+        """We detect a bit heuristically if we are built for the first time or
+        from subsequent calls by the form filter or by the pagination
+        hooks.
+
         """
         form = self._cw.form
         return 'fromformfilter' not in form and '__start' not in form

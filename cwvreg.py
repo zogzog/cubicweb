@@ -41,7 +41,6 @@ The `RegistryStore` has two main responsibilities:
 - handling the registration process at startup time, and during automatic
   reloading in debug mode.
 
-.. _AppObjectRecording:
 
 Details of the recording process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,9 +79,13 @@ to register your objects to the `RegistryStore` instance given as argument (usua
 named `vreg`):
 
 .. automethod:: cubicweb.cwvreg.CWRegistryStore.register_all
+   :noindex:
 .. automethod:: cubicweb.cwvreg.CWRegistryStore.register_and_replace
+   :noindex:
 .. automethod:: cubicweb.cwvreg.CWRegistryStore.register
+   :noindex:
 .. automethod:: cubicweb.cwvreg.CWRegistryStore.unregister
+   :noindex:
 
 Examples:
 
@@ -122,7 +125,6 @@ implementation. The previous example will register it though, thanks to the call
 to the `register_all` method.
 
 
-.. _Selection:
 
 Runtime objects selection
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -171,7 +173,6 @@ Other primary views specific to other entity types won't be selectable in this
 case. Among selectable objects, the `is_instance('Card')` selector will return a higher
 score since it's more specific, so the correct view will be selected as expected.
 
-.. _SelectionAPI:
 
 API for objects selections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -182,12 +183,16 @@ Here is the selection API you'll get on every registry. Some of them, as the
 selectors that will inspect their content and return a score accordingly.
 
 .. automethod:: cubicweb.vregistry.Registry.select
+   :noindex:
 
 .. automethod:: cubicweb.vregistry.Registry.select_or_none
+   :noindex:
 
 .. automethod:: cubicweb.vregistry.Registry.possible_objects
+   :noindex:
 
 .. automethod:: cubicweb.vregistry.Registry.object_by_id
+   :noindex:
 """
 
 __docformat__ = "restructuredtext en"
@@ -269,7 +274,7 @@ class InstancesRegistry(CWRegistry):
 
     def selected(self, winner, args, kwargs):
         """overriden to avoid the default 'instanciation' behaviour, ie
-        winner(*args, **kwargs)
+        `winner(*args, **kwargs)`
         """
         return winner
 

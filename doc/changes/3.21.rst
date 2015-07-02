@@ -45,12 +45,12 @@ API changes
   cubicweb.devtools.{start,stop}pgcluster in setUpModule and tearDownModule
 
 * the Connection and ClientConnection objects introduced in CubicWeb 3.19 have
-  been unified.  To connect to a repository, use:
+  been unified.  To connect to a repository, use::
 
-  session = repo.new_session(login, password=...)
-  with session.new_cnx() as cnx:
-      cnx.execute(...)
-
+    session = repo.new_session(login, password=...)
+    with session.new_cnx() as cnx:
+        cnx.execute(...)
+  
   In tests, the 'repo_cnx' and 'client_cnx' methods of RepoAccess are now
   aliases to 'cnx'.
 

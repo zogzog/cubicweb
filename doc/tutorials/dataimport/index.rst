@@ -298,7 +298,7 @@ Each such store provides three methods for data import:
        This only works for entities defined via the stores in the CubicWeb's
        ``dataimport`` module.
 
-    The keyword argument that is understood by ``SQLGenObjectStore`` is called 
+   The keyword argument that is understood by ``SQLGenObjectStore`` is called 
    ``subjtype`` and holds the type of the subject entity. For the example considered here,
    this comes to having [#]_::
 
