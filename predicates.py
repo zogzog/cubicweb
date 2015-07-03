@@ -1299,6 +1299,7 @@ def no_cnx(cls, req, **kwargs):
         return 1
     return 0
 
+
 @objectify_predicate
 def authenticated_user(cls, req, **kwargs):
     """Return 1 if the user is authenticated (i.e. not the anonymous user).
@@ -1310,13 +1311,16 @@ def authenticated_user(cls, req, **kwargs):
     return 1
 
 
-# XXX == ~ authenticated_user()
-def anonymous_user():
+@objectify_predicate
+def anonymous_user(cls, req, **kwargs):
     """Return 1 if the user is not authenticated (i.e. is the anonymous user).
 
     May only be used on the web side, not on the data repository side.
     """
-    return ~ authenticated_user()
+    if req.session.anonymous_session:
+        return 1
+    return 0
+
 
 class match_user_groups(ExpectedValuePredicate):
     """Return a non-zero score if request's user is in at least one of the
