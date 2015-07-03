@@ -63,15 +63,15 @@ class PropertySheet(dict):
                 if not isinstance(self[name], type):
                     msg = "Configuration error: %s.%s should be a %s" % (fpath, name, type)
                     raise Exception(msg)
-        self._propfile_mtime[fpath] = os.stat(fpath)[-2]
+        self._propfile_mtime[fpath] = os.stat(fpath).st_mtime
         self._ordered_propfiles.append(fpath)
 
     def need_reload(self):
         for rid, (adirectory, rdirectory, mtime) in self._cache.items():
-            if os.stat(osp.join(rdirectory, rid))[-2] > mtime:
+            if os.stat(osp.join(rdirectory, rid)).st_mtime > mtime:
                 del self._cache[rid]
         for fpath, mtime in self._propfile_mtime.iteritems():
-            if os.stat(fpath)[-2] > mtime:
+            if os.stat(fpath).st_mtime > mtime:
                 return True
         return False
 
@@ -109,7 +109,7 @@ class PropertySheet(dict):
                 stream.write(content)
                 stream.close()
                 adirectory = self._cache_directory
-            self._cache[rid] = (adirectory, rdirectory, os.stat(sourcefile)[-2])
+            self._cache[rid] = (adirectory, rdirectory, os.stat(sourcefile).st_mtime)
             return adirectory
 
     def compile(self, content):
