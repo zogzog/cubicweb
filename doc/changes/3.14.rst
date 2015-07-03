@@ -1,5 +1,5 @@
-Whats new in CubicWeb 3.14
-==========================
+3.14 (09/11/2011)
+=================
 
 First notice CW 3.14 depends on yams 0.34 (which is incompatible with prior
 cubicweb releases regarding instance re-creation).

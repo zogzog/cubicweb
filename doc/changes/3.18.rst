@@ -1,5 +1,5 @@
-What's new in CubicWeb 3.18?
-============================
+3.18 (10/01/2014)
+=================
 
 The migration script does not handle sqlite nor mysql instances.
 
