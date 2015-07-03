@@ -64,6 +64,11 @@ A.k.a. "The Book"
    book/intro/index
 
 .. toctree::
+   :maxdepth: 2
+
+   tutorials/index
+   
+.. toctree::
    :maxdepth: 3
 
    book/devrepo/index
@@ -76,26 +81,6 @@ A.k.a. "The Book"
    book/additionnal_services/index
    book/annexes/index
 
-
-Tutorial
-~~~~~~~~
-
-We present two tutorials of different levels. The blog building
-tutorial introduces one smoothly to the basic concepts.
-
-Then there is a photo gallery construction tutorial which highlights
-more advanced concepts such as unit tests, security settings,
-migration scripts.
-
-.. toctree::
-   :maxdepth: 1
-   :numbered:
-
-   tutorials/base/index
-   tutorials/advanced/index
-   tutorials/tools/windmill.rst
-   tutorials/textreports/index
-   tutorials/dataimport/index
 
 
 Changes
