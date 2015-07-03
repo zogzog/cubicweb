@@ -1292,8 +1292,6 @@ class match_transition(ExpectedValuePredicate):
 def no_cnx(cls, req, **kwargs):
     """Return 1 if the web session has no connection set. This occurs when
     anonymous access is not allowed and user isn't authenticated.
-
-    May only be used on the web side, not on the data repository side.
     """
     if not req.cnx:
         return 1
@@ -1303,8 +1301,6 @@ def no_cnx(cls, req, **kwargs):
 @objectify_predicate
 def authenticated_user(cls, req, **kwargs):
     """Return 1 if the user is authenticated (i.e. not the anonymous user).
-
-    May only be used on the web side, not on the data repository side.
     """
     if req.session.anonymous_session:
         return 0
@@ -1314,8 +1310,6 @@ def authenticated_user(cls, req, **kwargs):
 @objectify_predicate
 def anonymous_user(cls, req, **kwargs):
     """Return 1 if the user is not authenticated (i.e. is the anonymous user).
-
-    May only be used on the web side, not on the data repository side.
     """
     if req.session.anonymous_session:
         return 1
