@@ -15,184 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-""".. RegistryStore:
-
-The `RegistryStore`
--------------------
-
-The `RegistryStore` can be seen as a two-level dictionary. It contains
-all dynamically loaded objects (subclasses of :ref:`appobject`) to
-build a |cubicweb| application. Basically:
-
-* the first level key returns a *registry*. This key corresponds to the
-  `__registry__` attribute of application object classes
-
-* the second level key returns a list of application objects which
-  share the same identifier. This key corresponds to the `__regid__`
-  attribute of application object classes.
-
-A *registry* holds a specific kind of application objects. There is
-for instance a registry for entity classes, another for views, etc...
-
-The `RegistryStore` has two main responsibilities:
-
-- being the access point to all registries
-
-- handling the registration process at startup time, and during automatic
-  reloading in debug mode.
-
-
-Details of the recording process
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. index::
-   vregistry: registration_callback
-
-On startup, |cubicweb| loads application objects defined in its library
-and in cubes used by the instance. Application objects from the
-library are loaded first, then those provided by cubes are loaded in
-dependency order (e.g. if your cube depends on an other, objects from
-the dependency will be loaded first). The layout of the modules or packages
-in a cube  is explained in :ref:`cubelayout`.
-
-For each module:
-
-* by default all objects are registered automatically
-
-* if some objects have to replace other objects, or have to be
-  included only if some condition is met, you'll have to define a
-  `registration_callback(vreg)` function in your module and explicitly
-  register **all objects** in this module, using the api defined
-  below.
-
-.. Note::
-    Once the function `registration_callback(vreg)` is implemented in a module,
-    all the objects from this module have to be explicitly registered as it
-    disables the automatic objects registration.
-
-
-API for objects registration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Here are the registration methods that you can use in the `registration_callback`
-to register your objects to the `RegistryStore` instance given as argument (usually
-named `vreg`):
-
-.. automethod:: cubicweb.cwvreg.CWRegistryStore.register_all
-   :noindex:
-.. automethod:: cubicweb.cwvreg.CWRegistryStore.register_and_replace
-   :noindex:
-.. automethod:: cubicweb.cwvreg.CWRegistryStore.register
-   :noindex:
-.. automethod:: cubicweb.cwvreg.CWRegistryStore.unregister
-   :noindex:
-
-Examples:
-
-.. sourcecode:: python
-
-   # web/views/basecomponents.py
-   def registration_callback(vreg):
-      # register everything in the module except SeeAlsoComponent
-      vreg.register_all(globals().itervalues(), __name__, (SeeAlsoVComponent,))
-      # conditionally register SeeAlsoVComponent
-      if 'see_also' in vreg.schema:
-          vreg.register(SeeAlsoVComponent)
-
-In this example, we register all application object classes defined in the module
-except `SeeAlsoVComponent`. This class is then registered only if the 'see_also'
-relation type is defined in the instance'schema.
-
-.. sourcecode:: python
-
-   # goa/appobjects/sessions.py
-   def registration_callback(vreg):
-      vreg.register(SessionsCleaner)
-      # replace AuthenticationManager by GAEAuthenticationManager
-      vreg.register_and_replace(GAEAuthenticationManager, AuthenticationManager)
-      # replace PersistentSessionManager by GAEPersistentSessionManager
-      vreg.register_and_replace(GAEPersistentSessionManager, PersistentSessionManager)
-
-In this example, we explicitly register classes one by one:
-
-* the `SessionCleaner` class
-* the `GAEAuthenticationManager` to replace the `AuthenticationManager`
-* the `GAEPersistentSessionManager` to replace the `PersistentSessionManager`
-
-If at some point we register a new appobject class in this module, it won't be
-registered at all without modification to the `registration_callback`
-implementation. The previous example will register it though, thanks to the call
-to the `register_all` method.
-
-
-
-Runtime objects selection
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Now that we have all application objects loaded, the question is : when
-I want some specific object, for instance the primary view for a given
-entity, how do I get the proper object ? This is what we call the
-**selection mechanism**.
-
-As explained in the :ref:`Concepts` section:
-
-* each application object has a **selector**, defined by its
-  `__select__` class attribute
-
-* this selector is responsible to return a **score** for a given context
-
-  - 0 score means the object doesn't apply to this context
-
-  - else, the higher the score, the better the object suits the context
-
-* the object with the highest score is selected.
-
-.. Note::
-
-  When no single object has the highest score, an exception is raised in development
-  mode to let you know that the engine was not able to identify the view to
-  apply. This error is silenced in production mode and one of the objects with
-  the highest score is picked.
-
-  In such cases you would need to review your design and make sure
-  your selectors or appobjects are properly defined. Such an error is
-  typically caused by either forgetting to change the __regid__ in a
-  derived class, or by having copy-pasted some code.
-
-For instance, if you are selecting the primary (`__regid__ =
-'primary'`) view (`__registry__ = 'views'`) for a result set
-containing a `Card` entity, two objects will probably be selectable:
-
-* the default primary view (`__select__ = is_instance('Any')`), meaning
-  that the object is selectable for any kind of entity type
-
-* the specific `Card` primary view (`__select__ = is_instance('Card')`,
-  meaning that the object is selectable for Card entities
-
-Other primary views specific to other entity types won't be selectable in this
-case. Among selectable objects, the `is_instance('Card')` selector will return a higher
-score since it's more specific, so the correct view will be selected as expected.
-
-
-API for objects selections
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Here is the selection API you'll get on every registry. Some of them, as the
-'etypes' registry, containing entity classes, extend it. In those methods,
-`*args, **kwargs` is what we call the **context**. Those arguments are given to
-selectors that will inspect their content and return a score accordingly.
-
-.. automethod:: cubicweb.vregistry.Registry.select
-   :noindex:
-
-.. automethod:: cubicweb.vregistry.Registry.select_or_none
-   :noindex:
-
-.. automethod:: cubicweb.vregistry.Registry.possible_objects
-   :noindex:
-
-.. automethod:: cubicweb.vregistry.Registry.object_by_id
-   :noindex:
+"""
+Cubicweb registries
 """
 
 __docformat__ = "restructuredtext en"
@@ -234,6 +58,7 @@ def cleanup_uicfg_compat():
     sys.modules.pop('cubicweb.web.uicfg', None)
     sys.modules.pop('cubicweb.web.uihelper', None)
 
+
 def require_appobject(obj):
     """return appobjects required by the given object by searching for
     `appobject_selectable` predicate
@@ -246,11 +71,16 @@ def require_appobject(obj):
 
 class CWRegistry(Registry):
     def __init__(self, vreg):
+        """
+        :param vreg: the :py:class:`CWRegistryStore` managing this registry.
+        """
         super(CWRegistry, self).__init__(True)
         self.vreg = vreg
 
     @property
     def schema(self):
+        """The :py:class:`cubicweb.schema.CubicWebSchema`
+        """
         return self.vreg.schema
 
     def poss_visible_objects(self, *args, **kwargs):

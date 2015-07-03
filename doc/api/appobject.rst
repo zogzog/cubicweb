@@ -5,7 +5,6 @@
 
 .. automodule:: cubicweb.appobject
 
-.. _appobject:
    .. autoclass:: AppObject
       :show-inheritance:
       :members:

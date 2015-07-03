@@ -5,9 +5,14 @@
 
 .. automodule:: cubicweb.cwvreg
 
-    .. autoclass:: CWRegistry
+    .. autoclass:: CWRegistryStore
         :show-inheritance:
         :members:
+        :undoc-members:
+
+    .. autoclass:: CWRegistry
+        :show-inheritance:
+        :members: schema, poss_visible_objects, select
 
     .. autoclass:: InstancesRegistry
         :show-inheritance:
@@ -33,6 +38,8 @@
         :show-inheritance:
         :members:
 
-    .. autoclass:: CWRegistryStore
-        :show-inheritance:
-        :members:
+
+:mod:`logilab.common.registry`
+==============================
+
+.. automodule:: logilab.common.registry
