@@ -2,7 +2,7 @@
 =================
 
 New functionalities
---------------------
+-------------------
 
 * implement Cross Origin Resource Sharing (CORS)
   (see `#2491768 <http://www.cubicweb.org/2491768>`_)
@@ -168,7 +168,7 @@ API changes
 
 
 Deprecated Code Drops
-----------------------
+---------------------
 
 * session.hijack_user mechanism has been dropped.
 

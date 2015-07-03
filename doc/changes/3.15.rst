@@ -26,6 +26,7 @@ New functionnalities
 
   - most web-side exceptions take an optional ``status`` argument.
 
+
 API changes
 -----------
 
@@ -62,6 +63,7 @@ API changes
 * `Publisher.publish` has been renamed to `Publisher.handle_request`. This
   method now contains generic version of logic previously handled by
   Twisted. `Controller.publish` is **not** affected.
+
 
 Unintrusive API changes
 -----------------------

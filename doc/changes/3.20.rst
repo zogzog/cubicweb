@@ -61,18 +61,40 @@ Deprecated Code Drops
 ----------------------
 
 * most of 3.10 and 3.11 backward compat is gone; this includes:
+
   - CtxComponent.box_action() and CtxComponent.build_link()
+  
   - cubicweb.devtools.htmlparser.XMLDemotingValidator
-  - various methods and properties on Entities, replaced by cw_edited and cw_attr_cache
+  
+  - various methods and properties on Entities, replaced by cw_edited
+    and cw_attr_cache
+  
   - 'commit_event' method on hooks, replaced by 'postcommit_event'
-  - server.hook.set_operation(), replaced by Operation.get_instance(...).add_data()
+  
+  - server.hook.set_operation(), replaced by
+    Operation.get_instance(...).add_data()
+  
   - View.div_id(), View.div_class() and View.create_url()
+  
   - `*VComponent` classes
-  - in forms, Field.value() and Field.help() must take the form and the field itself as arguments
-  - form.render() must get `w` as a named argument, and renderer.render() must take `w` as first argument
-  - in breadcrumbs, the optional `recurs` argument must be a set, not False
+  
+  - in forms, Field.value() and Field.help() must take the form and
+    the field itself as arguments
+  
+  - form.render() must get `w` as a named argument, and
+    renderer.render() must take `w` as first argument
+  
+  - in breadcrumbs, the optional `recurs` argument must be a set, not
+    False
+  
   - cubicweb.web.views.idownloadable.{download_box,IDownloadableLineView}
-  - primary views no longer have `render_entity_summary` and `summary` methods
-  - WFHistoryVComponent's `cell_call` method is replaced by `render_body`
+  
+  - primary views no longer have `render_entity_summary` and `summary`
+    methods
+  
+  - WFHistoryVComponent's `cell_call` method is replaced by
+    `render_body`
+  
   - cubicweb.dataimport.ObjectStore.add(), replaced by create_entity
+  
   - ManageView.{folders,display_folders}

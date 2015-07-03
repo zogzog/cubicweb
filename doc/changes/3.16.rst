@@ -2,7 +2,7 @@
 =================
 
 New functionalities
---------------------
+-------------------
 
 * Add a new dataimport store (`SQLGenObjectStore`). This store enables a fast
   import of data (entity creation, link creation) in CubicWeb, by directly

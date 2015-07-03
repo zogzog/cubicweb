@@ -5,7 +5,7 @@ The migration script does not handle sqlite nor mysql instances.
 
 
 New functionalities
---------------------
+-------------------
 
 * add a security debugging tool
   (see `#2920304 <http://www.cubicweb.org/2920304>`_)
@@ -70,7 +70,7 @@ API changes
   values, on the sqlite and postgresql backends
 
 Deprecation
----------------------
+-----------
 
 * ``pyrorql`` sources have been deprecated. Multisource will be fully dropped
   in the next version. If you are still using pyrorql, switch to ``datafeed``
@@ -85,7 +85,7 @@ Deprecation
   `#3400448 <https://www.cubicweb.org/ticket/3400448>`_)
 
 Deprecated Code Drops
-----------------------
+---------------------
 
 * ``ldapuser`` have been dropped; use ``ldapfeed`` now
   (see `#2936496 <http://www.cubicweb.org/2936496>`_)
