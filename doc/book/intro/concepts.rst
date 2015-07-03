@@ -15,9 +15,11 @@ definitions and use this section as a reference during your reading.
 Cubes
 -----
 
-A cube is a software component made of three parts: its data model
-(:mod:`schema`), its logic (:mod:`entities`) and its user interface
-(:mod:`views`).
+A cube is a software component made of three parts:
+
+- its data model (:mod:`schema`),
+- its logic (:mod:`entities`) and
+- its user interface (:mod:`views`).
 
 A cube can use other cubes as building blocks and assemble them to provide a
 whole with richer functionnalities than its parts. The cubes `cubicweb-blog`_ and
@@ -29,7 +31,7 @@ and available under a free software license.
 
 .. note::
 
- The command :command:`cubicweb-ctl list` displays the list of available cubes.
+   The command :command:`cubicweb-ctl list` displays the list of available cubes.
 
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
 .. _`cubicweb-blog`: http://www.cubicweb.org/project/cubicweb-blog
@@ -41,20 +43,15 @@ and available under a free software license.
 Instances
 ---------
 
-An instance is a runnable application installed on a computer and based on a
-cube.
+An instance is a runnable application installed on a computer and
+based on one or more cubes.
 
-The instance directory contains the configuration files. Several instances can be
-created and based on the same cube. For exemple, several software forges can be
-set up on one computer system based on the `cubicweb-forge`_ cube.
+The instance directory contains the configuration files. Several
+instances can be created and based on the same cube. For example,
+several software forges can be set up on one computer system based on
+the `cubicweb-forge`_ cube.
 
 .. _`cubicweb-forge`: http://www.cubicweb.org/project/cubicweb-forge
-
-Instances can be of three different types: all-in-one, web engine or data
-repository. For applications that support high traffic, several web (front-end)
-and data (back-end) instances can be set-up to share the load.
-
-.. image:: ../../images/archi_globale_en.png
 
 The command :command:`cubicweb-ctl list` also displays the list of instances
 installed on your system.
@@ -101,12 +98,6 @@ By default the web engine provides a `CRUD`_ user interface based on
 the data model of the instance. Entities can be created, displayed,
 updated and deleted. As the default user interface is not very fancy,
 it is usually necessary to develop your own.
-
-It is common to run the web engine and the repository in the same
-process (see instances of type all-in-one above), but this is not a
-requirement. A repository can be set up to be accessed remotely using
-Pyro (`Python Remote Objects`_) and act as a standalone server, which
-can be directly accessed or also through a standalone web engine.
 
 .. _`CRUD`: http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
 
