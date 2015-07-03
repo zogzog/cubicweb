@@ -89,7 +89,7 @@ Changes
 .. toctree::
    :maxdepth: 2
 
-   changes/index
+   changes/changelog
 
 
 Reference documentation
