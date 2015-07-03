@@ -482,8 +482,3 @@ have the python imaging library installed to use captcha)',
     def static_file_del(self, rpath):
         if self.static_file_exists(rpath):
             os.remove(join(self.static_directory, rpath))
-
-    @deprecated('[3.9] use _cw.uiprops.get(rid)')
-    def has_resource(self, rid):
-        """return true if an external resource is defined"""
-        return bool(self.uiprops.get(rid))
