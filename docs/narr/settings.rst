@@ -68,6 +68,19 @@ A typical ``pyramid.ini`` file is:
 
 The Pyramid CubicWeb specific configuration entries are:
 
+.. confval:: cubicweb.instance (string)
+
+    A CubicWeb instance name. Useful when the application is not run by
+    :ref:`cubicweb-ctl_pyramid`.
+
+.. confval:: cubicweb.debug (bool)
+
+    Enables the cubicweb debugmode. Works only if the instance is setup by
+    :confval:`cubicweb.instance`.
+
+    Unlike when the debugmode is set by the :option:`cubicweb-ctl pyramid --debug-mode`
+    command, the pyramid debug options are untouched.
+
 .. confval:: cubicweb.includes (list)
 
     Same as ``pyramid.includes``, but the includes are done after the cubicweb

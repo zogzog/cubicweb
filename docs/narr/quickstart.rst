@@ -1,26 +1,34 @@
 Quick start
 ===========
 
-.. highlight:: console
+.. highlight:: bash
 
-From CubicWeb
--------------
+Prerequites
+-----------
 
 -   Install everything (here with pip, possibly in a virtualenv)::
 
         pip install pyramid-cubicweb cubicweb-pyramid pyramid_debugtoolbar
-        
--   Make sure CubicWeb is in user mode::
 
-        export CW_MODE=user
+-   Have a working Cubicweb instance, for example:
 
--   Create a CubicWeb instance, and install the 'pyramid' cube on it (see
-    :ref:`configenv` for more details on this step)::
 
-        cubicweb-ctl create pyramid myinstance
+    -   Make sure CubicWeb is in user mode::
+
+            export CW_MODE=user
+
+    -   Create a CubicWeb instance, and install the 'pyramid' cube on it (see
+        :ref:`configenv` for more details on this step)::
+
+            cubicweb-ctl create pyramid myinstance
 
 -   Edit your ``~/etc/cubicweb.d/myinstance/all-in-one.conf`` and set values for
     :confval:`pyramid-auth-secret` and :confval:`pyramid-session-secret`.
+    *required if pyramid_cubicweb.auth and pyramid_cubiweb.session get
+    included, which is the default*
+
+From CubicWeb
+-------------
 
 -   Start the instance with the :ref:`'pyramid' command <cubicweb-ctl_pyramid>`
     instead of 'start'::
@@ -30,4 +38,22 @@ From CubicWeb
 In a pyramid application
 ------------------------
 
-Coming soon.
+-   Create a pyramid application
+
+-   Include pyramid_cubicweb:
+
+    .. code-block:: python
+
+        def includeme(config):
+            # ...
+            config.include('pyramid_cubicweb')
+            # ...
+
+-   Configure the instance name (in the .ini file):
+
+    .. code-block:: ini
+
+        cubicweb.instance = myinstance
+
+-   Configure the base-url and https-url in all-in-one.conf to match the ones
+    of the pyramid configuration (this is a temporary limitation).

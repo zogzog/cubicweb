@@ -20,11 +20,19 @@ Options
 
     Run the server in the foreground.
 
-
 .. option:: --debug-mode
 
     Activate the repository debug mode (logs in the console and the debug
-    toolbar). Implies :option:`--no-daemon`
+    toolbar). Implies :option:`--no-daemon`.
+
+    Also force the following pyramid options:
+
+    .. code-block:: ini
+    
+        pyramid.debug_authorization = yes
+        pyramid.debug_notfound = yes
+        pyramid.debug_routematch = yes
+        pyramid.reload_templates = yes
 
 .. option:: -D, --debug
 
