@@ -44,27 +44,9 @@ def make_cubicweb_application(cwconfig, settings=None):
             break
 
     config = Configurator(settings=settings)
-    if cwconfig.debugmode:
-        try:
-            config.include('pyramid_debugtoolbar')
-        except ImportError:
-            warn('pyramid_debugtoolbar package not available, install it to '
-                 'get UI debug features', RuntimeWarning)
     config.registry['cubicweb.config'] = cwconfig
-    config.registry['cubicweb.repository'] = repo = cwconfig.repository()
-    config.registry['cubicweb.registry'] = repo.vreg
+    config.include('pyramid_cubicweb')
 
-    if asbool(config.registry.settings.get('cubicweb.defaults', True)):
-        config.include('pyramid_cubicweb.defaults')
-
-    for name in aslist(config.registry.settings.get('cubicweb.includes', [])):
-        config.include(name)
-
-    config.include('pyramid_cubicweb.tools')
-    config.include('pyramid_cubicweb.core')
-
-    if asbool(config.registry.settings.get('cubicweb.bwcompat', True)):
-        config.include('pyramid_cubicweb.bwcompat')
     return config
 
 
@@ -151,3 +133,50 @@ def wsgi_application(instance_name=None, debug=None):
     cwconfig = cwcfg.config_for(instance_name, debugmode=debug)
 
     return wsgi_application_from_cwconfig(cwconfig)
+
+
+def includeme(config):
+    """Set-up a CubicWeb instance.
+
+    The CubicWeb instance can be set in several ways:
+
+    -   Provide an already loaded CubicWeb config instance in the registry:
+
+        .. code-block:: python
+
+            config.registry['cubicweb.config'] = your_config_instance
+
+    -   Provide an instance name in the pyramid settings with
+        :confval:`cubicweb.instance`.
+
+    """
+    cwconfig = config.registry.get('cubicweb.config')
+
+    if cwconfig is None:
+        debugmode = asbool(
+            config.registry.settings.get('cubicweb.debug', False))
+        cwconfig = cwcfg.config_for(
+            config.registry.settings['cubicweb.instance'], debugmode=debugmode)
+        config.registry['cubicweb.config'] = cwconfig
+
+    if cwconfig.debugmode:
+        try:
+            config.include('pyramid_debugtoolbar')
+        except ImportError:
+            warn('pyramid_debugtoolbar package not available, install it to '
+                 'get UI debug features', RuntimeWarning)
+
+    config.registry['cubicweb.repository'] = repo = cwconfig.repository()
+    config.registry['cubicweb.registry'] = repo.vreg
+
+    if asbool(config.registry.settings.get('cubicweb.defaults', True)):
+        config.include('pyramid_cubicweb.defaults')
+
+    for name in aslist(config.registry.settings.get('cubicweb.includes', [])):
+        config.include(name)
+
+    config.include('pyramid_cubicweb.tools')
+    config.include('pyramid_cubicweb.core')
+
+    if asbool(config.registry.settings.get('cubicweb.bwcompat', True)):
+        config.include('pyramid_cubicweb.bwcompat')
