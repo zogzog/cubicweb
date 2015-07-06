@@ -89,3 +89,6 @@ Deprecated code drops
 * the ``Repository.pinfo()`` method was removed
 
 * the ``cubicweb.utils.SizeConstrainedList`` class was removed
+
+* the 'startorder' file in configuration directory is no longer honored
+
