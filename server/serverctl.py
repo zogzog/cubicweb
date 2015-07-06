@@ -980,20 +980,19 @@ class SynchronizeSourceCommand(Command):
     )
 
     def run(self, args):
+        from cubicweb import repoapi
         from cubicweb.cwctl import init_cmdline_log_threshold
         config = ServerConfiguration.config_for(args[0])
         config.global_set_option('log-file', None)
         config.log_format = '%(levelname)s %(name)s: %(message)s'
         init_cmdline_log_threshold(config, self['loglevel'])
-        # only retrieve cnx to trigger authentication, close it right away
-        repo, cnx = repo_cnx(config)
-        cnx.close()
+        repo = repoapi.get_repository(config=config)
         try:
             source = repo.sources_by_uri[args[1]]
         except KeyError:
             raise ExecutionError('no source named %r' % args[1])
-        session = repo.internal_session()
-        stats = source.pull_data(session, force=True, raise_on_error=True)
+        with repo.internal_cnx() as cnx:
+            stats = source.pull_data(cnx, force=True, raise_on_error=True)
         for key, val in stats.iteritems():
             if val:
                 print key, ':', val
