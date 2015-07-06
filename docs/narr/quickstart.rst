@@ -19,10 +19,6 @@ From CubicWeb
 
         cubicweb-ctl create pyramid myinstance
 
-    .. warning::
-
-        You `must` allow anonymous access.
-
 -   Edit your ``~/etc/cubicweb.d/myinstance/all-in-one.conf`` and set values for
     :confval:`pyramid-auth-secret` and :confval:`pyramid-session-secret`.
 
