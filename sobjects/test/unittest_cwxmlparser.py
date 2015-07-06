@@ -267,7 +267,11 @@ class CWEntityXMLParserTC(CubicWebTC):
             self.assertEqual(e.cw_source[0].name, 'system')
             self.assertEqual(e.reverse_use_email[0].login, 'sthenault')
             # test everything is still fine after source synchronization
+            # clear caches to make sure we look at the moved_entities table
+            self.repo._type_source_cache.clear()
+            self.repo._extid_cache.clear()
             stats = dfsource.pull_data(cnx, force=True, raise_on_error=True)
+            self.assertEqual(stats['updated'], set((email.eid,)))
             rset = cnx.execute('EmailAddress X WHERE X address "syt@logilab.fr"')
             self.assertEqual(len(rset), 1)
             e = rset.get_entity(0, 0)

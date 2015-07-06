@@ -20,6 +20,7 @@
 __docformat__ = "restructuredtext en"
 
 from datetime import datetime
+from base64 import b64encode
 
 from cubicweb.predicates import is_instance
 from cubicweb.server import hook
@@ -203,7 +204,9 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             # to 'moved_entities'.  External source will then have consider
             # case where `extid2eid` returns a negative eid as 'this entity was
             # known but has been moved, ignore it'.
-            attrs = {'eid': entity.eid, 'extid': self._cw.entity_metas(entity.eid)['extid']}
+            extid = self._cw.entity_metas(entity.eid)['extid']
+            assert extid is not None
+            attrs = {'eid': entity.eid, 'extid': b64encode(extid).decode('ascii')}
             self._cw.system_sql(syssource.sqlgen.insert('moved_entities', attrs), attrs)
             attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': None,
                      'asource': 'system'}
