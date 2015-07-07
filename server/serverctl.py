@@ -991,12 +991,16 @@ class SynchronizeSourceCommand(Command):
         config.log_format = '%(levelname)s %(name)s: %(message)s'
         init_cmdline_log_threshold(config, self['loglevel'])
         repo = repoapi.get_repository(config=config)
+        repo.hm.call_hooks('server_maintenance', repo=repo)
         try:
-            source = repo.sources_by_uri[args[1]]
-        except KeyError:
-            raise ExecutionError('no source named %r' % args[1])
-        with repo.internal_cnx() as cnx:
-            stats = source.pull_data(cnx, force=True, raise_on_error=True)
+            try:
+                source = repo.sources_by_uri[args[1]]
+            except KeyError:
+                raise ExecutionError('no source named %r' % args[1])
+            with repo.internal_cnx() as cnx:
+                stats = source.pull_data(cnx, force=True, raise_on_error=True)
+        finally:
+            repo.shutdown()
         for key, val in stats.iteritems():
             if val:
                 print key, ':', val
