@@ -497,51 +497,55 @@ class AddSourceCommand(Command):
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
         repo, cnx = repo_cnx(config)
-        with cnx:
-            used = set(n for n, in cnx.execute('Any SN WHERE S is CWSource, S name SN'))
-            cubes = repo.get_cubes()
-            while True:
-                type = raw_input('source type (%s): '
-                                    % ', '.join(sorted(SOURCE_TYPES)))
-                if type not in SOURCE_TYPES:
-                    print '-> unknown source type, use one of the available types.'
-                    continue
-                sourcemodule = SOURCE_TYPES[type].module
-                if not sourcemodule.startswith('cubicweb.'):
-                    # module names look like cubes.mycube.themodule
-                    sourcecube = SOURCE_TYPES[type].module.split('.', 2)[1]
-                    # if the source adapter is coming from an external component,
-                    # ensure it's specified in used cubes
-                    if not sourcecube in cubes:
-                        print ('-> this source type require the %s cube which is '
-                               'not used by the instance.')
+        repo.hm.call_hooks('server_maintenance', repo=repo)
+        try:
+            with cnx:
+                used = set(n for n, in cnx.execute('Any SN WHERE S is CWSource, S name SN'))
+                cubes = repo.get_cubes()
+                while True:
+                    type = raw_input('source type (%s): '
+                                        % ', '.join(sorted(SOURCE_TYPES)))
+                    if type not in SOURCE_TYPES:
+                        print '-> unknown source type, use one of the available types.'
                         continue
-                break
-            while True:
-                parser = raw_input('parser type (%s): '
-                                    % ', '.join(sorted(repo.vreg['parsers'])))
-                if parser in repo.vreg['parsers']:
+                    sourcemodule = SOURCE_TYPES[type].module
+                    if not sourcemodule.startswith('cubicweb.'):
+                        # module names look like cubes.mycube.themodule
+                        sourcecube = SOURCE_TYPES[type].module.split('.', 2)[1]
+                        # if the source adapter is coming from an external component,
+                        # ensure it's specified in used cubes
+                        if not sourcecube in cubes:
+                            print ('-> this source type require the %s cube which is '
+                                   'not used by the instance.')
+                            continue
                     break
-                print '-> unknown parser identifier, use one of the available types.'
-            while True:
-                sourceuri = raw_input('source identifier (a unique name used to '
-                                      'tell sources apart): ').strip()
-                if not sourceuri:
-                    print '-> mandatory.'
-                else:
-                    sourceuri = unicode(sourceuri, sys.stdin.encoding)
-                    if sourceuri in used:
-                        print '-> uri already used, choose another one.'
-                    else:
+                while True:
+                    parser = raw_input('parser type (%s): '
+                                        % ', '.join(sorted(repo.vreg['parsers'])))
+                    if parser in repo.vreg['parsers']:
                         break
-            url = raw_input('source URL (leave empty for none): ').strip()
-            url = unicode(url) if url else None
-            # XXX configurable inputlevel
-            sconfig = ask_source_config(config, type, inputlevel=self.config.config_level)
-            cfgstr = unicode(generate_source_config(sconfig), sys.stdin.encoding)
-            cnx.create_entity('CWSource', name=sourceuri, type=unicode(type),
-                              config=cfgstr, parser=unicode(parser), url=unicode(url))
-            cnx.commit()
+                    print '-> unknown parser identifier, use one of the available types.'
+                while True:
+                    sourceuri = raw_input('source identifier (a unique name used to '
+                                          'tell sources apart): ').strip()
+                    if not sourceuri:
+                        print '-> mandatory.'
+                    else:
+                        sourceuri = unicode(sourceuri, sys.stdin.encoding)
+                        if sourceuri in used:
+                            print '-> uri already used, choose another one.'
+                        else:
+                            break
+                url = raw_input('source URL (leave empty for none): ').strip()
+                url = unicode(url) if url else None
+                # XXX configurable inputlevel
+                sconfig = ask_source_config(config, type, inputlevel=self.config.config_level)
+                cfgstr = unicode(generate_source_config(sconfig), sys.stdin.encoding)
+                cnx.create_entity('CWSource', name=sourceuri, type=unicode(type),
+                                  config=cfgstr, parser=unicode(parser), url=unicode(url))
+                cnx.commit()
+        finally:
+            repo.hm.call_hooks('server_shutdown')
 
 
 class GrantUserOnInstanceCommand(Command):
