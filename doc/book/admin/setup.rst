@@ -242,28 +242,7 @@ Install from version control system
 To keep-up with on-going development, clone the :ref:`Mercurial
 <MercurialPresentation>` repository::
 
-  hg clone -u stable http://hg.logilab.org/cubicweb # stable branch
+  hg clone -u 'last(tag())' http://hg.logilab.org/cubicweb # stable version
   hg clone http://hg.logilab.org/cubicweb # development branch
 
-To get many of CubicWeb's dependencies and a nice set of base cubes, run the
-`clone_deps.py` script located in `cubicweb/bin/`::
-
-  python cubicweb/bin/clone_deps.py
-
-(Windows users should replace slashes with antislashes).
-
-This script will clone a set of mercurial repositories into the
-directory containing the ``cubicweb`` repository, and update them to the
-latest published version tag (if any).
-
-.. note::
-
-  In every cloned repositories, a `hg tags` will display a list of
-  tags in reverse chronological order. One reasonnable option is to go to a
-  tagged version: the latest published version or example, as done by
-  the `clone_deps` script)::
-
-   hg update cubicweb-version-3.12.2
-
 Make sure you also have all the :ref:`InstallDependencies`.
-
