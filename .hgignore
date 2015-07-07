@@ -17,6 +17,8 @@ syntax: regexp
 .*/data.*/database/.*\.config
 .*/data/database/tmpdb.*
 .*/data/ldapdb/.*
+.*/data/uicache/
+.*/data/cubes/.*/i18n/.*\.po
 ^doc/html/
 ^doc/doctrees/
 ^doc/book/en/devweb/js_api/
