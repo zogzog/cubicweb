@@ -42,7 +42,7 @@ from rql.utils import rqlvar_maker
 
 from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
-                      BadConnectionId, ValidationError,
+                      BadConnectionId, ValidationError, Unauthorized,
                       UniqueTogetherError, onevent, ViolatedConstraint)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import ShuttingDown, utils, hook, querier, sources
