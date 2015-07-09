@@ -642,10 +642,6 @@ msgstr "Neuer workflow"
 msgid "New WorkflowTransition"
 msgstr "Neuer workflow-Übergang"
 
-#, python-format
-msgid "No account? Try public access at %s"
-msgstr "Kein Konto? Zur öffentlichen Website: %s"
-
 msgid "No result matching query"
 msgstr "Ihre Suche ergab keine Treffer."
 
@@ -1130,6 +1126,9 @@ msgid "add a CWAttribute"
 msgstr ""
 
 msgid "add a CWCache"
+msgstr ""
+
+msgid "add a CWComputedRType"
 msgstr ""
 
 msgid "add a CWConstraint"
@@ -4158,9 +4157,6 @@ msgstr ""
 msgid "thursday"
 msgstr "Donnerstag"
 
-msgid "timeline"
-msgstr "Zeitleiste"
-
 msgid "timestamp"
 msgstr "Datum"
 
@@ -4509,11 +4505,15 @@ msgid "value"
 msgstr "Wert"
 
 #, python-format
-msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
+msgid "value %(KEY-value)s must be < %(KEY-boundary)s"
 msgstr ""
 
 #, python-format
 msgid "value %(KEY-value)s must be <= %(KEY-boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(KEY-value)s must be > %(KEY-boundary)s"
 msgstr ""
 
 #, python-format
@@ -4663,6 +4663,9 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #~ msgid "Browse by category"
 #~ msgstr "nach Kategorien navigieren"
 
+#~ msgid "No account? Try public access at %s"
+#~ msgstr "Kein Konto? Zur öffentlichen Website: %s"
+
 #~ msgid "anonymous"
 #~ msgstr "anonym"
 
@@ -4682,3 +4685,6 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 
 #~ msgid "no edited fields specified for entity %s"
 #~ msgstr "kein Eingabefeld spezifiziert Für Entität %s"
+
+#~ msgid "timeline"
+#~ msgstr "Zeitleiste"

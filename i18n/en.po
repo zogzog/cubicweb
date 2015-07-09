@@ -620,10 +620,6 @@ msgstr "New workflow"
 msgid "New WorkflowTransition"
 msgstr "New workflow-transition"
 
-#, python-format
-msgid "No account? Try public access at %s"
-msgstr ""
-
 msgid "No result matching query"
 msgstr ""
 
@@ -1092,6 +1088,9 @@ msgid "add a CWAttribute"
 msgstr ""
 
 msgid "add a CWCache"
+msgstr ""
+
+msgid "add a CWComputedRType"
 msgstr ""
 
 msgid "add a CWConstraint"
@@ -4060,9 +4059,6 @@ msgstr ""
 msgid "thursday"
 msgstr ""
 
-msgid "timeline"
-msgstr ""
-
 msgid "timestamp"
 msgstr ""
 
@@ -4402,11 +4398,15 @@ msgid "value"
 msgstr ""
 
 #, python-format
-msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
+msgid "value %(KEY-value)s must be < %(KEY-boundary)s"
 msgstr ""
 
 #, python-format
 msgid "value %(KEY-value)s must be <= %(KEY-boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(KEY-value)s must be > %(KEY-boundary)s"
 msgstr ""
 
 #, python-format

@@ -651,10 +651,6 @@ msgstr "Agregar Workflow"
 msgid "New WorkflowTransition"
 msgstr "Agregar transición de Workflow"
 
-#, python-format
-msgid "No account? Try public access at %s"
-msgstr "No esta registrado? Use el acceso público en %s"
-
 msgid "No result matching query"
 msgstr "Ningún resultado corresponde a su búsqueda"
 
@@ -1149,6 +1145,9 @@ msgid "add a CWAttribute"
 msgstr ""
 
 msgid "add a CWCache"
+msgstr ""
+
+msgid "add a CWComputedRType"
 msgstr ""
 
 msgid "add a CWConstraint"
@@ -4222,9 +4221,6 @@ msgstr "esta fuente no utiliza mapeo"
 msgid "thursday"
 msgstr "Jueves"
 
-msgid "timeline"
-msgstr "Escala de Tiempo"
-
 msgid "timestamp"
 msgstr "Fecha"
 
@@ -4573,12 +4569,16 @@ msgid "value"
 msgstr "Vampr"
 
 #, python-format
-msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
-msgstr "El valor %(KEY-value)s debe ser %(KEY-op)s %(KEY-boundary)s"
+msgid "value %(KEY-value)s must be < %(KEY-boundary)s"
+msgstr ""
 
 #, python-format
 msgid "value %(KEY-value)s must be <= %(KEY-boundary)s"
 msgstr "el valor %(KEY-value)s debe ser <= %(KEY-boundary)s"
+
+#, python-format
+msgid "value %(KEY-value)s must be > %(KEY-boundary)s"
+msgstr ""
 
 #, python-format
 msgid "value %(KEY-value)s must be >= %(KEY-boundary)s"
@@ -4729,6 +4729,9 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgid "Browse by category"
 #~ msgstr "Busca por categoría"
 
+#~ msgid "No account? Try public access at %s"
+#~ msgstr "No esta registrado? Use el acceso público en %s"
+
 #~ msgid "anonymous"
 #~ msgstr "anónimo"
 
@@ -4765,8 +4768,14 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgid "no edited fields specified for entity %s"
 #~ msgstr "Ningún campo editable especificado para la entidad %s"
 
+#~ msgid "timeline"
+#~ msgstr "Escala de Tiempo"
+
 #~ msgid "unknown option(s): %s"
 #~ msgstr "opcion(es) desconocida(s): %s"
+
+#~ msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
+#~ msgstr "El valor %(KEY-value)s debe ser %(KEY-op)s %(KEY-boundary)s"
 
 #~ msgid "web sessions without CNX"
 #~ msgstr "sesiones web sin conexión asociada"

@@ -647,10 +647,6 @@ msgstr "Nouveau workflow"
 msgid "New WorkflowTransition"
 msgstr "Nouvelle transition workflow"
 
-#, python-format
-msgid "No account? Try public access at %s"
-msgstr "Pas de compte ? Accédez au site public : %s"
-
 msgid "No result matching query"
 msgstr "Aucun résultat ne correspond à la requête"
 
@@ -1145,6 +1141,9 @@ msgid "add a CWAttribute"
 msgstr ""
 
 msgid "add a CWCache"
+msgstr ""
+
+msgid "add a CWComputedRType"
 msgstr ""
 
 msgid "add a CWConstraint"
@@ -4221,9 +4220,6 @@ msgstr "cette source n'utilise pas de mapping"
 msgid "thursday"
 msgstr "jeudi"
 
-msgid "timeline"
-msgstr "échelle de temps"
-
 msgid "timestamp"
 msgstr "date"
 
@@ -4570,18 +4566,22 @@ msgid "value"
 msgstr "valeur"
 
 #, python-format
-msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
-msgstr "la valeur %(KEY-value)s n'est pas %(KEY-op)s %(KEY-boundary)s"
+msgid "value %(KEY-value)s must be < %(KEY-boundary)s"
+msgstr "la valeur %(KEY-value)s doit être strictement inférieure à %(KEY-boundary)s"
 
 #, python-format
 msgid "value %(KEY-value)s must be <= %(KEY-boundary)s"
 msgstr ""
-"la valeur %(KEY-value)s n'est pas inférieure ou égale à %(KEY-boundary)s"
+"la valeur %(KEY-value)s doit être inférieure ou égale à %(KEY-boundary)s"
+
+#, python-format
+msgid "value %(KEY-value)s must be > %(KEY-boundary)s"
+msgstr "la valeur %(KEY-value)s doit être strictement supérieure à %(KEY-boundary)s"
 
 #, python-format
 msgid "value %(KEY-value)s must be >= %(KEY-boundary)s"
 msgstr ""
-"la valeur %(KEY-value)s n'est pas supérieure ou égale à %(KEY-boundary)s"
+"la valeur %(KEY-value)s doit être supérieure ou égale à %(KEY-boundary)s"
 
 msgid "value associated to this key is not editable manually"
 msgstr "la valeur associée à cette clé n'est pas éditable manuellement"
@@ -4723,69 +4723,3 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
-
-#~ msgid "%s relation should not be in mapped"
-#~ msgstr "la relation %s ne devrait pas ếtre mappé"
-
-#~ msgid "Any"
-#~ msgstr "Tous"
-
-#~ msgid "Browse by category"
-#~ msgstr "Naviguer par catégorie"
-
-#~ msgid "anonymous"
-#~ msgstr "anonyme"
-
-#~ msgid "attribute/relation can't be mapped, only entity and relation types"
-#~ msgstr ""
-#~ "les attributs et relations ne peuvent être mappés, uniquement les types "
-#~ "d'entité et de relation"
-
-#~ msgid "can't connect to source %s, some data may be missing"
-#~ msgstr "ne peut se connecter à la source %s, des données peuvent manquer"
-
-#~ msgid "can't mix dontcross and maycross options"
-#~ msgstr "ne peut mélanger dontcross et maycross options"
-
-#~ msgid "can't mix dontcross and write options"
-#~ msgstr "ne peut mélanger dontcross et write options"
-
-#~ msgid "components_etypenavigation"
-#~ msgstr "filtrage par type"
-
-#~ msgid "components_etypenavigation_description"
-#~ msgstr "permet de filtrer par type d'entité les résultats d'une recherche"
-
-#~ msgid "error while querying source %s, some data may be missing"
-#~ msgstr ""
-#~ "une erreur est survenue en interrogeant %s, il est possible que les\n"
-#~ "données affichées soient incomplètes"
-
-#~ msgid "inlined relation %(rtype)s of %(etype)s should be supported"
-#~ msgstr ""
-#~ "la relation %(rtype)s du type d'entité %(etype)s doit être supportée "
-#~ "('inlined')"
-
-#~ msgid "no edited fields specified for entity %s"
-#~ msgstr "aucun champ à éditer spécifié pour l'entité %s"
-
-#~ msgid "unknown option(s): %s"
-#~ msgstr "option(s) inconnue(s) : %s"
-
-#~ msgid "web sessions without CNX"
-#~ msgstr "sessions web sans connexion associée"
-
-#~ msgid "workflow already has a state of that name"
-#~ msgstr "le workflow a déja un état du même nom"
-
-#~ msgid "workflow already has a transition of that name"
-#~ msgstr "le workflow a déja une transition du même nom"
-
-#~ msgid "you may want to specify something for %s"
-#~ msgstr "vous désirez peut-être spécifié quelque chose pour la relation %s"
-
-#~ msgid ""
-#~ "you should un-inline relation %s which is supported and may be crossed "
-#~ msgstr ""
-#~ "vous devriez enlevé la mise en ligne de la relation %s qui est supportée "
-#~ "et peut-être croisée"
