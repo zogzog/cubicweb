@@ -169,7 +169,7 @@ class SchemaReaderClassTest(TestCase):
                              'CWRelation', 'CWPermission', 'CWProperty', 'CWRType',
                              'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
                              'CWUniqueTogetherConstraint', 'CWUser',
-                             'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
+                             'ExternalUri', 'FakeFile', 'Float', 'Int', 'Interval', 'Note',
                              'Password', 'Personne', 'Produit',
                              'RQLExpression', 'Reference',
                              'Service', 'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
@@ -221,8 +221,6 @@ class SchemaReaderClassTest(TestCase):
                               'value',
 
                               'wf_info_for', 'wikiid', 'workflow_of', 'tr_count']
-        if config.cube_version('file') >= (1, 14, 0):
-            expected_relations.append('data_sha1hex')
 
         self.assertListEqual(sorted(expected_relations), relations)
 
@@ -510,7 +508,7 @@ class CompositeSchemaTC(CubicWebTC):
                      ('cw_source', 'Card', 'CWSource', 'object'),
                      ('cw_source', 'EmailAddress', 'CWSource', 'object'),
                      ('cw_source', 'ExternalUri', 'CWSource', 'object'),
-                     ('cw_source', 'File', 'CWSource', 'object'),
+                     ('cw_source', 'FakeFile', 'CWSource', 'object'),
                      ('cw_source', 'Note', 'CWSource', 'object'),
                      ('cw_source', 'Personne', 'CWSource', 'object'),
                      ('cw_source', 'Produit', 'CWSource', 'object'),

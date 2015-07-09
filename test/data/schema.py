@@ -16,11 +16,14 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from yams.buildobjs import (EntityType, String, SubjectRelation,
-                            RelationDefinition)
+from yams.buildobjs import (EntityType, String, RichString, Bytes,
+                            SubjectRelation, RelationDefinition)
 
 from cubicweb.schema import (WorkflowableEntityType,
                              RQLConstraint, RQLVocabularyConstraint)
+
+
+_ = unicode
 
 
 class Personne(EntityType):
@@ -94,3 +97,17 @@ class StateFull(WorkflowableEntityType):
 class Reference(EntityType):
     nom = String(unique=True)
     ean = String(unique=True, required=True)
+
+
+class FakeFile(EntityType):
+    title = String(fulltextindexed=True, maxsize=256)
+    data = Bytes(required=True, fulltextindexed=True, description=_('file to upload'))
+    data_format = String(required=True, maxsize=128,
+                         description=_('MIME type of the file. Should be dynamically set at upload time.'))
+    data_encoding = String(maxsize=32,
+                           description=_('encoding of the file when it applies (e.g. text). '
+                                         'Should be dynamically set at upload time.'))
+    data_name = String(required=True, fulltextindexed=True,
+                       description=_('name of the file. Should be dynamically set at upload time.'))
+    description = RichString(fulltextindexed=True, internationalizable=True,
+                             default_format='text/rest')

@@ -644,7 +644,7 @@ du :eid:`1:*ReST*`'''
 
     def test_printable_value_bytes(self):
         with self.admin_access.web_request() as req:
-            e = req.create_entity('File', data=Binary('lambda x: 1'), data_format=u'text/x-python',
+            e = req.create_entity('FakeFile', data=Binary('lambda x: 1'), data_format=u'text/x-python',
                                   data_encoding=u'ascii', data_name=u'toto.py')
             from cubicweb import mttransforms
             if mttransforms.HAS_PYGMENTS_TRANSFORMS:
@@ -663,7 +663,7 @@ du :eid:`1:*ReST*`'''
     <span style="color: #C00000;">lambda</span> <span style="color: #000000;">x</span><span style="color: #0000C0;">:</span> <span style="color: #0080C0;">1</span>
 </pre>''')
 
-            e = req.create_entity('File', data=Binary('*héhéhé*'), data_format=u'text/rest',
+            e = req.create_entity('FakeFile', data=Binary('*héhéhé*'), data_format=u'text/rest',
                                 data_encoding=u'utf-8', data_name=u'toto.txt')
             self.assertEqual(e.printable_value('data'),
                               u'<p><em>héhéhé</em></p>')
@@ -714,7 +714,7 @@ du :eid:`1:*ReST*`'''
 
     def test_fulltextindex(self):
         with self.admin_access.web_request() as req:
-            e = self.vreg['etypes'].etype_class('File')(req)
+            e = self.vreg['etypes'].etype_class('FakeFile')(req)
             e.cw_attr_cache['description'] = 'du <em>html</em>'
             e.cw_attr_cache['description_format'] = 'text/html'
             e.cw_attr_cache['data'] = Binary('some <em>data</em>')

@@ -16,7 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from cubicweb.entities import AnyEntity, fetch_config
+from cubicweb.entities import AnyEntity, fetch_config, adapters
+from cubicweb.predicates import is_instance
+
 
 class Societe(AnyEntity):
     __regid__ = 'Societe'
@@ -34,3 +36,7 @@ class Ami(Societe):
 
 class Note(AnyEntity):
     __regid__ = 'Note'
+
+
+class FakeFileIDownloadableAdapter(adapters.IDownloadableAdapter):
+    __select__ = is_instance('FakeFile')

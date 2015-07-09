@@ -37,12 +37,13 @@ from cubicweb.web import action
 class ImplementsTC(CubicWebTC):
     def test_etype_priority(self):
         with self.admin_access.web_request() as req:
-            f = req.create_entity('File', data_name=u'hop.txt', data=Binary('hop'))
+            f = req.create_entity('FakeFile', data_name=u'hop.txt', data=Binary('hop'),
+                                  data_format=u'text/plain')
             rset = f.as_rset()
             anyscore = is_instance('Any')(f.__class__, req, rset=rset)
             idownscore = adaptable('IDownloadable')(f.__class__, req, rset=rset)
             self.assertTrue(idownscore > anyscore, (idownscore, anyscore))
-            filescore = is_instance('File')(f.__class__, req, rset=rset)
+            filescore = is_instance('FakeFile')(f.__class__, req, rset=rset)
             self.assertTrue(filescore > idownscore, (filescore, idownscore))
 
     def test_etype_inheritance_no_yams_inheritance(self):
