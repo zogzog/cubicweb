@@ -214,6 +214,12 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
         return self.cw_rset.get_entity(self.cw_row, self.cw_col)
 
     @property
+    def petype(self):
+        assert isinstance(self.peid, int)
+        pentity = self._cw.entity_from_eid(self.peid)
+        return pentity.e_schema.type
+
+    @property
     @cached
     def form(self):
         entity = self._entity()
@@ -249,12 +255,25 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
         creation form.
         """
         entity = self._entity()
-        if isinstance(self.peid, int):
-            pentity = self._cw.entity_from_eid(self.peid)
-            petype = pentity.e_schema.type
-            rdef = entity.e_schema.rdef(self.rtype, neg_role(self.role), petype)
-            card= rdef.role_cardinality(self.role)
-            if card == '1': # don't display remove link
+        rdef = entity.e_schema.rdef(self.rtype, neg_role(self.role), self.petype)
+        card = rdef.role_cardinality(self.role)
+        if card == '1': # don't display remove link
+            return None
+        # if cardinality is 1..n (+), dont display link to remove an inlined form for the first form
+        # allowing to edit the relation. To detect so:
+        #
+        # * if parent form (pform) is None, we're generated through an ajax call and so we know this
+        #   is not the first form
+        #
+        # * if parent form is not None, look for previous InlinedFormField in the parent's form
+        #   fields
+        if card == '+' and self.pform is not None:
+            # retrieve all field'views handling this relation and return None if we're the first of
+            # them
+            first_view = next(iter((f.view for f in self.pform.fields
+                                    if isinstance(f, InlinedFormField)
+                                    and f.view.rtype == self.rtype and f.view.role == self.role)))
+            if self == first_view:
                 return None
         return self.removejs and self.removejs % (
             self.peid, self.rtype, entity.eid)
@@ -314,7 +333,7 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
     def removejs(self):
         entity = self._entity()
         rdef = entity.e_schema.rdef(self.rtype, neg_role(self.role), self.petype)
-        card= rdef.role_cardinality(self.role)
+        card = rdef.role_cardinality(self.role)
         # when one is adding an inline entity for a relation of a single card,
         # the 'add a new xxx' link disappears. If the user then cancel the addition,
         # we have to make this link appears back. This is done by giving add new link

@@ -38,8 +38,16 @@ def tearDownModule():
     stoppgcluster(__file__)
 
 
+class PostgresTimeoutConfiguration(PostgresApptestConfiguration):
+    def __init__(self, *args, **kwargs):
+        self.default_sources = PostgresApptestConfiguration.default_sources.copy()
+        self.default_sources['system'] = PostgresApptestConfiguration.default_sources['system'].copy()
+        self.default_sources['system']['db-statement-timeout'] = 200
+        super(PostgresTimeoutConfiguration, self).__init__(*args, **kwargs)
+
+
 class PostgresFTITC(CubicWebTC):
-    configcls = PostgresApptestConfiguration
+    configcls = PostgresTimeoutConfiguration
 
     def test_eid_range(self):
         # concurrent allocation of eid ranges
@@ -133,6 +141,12 @@ class PostgresFTITC(CubicWebTC):
                 self.assertEqual(cm.exception.msgargs,
                         {'type-subject-value': u'"nogood"',
                          'type-subject-choices': u'"todo", "a", "b", "T", "lalala"'})
+
+    def test_statement_timeout(self):
+        with self.admin_access.repo_cnx() as cnx:
+            cnx.system_sql('select pg_sleep(0.1)')
+            with self.assertRaises(Exception):
+                cnx.system_sql('select pg_sleep(0.3)')
 
 
 class PostgresLimitSizeTC(CubicWebTC):
