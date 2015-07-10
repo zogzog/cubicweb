@@ -345,9 +345,10 @@ class DataFeedParser(AppObject):
             resp = cnx.get(url)
             resp.raise_for_status()
             return URLLibResponseAdapter(StringIO.StringIO(resp.text), url)
-        except (ImportError, ValueError) as exc:
+        except (ImportError, ValueError, EnvironmentError) as exc:
             # ImportError: not available
             # ValueError: no config entry found
+            # EnvironmentError: no cwclientlib config file found
             self.source.debug(str(exc))
 
         # no chance with cwclientlib, fall back to former implementation
@@ -522,9 +523,10 @@ class DataFeedXMLParser(DataFeedParser):
             cnx.timeout = self.source.http_timeout
             self.source.info('Using cwclientlib for checking %s' % url)
             return cnx.get(url).status_code == 404
-        except (ImportError, ValueError) as exc:
+        except (ImportError, ValueError, EnvironmentError) as exc:
             # ImportError: not available
             # ValueError: no config entry found
+            # EnvironmentError: no cwclientlib config file found
             self.source.debug(str(exc))
 
         # no chance with cwclientlib, fall back to former implementation
