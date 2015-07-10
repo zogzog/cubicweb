@@ -657,7 +657,7 @@ def check_perm(self, _cw, action, **kwargs):
     groups = self.get_groups(action)
     if _cw.user.matching_groups(groups):
         if DBG:
-            print 'check_perm: %r %r: user matches %s' % (action, _self_str, groups)
+            print ('check_perm: %r %r: user matches %s' % (action, _self_str, groups))
         return
     # if 'owners' in allowed groups, check if the user actually owns this
     # object, if so that's enough
