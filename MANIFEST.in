@@ -6,9 +6,18 @@ include bin/cubicweb-*
 include man/cubicweb-ctl.1
 
 include doc/*.rst
+include doc/Makefile
 recursive-include doc/book *
 recursive-include doc/tools *.py
 recursive-include doc/tutorials *.rst *.py
+include doc/api/*.rst
+recursive-include doc/_themes *
+recursive-include doc/_static *
+include doc/_templates/*.html
+include doc/changes/*.rst
+recursive-include doc/dev .txt *.rst
+recursive-include doc/images *.png *.svg
+include doc/conf.py
 
 recursive-include misc *.py *.png *.display
 
@@ -25,18 +34,18 @@ recursive-include entities/test/data bootstrap_cubes *.py
 recursive-include sobjects/test/data bootstrap_cubes *.py
 recursive-include hooks/test/data bootstrap_cubes *.py
 recursive-include server/test/data bootstrap_cubes *.py source* *.conf.in *.ldif
-recursive-include devtools/test/data bootstrap_cubes *.py *.txt *.js
+recursive-include devtools/test/data bootstrap_cubes *.py *.txt *.js *.po.ref
 recursive-include web/test/data bootstrap_cubes pouet.css *.py
+recursive-include etwist/test/data *.py
 
 recursive-include web/test/jstests *.js *.html *.css *.json
 recursive-include web/test/windmill *.py
 
-recursive-include skeleton *.py *.css *.js *.po compat *.in *.tmpl
+recursive-include skeleton *.py *.css *.js *.po compat *.in *.tmpl rules
 
 prune doc/book/en/.static
 prune doc/book/fr/.static
 prune doc/html/_sources/
 prune misc/cwfs
-prune goa
-prune doc/book/en/devweb/js_api
+prune doc/js_api
 global-exclude *.pyc

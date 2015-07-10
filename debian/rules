@@ -17,7 +17,7 @@ build-stamp:
 	# documentation build is now made optional since it can break for old
 	# distributions and we don't want to block a new release of Cubicweb
 	# because of documentation issues.
-	-PYTHONPATH=$${PYTHONPATH:+$${PYTHONPATH}:}$(CURDIR)/debian/pythonpath $(MAKE) -C doc/book/en all
+	-PYTHONPATH=$${PYTHONPATH:+$${PYTHONPATH}:}$(CURDIR)/debian/pythonpath $(MAKE) -C doc all
 	rm -rf debian/pythonpath
 	touch build-stamp
 
@@ -27,6 +27,7 @@ clean:
 	rm -rf build
 	#rm -rf debian/cubicweb-*/
 	find . -name "*.pyc" -delete
+	-$(MAKE) -C doc clean
 	rm -f $(basename $(wildcard debian/*.in))
 	dh_clean
 
@@ -70,7 +71,7 @@ binary-indep: build install
 	dh_installlogrotate -i
 	dh_installdocs -i -A README
 	dh_installman -i
-	dh_installchangelogs -i
+	dh_installchangelogs -i -Xdoc/changes
 	dh_link -i
 	dh_compress -i -X.py -X.ini -X.xml -X.js -X.rst -X.txt
 	dh_fixperms -i
