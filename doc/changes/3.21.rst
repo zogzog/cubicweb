@@ -15,6 +15,9 @@ New features
   - upgrades that modify constraints will fail when running on sqlite
     (but upgrades aren't supported on sqlite anyway)
 
+  Note: as of 3.21.0, the upgrade script only works on PostgreSQL.  The
+  migration for SQLServer will be added in a future bugfix release.
+
 * for easier instance monitoring, cubicweb can regularly dump some statistics
   (basically those exposed by the 'info' and 'gc' views) in json format to a file
 
