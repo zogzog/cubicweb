@@ -66,7 +66,7 @@ For Ubuntu 12.04 Precise Pangolin (Long Term Support) and newer::
 The repositories are signed with the `Logilab's gnupg key`_. You can download
 and register the key to avoid warnings::
 
-  wget -q http://download.logilab.org/logilab-dists-key.asc -O- | sudo apt-key add -
+  wget -O/etc/apt/trusted.gpg.d/logilab.gpg https://www.logilab.fr/logilab-debian-keyring.gpg
 
 Update your list of packages and perform the installation::
 
@@ -94,7 +94,7 @@ list of available cubes using ``apt-cache search cubicweb`` or at the
     :ref:`cubicweb with mysql database <MySqlConfiguration>`.
 
 .. _`list of sources`: http://wiki.debian.org/SourcesList
-.. _`Logilab's gnupg key`: http://download.logilab.org/logilab-dists-key.asc
+.. _`Logilab's gnupg key`: https://www.logilab.fr/logilab-debian-keyring.gpg
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
 
 .. _WindowsInstallation:
