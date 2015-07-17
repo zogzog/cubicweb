@@ -49,21 +49,12 @@ installation and upgrade much easier for users since
 dependencies (like databases) are automatically installed.
 
 Depending on the distribution you are using, add the appropriate line to your
-`list of sources` (for example by editing ``/etc/apt/sources.list``).
+`list of sources` (for example by editing ``/etc/apt/sources.list``), replacing
+``<release>`` with e.g. ``wheezy`` or ``trusty``::
 
-For Debian 7.0 Wheezy (stable)::
+  deb http://download.logilab.org/production/ <release>/
 
-  deb http://download.logilab.org/production/ wheezy/
-
-For Debian Sid (unstable)::
-
-  deb http://download.logilab.org/production/ sid/
-
-For Ubuntu 12.04 Precise Pangolin (Long Term Support) and newer::
-
-  deb http://download.logilab.org/production/ precise/
-
-The repositories are signed with the `Logilab's gnupg key`_. You can download
+The repositories are signed with `Logilab's gnupg key`_. You can download
 and register the key to avoid warnings::
 
   wget -O/etc/apt/trusted.gpg.d/logilab.gpg https://www.logilab.fr/logilab-debian-keyring.gpg
