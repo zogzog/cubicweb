@@ -1097,7 +1097,7 @@ class CubicWebSchema(Schema):
                     subjtype, rschema.type, objtype,
                     __permissions__={'add': (),
                                      'delete': (),
-                                     'read': ('managers', 'users', 'guests')})
+                                     'read': rschema.permissions['read']})
                 rdef.infered = True
                 self.add_relation_def(rdef)
 
