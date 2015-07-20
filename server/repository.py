@@ -712,6 +712,8 @@ class Repository(object):
         """
         with Session(InternalManager(), self) as session:
             with session.new_cnx() as cnx:
+                cnx.user._cw = cnx  # XXX remove when "vreg = user._cw.vreg"
+                                    # hack in entity.py is gone
                 with cnx.security_enabled(read=False, write=False):
                     yield cnx
 
