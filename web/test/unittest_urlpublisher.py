@@ -25,7 +25,7 @@ from logilab.common.testlib import unittest_main
 from cubicweb.rset import ResultSet
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.fake import FakeRequest
-from cubicweb.web import NotFound, Redirect
+from cubicweb.web import NotFound, Redirect, views
 from cubicweb.web.views.urlrewrite import SimpleReqRewriter
 
 
@@ -69,6 +69,7 @@ class URLPublisherTC(CubicWebTC):
             self.assertEqual("Any X,AA,AB ORDERBY AB WHERE X is_instance_of CWEType, "
                              "X modification_date AA, X name AB",
                              rset.printable_rql())
+            self.assertEqual(req.form['vid'], 'sameetypelist')
 
     def test_rest_path_by_attr(self):
         with self.admin_access.web_request() as req:
@@ -91,6 +92,7 @@ class URLPublisherTC(CubicWebTC):
                              'X firstname AA, X login AB, X modification_date AC, '
                              'X surname AD, X login "admin"',
                              rset.printable_rql())
+            self.assertEqual(req.form['vid'], 'primary')
 
     def test_rest_path_eid(self):
         with self.admin_access.web_request() as req:
@@ -125,6 +127,15 @@ class URLPublisherTC(CubicWebTC):
                              'X title "hell\'o"',
                              rset.printable_rql())
 
+    def test_rest_path_use_vid_from_rset(self):
+        with self.admin_access.web_request(headers={'Accept': 'application/rdf+xml'}) as req:
+            views.VID_BY_MIMETYPE['application/rdf+xml'] = 'rdf'
+            try:
+                ctrl, rset = self.process(req, 'CWEType')
+            finally:
+                views.VID_BY_MIMETYPE.pop('application/rdf+xml')
+            self.assertEqual(req.form['vid'], 'rdf')
+
     def test_rest_path_errors(self):
         with self.admin_access.web_request() as req:
             self.assertRaises(NotFound, self.process, req, 'CWUser/eid/30000')
@@ -141,25 +152,24 @@ class URLPublisherTC(CubicWebTC):
             self.assertRaises(NotFound, self.process, req, '1/non_action')
             self.assertRaises(NotFound, self.process, req, 'CWUser/login/admin/non_action')
 
-
     def test_regexp_path(self):
         """tests the regexp path resolution"""
         with self.admin_access.web_request() as req:
             ctrl, rset = self.process(req, 'add/Task')
             self.assertEqual(ctrl, 'view')
             self.assertEqual(rset, None)
-            self.assertEqual(req.form, {'etype' : "Task", 'vid' : "creation"})
+            self.assertEqual(req.form, {'etype': "Task", 'vid': "creation"})
             self.assertRaises(NotFound, self.process, req, 'add/foo/bar')
 
     def test_nonascii_path(self):
         oldrules = SimpleReqRewriter.rules
-        SimpleReqRewriter.rules = [(re.compile('/\w+', re.U), dict(vid='foo')),]
+        SimpleReqRewriter.rules = [(re.compile('/\w+', re.U), dict(vid='foo'))]
         with self.admin_access.web_request() as req:
             try:
                 path = str(FakeRequest().url_quote(u'été'))
                 ctrl, rset = self.process(req, path)
                 self.assertEqual(rset, None)
-                self.assertEqual(req.form, {'vid' : "foo"})
+                self.assertEqual(req.form, {'vid': "foo"})
             finally:
                 SimpleReqRewriter.rules = oldrules
 

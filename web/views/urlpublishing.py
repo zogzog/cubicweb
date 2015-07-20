@@ -60,7 +60,7 @@ __docformat__ = "restructuredtext en"
 from rql import TypeResolverException
 
 from cubicweb import RegistryException
-from cubicweb.web import NotFound, Redirect, component
+from cubicweb.web import NotFound, Redirect, component, views
 
 
 class PathDontMatch(Exception):
@@ -201,18 +201,14 @@ class RestPathEvaluator(URLPathEvaluator):
             return self.handle_etype_attr(req, cls, attrname, value)
         return self.handle_etype(req, cls)
 
-    def set_vid_for_rset(self, req, cls, rset):# cls is there to ease overriding
+    def set_vid_for_rset(self, req, cls, rset):  # cls is there to ease overriding
         if rset.rowcount == 0:
             raise NotFound()
-        # we've to set a default vid here, since vid_from_rset may try to use a
-        # table view if fetch_rql include some non final relation
-        if rset.rowcount == 1:
-            req.form.setdefault('vid', 'primary')
-        else: # rset.rowcount >= 1
-            if len(rset.column_types(0)) > 1:
-                req.form.setdefault('vid', 'list')
-            else:
-                req.form.setdefault('vid', 'sameetypelist')
+        if 'vid' not in req.form:
+            # check_table=False tells vid_from_rset not to try to use a table view if fetch_rql
+            # include some non final relation
+            req.form['vid'] = views.vid_from_rset(req, rset, req.vreg.schema,
+                                                  check_table=False)
 
     def handle_etype(self, req, cls):
         rset = req.execute(cls.fetch_rql(req.user))

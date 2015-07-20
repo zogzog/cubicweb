@@ -77,7 +77,7 @@ VID_BY_MIMETYPE = {
     #'text/xml': 'xml',
     # XXX rss, owl...
 }
-def vid_from_rset(req, rset, schema):
+def vid_from_rset(req, rset, schema, check_table=True):
     """given a result set, return a view id"""
     if rset is None:
         return 'index'
@@ -90,7 +90,7 @@ def vid_from_rset(req, rset, schema):
         return 'noresult'
     # entity result set
     if not schema.eschema(rset.description[0][0]).final:
-        if need_table_view(rset, schema):
+        if check_table and need_table_view(rset, schema):
             return 'table'
         if nb_rows == 1:
             if req.search_state[0] == 'normal':
