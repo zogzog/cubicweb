@@ -981,18 +981,6 @@ def cnx_attr(attr_name, writable=False):
         args['fset'] = write_attr
     return property(**args)
 
-def cnx_meth(meth_name):
-    """return a function forwarding calls to connection.
-
-    This is to be used by session"""
-    @deprecated('[3.19] use a Connection object instead')
-    def meth_from_cnx(session, *args, **kwargs):
-        result = getattr(session._cnx, meth_name)(*args, **kwargs)
-        if getattr(result, '_cw', None) is not None:
-            result._cw = session
-        return result
-    meth_from_cnx.__doc__ = getattr(Connection, meth_name).__doc__
-    return meth_from_cnx
 
 class Timestamp(object):
 
