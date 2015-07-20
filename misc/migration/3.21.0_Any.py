@@ -50,13 +50,13 @@ def add_foreign_keys_inlined(rschema):
             broken_eids = sql('SELECT cw_eid FROM cw_%(e)s WHERE cw_%(r)s IS NULL' % args, ask_confirm=False)
             if broken_eids:
                 print 'Required relation %(e)s.%(r)s missing' % args
-                args['eids'] = ', '.join(eid for eid, in broken_eids)
+                args['eids'] = ', '.join(str(eid) for eid, in broken_eids)
                 rql('DELETE %(e)s X WHERE X eid IN (%(eids)s)' % args)
             broken_eids = sql('SELECT cw_eid FROM cw_%(e)s WHERE cw_%(r)s IN (SELECT cw_%(r)s FROM cw_%(e)s '
                               'EXCEPT SELECT eid FROM entities)' % args, ask_confirm=False)
             if broken_eids:
                 print 'Required relation %(e)s.%(r)s references unknown objects, deleting subject entities' % args
-                args['eids'] = ', '.join(eid for eid, in broken_eids)
+                args['eids'] = ', '.join(str(eid) for eid, in broken_eids)
                 rql('DELETE %(e)s X WHERE X eid IN (%(eids)s)' % args)
         else:
             if sql('SELECT COUNT(*) FROM ('
