@@ -33,12 +33,16 @@ def add_foreign_keys_relation(rschema):
         sql('DELETE FROM %(r)s_relation '
             'WHERE eid_to IN (SELECT eid_to FROM %(r)s_relation EXCEPT SELECT eid FROM entities)' % args)
 
-    sql('ALTER TABLE %(r)s_relation DROP CONSTRAINT IF EXISTS %(r)s_relation_eid_from_fkey' % args)
-    sql('ALTER TABLE %(r)s_relation DROP CONSTRAINT IF EXISTS %(r)s_relation_eid_to_fkey' % args)
+    sql('ALTER TABLE %(r)s_relation DROP CONSTRAINT IF EXISTS %(r)s_relation_eid_from_fkey' % args,
+        ask_confirm=False)
+    sql('ALTER TABLE %(r)s_relation DROP CONSTRAINT IF EXISTS %(r)s_relation_eid_to_fkey' % args,
+        ask_confirm=False)
     sql('ALTER TABLE %(r)s_relation ADD CONSTRAINT %(r)s_relation_eid_from_fkey '
-        'FOREIGN KEY (eid_from) REFERENCES entities (eid)' % args)
+        'FOREIGN KEY (eid_from) REFERENCES entities (eid)' % args,
+        ask_confirm=False)
     sql('ALTER TABLE %(r)s_relation ADD CONSTRAINT %(r)s_relation_eid_to_fkey '
-        'FOREIGN KEY (eid_to) REFERENCES entities (eid)' % args)
+        'FOREIGN KEY (eid_to) REFERENCES entities (eid)' % args,
+        ask_confirm=False)
 
 
 def add_foreign_keys_inlined(rschema):
@@ -47,13 +51,15 @@ def add_foreign_keys_inlined(rschema):
         args['c'] = 'cw_%(e)s_cw_%(r)s_fkey' % args
 
         if eschema.rdef(rschema).cardinality[0] == '1':
-            broken_eids = sql('SELECT cw_eid FROM cw_%(e)s WHERE cw_%(r)s IS NULL' % args, ask_confirm=False)
+            broken_eids = sql('SELECT cw_eid FROM cw_%(e)s WHERE cw_%(r)s IS NULL' % args,
+                              ask_confirm=False)
             if broken_eids:
                 print 'Required relation %(e)s.%(r)s missing' % args
                 args['eids'] = ', '.join(str(eid) for eid, in broken_eids)
                 rql('DELETE %(e)s X WHERE X eid IN (%(eids)s)' % args)
             broken_eids = sql('SELECT cw_eid FROM cw_%(e)s WHERE cw_%(r)s IN (SELECT cw_%(r)s FROM cw_%(e)s '
-                              'EXCEPT SELECT eid FROM entities)' % args, ask_confirm=False)
+                              'EXCEPT SELECT eid FROM entities)' % args,
+                              ask_confirm=False)
             if broken_eids:
                 print 'Required relation %(e)s.%(r)s references unknown objects, deleting subject entities' % args
                 args['eids'] = ', '.join(str(eid) for eid, in broken_eids)
@@ -62,14 +68,16 @@ def add_foreign_keys_inlined(rschema):
             if sql('SELECT COUNT(*) FROM ('
                    '    SELECT cw_%(r)s FROM cw_%(e)s WHERE cw_%(r)s IS NOT NULL'
                    '  EXCEPT'
-                   '    SELECT eid FROM entities) AS eids' % args, ask_confirm=False)[0][0]:
+                   '    SELECT eid FROM entities) AS eids' % args,
+                   ask_confirm=False)[0][0]:
                 print '%(e)s.%(r)s references unknown entities, deleting relation' % args
                 sql('UPDATE cw_%(e)s SET cw_%(r)s = NULL WHERE cw_%(r)s IS NOT NULL AND cw_%(r)s IN '
                     '(SELECT cw_%(r)s FROM cw_%(e)s EXCEPT SELECT eid FROM entities)' % args)
-        sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS %(c)s' % args)
+        sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS %(c)s' % args,
+            ask_confirm=False)
         sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s '
-            'FOREIGN KEY (cw_%(r)s) references entities(eid)'
-            % args)
+            'FOREIGN KEY (cw_%(r)s) references entities(eid)' % args,
+            ask_confirm=False)
 
 
 def add_foreign_key_etype(eschema):
@@ -82,9 +90,11 @@ def add_foreign_key_etype(eschema):
         print '%(e)s has nonexistent entities, deleting' % args
         sql('DELETE FROM cw_%(e)s WHERE cw_eid IN '
             '(SELECT cw_eid FROM cw_%(e)s EXCEPT SELECT eid FROM entities)' % args)
-    sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS cw_%(e)s_cw_eid_fkey' % args)
+    sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS cw_%(e)s_cw_eid_fkey' % args,
+        ask_confirm=False)
     sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT cw_%(e)s_cw_eid_fkey '
-        'FOREIGN KEY (cw_eid) REFERENCES entities (eid)' % args)
+        'FOREIGN KEY (cw_eid) REFERENCES entities (eid)' % args,
+        ask_confirm=False)
 
 
 add_foreign_keys()
@@ -103,7 +113,8 @@ if 'moved_entities' not in helper.list_tables(cu):
     )
     ''')
 
-moved_entities = sql('SELECT -eid, extid FROM entities WHERE eid < 0')
+moved_entities = sql('SELECT -eid, extid FROM entities WHERE eid < 0',
+                     ask_confirm=False)
 cu.executemany('INSERT INTO moved_entities (eid, extid) VALUES (%s, %s)',
                moved_entities)
 sql('DELETE FROM entities WHERE eid < 0')
