@@ -146,7 +146,10 @@ def skip_inlined_relation_security(cnx, rschema, eid):
         entity = cnx.entity_cache(eid)
     except KeyError:
         return False
-    return rschema.type in entity.cw_edited.skip_security
+    edited = getattr(entity, 'cw_edited', None)
+    if edited is None:
+        return False
+    return rschema.type in edited.skip_security
 
 
 class BeforeAddRelationSecurityHook(SecurityHook):
