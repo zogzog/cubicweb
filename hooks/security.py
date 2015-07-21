@@ -143,7 +143,7 @@ def skip_inlined_relation_security(cnx, rschema, eid):
     """
     assert rschema.inlined
     try:
-        entity = cnx.transaction_data['ecache'][eid]
+        entity = cnx.entity_cache(eid)
     except KeyError:
         return False
     return rschema.type in entity.cw_edited.skip_security
