@@ -510,8 +510,8 @@ class DataFeedXMLParser(DataFeedParser):
         raise NotImplementedError
 
     def is_deleted(self, extid, etype, eid):
-        if exitd.startswith('file://'):
-            return exists(exitd[7:])
+        if extid.startswith('file://'):
+            return exists(extid[7:])
 
         url = self.normalize_url(extid)
         # first, try to use cwclientlib if it's available and if the
