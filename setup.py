@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # pylint: disable=W0142,W0403,W0404,W0613,W0622,W0622,W0704,R0904,C0103,E0611
 #
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
 # This file is part of CubicWeb pyramid cube.
 #
 # CubicWeb is free software: you can redistribute it and/or modify it under the
@@ -22,7 +25,7 @@ __docformat__ = "restructuredtext en"
 import os
 import sys
 import shutil
-from os.path import isdir, exists, join, walk
+from os.path import isdir, exists, join, walk, dirname
 
 try:
     if os.environ.get('NO_SETUPTOOLS'):
@@ -36,36 +39,47 @@ except ImportError:
     USE_SETUPTOOLS = False
 from distutils.command import install_data
 
-# import required features
-from __pkginfo__ import modname, version, license, description, web, \
-     author, author_email, classifiers
+# load metadata from the __pkginfo__.py file so there is no risk of conflict
+# see https://packaging.python.org/en/latest/single_source_version.html
+base_dir = dirname(__file__)
 
-if exists('README'):
-    long_description = file('README').read()
-else:
-    long_description = ''
+pkginfo = {}
+with open(join(base_dir, "__pkginfo__.py")) as f:
+    exec(f.read(), pkginfo)
 
-# import optional features
-import __pkginfo__
+    
+# get required metadatas
+modname = pkginfo['modname']
+version = pkginfo['version']
+license = pkginfo['license']
+description = pkginfo['description']
+web = pkginfo['web']
+author = pkginfo['author']
+author_email = pkginfo['author_email']
+classifiers = pkginfo['classifiers']
+
+with open(join(base_dir, 'README')) as f:
+    long_description = f.read()
+
+# get optional metadatas
+distname = pkginfo.get('distname', modname)
+scripts = pkginfo.get('scripts', ())
+include_dirs = pkginfo.get('include_dirs', ())
+data_files = pkginfo.get('data_files', None)
+ext_modules = pkginfo.get('ext_modules', None)
+dependency_links = pkginfo.get('dependency_links', ())
+
 if USE_SETUPTOOLS:
     requires = {}
     for entry in ("__depends__",): # "__recommends__"):
-        requires.update(getattr(__pkginfo__, entry, {}))
+        requires.update(pkginfo.get(entry, {}))
     install_requires = [("%s %s" % (d, v and v or "")).strip()
                        for d, v in requires.iteritems()]
 else:
     install_requires = []
 
-distname = getattr(__pkginfo__, 'distname', modname)
-scripts = getattr(__pkginfo__, 'scripts', ())
-include_dirs = getattr(__pkginfo__, 'include_dirs', ())
-data_files = getattr(__pkginfo__, 'data_files', None)
-ext_modules = getattr(__pkginfo__, 'ext_modules', None)
-dependency_links = getattr(__pkginfo__, 'dependency_links', ())
-
-BASE_BLACKLIST = ('CVS', '.svn', '.hg', 'debian', 'dist', 'build')
+BASE_BLACKLIST = ('CVS', '.svn', '.hg', '.git', 'debian', 'dist', 'build')
 IGNORED_EXTENSIONS = ('.pyc', '.pyo', '.elc', '~')
-
 
 def ensure_scripts(linux_scripts):
     """

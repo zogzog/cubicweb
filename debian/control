@@ -2,8 +2,10 @@ Source: cubicweb-pyramid
 Section: web
 Priority: optional
 Maintainer: UNLISH S.A.S. (Montpelliers, FRANCE) <contact@unlish.com>
-Build-Depends: debhelper (>= 7), python (>= 2.6), python-support
-Standards-Version: 3.9.3
+Build-Depends:
+  debhelper (>= 9),
+  python (>= 2.6.6-3),
+Standards-Version: 3.9.6
 XS-Python-Version: >= 2.6
 
 Package: cubicweb-pyramid
