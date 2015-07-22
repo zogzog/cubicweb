@@ -16,7 +16,8 @@ web = 'http://www.cubicweb.org/project/%s' % distname
 __depends__ = {
     'cubicweb': '>= 3.19.3',
     'wsgicors': '>= 0.3',
-    'pyramid-cubicweb': '>= 0.2.0'
+    'pyramid-cubicweb': '>= 0.2.0',
+    'waitress': None,
 }
 __recommends__ = {}
 

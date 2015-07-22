@@ -12,6 +12,7 @@ Package: cubicweb-pyramid
 Architecture: all
 Depends:
  cubicweb-common (>= 3.19.3),
+ python-waitress,
  ${python:Depends},
  ${misc:Depends},
 Description: Add the 'pyramid' command to cubicweb-ctl"
