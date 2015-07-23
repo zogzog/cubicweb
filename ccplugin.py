@@ -74,7 +74,7 @@ class PyramidStartHandler(InstanceCommand):
                   '(default: 100)'}),
     )
     if cwversion >= (3, 21, 0):
-        options = PyramidStartHandler.options + (
+        options = options + (
         ('param',
          {'short': 'p', 'type': 'named', 'metavar': 'key1:value1,key2:value2',
           'default': {},
