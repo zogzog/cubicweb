@@ -28,11 +28,6 @@ class JScript(QUnitTestCase):
             "../../web/data/cubicweb.compat.js",
             "../../web/data/cubicweb.htmlhelpers.js",
             "../../web/data/cubicweb.ajax.js",
-            ), (
-            "jstests/ajax_url0.html",
-            "jstests/ajax_url1.html",
-            "jstests/ajax_url2.html",
-            "jstests/ajaxresult.json",
             ),
          ),
     )
