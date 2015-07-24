@@ -1,54 +1,9 @@
 from __future__ import absolute_import
 
-from rql import TypeResolverException
 
-from pyramid.decorator import reify
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.view import view_config
-
-
-class EntityResource(object):
-    def __init__(self, request, cls, attrname, value):
-        self.request = request
-        self.cls = cls
-        self.attrname = attrname
-        self.value = value
-
-    @reify
-    def rset(self):
-        st = self.cls.fetch_rqlst(self.request.cw_cnx.user, ordermethod=None)
-        st.add_constant_restriction(st.get_variable('X'), self.attrname,
-                                    'x', 'Substitute')
-        if self.attrname == 'eid':
-            try:
-                rset = self.request.cw_request.execute(
-                    st.as_string(), {'x': int(self.value)})
-            except (ValueError, TypeResolverException):
-                # conflicting eid/type
-                raise HTTPNotFound()
-        else:
-            rset = self.request.cw_request.execute(
-                st.as_string(), {'x': unicode(self.value)})
-        return rset
-
-
-class ETypeResource(object):
-    @classmethod
-    def from_match(cls, matchname):
-        def factory(request):
-            return cls(request, request.matchdict[matchname])
-        return factory
-
-    def __init__(self, request, etype):
-        vreg = request.registry['cubicweb.registry']
-
-        self.request = request
-        self.etype = vreg.case_insensitive_etypes[etype.lower()]
-        self.cls = vreg['etypes'].etype_class(self.etype)
-
-    def __getitem__(self, value):
-        attrname = self.cls.cw_rest_attr_info()[0]
-        return EntityResource(self.request, self.cls, attrname, value)
+from pyramid_cubicweb.resources import EntityResource, ETypeResource
 
 
 class MatchIsETypePredicate(object):
