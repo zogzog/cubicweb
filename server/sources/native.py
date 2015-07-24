@@ -29,7 +29,7 @@ from cPickle import loads, dumps
 import cPickle as pickle
 from threading import Lock
 from datetime import datetime
-from base64 import b64decode, b64encode
+from base64 import b64encode
 from contextlib import contextmanager
 from os.path import basename
 import re
@@ -852,10 +852,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
         sql = 'SELECT type, extid, asource FROM entities WHERE eid=%s' % eid
         res = self._eid_type_source(cnx, eid, sql)
-        if res[-2] is not None:
-            if not isinstance(res, list):
-                res = list(res)
-            res[-2] = b64decode(res[-2])
+        if not isinstance(res, list):
+            res = list(res)
+        res[-2] = self.decode_extid(res[-2])
         return res
 
     def eid_type_source_pre_131(self, cnx, eid):
@@ -864,8 +863,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         res = self._eid_type_source(cnx, eid, sql)
         if not isinstance(res, list):
             res = list(res)
-        if res[-1] is not None:
-            res[-1] = b64decode(res[-1])
+        res[-1] = self.decode_extid(extid)
         res.append("system")
         return res
 

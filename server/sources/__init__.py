@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from time import time
 from logging import getLogger
+from base64 import b64decode
 
 from logilab.common import configuration
 from logilab.common.deprecation import deprecated
@@ -195,6 +196,12 @@ class AbstractSource(object):
                          if url.strip()]
         else:
             self.urls = []
+
+    @staticmethod
+    def decode_extid(extid):
+        if extid is None:
+            return extid
+        return b64decode(extid)
 
     # source initialization / finalization #####################################
 
