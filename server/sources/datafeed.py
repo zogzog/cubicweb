@@ -23,7 +23,6 @@ import urllib2
 import StringIO
 from os.path import exists
 from datetime import datetime, timedelta
-from base64 import b64decode
 from cookielib import CookieJar
 import urlparse
 from lxml import etree
@@ -282,7 +281,7 @@ class DataFeedSource(AbstractSource):
         sql = ('SELECT extid, eid, type FROM entities, cw_source_relation '
                'WHERE entities.eid=cw_source_relation.eid_from '
                'AND cw_source_relation.eid_to=%s' % self.eid)
-        return dict((b64decode(uri), (eid, type))
+        return dict((self.decode_extid(uri), (eid, type))
                     for uri, eid, type in cnx.system_sql(sql).fetchall())
 
     def init_import_log(self, cnx, **kwargs):
