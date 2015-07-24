@@ -92,6 +92,11 @@ The Pyramid CubicWeb specific configuration entries are:
 
     (True) Enable/disable backward compatibility. See :ref:`bwcompat_module`.
 
+.. confval:: cubicweb.bwcompat.errorhandler (bool)
+
+    (True) Enable/disable the backward compatibility error handler.
+    Set to 'no' if you need to define your own error handlers.
+
 .. confval:: cubicweb.defaults (bool)
 
     (True) Enable/disable defaults. See :ref:`defaults_module`.

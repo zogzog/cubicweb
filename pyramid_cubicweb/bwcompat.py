@@ -4,6 +4,7 @@ from pyramid import security
 from pyramid import tweens
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid import httpexceptions
+from pyramid.settings import asbool
 
 import cubicweb
 import cubicweb.web
@@ -196,6 +197,8 @@ def includeme(config):
 
     config.add_tween(
         'pyramid_cubicweb.bwcompat.TweenHandler', under=tweens.EXCVIEW)
-    config.add_view(cwhandler.error_handler, context=Exception)
-    # XXX why do i need this?
-    config.add_view(cwhandler.error_handler, context=httpexceptions.HTTPForbidden)
+    if asbool(config.registry.settings.get(
+            'cubicweb.bwcompat.errorhandler', True)):
+        config.add_view(cwhandler.error_handler, context=Exception)
+        # XXX why do i need this?
+        config.add_view(cwhandler.error_handler, context=httpexceptions.HTTPForbidden)
