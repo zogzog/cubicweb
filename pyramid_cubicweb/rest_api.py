@@ -4,22 +4,7 @@ from __future__ import absolute_import
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.view import view_config
 from pyramid_cubicweb.resources import EntityResource, ETypeResource
-
-
-class MatchIsETypePredicate(object):
-    def __init__(self, matchname, config):
-        self.matchname = matchname
-        self.etypes = frozenset(
-            k.lower() for k in config.registry['cubicweb.registry']['etypes'])
-
-    def text(self):
-        return 'match_is_etype = %s' % self.matchname
-
-    phash = text
-
-    def __call__(self, info, request):
-        return info['match'][self.matchname].lower() in \
-            request.registry['cubicweb.registry'].case_insensitive_etypes
+from pyramid_cubicweb.predicates import MatchIsETypePredicate
 
 
 @view_config(
