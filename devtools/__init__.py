@@ -627,6 +627,11 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
             return backup_name
         return None
 
+    def has_cache(self, db_id):
+        backup_name = self._backup_name(db_id)
+        return (super(PostgresTestDataBaseHandler, self).has_cache(db_id)
+                and backup_name in self.helper.list_databases(self.cursor))
+
     def init_test_database(self):
         """initialize a fresh postgresql database used for testing purpose"""
         from cubicweb.server import init_repository
