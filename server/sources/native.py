@@ -849,7 +849,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         raise UnknownEid(eid)
 
     def eid_type_source(self, cnx, eid): # pylint: disable=E0202
-        """return a tuple (type, source, extid) for the entity with id <eid>"""
+        """return a tuple (type, extid, source) for the entity with id <eid>"""
         sql = 'SELECT type, extid, asource FROM entities WHERE eid=%s' % eid
         res = self._eid_type_source(cnx, eid, sql)
         if res[-2] is not None:
@@ -859,7 +859,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return res
 
     def eid_type_source_pre_131(self, cnx, eid):
-        """return a tuple (type, source, extid) for the entity with id <eid>"""
+        """return a tuple (type, extid, source) for the entity with id <eid>"""
         sql = 'SELECT type, extid FROM entities WHERE eid=%s' % eid
         res = self._eid_type_source(cnx, eid, sql)
         if not isinstance(res, list):

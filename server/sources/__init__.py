@@ -395,7 +395,7 @@ class AbstractSource(object):
     # system source interface #################################################
 
     def eid_type_source(self, cnx, eid):
-        """return a tuple (type, source, extid) for the entity with id <eid>"""
+        """return a tuple (type, extid, source) for the entity with id <eid>"""
         raise NotImplementedError(self)
 
     def create_eid(self, cnx):
