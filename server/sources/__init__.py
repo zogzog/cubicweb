@@ -128,6 +128,9 @@ class AbstractSource(object):
     def __eq__(self, other):
         return self.uri == other.uri
 
+    def __ne__(self, other):
+        return not (self == other)
+
     def backup(self, backupfile, confirm, format='native'):
         """method called to create a backup of source's data"""
         pass
