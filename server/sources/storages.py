@@ -44,7 +44,7 @@ class Storage(object):
       query result process of fetched attribute's value and should have the
       following prototype::
 
-        callback(self, source, session, value)
+        callback(self, source, cnx, value)
 
       where `value` is the value actually stored in the backend. None values
       will be skipped (eg callback won't be called).
@@ -92,15 +92,15 @@ def uniquify_path(dirpath, basename):
     return tempfile.mkstemp(prefix=base, suffix=ext, dir=dirpath)
 
 @contextmanager
-def fsimport(session):
-    present = 'fs_importing' in session.transaction_data
-    old_value = session.transaction_data.get('fs_importing')
-    session.transaction_data['fs_importing'] = True
+def fsimport(cnx):
+    present = 'fs_importing' in cnx.transaction_data
+    old_value = cnx.transaction_data.get('fs_importing')
+    cnx.transaction_data['fs_importing'] = True
     yield
     if present:
-        session.transaction_data['fs_importing'] = old_value
+        cnx.transaction_data['fs_importing'] = old_value
     else:
-        del session.transaction_data['fs_importing']
+        del cnx.transaction_data['fs_importing']
 
 
 class BytesFileSystemStorage(Storage):
@@ -126,7 +126,7 @@ class BytesFileSystemStorage(Storage):
         fileobj.close()
 
 
-    def callback(self, source, session, value):
+    def callback(self, source, cnx, value):
         """sql generator callback when some attribute with a custom storage is
         accessed
         """
@@ -236,12 +236,12 @@ class BytesFileSystemStorage(Storage):
         """migrate an entity attribute to the storage"""
         entity.cw_edited = EditedEntity(entity, **entity.cw_attr_cache)
         self.entity_added(entity, attribute)
-        session = entity._cw
-        source = session.repo.system_source
+        cnx = entity._cw
+        source = cnx.repo.system_source
         attrs = source.preprocess_entity(entity)
         sql = source.sqlgen.update('cw_' + entity.cw_etype, attrs,
                                    ['cw_eid'])
-        source.doexec(session, sql, attrs)
+        source.doexec(cnx, sql, attrs)
         entity.cw_edited = None
 
 
