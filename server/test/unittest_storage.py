@@ -87,27 +87,31 @@ class StorageTC(CubicWebTC):
                              'managed attribute. Is FSPATH() argument BFSS managed?')
 
     def test_bfss_storage(self):
-        with self.admin_access.repo_cnx() as cnx:
-            f1 = self.create_file(cnx)
+        with self.admin_access.web_request() as req:
+            cnx = req.cnx
+            f1 = self.create_file(req)
             filepaths = glob(osp.join(self.tempdir, '%s_data_*' % f1.eid))
             self.assertEqual(len(filepaths), 1, filepaths)
             expected_filepath = filepaths[0]
             # file should be read only
             self.assertFalse(os.access(expected_filepath, os.W_OK))
-            self.assertEqual(file(expected_filepath).read(), 'the-data')
+            self.assertEqual(open(expected_filepath).read(), 'the-data')
             cnx.rollback()
             self.assertFalse(osp.isfile(expected_filepath))
             filepaths = glob(osp.join(self.tempdir, '%s_data_*' % f1.eid))
             self.assertEqual(len(filepaths), 0, filepaths)
-            f1 = self.create_file(cnx)
+            f1 = self.create_file(req)
             cnx.commit()
             filepaths = glob(osp.join(self.tempdir, '%s_data_*' % f1.eid))
             self.assertEqual(len(filepaths), 1, filepaths)
             expected_filepath = filepaths[0]
-            self.assertEqual(file(expected_filepath).read(), 'the-data')
+            self.assertEqual(open(expected_filepath).read(), 'the-data')
+
+            # add f1 back to the entity cache with req as _cw
+            f1 = req.entity_from_eid(f1.eid)
             f1.cw_set(data=Binary('the new data'))
             cnx.rollback()
-            self.assertEqual(file(expected_filepath).read(), 'the-data')
+            self.assertEqual(open(expected_filepath).read(), 'the-data')
             f1.cw_delete()
             self.assertTrue(osp.isfile(expected_filepath))
             cnx.rollback()

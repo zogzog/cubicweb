@@ -563,7 +563,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return results
 
     @contextmanager
-    def _storage_handler(self, entity, event):
+    def _fixup_cw(self, cnx, entity):
+        _cw = entity._cw
+        entity._cw = cnx
+        try:
+            yield
+        finally:
+            entity._cw = _cw
+
+    @contextmanager
+    def _storage_handler(self, cnx, entity, event):
         # 1/ memorize values as they are before the storage is called.
         #    For instance, the BFSStorage will replace the `data`
         #    binary value with a Binary containing the destination path
@@ -578,14 +587,15 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         etype = entities[0].__regid__
         for attr, storage in self._storages.get(etype, {}).items():
             for entity in entities:
-                if event == 'deleted':
-                    storage.entity_deleted(entity, attr)
-                else:
-                    edited = entity.cw_edited
-                    if attr in edited:
-                        handler = getattr(storage, 'entity_%s' % event)
-                        to_restore = handler(entity, attr)
-                        restore_values.append((entity, attr, to_restore))
+                with self._fixup_cw(cnx, entity):
+                    if event == 'deleted':
+                        storage.entity_deleted(entity, attr)
+                    else:
+                        edited = entity.cw_edited
+                        if attr in edited:
+                            handler = getattr(storage, 'entity_%s' % event)
+                            to_restore = handler(entity, attr)
+                            restore_values.append((entity, attr, to_restore))
         try:
             yield # 2/ execute the source's instructions
         finally:
@@ -595,7 +605,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def add_entity(self, cnx, entity):
         """add a new entity to the source"""
-        with self._storage_handler(entity, 'added'):
+        with self._storage_handler(cnx, entity, 'added'):
             attrs = self.preprocess_entity(entity)
             sql = self.sqlgen.insert(SQL_PREFIX + entity.cw_etype, attrs)
             self.doexec(cnx, sql, attrs)
@@ -605,7 +615,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def update_entity(self, cnx, entity):
         """replace an entity in the source"""
-        with self._storage_handler(entity, 'updated'):
+        with self._storage_handler(cnx, entity, 'updated'):
             attrs = self.preprocess_entity(entity)
             if cnx.ertype_supports_undo(entity.cw_etype):
                 changes = self._save_attrs(cnx, entity, attrs)
@@ -618,7 +628,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def delete_entity(self, cnx, entity):
         """delete an entity from the source"""
-        with self._storage_handler(entity, 'deleted'):
+        with self._storage_handler(cnx, entity, 'deleted'):
             if cnx.ertype_supports_undo(entity.cw_etype):
                 attrs = [SQL_PREFIX + r.type
                          for r in entity.e_schema.subject_relations()
