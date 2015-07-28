@@ -412,13 +412,35 @@ class ERQLExpression(RQLExpression):
             return self._check(_cw, x=eid, **kwargs)
         return self._check(_cw, **kwargs)
 
-def constraint_by_eid(self, eid):
-    for cstr in self.constraints:
-        if cstr.eid == eid:
-            return cstr
-    raise ValueError('No constraint with eid %d' % eid)
-RelationDefinitionSchema.constraint_by_eid = constraint_by_eid
 
+class CubicWebRelationDefinitionSchema(RelationDefinitionSchema):
+    def constraint_by_eid(self, eid):
+        for cstr in self.constraints:
+            if cstr.eid == eid:
+                return cstr
+        raise ValueError('No constraint with eid %d' % eid)
+
+    def rql_expression(self, expression, mainvars=None, eid=None):
+        """rql expression factory"""
+        if self.rtype.final:
+            return ERQLExpression(expression, mainvars, eid)
+        return RRQLExpression(expression, mainvars, eid)
+
+    def check_permission_definitions(self):
+        super(CubicWebRelationDefinitionSchema, self).check_permission_definitions()
+        schema = self.subject.schema
+        for action, groups in self.permissions.items():
+            for group_or_rqlexpr in groups:
+                if action == 'read' and \
+                       isinstance(group_or_rqlexpr, RQLExpression):
+                    msg = "can't use rql expression for read permission of %s"
+                    raise BadSchemaDefinition(msg % self)
+                if self.final and isinstance(group_or_rqlexpr, RRQLExpression):
+                    msg = "can't use RRQLExpression on %s, use an ERQLExpression"
+                    raise BadSchemaDefinition(msg % self)
+                if not self.final and isinstance(group_or_rqlexpr, ERQLExpression):
+                    msg = "can't use ERQLExpression on %s, use a RRQLExpression"
+                    raise BadSchemaDefinition(msg % self)
 
 def vargraph(rqlst):
     """ builds an adjacency graph of variables from the rql syntax tree, e.g:
@@ -703,35 +725,10 @@ def check_perm(self, _cw, action, **kwargs):
 PermissionMixIn.check_perm = check_perm
 
 
-RelationDefinitionSchema._RPROPERTIES['eid'] = None
+CubicWebRelationDefinitionSchema._RPROPERTIES['eid'] = None
 # remember rproperties defined at this point. Others will have to be serialized in
 # CWAttribute.extra_props
-KNOWN_RPROPERTIES = RelationDefinitionSchema.ALL_PROPERTIES()
-
-def rql_expression(self, expression, mainvars=None, eid=None):
-    """rql expression factory"""
-    if self.rtype.final:
-        return ERQLExpression(expression, mainvars, eid)
-    return RRQLExpression(expression, mainvars, eid)
-RelationDefinitionSchema.rql_expression = rql_expression
-
-orig_check_permission_definitions = RelationDefinitionSchema.check_permission_definitions
-def check_permission_definitions(self):
-    orig_check_permission_definitions(self)
-    schema = self.subject.schema
-    for action, groups in self.permissions.items():
-        for group_or_rqlexpr in groups:
-            if action == 'read' and \
-                   isinstance(group_or_rqlexpr, RQLExpression):
-                msg = "can't use rql expression for read permission of %s"
-                raise BadSchemaDefinition(msg % self)
-            if self.final and isinstance(group_or_rqlexpr, RRQLExpression):
-                msg = "can't use RRQLExpression on %s, use an ERQLExpression"
-                raise BadSchemaDefinition(msg % self)
-            if not self.final and isinstance(group_or_rqlexpr, ERQLExpression):
-                msg = "can't use ERQLExpression on %s, use a RRQLExpression"
-                raise BadSchemaDefinition(msg % self)
-RelationDefinitionSchema.check_permission_definitions = check_permission_definitions
+KNOWN_RPROPERTIES = CubicWebRelationDefinitionSchema.ALL_PROPERTIES()
 
 
 class CubicWebEntitySchema(EntitySchema):
@@ -882,6 +879,7 @@ class CubicWebEntitySchema(EntitySchema):
 class CubicWebRelationSchema(PermissionMixIn, RelationSchema):
     permissions = {}
     ACTIONS = ()
+    rdef_class = CubicWebRelationDefinitionSchema
 
     def __init__(self, schema=None, rdef=None, eid=None, **kwargs):
         if rdef is not None:
