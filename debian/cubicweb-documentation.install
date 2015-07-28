@@ -1,3 +1,2 @@
 ../../doc/book usr/share/doc/cubicweb-documentation
 ../../doc/_build/html usr/share/doc/cubicweb-documentation
-../../debian/cubicweb-doc usr/share/doc-base/cubicweb-doc
