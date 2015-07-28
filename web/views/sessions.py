@@ -60,15 +60,16 @@ class AbstractSessionManager(component.Component):
             except BadConnectionId:
                 self.close_session(session)
                 closed += 1
-            else:
-                no_use_time = (time() - last_usage_time)
-                if session.anonymous_session:
-                    if no_use_time >= self.cleanup_anon_session_time:
-                        self.close_session(session)
-                        closed += 1
-                elif session_time is not None and no_use_time >= session_time:
+                continue
+
+            no_use_time = (time() - last_usage_time)
+            if session.anonymous_session:
+                if no_use_time >= self.cleanup_anon_session_time:
                     self.close_session(session)
                     closed += 1
+            elif session_time is not None and no_use_time >= session_time:
+                self.close_session(session)
+                closed += 1
         return closed, total - closed
 
     def current_sessions(self):
