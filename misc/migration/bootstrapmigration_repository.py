@@ -434,6 +434,12 @@ if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
 if applcubicwebversion < (3, 2, 0) and cubicwebversion >= (3, 2, 0):
     add_cube('card', update_database=False)
 
+
+if applcubicwebversion < (3, 21, 1) and cubicwebversion >= (3, 21, 1):
+    add_relation_definition('CWComputedRType', 'read_permission', 'CWGroup')
+    add_relation_definition('CWComputedRType', 'read_permission', 'RQLExpression')
+
+
 def sync_constraint_types():
     """Make sure the repository knows about all constraint types defined in the code"""
     from cubicweb.schema import CONSTRAINTS

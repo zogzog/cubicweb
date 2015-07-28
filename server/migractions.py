@@ -1020,7 +1020,8 @@ class ServerMigrationHelper(MigrationHelper):
             print 'warning: relation type %s is already known, skip addition' % (
                 rtype)
         elif rschema.rule:
-            ss.execschemarql(execute, rschema, ss.crschema2rql(rschema))
+            gmap = self.group_mapping()
+            ss.execschemarql(execute, rschema, ss.crschema2rql(rschema, gmap))
         else:
             # register the relation into CWRType and insert necessary relation
             # definitions

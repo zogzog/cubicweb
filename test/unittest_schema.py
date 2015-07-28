@@ -482,6 +482,7 @@ class CompositeSchemaTC(CubicWebTC):
                        ('cw_schema', 'CWSourceSchemaConfig', 'CWRelation', 'object'),
                        ('delete_permission', 'CWRelation', 'RQLExpression', 'subject'),
                        ('read_permission', 'CWRelation', 'RQLExpression', 'subject')],
+        'CWComputedRType': [('read_permission', 'CWComputedRType', 'RQLExpression', 'subject')],
         'CWSource': [('cw_for_source', 'CWSourceSchemaConfig', 'CWSource', 'object'),
                      ('cw_host_config_of', 'CWSourceHostConfig', 'CWSource', 'object'),
                      ('cw_import_of', 'CWDataImport', 'CWSource', 'object'),

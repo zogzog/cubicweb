@@ -239,7 +239,7 @@ class read_permission_cwgroup(RelationDefinition):
     """groups allowed to read entities/relations of this type"""
     __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'read_permission'
-    subject = ('CWEType', 'CWAttribute', 'CWRelation')
+    subject = ('CWEType', 'CWAttribute', 'CWRelation', 'CWComputedRType')
     object = 'CWGroup'
     cardinality = '**'
 
@@ -271,7 +271,7 @@ class read_permission_rqlexpr(RelationDefinition):
     """rql expression allowing to read entities/relations of this type"""
     __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'read_permission'
-    subject = ('CWEType', 'CWAttribute', 'CWRelation')
+    subject = ('CWEType', 'CWAttribute', 'CWRelation', 'CWComputedRType')
     object = 'RQLExpression'
     cardinality = '*?'
     composite = 'subject'

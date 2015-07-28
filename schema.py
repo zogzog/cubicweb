@@ -32,6 +32,7 @@ from logilab.common.deprecation import deprecated, class_moved, moved
 from logilab.common.textutils import splitstrip
 from logilab.common.graph import get_cycles
 
+import yams
 from yams import BadSchemaDefinition, buildobjs as ybo
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema, \
      RelationDefinitionSchema, PermissionMixIn, role_name
@@ -462,6 +463,13 @@ class RRQLExpression(RQLExpression):
 ybo.DEFAULT_ATTRPERMS['update'] = ('managers', ERQLExpression('U has_update_permission X'))
 ybo.DEFAULT_ATTRPERMS['add'] = ('managers', ERQLExpression('U has_add_permission X'))
 
+# we don't want 'add' or 'delete' permissions on computed relation types
+# (they're hardcoded to '()' on computed relation definitions)
+if 'add' in yams.DEFAULT_COMPUTED_RELPERMS:
+    del yams.DEFAULT_COMPUTED_RELPERMS['add']
+if 'delete' in yams.DEFAULT_COMPUTED_RELPERMS:
+    del yams.DEFAULT_COMPUTED_RELPERMS['delete']
+
 
 PUB_SYSTEM_ENTITY_PERMS = {
     'read':   ('managers', 'users', 'guests',),
@@ -859,7 +867,9 @@ class CubicWebEntitySchema(EntitySchema):
         return ERQLExpression(expression, mainvars, eid)
 
 
-class CubicWebRelationSchema(RelationSchema):
+class CubicWebRelationSchema(PermissionMixIn, RelationSchema):
+    permissions = {}
+    ACTIONS = ()
 
     def __init__(self, schema=None, rdef=None, eid=None, **kwargs):
         if rdef is not None:
@@ -869,6 +879,17 @@ class CubicWebRelationSchema(RelationSchema):
         if eid is None and rdef is not None:
             eid = getattr(rdef, 'eid', None)
         self.eid = eid
+
+    def init_computed_relation(self, rdef):
+        self.ACTIONS = ('read',)
+        super(CubicWebRelationSchema, self).init_computed_relation(rdef)
+
+    def advertise_new_add_permission(self):
+        pass
+
+    def check_permission_definitions(self):
+        RelationSchema.check_permission_definitions(self)
+        PermissionMixIn.check_permission_definitions(self)
 
     @property
     def meta(self):

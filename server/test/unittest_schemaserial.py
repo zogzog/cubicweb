@@ -434,6 +434,8 @@ class ComputedAttributeAndRelationTC(CubicWebTC):
         self.repo.set_schema(self.repo.deserialize_schema(), resetvreg=False)
         schema = self.repo.schema
         self.assertEqual([('Company', 'Person')], list(schema['has_employee'].rdefs))
+        self.assertEqual(schema['has_employee'].rdef('Company', 'Person').permissions['read'],
+                         (u'managers',))
         self.assertEqual('O works_for S',
                          schema['has_employee'].rule)
         self.assertEqual([('Company', 'Int')], list(schema['total_salary'].rdefs))
