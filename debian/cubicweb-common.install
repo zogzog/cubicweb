@@ -1,0 +1,4 @@
+usr/lib/python2*/*-packages/cubicweb/entities/
+usr/lib/python2*/*-packages/cubicweb/ext/
+usr/share/cubicweb/cubes/
+usr/lib/python2*/*-packages/cubicweb/*.py

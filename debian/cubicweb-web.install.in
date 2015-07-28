@@ -1,4 +1,0 @@
-usr/lib/PY_VERSION/*-packages/cubicweb/web
-usr/lib/PY_VERSION/*-packages/cubicweb/wsgi
-usr/share/cubicweb/cubes/shared/data
-usr/share/cubicweb/cubes/shared/wdoc

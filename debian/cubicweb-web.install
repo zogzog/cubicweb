@@ -1,0 +1,4 @@
+usr/lib/python2*/*-packages/cubicweb/web
+usr/lib/python2*/*-packages/cubicweb/wsgi
+usr/share/cubicweb/cubes/shared/data
+usr/share/cubicweb/cubes/shared/wdoc

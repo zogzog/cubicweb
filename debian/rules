@@ -5,8 +5,6 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-PY_VERSION:=$(shell pyversions -d)
-
 build: build-stamp
 build-stamp:
 	dh_testdir
@@ -28,10 +26,9 @@ clean:
 	#rm -rf debian/cubicweb-*/
 	find . -name "*.pyc" -delete
 	-$(MAKE) -C doc clean
-	rm -f $(basename $(wildcard debian/*.in))
 	dh_clean
 
-install: build $(basename $(wildcard debian/*.in))
+install: build
 	dh_testdir
 	dh_testroot
 	dh_clean
@@ -50,30 +47,28 @@ install: build $(basename $(wildcard debian/*.in))
 	dh_lintian
 
 	# Remove unittests directory (should be available in cubicweb-dev only)
-	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/*-packages/cubicweb/server/test
-	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/*-packages/cubicweb/hooks/test
-	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/*-packages/cubicweb/sobjects/test
-	rm -rf debian/cubicweb-web/usr/lib/${PY_VERSION}/*-packages/cubicweb/web/test
-	rm -rf debian/cubicweb-twisted/usr/lib/${PY_VERSION}/*-packages/cubicweb/etwist/test
-	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/*-packages/cubicweb/ext/test
-	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/*-packages/cubicweb/entities/test
+	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/server/test
+	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/hooks/test
+	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/sobjects/test
+	rm -rf debian/cubicweb-web/usr/lib/python2*/*-packages/cubicweb/web/test
+	rm -rf debian/cubicweb-twisted/usr/lib/python2*/*-packages/cubicweb/etwist/test
+	rm -rf debian/cubicweb-common/usr/lib/python2*/*-packages/cubicweb/ext/test
+	rm -rf debian/cubicweb-common/usr/lib/python2*/*-packages/cubicweb/entities/test
 
-
-%: %.in
-	sed "s/PY_VERSION/${PY_VERSION}/g" < $< > $@
 
 # Build architecture-independent files here.
 binary-indep: build install
 	dh_testdir
 	dh_testroot -i
 	dh_python2 -i
+	dh_python2 -i /usr/share/cubicweb
 	dh_installinit -i -n --name cubicweb -u"defaults 99"
 	dh_installlogrotate -i
 	dh_installdocs -i -A README
 	dh_installman -i
 	dh_installchangelogs -i -Xdoc/changes
 	dh_link -i
-	dh_compress -i -X.py -X.ini -X.xml -X.js -X.rst -X.txt
+	dh_compress -i -X.py -X.ini -X.xml -X.js -X.rst -X.txt -Xchangelog.html
 	dh_fixperms -i
 	dh_installdeb -i
 	dh_gencontrol  -i

@@ -1,0 +1,10 @@
+usr/lib/python2*/*-packages/cubicweb/devtools/
+usr/lib/python2*/*-packages/cubicweb/skeleton/
+usr/lib/python2*/*-packages/cubicweb/test
+usr/lib/python2*/*-packages/cubicweb/entities/test
+usr/lib/python2*/*-packages/cubicweb/ext/test
+usr/lib/python2*/*-packages/cubicweb/server/test
+usr/lib/python2*/*-packages/cubicweb/sobjects/test
+usr/lib/python2*/*-packages/cubicweb/hooks/test
+usr/lib/python2*/*-packages/cubicweb/web/test
+usr/lib/python2*/*-packages/cubicweb/etwist/test
