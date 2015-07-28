@@ -417,6 +417,10 @@ class BadSchemaTC(TestCase):
         self._test('rrqlexpr_on_attr.py',
                    "can't use RRQLExpression on attribute ToTo.attr[String], use an ERQLExpression")
 
+    def test_rqlexpr_on_computedrel(self):
+        self._test('rqlexpr_on_computedrel.py',
+                   "can't use rql expression for read permission of relation Subject computed Object")
+
 
 class NormalizeExpressionTC(TestCase):
 
