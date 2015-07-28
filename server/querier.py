@@ -76,7 +76,7 @@ def term_etype(cnx, term, solution, args):
 
 def check_relations_read_access(cnx, select, args):
     """Raise :exc:`Unauthorized` if the given user doesn't have credentials to
-    read relations used in the givel syntaxt tree
+    read relations used in the given syntax tree
     """
     # use `term_etype` since we've to deal with rewritten constants here,
     # when used as an external source by another repository.
