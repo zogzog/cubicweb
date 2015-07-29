@@ -387,13 +387,6 @@ class Repository(object):
     def _free_cnxset(self, cnxset):
         self._cnxsets_pool.put_nowait(cnxset)
 
-    def pinfo(self):
-        # XXX: session.cnxset is accessed from a local storage, would be interesting
-        #      to see if there is a cnxset set in any thread specific data)
-        return '%s: %s (%s)' % (self._cnxsets_pool.qsize(),
-                                ','.join(session.user.login for session in self._sessions.itervalues()
-                                         if session.cnxset),
-                                threading.currentThread())
     def shutdown(self):
         """called on server stop event to properly close opened sessions and
         connections
