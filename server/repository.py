@@ -186,8 +186,8 @@ class Repository(object):
         # registry hook to fix user class on registry reload
         @onevent('after-registry-reload', self)
         def fix_user_classes(self):
-            # After registery reload the 'CWUser' class used for CWEtype
-            # changed.  To any existing user object have a different class than
+            # After registry reload the 'CWUser' class used for CWEtype
+            # changed.  So any existing user object have a different class than
             # the new loaded one. We are hot fixing this.
             usercls = self.vreg['etypes'].etype_class('CWUser')
             for session in self._sessions.itervalues():
