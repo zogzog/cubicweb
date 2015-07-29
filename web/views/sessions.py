@@ -61,15 +61,7 @@ class AbstractSessionManager(RegistrableObject):
         closed, total = 0, 0
         for session in self.current_sessions():
             total += 1
-            try:
-                last_usage_time = session.cnx.check()
-            except AttributeError:
-                last_usage_time = session.mtime
-            except BadConnectionId:
-                self.close_session(session)
-                closed += 1
-                continue
-
+            last_usage_time = session.mtime
             no_use_time = (time() - last_usage_time)
             if session.anonymous_session:
                 if no_use_time >= self.cleanup_anon_session_time:
