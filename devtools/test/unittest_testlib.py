@@ -74,6 +74,16 @@ class WebTestTC(TestCase):
         clean_repo_test_cls(MyWebTest)
 
 
+class RepoInstancesConsistencyTC(CubicWebTC):
+    test_db_id = 'RepoInstancesConsistencyTC'
+
+    def pre_setup_database(self, cnx, config):
+        self.assertIs(cnx.repo, config.repository())
+
+    def test_pre_setup(self):
+        pass
+
+
 HTML_PAGE = u"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
   <head><title>need a title</title></head>

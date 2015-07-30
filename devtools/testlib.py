@@ -428,7 +428,6 @@ class CubicWebTC(TestCase):
         self._admin_clt_cnx = repoapi.ClientConnection(self._admin_session)
         self._cnxs.add(self._admin_clt_cnx)
         self._admin_clt_cnx.__enter__()
-        self.config.repository = lambda x=None: self.repo
 
     # db api ##################################################################
 
