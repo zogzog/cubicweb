@@ -1018,7 +1018,8 @@ class CubicWebTC(TestCase):
 
     def assertDocTestFile(self, testfile):
         # doctest returns tuple (failure_count, test_count)
-        result = self.shell().process_script(testfile)
+        with self.admin_access.shell() as mih:
+            result = mih.process_script(testfile)
         if result[0] and result[1]:
             raise self.failureException("doctest file '%s' failed"
                                         % testfile)
