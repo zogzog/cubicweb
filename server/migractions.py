@@ -60,9 +60,6 @@ from cubicweb.server.utils import manager_userpasswd
 from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 
 
-def mock_object(**params):
-    return type('Mock', (), params)()
-
 class ClearGroupMap(hook.Hook):
     __regid__ = 'cw.migration.clear_group_mapping'
     __select__ = hook.Hook.__select__ & is_instance('CWGroup')
