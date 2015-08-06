@@ -25,8 +25,6 @@ from os.path import join, exists
 import subprocess
 import tempfile
 
-from logilab.common.testlib import TestCase, unittest_main, mock_object, Tags
-
 from cubicweb import AuthenticationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import RQLGeneratorTC
@@ -480,4 +478,5 @@ class LDAPFeedGroupTC(LDAPFeedTestBase):
 
 
 if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
     unittest_main()
