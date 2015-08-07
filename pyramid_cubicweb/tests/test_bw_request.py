@@ -96,9 +96,3 @@ class WSGIAppTest(PyramidCWTest):
                 '/', POST=params,
                 content_type='application/x-www-form-urlencoded'))
         self.assertEqual(u"é", req.form['arg'])
-
-    @classmethod
-    def init_config(cls, config):
-        super(WSGIAppTest, cls).init_config(config)
-        config.https_uiprops = None
-        config.https_datadir_url = None

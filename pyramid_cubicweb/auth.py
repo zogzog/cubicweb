@@ -144,7 +144,9 @@ def includeme(config):
                     'hashalg': 'sha512',
                     'cookie_name': 'auth_tkt',
                     'timeout': 1200,
-                    'reissue_time': 120
+                    'reissue_time': 120,
+                    'http_only': True,
+                    'secure': True
                 },
                 prefix=session_prefix,
                 **settings
@@ -158,7 +160,9 @@ def includeme(config):
                     'hashalg': 'sha512',
                     'cookie_name': 'pauth_tkt',
                     'max_age': 3600*24*30,
-                    'reissue_time': 3600*24
+                    'reissue_time': 3600*24,
+                    'http_only': True,
+                    'secure': True
                 },
                 prefix=persistent_prefix,
                 **settings

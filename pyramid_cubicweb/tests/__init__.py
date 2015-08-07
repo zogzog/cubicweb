@@ -15,6 +15,8 @@ class PyramidCWTest(CubicWebTestTC):
         config.global_set_option('anonymous-user', 'anon')
         config['pyramid-auth-secret'] = 'authsecret'
         config['pyramid-session-secret'] = 'sessionsecret'
+        config.https_uiprops = None
+        config.https_datadir_url = None
 
     def setUp(self):
         # Skip CubicWebTestTC setUp
@@ -22,7 +24,9 @@ class PyramidCWTest(CubicWebTestTC):
         config = make_cubicweb_application(self.config, self.settings)
         self.includeme(config)
         self.pyr_registry = config.registry
-        self.webapp = webtest.TestApp(config.make_wsgi_app())
+        self.webapp = webtest.TestApp(
+            config.make_wsgi_app(),
+            extra_environ={'wsgi.url_scheme': 'https'})
 
     def includeme(self, config):
         pass
