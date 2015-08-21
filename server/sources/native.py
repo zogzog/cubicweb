@@ -916,12 +916,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self._handle_is_relation_sql(cnx, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
                                          (entity.eid, source.eid))
         # now we can update the full text index
-        if self.do_fti and self.need_fti_indexation(entity.cw_etype):
+        if self.need_fti_indexation(entity.cw_etype):
             self.index_entity(cnx, entity=entity)
 
     def update_info(self, cnx, entity, need_fti_update):
         """mark entity as being modified, fulltext reindex if needed"""
-        if self.do_fti and need_fti_update:
+        if need_fti_update:
             # reindex the entity only if this query is updating at least
             # one indexable attribute
             self.index_entity(cnx, entity=entity)
@@ -1319,7 +1319,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """create an operation to [re]index textual content of the given entity
         on commit
         """
-        FTIndexEntityOp.get_instance(cnx).add_data(entity.eid)
+        if self.do_fti:
+            FTIndexEntityOp.get_instance(cnx).add_data(entity.eid)
 
     def fti_unindex_entities(self, cnx, entities):
         """remove text content for entities from the full text index
