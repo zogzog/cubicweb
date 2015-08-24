@@ -17,17 +17,13 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, os.path as osp
-from tempfile import mkdtemp, NamedTemporaryFile, TemporaryFile
-import tempfile
-from subprocess import Popen, check_call, CalledProcessError
-from shutil import rmtree, copy as copyfile
-from uuid import uuid4
+from tempfile import mkdtemp
+from subprocess import Popen
 
 from six.moves.queue import Queue, Empty
 
 # imported by default to simplify further import statements
 from logilab.common.testlib import unittest_main, with_tempdir, InnerTest, Tags
-from logilab.common.shellutils import getlogin
 
 import cubicweb
 from cubicweb.view import View
@@ -36,32 +32,7 @@ from cubicweb.web.views.staticcontrollers import StaticFileController, STATIC_CO
 from cubicweb.devtools.httptest import CubicWebServerTC
 
 
-class VerboseCalledProcessError(CalledProcessError):
-
-    def __init__(self, returncode, command, stdout, stderr):
-        super(VerboseCalledProcessError, self).__init__(returncode, command)
-        self.stdout = stdout
-        self.stderr = stderr
-
-    def __str__(self):
-        str = [ super(VerboseCalledProcessError, self).__str__()]
-        if self.stdout.strip():
-            str.append('******************')
-            str.append('* process stdout *')
-            str.append('******************')
-            str.append(self.stdout)
-        if self.stderr.strip():
-            str.append('******************')
-            str.append('* process stderr *')
-            str.append('******************')
-            str.append(self.stderr)
-        return '\n'.join(str)
-
-
-
 class FirefoxHelper(object):
-
-    profile_name_mask = 'PYTEST_PROFILE_%(uid)s'
 
     def __init__(self, url=None):
         self._process = None
