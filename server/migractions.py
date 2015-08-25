@@ -1080,7 +1080,7 @@ class ServerMigrationHelper(MigrationHelper):
             if not self.confirm('Relation %s is still present in the filesystem schema,'
                                 ' do you really want to drop it?' % oldname,
                                 default='n'):
-                raise SystemExit(1)
+                return
         self.cmd_add_relation_type(newname, commit=True)
         self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
                      ask_confirm=self.verbosity>=2)
