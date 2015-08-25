@@ -1085,8 +1085,9 @@ class ServerMigrationHelper(MigrationHelper):
                                 default='n'):
                 raise SystemExit(1)
         self.cmd_add_relation_type(newname, commit=True)
-        self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
-                     ask_confirm=self.verbosity>=2)
+        if not self.repo.schema[oldname].rule:
+            self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
+                         ask_confirm=self.verbosity>=2)
         self.cmd_drop_relation_type(oldname, commit=commit)
 
     def cmd_add_relation_definition(self, subjtype, rtype, objtype, commit=True):

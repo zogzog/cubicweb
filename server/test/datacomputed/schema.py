@@ -52,3 +52,7 @@ class notes(ComputedRelation):
 
 class whatever(ComputedRelation):
     rule = 'S employees E, O concerns E'
+
+
+class to_be_renamed(ComputedRelation):
+    rule = 'S employees E, O concerns E'

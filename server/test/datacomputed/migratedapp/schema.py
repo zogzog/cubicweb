@@ -55,3 +55,7 @@ class concerns(RelationDefinition):
 
 class whatever(ComputedRelation):
     rule = 'S employees E, O associates E'
+
+
+class renamed(ComputedRelation):
+    rule = 'S employees E, O concerns E'

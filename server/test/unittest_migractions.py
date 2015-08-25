@@ -763,6 +763,12 @@ class MigrationCommandsComputedTC(MigrationTC):
                          'Cannot synchronize a relation definition for a computed '
                          'relation (whatever)')
 
+    def test_computed_relation_rename_relation_type(self):
+        with self.mh() as (cnx, mh):
+            mh.cmd_rename_relation_type('to_be_renamed', 'renamed')
+        self.assertIn('renamed', self.schema)
+        self.assertNotIn('to_be_renamed', self.schema)
+
     # computed attributes migration ############################################
 
     def setup_add_score(self):
