@@ -3,9 +3,9 @@ from __future__ import absolute_import
 from . import PyramidCWTest
 
 
-class EntitiesTest(PyramidCWTest):
+class RestApiTest(PyramidCWTest):
     def includeme(self, config):
-        config.include('pyramid_cubicweb.entities')
+        config.include('pyramid_cubicweb.rest_api')
 
     def test_delete(self):
         with self.admin_access.repo_cnx() as cnx:
