@@ -17,8 +17,9 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, os.path as osp
+import errno
 from tempfile import mkdtemp
-from subprocess import Popen
+from subprocess import Popen, PIPE, STDOUT
 
 from six.moves.queue import Queue, Empty
 
@@ -41,6 +42,17 @@ class FirefoxHelper(object):
         if os.name == 'posix':
             self.firefox_cmd = [osp.join(osp.dirname(__file__), 'data', 'xvfb-run.sh'),
                                 '-a', '-s', '-noreset -screen 0 800x600x24'] + self.firefox_cmd
+
+    def test(self):
+        try:
+            proc = Popen(['firefox', '--help'], stdout=PIPE, stderr=STDOUT)
+            stdout, _ = proc.communicate()
+            return proc.returncode == 0, stdout
+        except OSError as exc:
+            if exc.errno == errno.ENOENT:
+                msg = '[%s] %s' % (errno.errorcode[exc.errno], exc.strerror)
+                return False, msg
+            raise
 
     def start(self, url):
         self.stop()
@@ -116,6 +128,9 @@ class QUnitTestCase(CubicWebServerTC):
             self.test_queue.get(False)
 
         browser = FirefoxHelper()
+        isavailable, reason = browser.test()
+        if not isavailable:
+            self.fail('firefox not available or not working properly (%s)' % reason)
         browser.start(self.config['base-url'] + "?vid=qunit")
         test_count = 0
         error = False
