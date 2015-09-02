@@ -108,6 +108,12 @@ class Frozable(EntityType):
 
 
 class Personne(EntityType):
+    __permissions__ = {
+        'read':   ('managers', 'users'), # 'guests' was removed
+        'add':    ('managers', 'users'),
+        'update': ('managers', 'owners'),
+        'delete': ('managers', 'owners')
+    }
     __unique_together__ = [('nom', 'prenom', 'datenaiss')]
     nom    = String(fulltextindexed=True, required=True, maxsize=64)
     prenom = String(fulltextindexed=True, maxsize=64)

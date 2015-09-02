@@ -410,6 +410,9 @@ class MigrationCommandsTC(CubicWebTC):
             delete_concerne_rqlexpr = self._rrqlexpr_rset(cnx, 'delete', 'concerne')
             add_concerne_rqlexpr = self._rrqlexpr_rset(cnx, 'add', 'concerne')
 
+            # make sure properties (e.g. etype descriptions) are synced by the
+            # second call to sync_schema
+            mh.cmd_sync_schema_props_perms(syncprops=False, commit=False)
             mh.cmd_sync_schema_props_perms(commit=False)
 
             self.assertEqual(cnx.execute('Any D WHERE X name "Personne", X description D')[0][0],
