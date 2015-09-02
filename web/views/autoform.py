@@ -126,6 +126,7 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.deprecation import deprecated
+from logilab.common.registry import NoSelectableObject
 
 from cubicweb import neg_role, uilib
 from cubicweb.schema import display_name
@@ -992,11 +993,16 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """yield inline form views to a newly related (hence created) entity
         through the given relation
         """
-        yield self._cw.vreg['views'].select('inline-creation', self._cw,
-                                            etype=ttype, rtype=rschema, role=role,
-                                            peid=self.edited_entity.eid,
-                                            petype=self.edited_entity.e_schema,
-                                            pform=self)
+        try:
+            yield self._cw.vreg['views'].select('inline-creation', self._cw,
+                                                etype=ttype, rtype=rschema, role=role,
+                                                peid=self.edited_entity.eid,
+                                                petype=self.edited_entity.e_schema,
+                                                pform=self)
+        except NoSelectableObject:
+            # may be raised if user doesn't have the permission to add ttype entities (no checked
+            # earlier) or if there is some custom selector on the view
+            pass
 
 
 ## default form ui configuration ##############################################

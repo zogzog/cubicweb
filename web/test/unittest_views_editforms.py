@@ -173,6 +173,12 @@ class AutomaticEntityFormTC(CubicWebTC):
                              [rschema.type
                               for rschema, _ in mform.editable_attributes()])
 
+    def test_inlined_relations(self):
+        with self.admin_access.web_request() as req:
+            with self.temporary_permissions(EmailAddress={'add': ()}):
+                autoform = self.vreg['forms'].select('edition', req, entity=req.user)
+                self.assertEqual(list(autoform.inlined_form_views()), [])
+
 
 class FormViewsTC(CubicWebTC):
 
