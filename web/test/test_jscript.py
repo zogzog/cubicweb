@@ -1,9 +1,9 @@
-from cubicweb.devtools.qunit import QUnitTestCase, unittest_main
+from cubicweb.devtools import qunit
 
 from os import path as osp
 
 
-class JScript(QUnitTestCase):
+class JScript(qunit.QUnitTestCase):
 
     all_js_tests = (
         ("jstests/test_utils.js", (
@@ -34,4 +34,5 @@ class JScript(QUnitTestCase):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    from unittest import main
+    main()

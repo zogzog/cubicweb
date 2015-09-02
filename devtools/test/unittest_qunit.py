@@ -1,7 +1,7 @@
-from logilab.common.testlib import unittest_main
-from cubicweb.devtools.qunit import QUnitTestCase
-
 from os import path as osp
+
+from cubicweb.devtools import qunit
+
 
 JSTESTDIR = osp.abspath(osp.join(osp.dirname(__file__), 'data', 'js_examples'))
 
@@ -9,7 +9,7 @@ JSTESTDIR = osp.abspath(osp.join(osp.dirname(__file__), 'data', 'js_examples'))
 def js(name):
     return osp.join(JSTESTDIR, name)
 
-class QUnitTestCaseTC(QUnitTestCase):
+class QUnitTestCaseTC(qunit.QUnitTestCase):
 
     all_js_tests = (
                     (js('test_simple_success.js'),),
@@ -28,4 +28,5 @@ class QUnitTestCaseTC(QUnitTestCase):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    from unittest import main
+    main()
