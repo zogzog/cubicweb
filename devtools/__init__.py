@@ -165,7 +165,7 @@ class TestServerConfiguration(ServerConfiguration):
             return None, None
         return self.anonymous_credential
 
-    def set_anonymous_allowed(self, allowed, anonuser='anon'):
+    def set_anonymous_allowed(self, allowed, anonuser=u'anon'):
         if allowed:
             self.anonymous_credential = (anonuser, anonuser)
         else:
