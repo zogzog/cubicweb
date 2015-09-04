@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 import copy
+import warnings
+
 from logilab.common.testlib import tag
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web import uihelper, formwidgets as fwdgs
@@ -70,7 +72,10 @@ class DefinitionOrderTC(CubicWebTC):
     def test_uihelper_set_fields_order(self):
         afk_get = uicfg.autoform_field_kwargs.get
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {})
-        uihelper.set_fields_order('CWUser', ('login', 'firstname', 'surname'))
+        with warnings.catch_warnings(record=True) as w:
+            uihelper.set_fields_order('CWUser', ('login', 'firstname', 'surname'))
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
 
     @tag('uicfg', 'order', 'func')
@@ -86,7 +91,10 @@ class DefinitionOrderTC(CubicWebTC):
         afk_get = uicfg.autoform_field_kwargs.get
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {})
         wdg = fwdgs.TextInput({'size': 30})
-        uihelper.set_field_kwargs('CWUser', 'firstname', widget=wdg)
+        with warnings.catch_warnings(record=True) as w:
+            uihelper.set_field_kwargs('CWUser', 'firstname', widget=wdg)
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'widget': wdg})
 
     @tag('uihelper', 'hidden', 'func')
@@ -95,11 +103,17 @@ class DefinitionOrderTC(CubicWebTC):
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
         self.assertCountEqual(section_conf, ['main_attributes', 'muledit_attributes'])
         # hide field in main form
-        uihelper.hide_fields('CWUser', ('login', 'in_group'))
+        with warnings.catch_warnings(record=True) as w:
+            uihelper.hide_fields('CWUser', ('login', 'in_group'))
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
         self.assertCountEqual(section_conf, ['main_hidden', 'muledit_attributes'])
         # hide field in muledit form
-        uihelper.hide_fields('CWUser', ('login', 'in_group'), formtype='muledit')
+        with warnings.catch_warnings(record=True) as w:
+            uihelper.hide_fields('CWUser', ('login', 'in_group'), formtype='muledit')
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
         self.assertCountEqual(section_conf, ['main_hidden', 'muledit_hidden'])
 
