@@ -645,7 +645,7 @@ class RQLSuggestionsBuilder(Component):
                 vocab_kwargs = {}
                 if rtype_incomplete_value:
                     vocab_rql += ', X %s LIKE %%(value)s' % user_rtype
-                    vocab_kwargs['value'] = '%s%%' % rtype_incomplete_value
+                    vocab_kwargs['value'] = u'%s%%' % rtype_incomplete_value
                 vocab += [value for value, in
                           self._cw.execute(vocab_rql, vocab_kwargs)]
         return sorted(set(vocab))
