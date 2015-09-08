@@ -119,7 +119,7 @@ class SourceUpdatedHook(SourceHook):
                 msg = _("You cannot rename the system source")
                 raise validation_error(self.entity, {('name', 'subject'): msg})
             SourceRenamedOp(self._cw, oldname=oldname, newname=newname)
-        if 'config' in self.entity.cw_edited:
+        if 'config' in self.entity.cw_edited or 'url' in self.entity.cw_edited:
             if self.entity.name == 'system' and self.entity.config:
                 msg = _("Configuration of the system source goes to "
                         "the 'sources' file, not in the database")

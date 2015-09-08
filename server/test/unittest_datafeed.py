@@ -142,6 +142,14 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(200, value.getcode())
                 self.assertEqual('a string', value.geturl())
 
+    def test_update_url(self):
+        dfsource = self.repo.sources_by_uri[u'ô myfeed']
+        with self.admin_access.repo_cnx() as cnx:
+            cnx.entity_from_eid(dfsource.eid).cw_set(url=u"http://pouet.com\nhttp://pouet.org")
+            self.assertEqual(dfsource.urls, [u'ignored'])
+            cnx.commit()
+        self.assertEqual(dfsource.urls, [u"http://pouet.com", u"http://pouet.org"])
+
 
 class DataFeedConfigTC(CubicWebTC):
 
