@@ -259,7 +259,7 @@ def sort_term_selection(sorts, rqlst, groups):
             append(term)
             if groups:
                 for vref in term.iget_nodes(VariableRef):
-                    if not vref in groups:
+                    if not any(vref.is_equivalent(g) for g in groups):
                         groups.append(vref)
 
 def fix_selection_and_group(rqlst, needwrap, selectsortterms,
@@ -275,7 +275,7 @@ def fix_selection_and_group(rqlst, needwrap, selectsortterms,
                     (isinstance(term, Function) and
                      get_func_descr(term.name).aggregat)):
                 for vref in term.iget_nodes(VariableRef):
-                    if not vref in groupvrefs:
+                    if not any(vref.is_equivalent(group) for group in groupvrefs):
                         groups.append(vref)
                         groupvrefs.append(vref)
     if needwrap and (groups or having):
