@@ -38,7 +38,7 @@ class dict_protocol_catcher(object):
 class EditedEntity(dict):
     """encapsulate entities attributes being written by an RQL query"""
     def __init__(self, entity, **kwargs):
-        dict.__init__(self, **kwargs)
+        super(EditedEntity, self).__init__(**kwargs)
         self.entity = entity
         self.skip_security = set()
         self.querier_pending_relations = {}
@@ -50,10 +50,13 @@ class EditedEntity(dict):
 
     def __lt__(self, other):
         # we don't want comparison by value inherited from dict
-        return id(self) < id(other)
+        raise NotImplementedError
 
     def __eq__(self, other):
-        return id(self) == id(other)
+        return self is other
+
+    def __ne__(self, other):
+        return not (self == other)
 
     def __setitem__(self, attr, value):
         assert attr != 'eid'

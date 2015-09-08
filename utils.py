@@ -208,8 +208,10 @@ class RepeatList(object):
         if isinstance(other, RepeatList):
             return other._size == self._size and other._item == self._item
         return self[:] == other
-    # py3k future warning "Overriding __eq__ blocks inheritance of __hash__ in 3.x"
-    # is annoying but won't go away because we don't want to hash() the repeatlist
+    def __ne__(self, other):
+        return not (self == other)
+    def __hash__(self):
+        raise NotImplementedError
     def pop(self, i):
         self._size -= 1
 

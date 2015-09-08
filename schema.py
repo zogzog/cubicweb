@@ -253,6 +253,9 @@ class RQLExpression(object):
             return self.expression == other.expression
         return False
 
+    def __ne__(self, other):
+        return not (self == other)
+
     def __hash__(self):
         return hash(self.expression)
 
