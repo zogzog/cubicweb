@@ -36,7 +36,7 @@ class JsonViewsTC(CubicWebTC):
 
     def test_json_rsetexport_empty_rset(self):
         with self.admin_access.web_request() as req:
-            rset = req.execute('Any X WHERE X is CWUser, X login "foobarbaz"')
+            rset = req.execute(u'Any X WHERE X is CWUser, X login "foobarbaz"')
             data = self.view('jsonexport', rset, req=req)
             self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
             self.assertListEqual(data, [])
@@ -71,7 +71,7 @@ class JsonViewsTC(CubicWebTC):
             self.assertEqual(data[0]['name'], 'guests')
             self.assertEqual(data[1]['name'], 'managers')
 
-            rset = req.execute('Any G WHERE G is CWGroup, G name "foo"')
+            rset = req.execute(u'Any G WHERE G is CWGroup, G name "foo"')
             data = self.view('ejsonexport', rset, req=req)
             self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
             self.assertEqual(data, [])
