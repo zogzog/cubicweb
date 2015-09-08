@@ -70,8 +70,8 @@ class BaseFacetTC(CubicWebTC):
 
     def test_relation_optional_rel(self):
         with self.admin_access.web_request() as req:
-            rset = req.cnx.execute('Any X,GROUP_CONCAT(GN) GROUPBY X '
-                                   'WHERE X in_group G?, G name GN, NOT G name "users"')
+            rset = req.cnx.execute(u'Any X,GROUP_CONCAT(GN) GROUPBY X '
+                                    'WHERE X in_group G?, G name GN, NOT G name "users"')
             rqlst = rset.syntax_tree().copy()
             select = rqlst.children[0]
             filtered_variable, baserql = facet.init_facets(rset, select)
@@ -87,18 +87,18 @@ class BaseFacetTC(CubicWebTC):
             self.assertEqual(f.vocabulary(),
                              [(u'guests', guests), (u'managers', managers)])
             # ensure rqlst is left unmodified
-            self.assertEqual(rqlst.as_string(), "DISTINCT Any  WHERE X in_group G?, G name GN, NOT G name 'users'")
+            self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X in_group G?, G name GN, NOT G name "users"')
             #rqlst = rset.syntax_tree()
             self.assertEqual(sorted(f.possible_values()),
                              [str(guests), str(managers)])
             # ensure rqlst is left unmodified
-            self.assertEqual(rqlst.as_string(), "DISTINCT Any  WHERE X in_group G?, G name GN, NOT G name 'users'")
+            self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X in_group G?, G name GN, NOT G name "users"')
             req.form[f.__regid__] = str(guests)
             f.add_rql_restrictions()
             # selection is cluttered because rqlst has been prepared for facet (it
             # is not in real life)
             self.assertEqual(f.select.as_string(),
-                             "DISTINCT Any  WHERE X in_group G?, G name GN, NOT G name 'users', X in_group D, D eid %s" % guests)
+                             'DISTINCT Any  WHERE X in_group G?, G name GN, NOT G name "users", X in_group D, D eid %s' % guests)
 
     def test_relation_no_relation_1(self):
         with self.admin_access.web_request() as req:
@@ -141,12 +141,12 @@ class BaseFacetTC(CubicWebTC):
                               ['guests', 'managers'])
             # ensure rqlst is left unmodified
             self.assertEqual(f.select.as_string(), 'DISTINCT Any  WHERE X is CWUser')
-            f._cw.form[f.__regid__] = 'guests'
+            f._cw.form[f.__regid__] = u'guests'
             f.add_rql_restrictions()
             # selection is cluttered because rqlst has been prepared for facet (it
             # is not in real life)
             self.assertEqual(f.select.as_string(),
-                              "DISTINCT Any  WHERE X is CWUser, X in_group E, E name 'guests'")
+                             'DISTINCT Any  WHERE X is CWUser, X in_group E, E name "guests"')
 
     def test_hasrelation(self):
         with self.admin_access.web_request() as req:
@@ -207,12 +207,12 @@ class BaseFacetTC(CubicWebTC):
                               ['admin', 'anon'])
             # ensure rqlst is left unmodified
             self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
-            req.form[f.__regid__] = 'admin'
+            req.form[f.__regid__] = u'admin'
             f.add_rql_restrictions()
             # selection is cluttered because rqlst has been prepared for facet (it
             # is not in real life)
             self.assertEqual(f.select.as_string(),
-                              "DISTINCT Any  WHERE X is CWUser, X login 'admin'")
+                             'DISTINCT Any  WHERE X is CWUser, X login "admin"')
 
     def test_bitfield(self):
         with self.admin_access.web_request() as req:
@@ -310,12 +310,12 @@ class BaseFacetTC(CubicWebTC):
             self.assertEqual(f.possible_values(), ['admin',])
             # ensure rqlst is left unmodified
             self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
-            req.form[f.__regid__] = 'admin'
+            req.form[f.__regid__] = u'admin'
             f.add_rql_restrictions()
             # selection is cluttered because rqlst has been prepared for facet (it
             # is not in real life)
             self.assertEqual(f.select.as_string(),
-                             "DISTINCT Any  WHERE X is CWUser, X created_by G, G owned_by H, H login 'admin'")
+                             'DISTINCT Any  WHERE X is CWUser, X created_by G, G owned_by H, H login "admin"')
 
     def test_rql_path_check_filter_label_variable(self):
         with self.admin_access.web_request() as req:
@@ -359,13 +359,13 @@ class BaseFacetTC(CubicWebTC):
 
     def prepareg_aggregat_rqlst(self, req):
         return self.prepare_rqlst(req,
-            'Any 1, COUNT(X) WHERE X is CWUser, X creation_date XD, '
-            'X modification_date XM, Y creation_date YD, Y is CWGroup '
-            'HAVING DAY(XD)>=DAY(YD) AND DAY(XM)<=DAY(YD)', 'X',
-            expected_baserql='Any 1,COUNT(X) WHERE X is CWUser, X creation_date XD, '
+            u'Any 1, COUNT(X) WHERE X is CWUser, X creation_date XD, '
+             'X modification_date XM, Y creation_date YD, Y is CWGroup '
+             'HAVING DAY(XD)>=DAY(YD) AND DAY(XM)<=DAY(YD)', 'X',
+            expected_baserql=u'Any 1,COUNT(X) WHERE X is CWUser, X creation_date XD, '
             'X modification_date XM, Y creation_date YD, Y is CWGroup '
             'HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)',
-            expected_preparedrql='DISTINCT Any  WHERE X is CWUser, X creation_date XD, '
+            expected_preparedrql=u'DISTINCT Any  WHERE X is CWUser, X creation_date XD, '
             'X modification_date XM, Y creation_date YD, Y is CWGroup '
             'HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)')
 
@@ -390,13 +390,13 @@ class BaseFacetTC(CubicWebTC):
                     filtered_variable=filtered_variable)
             self.assertEqual(f.vocabulary(), [(u'admin', u'admin')])
             self.assertEqual(f.possible_values(), ['admin'])
-            req.form[f.__regid__] = 'admin'
+            req.form[f.__regid__] = u'admin'
             f.add_rql_restrictions()
             self.assertEqual(f.select.as_string(),
-                             "DISTINCT Any  WHERE X is CWUser, X creation_date XD, "
-                             "X modification_date XM, Y creation_date YD, Y is CWGroup, "
-                             "X created_by G, G owned_by H, H login 'admin' "
-                             "HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)")
+                             'DISTINCT Any  WHERE X is CWUser, X creation_date XD, '
+                             'X modification_date XM, Y creation_date YD, Y is CWGroup, '
+                             'X created_by G, G owned_by H, H login "admin" '
+                             'HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)')
 
     def test_aggregat_query_attribute(self):
         with self.admin_access.web_request() as req:
@@ -409,12 +409,12 @@ class BaseFacetTC(CubicWebTC):
                               [(u'admin', u'admin'), (u'anon', u'anon')])
             self.assertEqual(f.possible_values(),
                               ['admin', 'anon'])
-            req.form[f.__regid__] = 'admin'
+            req.form[f.__regid__] = u'admin'
             f.add_rql_restrictions()
             self.assertEqual(f.select.as_string(),
-                              "DISTINCT Any  WHERE X is CWUser, X creation_date XD, "
-                              "X modification_date XM, Y creation_date YD, Y is CWGroup, X login 'admin' "
-                              "HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)")
+                             'DISTINCT Any  WHERE X is CWUser, X creation_date XD, '
+                             'X modification_date XM, Y creation_date YD, Y is CWGroup, X login "admin" '
+                             'HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)')
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
