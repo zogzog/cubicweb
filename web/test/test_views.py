@@ -50,7 +50,7 @@ class ManualCubicWebTCs(AutoPopulateTest):
         composite entity
         """
         with self.admin_access.web_request() as req:
-            rset = req.execute('CWUser X WHERE X login "admin"')
+            rset = req.execute(u'CWUser X WHERE X login "admin"')
             self.view('copy', rset, req=req)
 
     def test_sortable_js_added(self):
@@ -77,7 +77,7 @@ class ManualCubicWebTCs(AutoPopulateTest):
             group = cnx.create_entity('CWGroup', name=u'R&D')
             cnx.commit()
         with self.admin_access.web_request(relation='in_group_subject') as req:
-            rset = req.execute('Any X WHERE X is CWUser, X login "admin"')
+            rset = req.execute(u'Any X WHERE X is CWUser, X login "admin"')
             self.view('unrelateddivs', rset, req=req)
 
 
