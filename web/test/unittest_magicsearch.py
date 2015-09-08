@@ -64,19 +64,19 @@ class QueryTranslatorTC(CubicWebTC):
     def test_basic_translations(self):
         """tests basic translations (no ambiguities)"""
         with self.proc() as proc:
-            rql = "Any C WHERE C is Adresse, P adel C, C adresse 'Logilab'"
+            rql = u"Any C WHERE C is Adresse, P adel C, C adresse 'Logilab'"
             rql, = proc.preprocess_query(rql)
-            self.assertEqual(rql, "Any C WHERE C is EmailAddress, P use_email C, C address 'Logilab'")
+            self.assertEqual(rql, 'Any C WHERE C is EmailAddress, P use_email C, C address "Logilab"')
 
     def test_ambiguous_translations(self):
         """tests possibly ambiguous translations"""
         with self.proc() as proc:
-            rql = "Any P WHERE P adel C, C is EmailAddress, C nom 'Logilab'"
+            rql = u"Any P WHERE P adel C, C is EmailAddress, C nom 'Logilab'"
             rql, = proc.preprocess_query(rql)
-            self.assertEqual(rql, "Any P WHERE P use_email C, C is EmailAddress, C alias 'Logilab'")
-            rql = "Any P WHERE P is Utilisateur, P adel C, P nom 'Smith'"
+            self.assertEqual(rql, 'Any P WHERE P use_email C, C is EmailAddress, C alias "Logilab"')
+            rql = u"Any P WHERE P is Utilisateur, P adel C, P nom 'Smith'"
             rql, = proc.preprocess_query(rql)
-            self.assertEqual(rql, "Any P WHERE P is CWUser, P use_email C, P surname 'Smith'")
+            self.assertEqual(rql, 'Any P WHERE P is CWUser, P use_email C, P surname "Smith"')
 
 
 class QSPreProcessorTC(CubicWebTC):
