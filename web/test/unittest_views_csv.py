@@ -36,8 +36,8 @@ class CSVExportViewsTC(CubicWebTC):
         """Should return the CSV header.
         """
         with self.admin_access.web_request() as req:
-            rset = req.execute('Any GN,COUNT(X) GROUPBY GN ORDERBY GN '
-                               'WHERE X in_group G, G name GN, X login "Miles"')
+            rset = req.execute(u'Any GN,COUNT(X) GROUPBY GN ORDERBY GN '
+                                'WHERE X in_group G, G name GN, X login "Miles"')
             data = self.view('csvexport', rset, req=req)
             self.assertEqual(req.headers_out.getRawHeaders('content-type'),
                              ['text/comma-separated-values;charset=UTF-8'])
