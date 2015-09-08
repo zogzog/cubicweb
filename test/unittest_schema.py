@@ -426,7 +426,9 @@ class NormalizeExpressionTC(TestCase):
 
     def test(self):
         self.assertEqual(normalize_expression('X  bla Y,Y blur Z  ,  Z zigoulou   X '),
-                                               'X bla Y, Y blur Z, Z zigoulou X')
+                                              'X bla Y, Y blur Z, Z zigoulou X')
+        self.assertEqual(normalize_expression('X bla Y, Y name "x,y"'),
+                                              'X bla Y, Y name "x,y"')
 
 
 class RQLExpressionTC(TestCase):

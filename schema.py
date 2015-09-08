@@ -146,7 +146,10 @@ def normalize_expression(rqlstring):
     suppressing and reinserting an expression if only a space has been
     added/removed for instance)
     """
-    return u', '.join(' '.join(expr.split()) for expr in rqlstring.split(','))
+    union = parse(u'Any 1 WHERE %s' % rqlstring).as_string()
+    if isinstance(union, str):
+        union = union.decode('utf-8')
+    return union.split(' WHERE ', 1)[1]
 
 
 def _check_valid_formula(rdef, formula_rqlst):
