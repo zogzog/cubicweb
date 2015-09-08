@@ -1,3 +1,4 @@
+# coding: utf-8
 # copyright 2011-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
@@ -27,7 +28,7 @@ class DataFeedTC(CubicWebTC):
     def setup_database(self):
         with self.admin_access.repo_cnx() as cnx:
             with self.base_parser(cnx):
-                cnx.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
+                cnx.create_entity('CWSource', name=u'ô myfeed', type=u'datafeed',
                                   parser=u'testparser', url=u'ignored',
                                   config=u'synchronization-interval=1min')
                 cnx.commit()
@@ -47,21 +48,23 @@ class DataFeedTC(CubicWebTC):
                 entity.cw_edited.update(sourceparams['item'])
 
         with self.temporary_appobjects(AParser):
-            if 'myfeed' in self.repo.sources_by_uri:
-                yield self.repo.sources_by_uri['myfeed']._get_parser(session)
+            if u'ô myfeed' in self.repo.sources_by_uri:
+                yield self.repo.sources_by_uri[u'ô myfeed']._get_parser(session)
             else:
                 yield
 
     def test(self):
-        self.assertIn('myfeed', self.repo.sources_by_uri)
-        dfsource = self.repo.sources_by_uri['myfeed']
+        self.assertIn(u'ô myfeed', self.repo.sources_by_uri)
+        dfsource = self.repo.sources_by_uri[u'ô myfeed']
         self.assertNotIn('use_cwuri_as_url', dfsource.__dict__)
-        self.assertEqual({'type': u'datafeed', 'uri': u'myfeed', 'use-cwuri-as-url': True},
+        self.assertEqual({'type': u'datafeed', 'uri': u'ô myfeed', 'use-cwuri-as-url': True},
                          dfsource.public_config)
         self.assertEqual(dfsource.use_cwuri_as_url, True)
         self.assertEqual(dfsource.latest_retrieval, None)
         self.assertEqual(dfsource.synchro_interval, timedelta(seconds=60))
         self.assertFalse(dfsource.fresh())
+        # ensure source's logger name has been unormalized
+        self.assertEqual(dfsource.info.__self__.name, 'cubicweb.sources.o myfeed')
 
         with self.repo.internal_cnx() as cnx:
             with self.base_parser(cnx):
@@ -77,16 +80,16 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(entity.title, 'cubicweb.org')
                 self.assertEqual(entity.content, 'the cw web site')
                 self.assertEqual(entity.cwuri, 'http://www.cubicweb.org/')
-                self.assertEqual(entity.cw_source[0].name, 'myfeed')
+                self.assertEqual(entity.cw_source[0].name, u'ô myfeed')
                 self.assertEqual(entity.cw_metainformation(),
                                  {'type': 'Card',
-                                  'source': {'uri': 'myfeed', 'type': 'datafeed', 'use-cwuri-as-url': True},
+                                  'source': {'uri': u'ô myfeed', 'type': 'datafeed', 'use-cwuri-as-url': True},
                                   'extid': b'http://www.cubicweb.org/'}
                                  )
                 self.assertEqual(entity.absolute_url(), 'http://www.cubicweb.org/')
                 # test repo cache keys
                 self.assertEqual(self.repo._type_source_cache[entity.eid],
-                                 ('Card', b'http://www.cubicweb.org/', 'myfeed'))
+                                 ('Card', b'http://www.cubicweb.org/', u'ô myfeed'))
                 self.assertEqual(self.repo._extid_cache[b'http://www.cubicweb.org/'],
                                  entity.eid)
                 # test repull
@@ -100,19 +103,18 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(stats['created'], set())
                 self.assertEqual(stats['updated'], set((entity.eid,)))
                 self.assertEqual(self.repo._type_source_cache[entity.eid],
-                                 ('Card', b'http://www.cubicweb.org/', 'myfeed'))
+                                 ('Card', b'http://www.cubicweb.org/', u'ô myfeed'))
                 self.assertEqual(self.repo._extid_cache[b'http://www.cubicweb.org/'],
                                  entity.eid)
 
                 self.assertEqual(dfsource.source_cwuris(cnx),
-                                 {b'http://www.cubicweb.org/': (entity.eid, 'Card')}
-                             )
+                                 {b'http://www.cubicweb.org/': (entity.eid, 'Card')})
                 self.assertTrue(dfsource.latest_retrieval)
                 self.assertTrue(dfsource.fresh())
 
         # test_rename_source
         with self.admin_access.repo_cnx() as cnx:
-            cnx.execute('SET S name "myrenamedfeed" WHERE S is CWSource, S name "myfeed"')
+            cnx.entity_from_eid(dfsource.eid).cw_set(name=u"myrenamedfeed")
             cnx.commit()
             entity = cnx.execute('Card X').get_entity(0, 0)
             self.assertEqual(entity.cwuri, 'http://www.cubicweb.org/')

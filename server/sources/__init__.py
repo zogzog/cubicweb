@@ -27,6 +27,7 @@ from base64 import b64decode
 from six import text_type
 
 from logilab.common import configuration
+from logilab.common.textutils import unormalize
 from logilab.common.deprecation import deprecated
 
 from yams.schema import role_name
@@ -108,7 +109,9 @@ class AbstractSource(object):
         self.public_config['use-cwuri-as-url'] = self.use_cwuri_as_url
         self.remove_sensitive_information(self.public_config)
         self.uri = source_config.pop('uri')
-        set_log_methods(self, getLogger('cubicweb.sources.'+self.uri))
+        # unormalize to avoid non-ascii characters in logger's name, this will cause decoding error
+        # on logging
+        set_log_methods(self, getLogger('cubicweb.sources.' + unormalize(unicode(self.uri))))
         source_config.pop('type')
         self.update_config(None, self.check_conf_dict(eid, source_config,
                                                       fail_if_unknown=False))
