@@ -182,7 +182,7 @@ class ApplicationTC(CubicWebTC):
 
     def test_publish_validation_error(self):
         with self.admin_access.web_request() as req:
-            user = self.user(req)
+            user = req.user
             eid = text_type(user.eid)
             req.form = {
                 'eid':       eid,

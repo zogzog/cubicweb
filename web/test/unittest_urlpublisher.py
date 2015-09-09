@@ -96,7 +96,7 @@ class URLPublisherTC(CubicWebTC):
 
     def test_rest_path_eid(self):
         with self.admin_access.web_request() as req:
-            ctrl, rset = self.process(req, 'cwuser/eid/%s' % self.user(req).eid)
+            ctrl, rset = self.process(req, 'cwuser/eid/%s' % req.user.eid)
             self.assertEqual(ctrl, 'view')
             self.assertEqual(len(rset), 1)
             self.assertEqual(rset.description[0][0], 'CWUser')
