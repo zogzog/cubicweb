@@ -952,6 +952,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     def check_inlined_rdef_permissions(self, rschema, role, tschema, ttype):
         """return true if permissions are granted on the inlined object and
         relation"""
+        if not tschema.has_perm(self._cw, 'add'):
+            return False
         entity = self.edited_entity
         rdef = entity.e_schema.rdef(rschema, role, ttype)
         if entity.has_eid():
@@ -959,10 +961,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 rdefkwargs = {'fromeid': entity.eid}
             else:
                 rdefkwargs = {'toeid': entity.eid}
-        else:
-            rdefkwargs = {}
-        return (tschema.has_perm(self._cw, 'add')
-                and rdef.has_perm(self._cw, 'add', **rdefkwargs))
+            return rdef.has_perm(self._cw, 'add', **rdefkwargs)
+        return rdef.may_have_permission('add', self._cw)
 
 
     def should_hide_add_new_relation_link(self, rschema, card):

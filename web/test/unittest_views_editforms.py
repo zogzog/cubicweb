@@ -20,6 +20,8 @@ from logilab.common.testlib import unittest_main, mock_object
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.views import uicfg
 from cubicweb.web.formwidgets import AutoCompletionWidget
+from cubicweb.schema import RRQLExpression
+
 
 AFFK = uicfg.autoform_field_kwargs
 AFS = uicfg.autoform_section
@@ -178,6 +180,29 @@ class AutomaticEntityFormTC(CubicWebTC):
             with self.temporary_permissions(EmailAddress={'add': ()}):
                 autoform = self.vreg['forms'].select('edition', req, entity=req.user)
                 self.assertEqual(list(autoform.inlined_form_views()), [])
+
+    def test_check_inlined_rdef_permissions(self):
+        # try to check permissions when creating an entity ('user' below is a
+        # fresh entity without an eid)
+        with self.admin_access.web_request() as req:
+            ttype = 'EmailAddress'
+            rschema = self.schema['use_email']
+            rdef =  rschema.rdefs[('CWUser', ttype)]
+            tschema = self.schema[ttype]
+            role = 'subject'
+            with self.temporary_permissions((rdef, {'add': ()})):
+                user = self.vreg['etypes'].etype_class('CWUser')(req)
+                autoform = self.vreg['forms'].select('edition', req, entity=user)
+                self.assertFalse(autoform.check_inlined_rdef_permissions(rschema, role,
+                                                                         tschema, ttype))
+            # we actually don't care about the actual expression,
+            # may_have_permission only checks the presence of such expressions
+            expr = RRQLExpression('S use_email O')
+            with self.temporary_permissions((rdef, {'add': (expr,)})):
+                user = self.vreg['etypes'].etype_class('CWUser')(req)
+                autoform = self.vreg['forms'].select('edition', req, entity=user)
+                self.assertTrue(autoform.check_inlined_rdef_permissions(rschema, role,
+                                                                        tschema, ttype))
 
 
 class FormViewsTC(CubicWebTC):
