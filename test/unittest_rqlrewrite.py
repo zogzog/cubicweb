@@ -70,8 +70,8 @@ def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
     snippets = []
     for v, exprs in sorted(snippets_map.items()):
         rqlexprs = [isinstance(snippet, string_types)
-                    and mock_object(snippet_rqlst=parse('Any X WHERE '+snippet).children[0],
-                                    expression='Any X WHERE '+snippet)
+                    and mock_object(snippet_rqlst=parse(u'Any X WHERE '+snippet).children[0],
+                                    expression=u'Any X WHERE '+snippet)
                     or snippet
                     for snippet in exprs]
         snippets.append((dict([v]), rqlexprs))
@@ -113,9 +113,9 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Card C')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         u"Any C WHERE C is Card, B eid %(D)s, "
-                         "EXISTS(C in_state A, B in_group E, F require_state A, "
-                         "F name 'read', F require_group E, A is State, E is CWGroup, F is CWPermission)")
+                         u'Any C WHERE C is Card, B eid %(D)s, '
+                          'EXISTS(C in_state A, B in_group E, F require_state A, '
+                          'F name "read", F require_group E, A is State, E is CWGroup, F is CWPermission)')
 
     def test_multiple_var(self):
         card_constraint = ('X in_state S, U in_group G, P require_state S,'
@@ -127,11 +127,11 @@ class RQLRewriteTC(TestCase):
                 kwargs)
         self.assertMultiLineEqual(
             rqlst.as_string(),
-            "Any S WHERE S documented_by C, C eid %(u)s, B eid %(D)s, "
-            "EXISTS(C in_state A, B in_group E, F require_state A, "
-            "F name 'read', F require_group E, A is State, E is CWGroup, F is CWPermission), "
-            "(EXISTS(S ref LIKE 'PUBLIC%')) OR (EXISTS(B in_group G, G name 'public', G is CWGroup)), "
-            "S is Affaire")
+            u'Any S WHERE S documented_by C, C eid %(u)s, B eid %(D)s, '
+             'EXISTS(C in_state A, B in_group E, F require_state A, '
+             'F name "read", F require_group E, A is State, E is CWGroup, F is CWPermission), '
+             '(EXISTS(S ref LIKE "PUBLIC%")) OR (EXISTS(B in_group G, G name "public", G is CWGroup)), '
+             'S is Affaire')
         self.assertIn('D', kwargs)
 
     def test_or(self):
@@ -139,9 +139,9 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Any S WHERE S owned_by C, C eid %(u)s, S is in (CWUser, CWGroup)')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {'u':1})
         self.assertEqual(rqlst.as_string(),
-                         "Any S WHERE S owned_by C, C eid %(u)s, S is IN(CWUser, CWGroup), A eid %(B)s, "
-                         "EXISTS((C identity A) OR (C in_state D, E identity A, "
-                         "E in_state D, D name 'subscribed'), D is State, E is CWUser)")
+                         'Any S WHERE S owned_by C, C eid %(u)s, S is IN(CWUser, CWGroup), A eid %(B)s, '
+                         'EXISTS((C identity A) OR (C in_state D, E identity A, '
+                         'E in_state D, D name "subscribed"), D is State, E is CWUser)')
 
     def test_simplified_rqlst(self):
         constraint = ('X in_state S, U in_group G, P require_state S,'
@@ -149,9 +149,9 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Any 2') # this is the simplified rql st for Any X WHERE X eid 12
         rewrite(rqlst, {('2', 'X'): (constraint,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         u"Any 2 WHERE B eid %(C)s, "
-                         "EXISTS(2 in_state A, B in_group D, E require_state A, "
-                         "E name 'read', E require_group D, A is State, D is CWGroup, E is CWPermission)")
+                         u'Any 2 WHERE B eid %(C)s, '
+                          'EXISTS(2 in_state A, B in_group D, E require_state A, '
+                          'E name "read", E require_group D, A is State, D is CWGroup, E is CWPermission)')
 
     def test_optional_var_1(self):
         constraint = ('X in_state S, U in_group G, P require_state S,'
@@ -159,10 +159,10 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Any A,C WHERE A documented_by C?')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any A,C WHERE A documented_by C?, A is Affaire "
-                         "WITH C BEING "
-                         "(Any C WHERE EXISTS(C in_state B, D in_group F, G require_state B, G name 'read', "
-                         "G require_group F), D eid %(A)s, C is Card)")
+                         u'Any A,C WHERE A documented_by C?, A is Affaire '
+                          'WITH C BEING '
+                          '(Any C WHERE EXISTS(C in_state B, D in_group F, G require_state B, G name "read", '
+                          'G require_group F), D eid %(A)s, C is Card)')
 
     def test_optional_var_2(self):
         constraint = ('X in_state S, U in_group G, P require_state S,'
@@ -170,11 +170,11 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Any A,C,T WHERE A documented_by C?, C title T')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any A,C,T WHERE A documented_by C?, A is Affaire "
-                         "WITH C,T BEING "
-                         "(Any C,T WHERE C title T, EXISTS(C in_state B, D in_group F, "
-                         "G require_state B, G name 'read', G require_group F), "
-                         "D eid %(A)s, C is Card)")
+                         u'Any A,C,T WHERE A documented_by C?, A is Affaire '
+                          'WITH C,T BEING '
+                          '(Any C,T WHERE C title T, EXISTS(C in_state B, D in_group F, '
+                          'G require_state B, G name "read", G require_group F), '
+                          'D eid %(A)s, C is Card)')
 
     def test_optional_var_3(self):
         constraint1 = ('X in_state S, U in_group G, P require_state S,'
@@ -183,11 +183,11 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Any A,C,T WHERE A documented_by C?, C title T')
         rewrite(rqlst, {('C', 'X'): (constraint1, constraint2)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any A,C,T WHERE A documented_by C?, A is Affaire "
-                         "WITH C,T BEING (Any C,T WHERE C title T, "
-                         "(EXISTS(C in_state B, D in_group F, G require_state B, G name 'read', G require_group F)) "
-                         "OR (EXISTS(C in_state E, E name 'public')), "
-                         "D eid %(A)s, C is Card)")
+                         u'Any A,C,T WHERE A documented_by C?, A is Affaire '
+                          'WITH C,T BEING (Any C,T WHERE C title T, '
+                          '(EXISTS(C in_state B, D in_group F, G require_state B, G name "read", G require_group F)) '
+                          'OR (EXISTS(C in_state E, E name "public")), '
+                          'D eid %(A)s, C is Card)')
 
     def test_optional_var_4(self):
         constraint1 = 'A created_by U, X documented_by A'
@@ -270,16 +270,16 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Card C WHERE C in_state STATE')
         rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any C WHERE C in_state STATE, C is Card, "
-                         "EXISTS(STATE name 'hop'), STATE is State")
+                         'Any C WHERE C in_state STATE, C is Card, '
+                         'EXISTS(STATE name "hop"), STATE is State')
 
     def test_relation_optimization_1_rhs(self):
         snippet = ('TW subworkflow_exit X, TW name "hop"')
         rqlst = parse('WorkflowTransition C WHERE C subworkflow_exit EXIT')
         rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any C WHERE C subworkflow_exit EXIT, C is WorkflowTransition, "
-                         "EXISTS(C name 'hop'), EXIT is SubWorkflowExitPoint")
+                         'Any C WHERE C subworkflow_exit EXIT, C is WorkflowTransition, '
+                         'EXISTS(C name "hop"), EXIT is SubWorkflowExitPoint')
 
     def test_relation_optimization_2_lhs(self):
         # optional relation can be shared if also optional in the snippet
@@ -287,15 +287,15 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Card C WHERE C in_state STATE?')
         rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any C WHERE C in_state STATE?, C is Card, "
-                         "EXISTS(STATE name 'hop'), STATE is State")
+                         'Any C WHERE C in_state STATE?, C is Card, '
+                         'EXISTS(STATE name "hop"), STATE is State')
     def test_relation_optimization_2_rhs(self):
         snippet = ('TW? subworkflow_exit X, TW name "hop"')
         rqlst = parse('SubWorkflowExitPoint EXIT WHERE C? subworkflow_exit EXIT')
         rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any EXIT WHERE C? subworkflow_exit EXIT, EXIT is SubWorkflowExitPoint, "
-                         "EXISTS(C name 'hop'), C is WorkflowTransition")
+                         'Any EXIT WHERE C? subworkflow_exit EXIT, EXIT is SubWorkflowExitPoint, '
+                         'EXISTS(C name "hop"), C is WorkflowTransition')
 
     def test_relation_optimization_3_lhs(self):
         # optional relation in the snippet but not in the orig tree can be shared
@@ -303,16 +303,16 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Card C WHERE C in_state STATE')
         rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any C WHERE C in_state STATE, C is Card, "
-                         "EXISTS(STATE name 'hop'), STATE is State")
+                         'Any C WHERE C in_state STATE, C is Card, '
+                         'EXISTS(STATE name "hop"), STATE is State')
 
     def test_relation_optimization_3_rhs(self):
         snippet = ('TW? subworkflow_exit X, TW name "hop"')
         rqlst = parse('WorkflowTransition C WHERE C subworkflow_exit EXIT')
         rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any C WHERE C subworkflow_exit EXIT, C is WorkflowTransition, "
-                         "EXISTS(C name 'hop'), EXIT is SubWorkflowExitPoint")
+                         'Any C WHERE C subworkflow_exit EXIT, C is WorkflowTransition, '
+                         'EXISTS(C name "hop"), EXIT is SubWorkflowExitPoint')
 
     def test_relation_non_optimization_1_lhs(self):
         # but optional relation in the orig tree but not in the snippet can't be shared
@@ -320,17 +320,17 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Card C WHERE C in_state STATE?')
         rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any C WHERE C in_state STATE?, C is Card, "
-                         "EXISTS(C in_state A, A name 'hop', A is State), STATE is State")
+                         'Any C WHERE C in_state STATE?, C is Card, '
+                         'EXISTS(C in_state A, A name "hop", A is State), STATE is State')
 
     def test_relation_non_optimization_1_rhs(self):
         snippet = ('TW subworkflow_exit X, TW name "hop"')
         rqlst = parse('SubWorkflowExitPoint EXIT WHERE C? subworkflow_exit EXIT')
         rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
-                         "Any EXIT WHERE C? subworkflow_exit EXIT, EXIT is SubWorkflowExitPoint, "
-                         "EXISTS(A subworkflow_exit EXIT, A name 'hop', A is WorkflowTransition), "
-                         "C is WorkflowTransition")
+                         'Any EXIT WHERE C? subworkflow_exit EXIT, EXIT is SubWorkflowExitPoint, '
+                         'EXISTS(A subworkflow_exit EXIT, A name "hop", A is WorkflowTransition), '
+                         'C is WorkflowTransition')
 
     def test_relation_non_optimization_2(self):
         """See #3024730"""
@@ -358,8 +358,8 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Any U,T WHERE U is CWUser, T wf_info_for U')
         rewrite(rqlst, {('T', 'X'): (trinfo_constraint, 'X wf_info_for Y, Y in_group G, G name "managers"')}, {})
         self.assertEqual(rqlst.as_string(),
-                         u"Any U,T WHERE U is CWUser, T wf_info_for U, "
-                         "EXISTS(U in_group B, B name 'managers', B is CWGroup), T is TrInfo")
+                         u'Any U,T WHERE U is CWUser, T wf_info_for U, '
+                          'EXISTS(U in_group B, B name "managers", B is CWGroup), T is TrInfo')
 
     def test_unsupported_constraint_3(self):
         self.skipTest('raise unauthorized for now')
