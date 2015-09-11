@@ -22,7 +22,7 @@
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 import os
 from warnings import warn

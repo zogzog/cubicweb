@@ -18,7 +18,7 @@
 """json export views"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from cubicweb.uilib import rest_traceback
 

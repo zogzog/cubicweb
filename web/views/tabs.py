@@ -18,7 +18,7 @@
 """base classes to handle tabbed views"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from six import string_types
 

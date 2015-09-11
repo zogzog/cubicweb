@@ -20,7 +20,7 @@ validity
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from threading import Lock
 

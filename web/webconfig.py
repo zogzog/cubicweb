@@ -18,7 +18,7 @@
 """web ui configuration for cubicweb instances"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 import os
 import hmac

@@ -34,7 +34,7 @@ from cubicweb import ValidationError, AuthenticationError, Binary
 from cubicweb.server import utils
 from cubicweb.server.sources import datafeed
 
-_ = unicode
+from cubicweb import _
 
 # search scopes
 BASE = ldap.SCOPE_BASE

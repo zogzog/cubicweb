@@ -18,7 +18,7 @@
 """Primary view for bookmarks + user's bookmarks box"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from logilab.mtconverter import xml_escape
 

@@ -18,7 +18,7 @@
 """base xml and rss views"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from base64 import b64encode
 from time import timezone

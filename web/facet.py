@@ -50,7 +50,7 @@ to skip those classes...
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from functools import reduce
 from warnings import warn

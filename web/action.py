@@ -33,7 +33,7 @@ Many examples are available in :mod:`cubicweb.web.views.actions`.
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from cubicweb import target
 from cubicweb.predicates import (partial_relation_possible, match_search_state,

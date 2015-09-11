@@ -18,7 +18,7 @@
 """some basic stuff to build dot generated graph images"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 import tempfile
 import os

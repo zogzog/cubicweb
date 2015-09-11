@@ -18,7 +18,7 @@
 """an helper class to display CubicWeb schema using ureports"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from six import string_types
 

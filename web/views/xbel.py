@@ -18,7 +18,7 @@
 """xbel views"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from six.moves import range
 

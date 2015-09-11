@@ -19,7 +19,7 @@
 
 """
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from yams.buildobjs import EntityType, RelationType, SubjectRelation, String
 from cubicweb.schema import RRQLExpression

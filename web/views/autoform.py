@@ -119,7 +119,7 @@ checking for dark-corner case where it can't be verified properly.
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from warnings import warn
 

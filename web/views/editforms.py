@@ -20,7 +20,7 @@ or a list of entities of the same type
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from copy import copy
 

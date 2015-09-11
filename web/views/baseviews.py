@@ -76,7 +76,7 @@ views use those text views as a basis.
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from datetime import timedelta
 from warnings import warn

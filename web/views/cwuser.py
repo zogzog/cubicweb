@@ -18,7 +18,7 @@
 """Specific views for users and groups"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from hashlib import sha1 # pylint: disable=E0611
 

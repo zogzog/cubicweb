@@ -21,7 +21,7 @@
 * the logged user link
 """
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from logilab.mtconverter import xml_escape
 from logilab.common.registry import yes

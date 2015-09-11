@@ -19,7 +19,7 @@
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition, Bytes,
                             SubjectRelation, RichString, String, Boolean, Int)

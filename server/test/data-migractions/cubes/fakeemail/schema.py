@@ -5,7 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 # pylint: disable-msg=E0611,F0401
 from yams.buildobjs import (SubjectRelation, RelationType, EntityType,

@@ -22,7 +22,7 @@ from yams.reader import context
 
 from cubicweb.schema import ERQLExpression
 
-_ = unicode
+from cubicweb import _
 
 class friend(RelationDefinition):
     subject = ('CWUser', 'CWGroup')

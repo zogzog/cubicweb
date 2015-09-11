@@ -23,7 +23,7 @@ __docformat__ = "restructuredtext en"
 from cubicweb.predicates import is_instance
 from cubicweb.view import EntityView
 
-_ = unicode
+from cubicweb import _
 
 VCARD_PHONE_TYPES = {'home': 'HOME', 'office': 'WORK', 'mobile': 'CELL', 'fax': 'FAX'}
 

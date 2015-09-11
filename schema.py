@@ -19,7 +19,6 @@
 from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
-_ = unicode
 
 import re
 from os.path import join, basename
@@ -49,7 +48,7 @@ from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 from rql.analyze import ETypeResolver
 
 import cubicweb
-from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized
+from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized, _
 
 try:
     from cubicweb import server

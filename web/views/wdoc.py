@@ -35,7 +35,7 @@ from cubicweb.predicates import match_form_params
 from cubicweb.view import StartupView
 from cubicweb.uilib import rest_publish
 from cubicweb.web import NotFound, action
-_ = unicode
+from cubicweb import _
 
 # table of content management #################################################
 

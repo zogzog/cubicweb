@@ -23,7 +23,7 @@ from cubicweb.schema import (WorkflowableEntityType,
                              RQLConstraint, RQLVocabularyConstraint)
 
 
-_ = unicode
+from cubicweb import _
 
 
 class Personne(EntityType):

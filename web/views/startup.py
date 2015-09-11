@@ -22,7 +22,7 @@
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from logilab.common.textutils import unormalize
 from logilab.common.deprecation import deprecated

@@ -167,7 +167,6 @@ Here are all environment variables that may be used to configure *CubicWeb*:
 from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
-_ = unicode
 
 import sys
 import os
@@ -189,7 +188,7 @@ from logilab.common.configuration import (Configuration, Method,
                                           ConfigurationMixIn, merge_options)
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
-                      ConfigurationError, Binary)
+                      ConfigurationError, Binary, _)
 from cubicweb.toolsutils import create_dir
 
 CONFIGURATIONS = []

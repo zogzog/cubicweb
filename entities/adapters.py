@@ -20,7 +20,7 @@ framework itself.
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from itertools import chain
 from warnings import warn

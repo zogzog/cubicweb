@@ -20,7 +20,7 @@ form
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 import copy
 from warnings import warn

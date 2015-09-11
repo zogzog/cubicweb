@@ -18,7 +18,7 @@
 """Specific views for CWProperty (eg site/user preferences"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from logilab.mtconverter import xml_escape
 

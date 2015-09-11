@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """hooks for repository sources synchronization"""
 
-_ = unicode
+from cubicweb import _
 
 from socket import gethostname
 

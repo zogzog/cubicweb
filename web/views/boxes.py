@@ -26,7 +26,7 @@ Additional boxes (disabled by default):
 * startup views box
 """
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from warnings import warn
 

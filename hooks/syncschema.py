@@ -24,7 +24,7 @@ checking for schema consistency is done in hooks.py
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from copy import copy
 from hashlib import md5

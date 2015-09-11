@@ -20,7 +20,7 @@ CWSourceHostConfig, CWSourceSchemaConfig).
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 import logging
 from itertools import repeat

@@ -18,7 +18,7 @@
 """some views to handle notification on data changes"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from itertools import repeat
 

@@ -18,7 +18,7 @@
 """Hooks for synchronizing computed attributes"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from collections import defaultdict
 

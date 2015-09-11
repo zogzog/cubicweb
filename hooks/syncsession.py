@@ -18,7 +18,7 @@
 """Core hooks: synchronize living session on persistent data changes"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from cubicweb import UnknownProperty, BadConnectionId, validation_error
 from cubicweb.predicates import is_instance

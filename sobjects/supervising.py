@@ -18,7 +18,7 @@
 """some hooks and views to handle supervising of any data changes"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from cubicweb import UnknownEid
 from cubicweb.predicates import none_rset

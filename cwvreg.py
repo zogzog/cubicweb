@@ -20,7 +20,7 @@ Cubicweb registries
 """
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 import sys
 from os.path import join, dirname, realpath

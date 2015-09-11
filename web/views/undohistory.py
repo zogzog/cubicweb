@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 
 from logilab.common.registry import Predicate

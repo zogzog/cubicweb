@@ -18,7 +18,7 @@
 """Some views used to help to the edition process"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from logilab.common.decorators import cached
 from logilab.mtconverter import xml_escape

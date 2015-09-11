@@ -18,7 +18,7 @@
 """html calendar views"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 import copy
 from datetime import timedelta

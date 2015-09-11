@@ -18,7 +18,7 @@
 """Core hooks: workflow related hooks"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from datetime import datetime
 

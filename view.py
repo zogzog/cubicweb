@@ -18,7 +18,7 @@
 """abstract views and templates classes for CubicWeb web client"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from io import BytesIO
 from warnings import warn

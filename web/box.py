@@ -18,7 +18,7 @@
 """abstract box classes for CubicWeb web client"""
 
 __docformat__ = "restructuredtext en"
-_ = unicode
+from cubicweb import _
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated, class_renamed
