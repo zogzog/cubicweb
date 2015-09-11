@@ -662,7 +662,7 @@ class EditControllerTC(CubicWebTC):
                         '_cw_entity_fields:X': 'login-subject,upassword-subject,in_group-subject',
                         'login-subject:X': u'adim',
                         'upassword-subject:X': u'toto', 'upassword-subject-confirm:X': u'toto',
-                        'in_group-subject:X': `gueid`,
+                        'in_group-subject:X': repr(gueid),
 
                         '__type:Y': 'EmailAddress',
                         '_cw_entity_fields:Y': 'address-subject,alias-subject,use_email-object',
