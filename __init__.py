@@ -28,12 +28,8 @@ warnings.filterwarnings('ignore', category=UserWarning,
                         module='.*pygments')
 
 
-import __builtin__
-from six import PY2, binary_type
-# '_' is available in builtins to mark internationalized string but should
-# not be used to do the actual translation
-if not hasattr(__builtin__, '_'):
-    __builtin__._ = unicode
+from six import PY2, binary_type, text_type
+from six.moves import builtins
 
 CW_SOFTWARE_ROOT = __path__[0]
 
@@ -57,6 +53,14 @@ set_log_methods(sys.modules[__name__], logging.getLogger('cubicweb'))
 # make all exceptions accessible from the package
 from cubicweb._exceptions import *
 from logilab.common.registry import ObjectNotFound, NoSelectableObject, RegistryNotFound
+
+
+# '_' is available to mark internationalized string but should not be used to
+# do the actual translation
+_ = text_type
+if not hasattr(builtins, '_'):
+    builtins._ = deprecated("[3.22] Use 'from cubicweb import _'")(_)
+
 
 # convert eid to the right type, raise ValueError if it's not a valid eid
 @deprecated('[3.17] typed_eid() was removed. replace it with int() when needed.')
