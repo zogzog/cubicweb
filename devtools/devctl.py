@@ -18,6 +18,7 @@
 """additional cubicweb-ctl commands and command handlers for cubicweb and
 cubicweb's cubes development
 """
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -314,8 +315,8 @@ class UpdateCubicWebCatalogCommand(Command):
         from cubicweb.i18n import extract_from_tal, execute2
         tempdir = tempfile.mkdtemp(prefix='cw-')
         cwi18ndir = WebConfiguration.i18n_lib_dir()
-        print '-> extract messages:',
-        print 'schema',
+        print('-> extract messages:', end=' ')
+        print('schema', end=' ')
         schemapot = osp.join(tempdir, 'schema.pot')
         potfiles = [schemapot]
         potfiles.append(schemapot)
@@ -324,11 +325,11 @@ class UpdateCubicWebCatalogCommand(Command):
         schemapotstream = file(schemapot, 'w')
         generate_schema_pot(schemapotstream.write, cubedir=None)
         schemapotstream.close()
-        print 'TAL',
+        print('TAL', end=' ')
         tali18nfile = osp.join(tempdir, 'tali18n.py')
         extract_from_tal(find(osp.join(BASEDIR, 'web'), ('.py', '.pt')),
                          tali18nfile)
-        print '-> generate .pot files.'
+        print('-> generate .pot files.')
         pyfiles = get_module_files(BASEDIR)
         pyfiles += globfind(osp.join(BASEDIR, 'misc', 'migration'), '*.py')
         schemafiles = globfind(osp.join(BASEDIR, 'schemas'), '*.py')
@@ -349,12 +350,12 @@ class UpdateCubicWebCatalogCommand(Command):
             if osp.exists(potfile):
                 potfiles.append(potfile)
             else:
-                print '-> WARNING: %s file was not generated' % potfile
-        print '-> merging %i .pot files' % len(potfiles)
+                print('-> WARNING: %s file was not generated' % potfile)
+        print('-> merging %i .pot files' % len(potfiles))
         cubicwebpot = osp.join(tempdir, 'cubicweb.pot')
         cmd = ['msgcat', '-o', cubicwebpot] + potfiles
         execute2(cmd)
-        print '-> merging main pot file with existing translations.'
+        print('-> merging main pot file with existing translations.')
         chdir(cwi18ndir)
         toedit = []
         for lang in CubicWebNoAppConfiguration.cw_languages():
@@ -368,10 +369,10 @@ class UpdateCubicWebCatalogCommand(Command):
         # cleanup
         rm(tempdir)
         # instructions pour la suite
-        print '-> regenerated CubicWeb\'s .po catalogs.'
-        print '\nYou can now edit the following files:'
-        print '* ' + '\n* '.join(toedit)
-        print 'when you are done, run "cubicweb-ctl i18ncube yourcube".'
+        print('-> regenerated CubicWeb\'s .po catalogs.')
+        print('\nYou can now edit the following files:')
+        print('* ' + '\n* '.join(toedit))
+        print('when you are done, run "cubicweb-ctl i18ncube yourcube".')
 
 
 class UpdateCubeCatalogCommand(Command):
@@ -398,25 +399,25 @@ def update_cubes_catalogs(cubes):
     from subprocess import CalledProcessError
     for cubedir in cubes:
         if not osp.isdir(cubedir):
-            print '-> ignoring %s that is not a directory.' % cubedir
+            print('-> ignoring %s that is not a directory.' % cubedir)
             continue
         try:
             toedit = update_cube_catalogs(cubedir)
         except CalledProcessError as exc:
-            print '\n*** error while updating catalogs for cube', cubedir
-            print 'cmd:\n%s' % exc.cmd
-            print 'stdout:\n%s\nstderr:\n%s' % exc.data
+            print('\n*** error while updating catalogs for cube', cubedir)
+            print('cmd:\n%s' % exc.cmd)
+            print('stdout:\n%s\nstderr:\n%s' % exc.data)
         except Exception:
             import traceback
             traceback.print_exc()
-            print '*** error while updating catalogs for cube', cubedir
+            print('*** error while updating catalogs for cube', cubedir)
             return False
         else:
             # instructions pour la suite
             if toedit:
-                print '-> regenerated .po catalogs for cube %s.' % cubedir
-                print '\nYou can now edit the following files:'
-                print '* ' + '\n* '.join(toedit)
+                print('-> regenerated .po catalogs for cube %s.' % cubedir)
+                print('\nYou can now edit the following files:')
+                print('* ' + '\n* '.join(toedit))
                 print ('When you are done, run "cubicweb-ctl i18ninstance '
                        '<yourinstance>" to see changes in your instances.')
             return True
@@ -429,7 +430,7 @@ def update_cube_catalogs(cubedir):
     from cubicweb.i18n import extract_from_tal, execute2
     cube = osp.basename(osp.normpath(cubedir))
     tempdir = tempfile.mkdtemp()
-    print underline_title('Updating i18n catalogs for cube %s' % cube)
+    print(underline_title('Updating i18n catalogs for cube %s' % cube))
     chdir(cubedir)
     if osp.exists(osp.join('i18n', 'entities.pot')):
         warn('entities.pot is deprecated, rename file to static-messages.pot (%s)'
@@ -439,8 +440,8 @@ def update_cube_catalogs(cubedir):
         potfiles = [osp.join('i18n', 'static-messages.pot')]
     else:
         potfiles = []
-    print '-> extracting messages:',
-    print 'schema',
+    print('-> extracting messages:', end=' ')
+    print('schema', end=' ')
     schemapot = osp.join(tempdir, 'schema.pot')
     potfiles.append(schemapot)
     # explicit close necessary else the file may not be yet flushed when
@@ -448,11 +449,11 @@ def update_cube_catalogs(cubedir):
     schemapotstream = file(schemapot, 'w')
     generate_schema_pot(schemapotstream.write, cubedir)
     schemapotstream.close()
-    print 'TAL',
+    print('TAL', end=' ')
     tali18nfile = osp.join(tempdir, 'tali18n.py')
     ptfiles = find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',))
     extract_from_tal(ptfiles, tali18nfile)
-    print 'Javascript'
+    print('Javascript')
     jsfiles =  [jsfile for jsfile in find('.', '.js')
                 if osp.basename(jsfile).startswith('cub')]
     if jsfiles:
@@ -463,7 +464,7 @@ def update_cube_catalogs(cubedir):
         # no pot file created if there are no string to translate
         if osp.exists(tmppotfile):
             potfiles.append(tmppotfile)
-    print '-> creating cube-specific catalog'
+    print('-> creating cube-specific catalog')
     tmppotfile = osp.join(tempdir, 'generated.pot')
     cubefiles = find('.', '.py', blacklist=STD_BLACKLIST+('test',))
     cubefiles.append(tali18nfile)
@@ -473,20 +474,20 @@ def update_cube_catalogs(cubedir):
     if osp.exists(tmppotfile): # doesn't exists of no translation string found
         potfiles.append(tmppotfile)
     potfile = osp.join(tempdir, 'cube.pot')
-    print '-> merging %i .pot files' % len(potfiles)
+    print('-> merging %i .pot files' % len(potfiles))
     cmd = ['msgcat', '-o', potfile]
     cmd.extend(potfiles)
     execute2(cmd)
     if not osp.exists(potfile):
-        print 'no message catalog for cube', cube, 'nothing to translate'
+        print('no message catalog for cube', cube, 'nothing to translate')
         # cleanup
         rm(tempdir)
         return ()
-    print '-> merging main pot file with existing translations:',
+    print('-> merging main pot file with existing translations:', end=' ')
     chdir('i18n')
     toedit = []
     for lang in CubicWebNoAppConfiguration.cw_languages():
-        print lang,
+        print(lang, end=' ')
         cubepo = '%s.po' % lang
         if not osp.exists(cubepo):
             shutil.copy(potfile, cubepo)
@@ -496,7 +497,7 @@ def update_cube_catalogs(cubedir):
             ensure_fs_mode(cubepo)
             shutil.move('%snew' % cubepo, cubepo)
         toedit.append(osp.abspath(cubepo))
-    print
+    print()
     # cleanup
     rm(tempdir)
     return toedit
@@ -620,7 +621,7 @@ layout, and a full featured cube with "full" layout.',
                     " Please specify it using the --directory option")
             cubesdir = cubespath[0]
         if not osp.isdir(cubesdir):
-            print "-> creating cubes directory", cubesdir
+            print("-> creating cubes directory", cubesdir)
             try:
                 mkdir(cubesdir)
             except OSError as err:
@@ -738,10 +739,10 @@ class ExamineLogCommand(Command):
         stat.sort()
         stat.reverse()
         total_time = sum(clocktime for clocktime, cputime, occ, rql in stat) * 0.01
-        print 'Percentage;Cumulative Time (clock);Cumulative Time (CPU);Occurences;Query'
+        print('Percentage;Cumulative Time (clock);Cumulative Time (CPU);Occurences;Query')
         for clocktime, cputime, occ, rql in stat:
-            print '%.2f;%.2f;%.2f;%s;%s' % (clocktime/total_time, clocktime,
-                                            cputime, occ, rql)
+            print('%.2f;%.2f;%.2f;%s;%s' % (clocktime/total_time, clocktime,
+                                            cputime, occ, rql))
 
 
 class GenerateSchema(Command):

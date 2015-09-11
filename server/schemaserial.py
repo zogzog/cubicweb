@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """functions for schema / permissions (de)serialization using RQL"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -49,11 +50,11 @@ def group_mapping(cnx, interactive=True):
         return res
     missing = [g for g in ('owners', 'managers', 'users', 'guests') if not g in res]
     if missing:
-        print 'some native groups are missing but the following groups have been found:'
-        print '\n'.join('* %s (%s)' % (n, eid) for n, eid in res.items())
-        print
-        print 'enter the eid of a to group to map to each missing native group'
-        print 'or just type enter to skip permissions granted to a group'
+        print('some native groups are missing but the following groups have been found:')
+        print('\n'.join('* %s (%s)' % (n, eid) for n, eid in res.items()))
+        print()
+        print('enter the eid of a to group to map to each missing native group')
+        print('or just type enter to skip permissions granted to a group')
         for group in missing:
             while True:
                 value = raw_input('eid for group %s: ' % group).strip()
@@ -62,13 +63,13 @@ def group_mapping(cnx, interactive=True):
                 try:
                     eid = int(value)
                 except ValueError:
-                    print 'eid should be an integer'
+                    print('eid should be an integer')
                     continue
                 for eid_ in res.values():
                     if eid == eid_:
                         break
                 else:
-                    print 'eid is not a group eid'
+                    print('eid is not a group eid')
                     continue
                 res[name] = eid
                 break
@@ -344,7 +345,7 @@ def serialize_schema(cnx, schema):
     current schema
     """
     _title = '-> storing the schema in the database '
-    print _title,
+    print(_title, end=' ')
     execute = cnx.execute
     eschemas = schema.entities()
     pb_size = (len(eschemas + schema.relations())
@@ -397,7 +398,7 @@ def serialize_schema(cnx, schema):
     for rql, kwargs in specialize2rql(schema):
         execute(rql, kwargs, build_descr=False)
         pb.update()
-    print
+    print()
 
 
 # high level serialization functions
@@ -455,8 +456,8 @@ def uniquetogether2rqls(eschema):
     columnset = set()
     for columns in eschema._unique_together:
         if columns in columnset:
-            print ('schemaserial: skipping duplicate unique together %r %r' %
-                   (eschema.type, columns))
+            print('schemaserial: skipping duplicate unique together %r %r' %
+                  (eschema.type, columns))
             continue
         columnset.add(columns)
         rql, args = _uniquetogether2rql(eschema, columns)
@@ -619,8 +620,8 @@ def _erperms2rql(erschema, groupmap):
                     yield ('SET X %s_permission Y WHERE Y eid %%(g)s, X eid %%(x)s' % action,
                            {'g': groupmap[group_or_rqlexpr]})
                 except KeyError:
-                    print ("WARNING: group %s used in permissions for %s was ignored because it doesn't exist."
-                           " You may want to add it into a precreate.py file" % (group_or_rqlexpr, erschema))
+                    print("WARNING: group %s used in permissions for %s was ignored because it doesn't exist."
+                          " You may want to add it into a precreate.py file" % (group_or_rqlexpr, erschema))
                     continue
             else:
                 # rqlexpr

@@ -23,6 +23,8 @@ Notes:
   string. This is because it should actually be Bytes but we want an index on
   it for fast querying.
 """
+from __future__ import print_function
+
 __docformat__ = "restructuredtext en"
 
 from cPickle import loads, dumps
@@ -76,12 +78,12 @@ class LogCursor(object):
         it's a function just so that it shows up in profiling
         """
         if server.DEBUG & server.DBG_SQL:
-            print 'exec', query, args
+            print('exec', query, args)
         try:
             self.cu.execute(str(query), args)
         except Exception as ex:
-            print "sql: %r\n args: %s\ndbms message: %r" % (
-                query, args, ex.args[0])
+            print("sql: %r\n args: %s\ndbms message: %r" % (
+                query, args, ex.args[0]))
             raise
 
     def fetchall(self):
@@ -708,7 +710,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         cursor = cnx.cnxset.cu
         if server.DEBUG & server.DBG_SQL:
-            print 'exec', query, args, cnx.cnxset.cnx
+            print('exec', query, args, cnx.cnxset.cnx)
         try:
             # str(query) to avoid error if it's a unicode string
             cursor.execute(str(query), args)
@@ -767,7 +769,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         it's a function just so that it shows up in profiling
         """
         if server.DEBUG & server.DBG_SQL:
-            print 'execmany', query, 'with', len(args), 'arguments', cnx.cnxset.cnx
+            print('execmany', query, 'with', len(args), 'arguments', cnx.cnxset.cnx)
         cursor = cnx.cnxset.cu
         try:
             # str(query) to avoid error if it's a unicode string

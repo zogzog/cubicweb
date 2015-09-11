@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 config['rql-cache-size'] = config['rql-cache-size'] * 10
 
 add_entity_type('CWDataImport')
@@ -10,4 +12,4 @@ for rqlcstr in rql('Any X,XT,XV WHERE X is CWConstraint, X cstrtype XT, X value 
     mainvars = guess_rrqlexpr_mainvars(expression)
     yamscstr = CONSTRAINTS[rqlcstr.type](expression, mainvars)
     rqlcstr.cw_set(value=yamscstr.serialize())
-    print 'updated', rqlcstr.type, rqlcstr.value.strip()
+    print('updated', rqlcstr.type, rqlcstr.value.strip())

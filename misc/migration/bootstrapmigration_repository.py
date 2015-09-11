@@ -19,6 +19,7 @@
 
 it should only include low level schema changes
 """
+from __future__ import print_function
 
 from cubicweb import ConfigurationError
 from cubicweb.server.session import hooks_control
@@ -77,8 +78,8 @@ if applcubicwebversion < (3, 19, 0) and cubicwebversion >= (3, 19, 0):
         sql('ALTER TABLE "entities" DROP COLUMN "mtime"')
         sql('ALTER TABLE "entities" DROP COLUMN "source"')
     except: # programming error, already migrated
-        print "Failed to drop mtime or source database columns"
-        print "'entities' table of the database has probably been already updated"
+        print("Failed to drop mtime or source database columns")
+        print("'entities' table of the database has probably been already updated")
 
     commit()
 
@@ -101,7 +102,7 @@ if applcubicwebversion < (3, 18, 0) and cubicwebversion >= (3, 18, 0):
     driver = config.system_source_config['db-driver']
     if not (driver == 'postgres' or driver.startswith('sqlserver')):
         import sys
-        print >>sys.stderr, 'This migration is not supported for backends other than sqlserver or postgres (yet).'
+        print('This migration is not supported for backends other than sqlserver or postgres (yet).', file=sys.stderr)
         sys.exit(1)
 
     add_relation_definition('CWAttribute', 'add_permission', 'CWGroup')
@@ -196,7 +197,7 @@ if applcubicwebversion < (3, 18, 0) and cubicwebversion >= (3, 18, 0):
                                                 (rschema.type, ','.join(subjects))))
             if martians:
                 martians = ','.join(martians)
-                print 'deleting broken relations %s for eids %s' % (rschema.type, martians)
+                print('deleting broken relations %s for eids %s' % (rschema.type, martians))
                 sql('DELETE FROM %s_relation WHERE eid_from IN (%s) OR eid_to IN (%s)' % (rschema.type, martians, martians))
             with session.deny_all_hooks_but():
                 rql('SET X %(r)s Y WHERE Y %(r)s X, NOT X %(r)s Y' % {'r': rschema.type})
@@ -219,20 +220,20 @@ if applcubicwebversion < (3, 18, 0) and cubicwebversion >= (3, 18, 0):
     if driver == 'postgres':
         for indexname, in sql('select indexname from pg_indexes'):
             if indexname.startswith('unique_'):
-                print 'dropping index', indexname
+                print('dropping index', indexname)
                 sql('DROP INDEX %s' % indexname)
         commit()
     elif driver.startswith('sqlserver'):
         for viewname, in sql('select name from sys.views'):
             if viewname.startswith('utv_'):
-                print 'dropping view (index should be cascade-deleted)', viewname
+                print('dropping view (index should be cascade-deleted)', viewname)
                 sql('DROP VIEW %s' % viewname)
         commit()
 
     # recreate the constraints, hook will lead to low-level recreation
     for eschema in sorted(schema.entities()):
         if eschema._unique_together:
-            print 'recreate unique indexes for', eschema
+            print('recreate unique indexes for', eschema)
             rql_args = schemaserial.uniquetogether2rqls(eschema)
             for rql, args in rql_args:
                 args['x'] = eschema.eid
@@ -243,10 +244,10 @@ if applcubicwebversion < (3, 18, 0) and cubicwebversion >= (3, 18, 0):
     for rschema in sorted(schema.relations()):
         if rschema.final:
             if rschema.type in fsschema:
-                print 'sync perms for', rschema.type
+                print('sync perms for', rschema.type)
                 sync_schema_props_perms(rschema.type, syncprops=False, ask_confirm=False, commit=False)
             else:
-                print 'WARNING: attribute %s missing from fs schema' % rschema.type
+                print('WARNING: attribute %s missing from fs schema' % rschema.type)
     commit()
 
 if applcubicwebversion < (3, 17, 0) and cubicwebversion >= (3, 17, 0):

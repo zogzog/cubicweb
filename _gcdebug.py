@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import print_function
 
 import gc, types, weakref
 
@@ -68,7 +69,7 @@ def gc_info(countclasses,
             except KeyError:
                 ocounters[key] = 1
         if isinstance(obj, viewreferrersclasses):
-            print '   ', obj, referrers(obj, showobjs, maxlevel)
+            print('   ', obj, referrers(obj, showobjs, maxlevel))
     garbage = [repr(obj) for obj in gc.garbage]
     return counters, ocounters, garbage
 

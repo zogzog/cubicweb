@@ -23,17 +23,19 @@
 rename A010-joe.en.txt to A030-joe.en.txt
 accept [y/N]?
 """
+from __future__ import print_function
+
 
 def ren(a,b):
     names = glob.glob('%s*'%a)
     for name in names :
-        print 'rename %s to %s' % (name, name.replace(a,b))
+        print('rename %s to %s' % (name, name.replace(a,b)))
     if raw_input('accept [y/N]?').lower() =='y':
         for name in names:
             os.system('hg mv %s %s' % (name, name.replace(a,b)))
 
 
-def ls(): print '\n'.join(sorted(os.listdir('.')))
+def ls(): print('\n'.join(sorted(os.listdir('.'))))
 
 def move():
     filenames = []
@@ -47,4 +49,4 @@ def move():
 
     for num, name in filenames:
         if num >= start:
-            print 'hg mv %s %2i%s' %(name,num+1,name[2:])
+            print('hg mv %s %2i%s' %(name,num+1,name[2:]))

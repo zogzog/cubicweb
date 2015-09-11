@@ -19,6 +19,7 @@
 
 This module contains functions to initialize a new repository.
 """
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -66,7 +67,7 @@ def compare_steps(self, step, expected):
         self.assertEqual(len(step[-1]), len(expected[-1]),
                           'got %s child steps, expected %s' % (len(step[-1]), len(expected[-1])))
     except AssertionError:
-        print 'error on step ',
+        print('error on step ', end=' ')
         pprint(step[:-1])
         raise
     children = step[-1]

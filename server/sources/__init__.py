@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb server sources support"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -36,25 +37,25 @@ from cubicweb.server.edition import EditedEntity
 def dbg_st_search(uri, union, varmap, args, cachekey=None, prefix='rql for'):
     if server.DEBUG & server.DBG_RQL:
         global t
-        print '  %s %s source: %s' % (prefix, uri, repr(union.as_string()))
+        print('  %s %s source: %s' % (prefix, uri, repr(union.as_string())))
         t = time()
         if varmap:
-            print '    using varmap', varmap
+            print('    using varmap', varmap)
         if server.DEBUG & server.DBG_MORE:
-            print '    args', repr(args)
-            print '    cache key', cachekey
-            print '    solutions', ','.join(str(s.solutions)
-                                            for s in union.children)
+            print('    args', repr(args))
+            print('    cache key', cachekey)
+            print('    solutions', ','.join(str(s.solutions)
+                                            for s in union.children))
     # return true so it can be used as assertion (and so be killed by python -O)
     return True
 
 def dbg_results(results):
     if server.DEBUG & server.DBG_RQL:
         if len(results) > 10:
-            print '  -->', results[:10], '...', len(results),
+            print('  -->', results[:10], '...', len(results), end=' ')
         else:
-            print '  -->', results,
-        print 'time: ', time() - t
+            print('  -->', results, end=' ')
+        print('time: ', time() - t)
     # return true so it can be used as assertion (and so be killed by python -O)
     return True
 

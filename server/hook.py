@@ -248,6 +248,8 @@ Hooks and operations classes
 .. autoclass:: cubicweb.server.hook.LateOperation
 .. autoclass:: cubicweb.server.hook.DataOperationMixIn
 """
+from __future__ import print_function
+
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -331,7 +333,7 @@ class HooksRegistry(CWRegistry):
                         with cnx.running_hooks_ops():
                             for hook in hooks:
                                 if debug:
-                                    print event, _kwargs, hook
+                                    print(event, _kwargs, hook)
                                 hook()
 
     def get_pruned_hooks(self, cnx, event, entities, eids_from_to, kwargs):

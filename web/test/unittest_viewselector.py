@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """XXX rename, split, reorganize this"""
+from __future__ import print_function
 
 from logilab.common.testlib import unittest_main
 
@@ -76,9 +77,9 @@ class VRegistryTC(ViewSelectorTC):
         try:
             self.assertSetEqual(list(content), expected)
         except Exception:
-            print registry, sorted(expected), sorted(content)
-            print 'no more', [v for v in expected if not v in content]
-            print 'missing', [v for v in content if not v in expected]
+            print(registry, sorted(expected), sorted(content))
+            print('no more', [v for v in expected if not v in content])
+            print('missing', [v for v in content if not v in expected])
             raise
 
     def setUp(self):
@@ -461,7 +462,7 @@ class VRegistryTC(ViewSelectorTC):
                 obj = self.vreg['views'].select(vid, req, rset=rset, **args)
                 return obj.render(**args)
             except Exception:
-                print vid, rset, args
+                print(vid, rset, args)
                 raise
 
     def test_form(self):

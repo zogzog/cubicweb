@@ -18,6 +18,8 @@
 """Helper classes to execute RQL queries on a set of sources, performing
 security checking and data aggregation.
 """
+from __future__ import print_function
+
 __docformat__ = "restructuredtext en"
 
 from itertools import repeat
@@ -103,13 +105,13 @@ def check_relations_read_access(cnx, select, args):
                                                    solution, args))
                 if not user.matching_groups(rdef.get_groups('read')):
                     if DBG:
-                        print ('check_read_access: %s %s does not match %s' %
-                               (rdef, user.groups, rdef.get_groups('read')))
+                        print('check_read_access: %s %s does not match %s' %
+                              (rdef, user.groups, rdef.get_groups('read')))
                     # XXX rqlexpr not allowed
                     raise Unauthorized('read', rel.r_type)
                 if DBG:
-                    print ('check_read_access: %s %s matches %s' %
-                           (rdef, user.groups, rdef.get_groups('read')))
+                    print('check_read_access: %s %s matches %s' %
+                          (rdef, user.groups, rdef.get_groups('read')))
 
 def get_local_checks(cnx, rqlst, solution):
     """Check that the given user has credentials to access data read by the
@@ -138,8 +140,8 @@ def get_local_checks(cnx, rqlst, solution):
                 ex = Unauthorized('read', solution[varname])
                 ex.var = varname
                 if DBG:
-                    print ('check_read_access: %s %s %s %s' %
-                           (varname, eschema, user.groups, eschema.get_groups('read')))
+                    print('check_read_access: %s %s %s %s' %
+                          (varname, eschema, user.groups, eschema.get_groups('read')))
                 raise ex
             # don't insert security on variable only referenced by 'NOT X relation Y' or
             # 'NOT EXISTS(X relation Y)'
@@ -539,8 +541,8 @@ class QuerierHelper(object):
         """
         if server.DEBUG & (server.DBG_RQL | server.DBG_SQL):
             if server.DEBUG & (server.DBG_MORE | server.DBG_SQL):
-                print '*'*80
-            print 'querier input', repr(rql), repr(args)
+                print('*'*80)
+            print('querier input', repr(rql), repr(args))
         # parse the query and binds variables
         cachekey = (rql,)
         try:

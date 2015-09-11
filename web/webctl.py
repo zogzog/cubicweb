@@ -18,6 +18,7 @@
 """cubicweb-ctl commands and command handlers common to twisted/modpython
 web configuration
 """
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -44,7 +45,7 @@ class WebCreateHandler(CommandHandler):
     def bootstrap(self, cubes, automatic=False, inputlevel=0):
         """bootstrap this configuration"""
         if not automatic:
-            print '\n' + underline_title('Generic web configuration')
+            print('\n' + underline_title('Generic web configuration'))
             config = self.config
             config.input_config('web', inputlevel)
             if ASK.confirm('Allow anonymous access ?', False):
@@ -87,8 +88,8 @@ class GenStaticDataDirMixIn(object):
             copy(osp.join(resource_dir, resource_path), dest_resource)
         # handle md5 version subdirectory
         linkdir(dest, osp.join(dest, config.instance_md5_version()))
-        print ('You can use apache rewrite rule below :\n'
-               'RewriteRule ^/data/(.*) %s/$1 [L]' % dest)
+        print('You can use apache rewrite rule below :\n'
+              'RewriteRule ^/data/(.*) %s/$1 [L]' % dest)
 
     def _datadirs(self, config, repo=None):
         if repo is None:

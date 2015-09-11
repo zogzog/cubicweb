@@ -21,6 +21,7 @@
 * workflow history (TrInfo)
 * adapter for workflowable entities (IWorkflowableAdapter)
 """
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -224,19 +225,19 @@ class BaseTransition(AnyEntity):
             matches = user.matching_groups(groups)
             if matches:
                 if DBG:
-                    print 'may_be_fired: %r may fire: user matches %s' % (self.name, groups)
+                    print('may_be_fired: %r may fire: user matches %s' % (self.name, groups))
                 return matches
             if 'owners' in groups and user.owns(eid):
                 if DBG:
-                    print 'may_be_fired: %r may fire: user is owner' % self.name
+                    print('may_be_fired: %r may fire: user is owner' % self.name)
                 return True
         # check one of the rql expression conditions matches if any
         if self.condition:
             if DBG:
-                print ('my_be_fired: %r: %s' %
-                       (self.name, [(rqlexpr.expression,
+                print('my_be_fired: %r: %s' %
+                      (self.name, [(rqlexpr.expression,
                                     rqlexpr.check_expression(self._cw, eid))
-                                   for rqlexpr in self.condition]))
+                                    for rqlexpr in self.condition]))
             for rqlexpr in self.condition:
                 if rqlexpr.check_expression(self._cw, eid):
                     return True

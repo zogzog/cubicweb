@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Repository users' and internal' sessions."""
+from __future__ import print_function
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -874,7 +876,7 @@ class Connection(RequestSessionBase):
                 processed = []
                 self.commit_state = 'precommit'
                 if debug:
-                    print self.commit_state, '*' * 20
+                    print(self.commit_state, '*' * 20)
                 try:
                     with self.running_hooks_ops():
                         while self.pending_operations:
@@ -882,7 +884,7 @@ class Connection(RequestSessionBase):
                             operation.processed = 'precommit'
                             processed.append(operation)
                             if debug:
-                                print operation
+                                print(operation)
                             operation.handle_event('precommit_event')
                     self.pending_operations[:] = processed
                     self.debug('precommit transaction %s done', self.connectionid)
@@ -899,11 +901,11 @@ class Connection(RequestSessionBase):
                     # and revertcommit, that will be enough in mont case.
                     operation.failed = True
                     if debug:
-                        print self.commit_state, '*' * 20
+                        print(self.commit_state, '*' * 20)
                     with self.running_hooks_ops():
                         for operation in reversed(processed):
                             if debug:
-                                print operation
+                                print(operation)
                             try:
                                 operation.handle_event('revertprecommit_event')
                             except BaseException:
@@ -917,12 +919,12 @@ class Connection(RequestSessionBase):
                 self.cnxset.commit()
                 self.commit_state = 'postcommit'
                 if debug:
-                    print self.commit_state, '*' * 20
+                    print(self.commit_state, '*' * 20)
                 with self.running_hooks_ops():
                     while self.pending_operations:
                         operation = self.pending_operations.pop(0)
                         if debug:
-                            print operation
+                            print(operation)
                         operation.processed = 'postcommit'
                         try:
                             operation.handle_event('postcommit_event')

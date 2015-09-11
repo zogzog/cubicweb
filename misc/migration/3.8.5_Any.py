@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 def migrate_varchar_to_nvarchar():
     dbdriver  = config.system_source_config['db-driver']
     if dbdriver != "sqlserver2005":
@@ -52,7 +54,7 @@ AND j.column_id = k.column_id;"""
 
 
     for statement in generated_statements:
-        print statement
+        print(statement)
         sql(statement, ask_confirm=False)
     commit()
 

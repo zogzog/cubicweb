@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """this module contains base classes and utilities for cubicweb tests"""
+from __future__ import print_function
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -1164,7 +1166,7 @@ class AutoPopulateTest(CubicWebTC):
                 cnx.execute(rql, args)
             except ValidationError as ex:
                 # failed to satisfy some constraint
-                print 'error in automatic db population', ex
+                print('error in automatic db population', ex)
                 cnx.commit_state = None # reset uncommitable flag
         self.post_populate(cnx)
 

@@ -18,6 +18,7 @@
 """Functions to add additional annotations on a rql syntax tree to ease later
 code generation.
 """
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -354,9 +355,9 @@ class IsAmbData(object):
                     continue
 
     def _debug_print(self):
-        print 'varsols', dict((x, sorted(str(v) for v in values))
-                               for x, values in self.varsols.iteritems())
-        print 'ambiguous vars', sorted(self.ambiguousvars)
+        print('varsols', dict((x, sorted(str(v) for v in values))
+                               for x, values in self.varsols.iteritems()))
+        print('ambiguous vars', sorted(self.ambiguousvars))
 
     def set_rel_constraint(self, term, rel, etypes_func):
         if isinstance(term, VariableRef) and self.is_ambiguous(term.variable):

@@ -164,6 +164,7 @@ Here are all environment variables that may be used to configure *CubicWeb*:
 
    Directory where pid files will be written
 """
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -1188,8 +1189,8 @@ the repository',
 
     def set_sources_mode(self, sources):
         if not 'all' in sources:
-            print 'warning: ignoring specified sources, requires a repository '\
-                  'configuration'
+            print('warning: ignoring specified sources, requires a repository '
+                  'configuration')
 
     def i18ncompile(self, langs=None):
         from cubicweb import i18n

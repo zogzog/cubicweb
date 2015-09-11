@@ -41,6 +41,7 @@ OPTIONS:
 Copyright (c) 2003-2011 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
+from __future__ import print_function
 
 import os
 import sys
@@ -84,7 +85,7 @@ class QueryExecutor:
 
 def usage(status=0):
     """print usage string and exit"""
-    print __doc__ % basename(sys.argv[0])
+    print(__doc__ % basename(sys.argv[0]))
     sys.exit(status)
 
 
@@ -133,7 +134,7 @@ def run(args):
                                                            'nb-times=', 'nb-threads=',
                                                            'profile', 'report-output=',])
     except Exception as ex:
-        print ex
+        print(ex)
         usage(1)
     repeat = 100
     threads = 1
@@ -166,7 +167,7 @@ def run(args):
     from cubicweb.cwconfig import instance_configuration
     config = instance_configuration(args[0])
     # get local access to the repository
-    print "Creating repo", prof_file
+    print("Creating repo", prof_file)
     repo = Repository(config, prof_file)
     cnxid = repo.connect(user, password=password)
     # connection to the CubicWeb repository

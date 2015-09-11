@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """classes to define schemas for CubicWeb"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -665,7 +666,7 @@ def check_perm(self, _cw, action, **kwargs):
     groups = self.get_groups(action)
     if _cw.user.matching_groups(groups):
         if DBG:
-            print ('check_perm: %r %r: user matches %s' % (action, _self_str, groups))
+            print('check_perm: %r %r: user matches %s' % (action, _self_str, groups))
         return
     # if 'owners' in allowed groups, check if the user actually owns this
     # object, if so that's enough
@@ -676,14 +677,14 @@ def check_perm(self, _cw, action, **kwargs):
           kwargs.get('creating')
           or ('eid' in kwargs and _cw.user.owns(kwargs['eid']))):
         if DBG:
-            print ('check_perm: %r %r: user is owner or creation time' %
-                   (action, _self_str))
+            print('check_perm: %r %r: user is owner or creation time' %
+                  (action, _self_str))
         return
     # else if there is some rql expressions, check them
     if DBG:
-        print ('check_perm: %r %r %s' %
-               (action, _self_str, [(rqlexpr, kwargs, rqlexpr.check(_cw, **kwargs))
-                                    for rqlexpr in self.get_rqlexprs(action)]))
+        print('check_perm: %r %r %s' %
+              (action, _self_str, [(rqlexpr, kwargs, rqlexpr.check(_cw, **kwargs))
+                                   for rqlexpr in self.get_rqlexprs(action)]))
     if any(rqlexpr.check(_cw, **kwargs)
            for rqlexpr in self.get_rqlexprs(action)):
         return

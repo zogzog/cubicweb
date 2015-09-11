@@ -20,6 +20,8 @@
 * integrity of a CubicWeb repository. Hum actually only the system database is
   checked.
 """
+from __future__ import print_function
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -90,11 +92,11 @@ def reindex_entities(schema, cnx, withpb=True, etypes=None):
     dbhelper = repo.system_source.dbhelper
     cursor = cnx.cnxset.cu
     if not dbhelper.has_fti_table(cursor):
-        print 'no text index table'
+        print('no text index table')
         dbhelper.init_fti(cursor)
     repo.system_source.do_fti = True  # ensure full-text indexation is activated
     if etypes is None:
-        print 'Reindexing entities'
+        print('Reindexing entities')
         etypes = set()
         for eschema in schema.entities():
             if eschema.final:
@@ -107,8 +109,8 @@ def reindex_entities(schema, cnx, withpb=True, etypes=None):
         # clear fti table first
         cnx.system_sql('DELETE FROM %s' % dbhelper.fti_table)
     else:
-        print 'Reindexing entities of type %s' % \
-              ', '.join(sorted(str(e) for e in etypes))
+        print('Reindexing entities of type %s' % \
+              ', '.join(sorted(str(e) for e in etypes)))
         # clear fti table first. Use subquery for sql compatibility
         cnx.system_sql("DELETE FROM %s WHERE EXISTS(SELECT 1 FROM ENTITIES "
                        "WHERE eid=%s AND type IN (%s))" % (
@@ -135,7 +137,7 @@ def reindex_entities(schema, cnx, withpb=True, etypes=None):
 
 def check_schema(schema, cnx, eids, fix=1):
     """check serialized schema"""
-    print 'Checking serialized schema'
+    print('Checking serialized schema')
     unique_constraints = ('SizeConstraint', 'FormatConstraint',
                           'VocabularyConstraint',
                           'RQLVocabularyConstraint')
@@ -147,16 +149,16 @@ def check_schema(schema, cnx, eids, fix=1):
         if count == 1:
             continue
         if cstrname in unique_constraints:
-            print "ERROR: got %s %r constraints on relation %s.%s.%s" % (
-                count, cstrname, sn, rn, on)
+            print("ERROR: got %s %r constraints on relation %s.%s.%s" % (
+                count, cstrname, sn, rn, on))
             if fix:
-                print 'dunno how to fix, do it yourself'
+                print('dunno how to fix, do it yourself')
 
 
 
 def check_text_index(schema, cnx, eids, fix=1):
     """check all entities registered in the text index"""
-    print 'Checking text index'
+    print('Checking text index')
     msg = '  Entity with eid %s exists in the text index but in no source (autofix will remove from text index)'
     cursor = cnx.system_sql('SELECT uid FROM appears;')
     for row in cursor.fetchall():
@@ -170,7 +172,7 @@ def check_text_index(schema, cnx, eids, fix=1):
 
 def check_entities(schema, cnx, eids, fix=1):
     """check all entities registered in the repo system table"""
-    print 'Checking entities system table'
+    print('Checking entities system table')
     # system table but no source
     msg = '  Entity %s with eid %s exists in the system table but in no source (autofix will delete the entity)'
     cursor = cnx.system_sql('SELECT eid,type FROM entities;')
@@ -228,7 +230,7 @@ def check_entities(schema, cnx, eids, fix=1):
                            'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_instance_of_relation as cs '
                            '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
         notify_fixed(True)
-    print 'Checking entities tables'
+    print('Checking entities tables')
     msg = '  Entity with eid %s exists in the %s table but not in the system table (autofix will delete the entity)'
     for eschema in schema.entities():
         if eschema.final:
@@ -263,7 +265,7 @@ def check_relations(schema, cnx, eids, fix=1):
     """check that eids referenced by relations are registered in the repo system
     table
     """
-    print 'Checking relations'
+    print('Checking relations')
     for rschema in schema.relations():
         if rschema.final or rschema.type in PURE_VIRTUAL_RTYPES:
             continue
@@ -287,7 +289,7 @@ def check_relations(schema, cnx, eids, fix=1):
             cursor = cnx.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
         except Exception as ex:
             # usually because table doesn't exist
-            print 'ERROR', ex
+            print('ERROR', ex)
             continue
         for row in cursor.fetchall():
             eid = row[0]
@@ -310,7 +312,7 @@ def check_relations(schema, cnx, eids, fix=1):
 
 def check_mandatory_relations(schema, cnx, eids, fix=1):
     """check entities missing some mandatory relation"""
-    print 'Checking mandatory relations'
+    print('Checking mandatory relations')
     msg = '%s #%s is missing mandatory %s relation %s (autofix will delete the entity)'
     for rschema in schema.relations():
         if rschema.final or rschema in PURE_VIRTUAL_RTYPES or rschema in ('is', 'is_instance_of'):
@@ -340,7 +342,7 @@ def check_mandatory_attributes(schema, cnx, eids, fix=1):
     """check for entities stored in the system source missing some mandatory
     attribute
     """
-    print 'Checking mandatory attributes'
+    print('Checking mandatory attributes')
     msg = '%s #%s is missing mandatory attribute %s (autofix will delete the entity)'
     for rschema in schema.relations():
         if not rschema.final or rschema in VIRTUAL_RTYPES:
@@ -361,7 +363,7 @@ def check_metadata(schema, cnx, eids, fix=1):
 
     FIXME: rewrite using RQL queries ?
     """
-    print 'Checking metadata'
+    print('Checking metadata')
     cursor = cnx.system_sql("SELECT DISTINCT type FROM entities;")
     eidcolumn = SQL_PREFIX + 'eid'
     msg = '  %s with eid %s has no %s (autofix will set it to now)'
@@ -403,9 +405,9 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
         if fix:
             cnx.commit()
         else:
-            print
+            print()
         if not fix:
-            print 'WARNING: Diagnostic run, nothing has been corrected'
+            print('WARNING: Diagnostic run, nothing has been corrected')
     if reindex:
         cnx.rollback()
         reindex_entities(repo.schema, cnx, withpb=withpb)

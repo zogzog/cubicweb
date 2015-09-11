@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Postgres specific store"""
+from __future__ import print_function
 
 import threading
 import warnings
@@ -52,7 +53,7 @@ def _import_statements(sql_connect, statements, nb_threads=3,
         for t in threads:
             t.join()
     except Exception:
-        print 'Error in import statements'
+        print('Error in import statements')
 
 def _execmany_thread_not_copy_from(cu, statement, data, table=None,
                                    columns=None, encoding='utf-8'):
@@ -100,7 +101,7 @@ def _execmany_thread(sql_connect, statements, dump_output_dir=None,
                     columns = list(data[0])
                 execmany_func(cu, statement, data, table, columns, encoding)
             except Exception:
-                print 'unable to copy data into table %s' % table
+                print('unable to copy data into table %s' % table)
                 # Error in import statement, save data in dump_output_dir
                 if dump_output_dir is not None:
                     pdata = {'data': data, 'statement': statement,
@@ -111,7 +112,7 @@ def _execmany_thread(sql_connect, statements, dump_output_dir=None,
                                            '%s.pickle' % filename), 'w') as fobj:
                             fobj.write(cPickle.dumps(pdata))
                     except IOError:
-                        print 'ERROR while pickling in', dump_output_dir, filename+'.pickle'
+                        print('ERROR while pickling in', dump_output_dir, filename+'.pickle')
                         pass
                 cnx.rollback()
                 raise
@@ -335,7 +336,7 @@ class SQLGenSourceWrapper(object):
         self._sql.eid_insertdicts = {}
 
     def flush(self):
-        print 'starting flush'
+        print('starting flush')
         _entities_sql = self._sql.entities
         _relations_sql = self._sql.relations
         _inlined_relations_sql = self._sql.inlined_relations

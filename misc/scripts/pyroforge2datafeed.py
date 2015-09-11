@@ -2,6 +2,8 @@
 
 Once this script is run, execute c-c db-check to cleanup relation tables.
 """
+from __future__ import print_function
+
 import sys
 
 try:
@@ -12,14 +14,14 @@ except ValueError:
           ' on the command line)')
     sys.exit(1)
 except KeyError:
-    print '%s is not an active source' % source_name
+    print('%s is not an active source' % source_name)
     sys.exit(1)
 
 # check source is reachable before doing anything
 try:
     source.get_connection()._repo
 except AttributeError:
-    print '%s is not reachable. Fix this before running this script' % source_name
+    print('%s is not reachable. Fix this before running this script' % source_name)
     sys.exit(1)
 
 raw_input('Ensure you have shutdown all instances of this application before continuing.'
@@ -39,7 +41,7 @@ DONT_GET_BACK_ETYPES = set(( # XXX edit as desired
         ))
 
 
-print '******************** backport entity content ***************************'
+print('******************** backport entity content ***************************')
 
 from cubicweb.server import debugged
 todelete = {}
@@ -47,20 +49,20 @@ host = source.config['base-url'].split('://')[1]
 for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).entities():
         etype = entity.cw_etype
         if not source.support_entity(etype):
-            print "source doesn't support %s, delete %s" % (etype, entity.eid)
+            print("source doesn't support %s, delete %s" % (etype, entity.eid))
         elif etype in DONT_GET_BACK_ETYPES:
-            print 'ignore %s, delete %s' % (etype, entity.eid)
+            print('ignore %s, delete %s' % (etype, entity.eid))
         else:
             try:
                 entity.complete()
                 if not host in entity.cwuri:
-                    print 'SKIP foreign entity', entity.cwuri, source.config['base-url']
+                    print('SKIP foreign entity', entity.cwuri, source.config['base-url'])
                     continue
             except Exception:
-                print '%s %s much probably deleted, delete it (extid %s)' % (
-                    etype, entity.eid, entity.cw_metainformation()['extid'])
+                print('%s %s much probably deleted, delete it (extid %s)' % (
+                    etype, entity.eid, entity.cw_metainformation()['extid']))
             else:
-                print 'get back', etype, entity.eid
+                print('get back', etype, entity.eid)
                 entity.cw_edited = EditedEntity(entity, **entity.cw_attr_cache)
                 system_source.add_entity(session, entity)
                 sql("UPDATE entities SET asource=%(asource)s, source='system', extid=%(extid)s "
@@ -76,7 +78,7 @@ for entities in todelete.itervalues():
     system_source.delete_info_multi(session, entities, source_name)
 
 
-print '******************** backport mapping **********************************'
+print('******************** backport mapping **********************************')
 session.disable_hook_categories('cw.sources')
 mapping = []
 for mappart in rql('Any X,SCH WHERE X cw_schema SCH, X cw_for_source S, S eid %(s)s',
@@ -91,7 +93,7 @@ for mappart in rql('Any X,SCH WHERE X cw_schema SCH, X cw_for_source S, S eid %(
                 continue
             if rdef.subject in DONT_GET_BACK_ETYPES \
                     and rdef.object in DONT_GET_BACK_ETYPES:
-                print 'dont map', rdef
+                print('dont map', rdef)
                 continue
             if rdef.subject in DONT_GET_BACK_ETYPES:
                 options = u'action=link\nlinkattr=name'
@@ -105,7 +107,7 @@ for mappart in rql('Any X,SCH WHERE X cw_schema SCH, X cw_for_source S, S eid %(
                     roles = 'object',
                 else:
                     roles = 'subject',
-            print 'map', rdef, options, roles
+            print('map', rdef, options, roles)
             for role in roles:
                 mapping.append( (
                         (str(rdef.subject), str(rdef.rtype), str(rdef.object)),

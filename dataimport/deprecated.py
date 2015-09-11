@@ -58,6 +58,7 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
 .. BUG file with one column are not parsable
 .. TODO rollback() invocation is not possible yet
 """
+from __future__ import print_function
 
 import sys
 import traceback
@@ -103,7 +104,7 @@ def lazydbtable(cu, table, headers, orderby=None):
 
 @deprecated('[3.21] deprecated')
 def tell(msg):
-    print msg
+    print(msg)
 
 
 @deprecated('[3.21] deprecated')

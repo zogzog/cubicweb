@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import base64
 from cubicweb.server.utils import crypt_password
 
@@ -20,10 +22,10 @@ update = "UPDATE entities SET source='system' WHERE eid=%(eid)s;"
 rset = sql("SELECT eid,type,source,extid,mtime FROM entities WHERE source!='system'", ask_confirm=False)
 for eid, type, source, extid, mtime in rset:
     if type != 'CWUser':
-        print "don't know what to do with entity type", type
+        print("don't know what to do with entity type", type)
         continue
     if not source.lower().startswith('ldap'):
-        print "don't know what to do with source type", source
+        print("don't know what to do with source type", source)
         continue
     extid = base64.decodestring(extid)
     ldapinfos = [x.strip().split('=') for x in extid.split(',')]
@@ -33,7 +35,7 @@ for eid, type, source, extid, mtime in rset:
     args = dict(eid=eid, type=type, source=source, login=login,
                 firstname=firstname, surname=surname, mtime=mtime,
                 pwd=dbhelper.binary_value(crypt_password('toto')))
-    print args
+    print(args)
     sql(insert, args)
     sql(update, args)
 

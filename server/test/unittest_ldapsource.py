@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.server.sources.ldapusers unit and functional tests"""
+from __future__ import print_function
 
 import os
 import sys
@@ -63,8 +64,8 @@ def create_slapd_configuration(cls):
     slapproc = subprocess.Popen(cmdline, stdout=PIPE, stderr=PIPE)
     stdout, stderr = slapproc.communicate()
     if slapproc.returncode:
-        print >> sys.stderr, ('slapadd returned with status: %s'
-                              % slapproc.returncode)
+        print('slapadd returned with status: %s'
+              % slapproc.returncode, file=sys.stderr)
         sys.stdout.write(stdout)
         sys.stderr.write(stderr)
 
@@ -96,8 +97,8 @@ def terminate_slapd(cls):
             os.kill(cls.slapd_process.pid, signal.SIGTERM)
         stdout, stderr = cls.slapd_process.communicate()
         if cls.slapd_process.returncode:
-            print >> sys.stderr, ('slapd returned with status: %s'
-                                  % cls.slapd_process.returncode)
+            print('slapd returned with status: %s'
+                  % cls.slapd_process.returncode, file=sys.stderr)
             sys.stdout.write(stdout)
             sys.stderr.write(stderr)
         config.info('DONE')

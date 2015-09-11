@@ -20,6 +20,7 @@
 
 The server module contains functions to initialize a new repository.
 """
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -245,7 +246,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
             remainings = filter(drop_filter, helper.list_tables(sqlcursor))
             assert not remainings, 'Remaining tables: %s' % ', '.join(remainings)
     _title = '-> creating tables '
-    print _title,
+    print(_title, end=' ')
     # schema entities and relations tables
     # can't skip entities table even if system source doesn't support them,
     # they are used sometimes by generated sql. Keeping them empty is much
@@ -255,8 +256,8 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
     #               if not repo.system_source.support_entity(str(e))])
     failed = sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
     if failed:
-        print 'The following SQL statements failed. You should check your schema.'
-        print failed
+        print('The following SQL statements failed. You should check your schema.')
+        print(failed)
         raise Exception('execution of the sql schema failed, you should check your schema')
     sqlcursor.close()
     sqlcnx.commit()
@@ -267,7 +268,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
         repo.system_source.eid = ssource.eid
         cnx.execute('SET X cw_source X WHERE X eid %(x)s', {'x': ssource.eid})
         # insert base groups and default admin
-        print '-> inserting default user and default groups.'
+        print('-> inserting default user and default groups.')
         try:
             login = unicode(sourcescfg['admin']['login'])
             pwd = sourcescfg['admin']['password']
@@ -310,7 +311,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
     # (drop instance attribute to get back to class attribute)
     del config.cubicweb_appobject_path
     del config.cube_appobject_path
-    print '-> database for instance %s initialized.' % config.appid
+    print('-> database for instance %s initialized.' % config.appid)
 
 
 def initialize_schema(config, schema, mhandler, event='create'):

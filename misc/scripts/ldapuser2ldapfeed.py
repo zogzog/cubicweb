@@ -2,6 +2,8 @@
 
 Once this script is run, execute c-c db-check to cleanup relation tables.
 """
+from __future__ import print_function
+
 import sys
 from collections import defaultdict
 from logilab.common.shellutils import generate_password
@@ -14,12 +16,12 @@ except ValueError:
           ' on the command line)')
     sys.exit(1)
 except KeyError:
-    print '%s is not an active source' % source_name
+    print('%s is not an active source' % source_name)
     sys.exit(1)
 
 # check source is reachable before doing anything
 if not source.get_connection().cnx:
-    print '%s is not reachable. Fix this before running this script' % source_name
+    print('%s is not reachable. Fix this before running this script' % source_name)
     sys.exit(1)
 
 raw_input('Ensure you have shutdown all instances of this application before continuing.'
@@ -31,7 +33,7 @@ from datetime import datetime
 from cubicweb.server.edition import EditedEntity
 
 
-print '******************** backport entity content ***************************'
+print('******************** backport entity content ***************************')
 
 todelete = defaultdict(list)
 extids = set()
@@ -39,17 +41,17 @@ duplicates = []
 for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).entities():
     etype = entity.cw_etype
     if not source.support_entity(etype):
-        print "source doesn't support %s, delete %s" % (etype, entity.eid)
+        print("source doesn't support %s, delete %s" % (etype, entity.eid))
         todelete[etype].append(entity)
         continue
     try:
         entity.complete()
     except Exception:
-        print '%s %s much probably deleted, delete it (extid %s)' % (
-            etype, entity.eid, entity.cw_metainformation()['extid'])
+        print('%s %s much probably deleted, delete it (extid %s)' % (
+            etype, entity.eid, entity.cw_metainformation()['extid']))
         todelete[etype].append(entity)
         continue
-    print 'get back', etype, entity.eid
+    print('get back', etype, entity.eid)
     entity.cw_edited = EditedEntity(entity, **entity.cw_attr_cache)
     if not entity.creation_date:
         entity.cw_edited['creation_date'] = datetime.now()
@@ -61,7 +63,7 @@ for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).e
     if not entity.cwuri:
         entity.cw_edited['cwuri'] = '%s/?dn=%s' % (
             source.urls[0], extid.decode('utf-8', 'ignore'))
-    print entity.cw_edited
+    print(entity.cw_edited)
     if extid in extids:
         duplicates.append(extid)
         continue
@@ -73,13 +75,13 @@ for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).e
 # only cleanup entities table, remaining stuff should be cleaned by a c-c
 # db-check to be run after this script
 if duplicates:
-    print 'found %s duplicate entries' % len(duplicates)
+    print('found %s duplicate entries' % len(duplicates))
     from pprint import pprint
     pprint(duplicates)
 
-print len(todelete), 'entities will be deleted'
+print(len(todelete), 'entities will be deleted')
 for etype, entities in todelete.iteritems():
-    print 'deleting', etype, [e.login for e in entities]
+    print('deleting', etype, [e.login for e in entities])
     system_source.delete_info_multi(session, entities, source_name)
 
 
@@ -89,9 +91,9 @@ source_ent.cw_set(type=u"ldapfeed", parser=u"ldapfeed")
 
 
 if raw_input('Commit?') in 'yY':
-    print 'committing'
+    print('committing')
     commit()
 else:
     rollback()
-    print 'rolled back'
+    print('rolled back')
 

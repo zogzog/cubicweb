@@ -16,8 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Functions to help importing CSV data"""
-
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import csv as csvmod
 import warnings
@@ -64,7 +63,7 @@ def ucsvreader_pb(stream_or_path, encoding='utf-8', delimiter=',', quotechar='"'
         yield urow
         if withpb:
             pb.update()
-    print ' %s rows imported' % rowcount
+    print(' %s rows imported' % rowcount)
 
 
 def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',

@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some utilities for the CubicWeb server."""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -92,7 +93,7 @@ def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
                        passwdmsg='password'):
     if not user:
         if msg:
-            print msg
+            print(msg)
         while not user:
             user = raw_input('login: ')
         user = unicode(user, sys.stdin.encoding)
@@ -102,7 +103,7 @@ def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
             passwd2 = getpass('confirm password: ')
             if passwd == passwd2:
                 break
-            print 'password doesn\'t match'
+            print('password doesn\'t match')
             passwd = getpass('password: ')
     # XXX decode password using stdin encoding then encode it using appl'encoding
     return user, passwd

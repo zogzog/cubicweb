@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """server.serverconfig definition"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -276,7 +277,7 @@ notified of every changes.',
                 assert len(self.sources_mode) == 1
                 if source.connect_for_migration:
                     return True
-                print 'not connecting to source', source.uri, 'during migration'
+                print('not connecting to source', source.uri, 'during migration')
                 return False
             if 'all' in self.sources_mode:
                 assert len(self.sources_mode) == 1

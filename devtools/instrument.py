@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 """Instrumentation utilities"""
+from __future__ import print_function
 
 import os
 
@@ -45,10 +46,10 @@ def get_color(key):
         return _COLORS[key]
 
 def warn(msg, *args):
-    print 'WARNING: %s' % (msg % args)
+    print('WARNING: %s' % (msg % args))
 
 def info(msg):
-    print 'INFO: ' + msg
+    print('INFO: ' + msg)
 
 
 class PropagationAnalyzer(object):

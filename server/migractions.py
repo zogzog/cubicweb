@@ -26,6 +26,8 @@ The following data actions are supported for now:
 * add an entity
 * execute raw RQL queries
 """
+from __future__ import print_function
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -137,18 +139,18 @@ class ServerMigrationHelper(MigrationHelper):
             try:
                 self.cnx = repoapi.connect(self.repo, login, password=pwd)
                 if not 'managers' in self.cnx.user.groups:
-                    print 'migration need an account in the managers group'
+                    print('migration need an account in the managers group')
                 else:
                     break
             except AuthenticationError:
-                print 'wrong user/password'
+                print('wrong user/password')
             except (KeyboardInterrupt, EOFError):
-                print 'aborting...'
+                print('aborting...')
                 sys.exit(0)
             try:
                 login, pwd = manager_userpasswd()
             except (KeyboardInterrupt, EOFError):
-                print 'aborting...'
+                print('aborting...')
                 sys.exit(0)
         self.session = self.repo._get_session(self.cnx.sessionid)
 
@@ -199,10 +201,10 @@ class ServerMigrationHelper(MigrationHelper):
         # check backup has to be done
         if osp.exists(backupfile) and not \
                 self.confirm('Backup file %s exists, overwrite it?' % backupfile):
-            print '-> no backup done.'
+            print('-> no backup done.')
             return
         elif askconfirm and not self.confirm('Backup %s database?' % config.appid):
-            print '-> no backup done.'
+            print('-> no backup done.')
             return
         open(backupfile,'w').close() # kinda lock
         os.chmod(backupfile, 0600)
@@ -214,7 +216,7 @@ class ServerMigrationHelper(MigrationHelper):
             try:
                 source.backup(osp.join(tmpdir, source.uri), self.confirm, format=format)
             except Exception as ex:
-                print '-> error trying to backup %s [%s]' % (source.uri, ex)
+                print('-> error trying to backup %s [%s]' % (source.uri, ex))
                 if not self.confirm('Continue anyway?', default='n'):
                     raise SystemExit(1)
                 else:
@@ -233,7 +235,7 @@ class ServerMigrationHelper(MigrationHelper):
                 # call hooks
                 repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
                 # done
-                print '-> backup file',  backupfile
+                print('-> backup file',  backupfile)
         finally:
             shutil.rmtree(tmpdir)
 
@@ -270,14 +272,14 @@ class ServerMigrationHelper(MigrationHelper):
         try:
             source.restore(osp.join(tmpdir, source.uri), self.confirm, drop, format)
         except Exception as exc:
-            print '-> error trying to restore %s [%s]' % (source.uri, exc)
+            print('-> error trying to restore %s [%s]' % (source.uri, exc))
             if not self.confirm('Continue anyway?', default='n'):
                 raise SystemExit(1)
         shutil.rmtree(tmpdir)
         # call hooks
         repo.init_cnxset_pool()
         repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
-        print '-> database restored.'
+        print('-> database restored.')
 
     def commit(self):
         self.cnx.commit()
@@ -359,11 +361,11 @@ class ServerMigrationHelper(MigrationHelper):
             directory = osp.join(self.config.cube_dir(cube), 'schema')
         sql_scripts = glob(osp.join(directory, '*.%s.sql' % driver))
         for fpath in sql_scripts:
-            print '-> installing', fpath
+            print('-> installing', fpath)
             failed = sqlexec(open(fpath).read(), self.cnx.system_sql, False,
                              delimiter=';;')
             if failed:
-                print '-> ERROR, skipping', fpath
+                print('-> ERROR, skipping', fpath)
 
     # schema synchronization internals ########################################
 
@@ -547,12 +549,12 @@ class ServerMigrationHelper(MigrationHelper):
                 for name in cols:
                     rschema = repoeschema.subjrels.get(name)
                     if rschema is None:
-                        print 'dont add %s unique constraint on %s, missing %s' % (
-                            ','.join(cols), eschema, name)
+                        print('dont add %s unique constraint on %s, missing %s' % (
+                            ','.join(cols), eschema, name))
                         return False
                     if not (rschema.final or rschema.inlined):
-                        print 'dont add %s unique constraint on %s, %s is neither final nor inlined' % (
-                            ','.join(cols), eschema, name)
+                        print('dont add %s unique constraint on %s, %s is neither final nor inlined' % (
+                            ','.join(cols), eschema, name))
                         return False
                 return True
 
@@ -737,8 +739,8 @@ class ServerMigrationHelper(MigrationHelper):
             rschema = self.repo.schema.rschema(attrname)
             attrtype = rschema.objects(etype)[0]
         except KeyError:
-            print 'warning: attribute %s %s is not known, skip deletion' % (
-                etype, attrname)
+            print('warning: attribute %s %s is not known, skip deletion' % (
+                etype, attrname))
         else:
             self.cmd_drop_relation_definition(etype, attrname, attrtype,
                                               commit=commit)
@@ -775,7 +777,7 @@ class ServerMigrationHelper(MigrationHelper):
         instschema = self.repo.schema
         eschema = self.fs_schema.eschema(etype)
         if etype in instschema and not (eschema.final and eschema.eid is None):
-            print 'warning: %s already known, skip addition' % etype
+            print('warning: %s already known, skip addition' % etype)
             return
         confirm = self.verbosity >= 2
         groupmap = self.group_mapping()
@@ -912,7 +914,7 @@ class ServerMigrationHelper(MigrationHelper):
         """
         schema = self.repo.schema
         if oldname not in schema:
-            print 'warning: entity type %s is unknown, skip renaming' % oldname
+            print('warning: entity type %s is unknown, skip renaming' % oldname)
             return
         # if merging two existing entity types
         if newname in schema:
@@ -1011,8 +1013,8 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.fs_schema.rschema(rtype)
         execute = self.cnx.execute
         if rtype in reposchema:
-            print 'warning: relation type %s is already known, skip addition' % (
-                rtype)
+            print('warning: relation type %s is already known, skip addition' % (
+                rtype))
         elif rschema.rule:
             gmap = self.group_mapping()
             ss.execschemarql(execute, rschema, ss.crschema2rql(rschema, gmap))
@@ -1091,8 +1093,8 @@ class ServerMigrationHelper(MigrationHelper):
         if not rtype in self.repo.schema:
             self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
         if (subjtype, objtype) in self.repo.schema.rschema(rtype).rdefs:
-            print 'warning: relation %s %s %s is already known, skip addition' % (
-                subjtype, rtype, objtype)
+            print('warning: relation %s %s %s is already known, skip addition' % (
+                subjtype, rtype, objtype))
             return
         rdef = self._get_rdef(rschema, subjtype, objtype)
         ss.execschemarql(self.cnx.execute, rdef,
@@ -1344,7 +1346,7 @@ class ServerMigrationHelper(MigrationHelper):
             # remove from entity cache to avoid memory exhaustion
             del entity.cw_attr_cache[attribute]
             pb.update()
-        print
+        print()
         source.set_storage(etype, attribute, storage)
 
     def cmd_create_entity(self, etype, commit=False, **kwargs):

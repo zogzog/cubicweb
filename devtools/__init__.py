@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Test tools for cubicweb"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -109,7 +110,7 @@ def turn_repo_off(repo):
             try:
                 repo.close(sessionid)
             except BadConnectionId: #this is strange ? thread issue ?
-                print 'XXX unknown session', sessionid
+                print('XXX unknown session', sessionid)
         for cnxset in repo.cnxsets:
             cnxset.close(True)
         repo.system_source.shutdown()
@@ -193,7 +194,7 @@ class TestServerConfiguration(ServerConfiguration):
     def sources_file(self):
         """define in subclasses self.sourcefile if necessary"""
         if self.sourcefile:
-            print 'Reading sources from', self.sourcefile
+            print('Reading sources from', self.sourcefile)
             sourcefile = self.sourcefile
             if not isabs(sourcefile):
                 sourcefile = join(self.apphome, sourcefile)
@@ -492,7 +493,7 @@ class TestDataBaseHandler(object):
         if test_db_id is DEFAULT_EMPTY_DB_ID:
             self.init_test_database()
         else:
-            print 'Building %s for database %s' % (test_db_id, self.dbname)
+            print('Building %s for database %s' % (test_db_id, self.dbname))
             self.build_db_cache(DEFAULT_EMPTY_DB_ID)
             self.restore_database(DEFAULT_EMPTY_DB_ID)
             repo = self.get_repo(startup=True)

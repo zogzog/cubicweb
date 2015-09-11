@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb-ctl commands and command handlers specific to the repository"""
+from __future__ import print_function
 
 __docformat__ = 'restructuredtext en'
 
@@ -55,25 +56,25 @@ def source_cnx(source, dbname=None, special_privs=False, interactive=True):
     driver = source['db-driver']
     dbhelper = get_db_helper(driver)
     if interactive:
-        print '-> connecting to %s database' % driver,
+        print('-> connecting to %s database' % driver, end=' ')
         if dbhost:
-            print '%s@%s' % (dbname, dbhost),
+            print('%s@%s' % (dbname, dbhost), end=' ')
         else:
-            print dbname,
+            print(dbname, end=' ')
     if dbhelper.users_support:
         if not interactive or (not special_privs and source.get('db-user')):
             user = source.get('db-user', os.environ.get('USER', ''))
             if interactive:
-                print 'as', user
+                print('as', user)
             password = source.get('db-password')
         else:
-            print
+            print()
             if special_privs:
-                print 'WARNING'
+                print('WARNING')
                 print ('the user will need the following special access rights '
                        'on the database:')
-                print special_privs
-                print
+                print(special_privs)
+                print()
             default_user = source.get('db-user', os.environ.get('USER', ''))
             user = raw_input('Connect as user ? [%r]: ' % default_user)
             user = user.strip() or default_user
@@ -146,7 +147,7 @@ def repo_cnx(config):
             cnx = repoapi.connect(repo, login, password=pwd)
             return repo, cnx
         except AuthenticationError:
-            print '-> Error: wrong user/password.'
+            print('-> Error: wrong user/password.')
             # reset cubes else we'll have an assertion error on next retry
             config._cubes = None
         login, pwd = manager_userpasswd()
@@ -164,9 +165,9 @@ class RepositoryCreateHandler(CommandHandler):
         """
         config = self.config
         if not automatic:
-            print underline_title('Configuring the repository')
+            print(underline_title('Configuring the repository'))
             config.input_config('email', inputlevel)
-            print '\n'+underline_title('Configuring the sources')
+            print('\n'+underline_title('Configuring the sources'))
         sourcesfile = config.sources_file()
         # hack to make Method('default_instance_id') usable in db option defs
         # (in native.py)
@@ -174,12 +175,12 @@ class RepositoryCreateHandler(CommandHandler):
                                       options=SOURCE_TYPES['native'].options)
         if not automatic:
             sconfig.input_config(inputlevel=inputlevel)
-            print
+            print()
         sourcescfg = {'system': sconfig}
         if automatic:
             # XXX modify a copy
             password = generate_password()
-            print '-> set administrator account to admin / %s' % password
+            print('-> set administrator account to admin / %s' % password)
             USER_OPTIONS[1][1]['default'] = password
             sconfig = Configuration(options=USER_OPTIONS)
         else:
@@ -197,8 +198,8 @@ class RepositoryCreateHandler(CommandHandler):
             CWCTL.run(['db-create', '--config-level', str(inputlevel),
                        self.config.appid])
         else:
-            print ('-> nevermind, you can do it later with '
-                   '"cubicweb-ctl db-create %s".' % self.config.appid)
+            print('-> nevermind, you can do it later with '
+                  '"cubicweb-ctl db-create %s".' % self.config.appid)
 
 
 @contextmanager
@@ -242,26 +243,26 @@ class RepositoryDeleteHandler(CommandHandler):
         with db_transaction(source, privilege='DROP SCHEMA') as cursor:
             helper = get_db_helper(source['db-driver'])
             helper.drop_schema(cursor, db_namespace)
-            print '-> database schema %s dropped' % db_namespace
+            print('-> database schema %s dropped' % db_namespace)
 
     def _drop_database(self, source):
         dbname = source['db-name']
         if source['db-driver'] == 'sqlite':
-            print 'deleting database file %(db-name)s' % source
+            print('deleting database file %(db-name)s' % source)
             os.unlink(source['db-name'])
-            print '-> database %(db-name)s dropped.' % source
+            print('-> database %(db-name)s dropped.' % source)
         else:
             helper = get_db_helper(source['db-driver'])
             with db_sys_transaction(source, privilege='DROP DATABASE') as cursor:
-                print 'dropping database %(db-name)s' % source
+                print('dropping database %(db-name)s' % source)
                 cursor.execute('DROP DATABASE "%(db-name)s"' % source)
-                print '-> database %(db-name)s dropped.' % source
+                print('-> database %(db-name)s dropped.' % source)
 
     def _drop_user(self, source):
         user = source['db-user'] or None
         if user is not None:
             with db_sys_transaction(source, privilege='DROP USER') as cursor:
-                print 'dropping user %s' % user
+                print('dropping user %s' % user)
                 cursor.execute('DROP USER %s' % user)
 
     def _cleanup_steps(self, source):
@@ -288,7 +289,7 @@ class RepositoryDeleteHandler(CommandHandler):
                 try:
                     step(source)
                 except Exception as exc:
-                    print 'ERROR', exc
+                    print('ERROR', exc)
                     if ASK.confirm('An error occurred. Continue anyway?',
                                    default_is_yes=False):
                         continue
@@ -357,7 +358,7 @@ class CreateInstanceDBCommand(Command):
                 ASK.confirm('Database %s already exists. Drop it?' % dbname)):
                 os.unlink(dbname)
         elif self.config.create_db:
-            print '\n'+underline_title('Creating the system database')
+            print('\n'+underline_title('Creating the system database'))
             # connect on the dbms system base to create our base
             dbcnx = _db_sys_cnx(source, 'CREATE/DROP DATABASE and / or USER',
                                 interactive=not automatic)
@@ -368,17 +369,17 @@ class CreateInstanceDBCommand(Command):
                     if not helper.user_exists(cursor, user) and (automatic or \
                            ASK.confirm('Create db user %s ?' % user, default_is_yes=False)):
                         helper.create_user(source['db-user'], source.get('db-password'))
-                        print '-> user %s created.' % user
+                        print('-> user %s created.' % user)
                 if dbname in helper.list_databases(cursor):
                     if automatic or ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
                         cursor.execute('DROP DATABASE "%s"' % dbname)
                     else:
-                        print ('you may want to run "cubicweb-ctl db-init '
-                               '--drop %s" manually to continue.' % config.appid)
+                        print('you may want to run "cubicweb-ctl db-init '
+                              '--drop %s" manually to continue.' % config.appid)
                         return
                 createdb(helper, source, dbcnx, cursor)
                 dbcnx.commit()
-                print '-> database %s created.' % dbname
+                print('-> database %s created.' % dbname)
             except BaseException:
                 dbcnx.rollback()
                 raise
@@ -400,13 +401,13 @@ class CreateInstanceDBCommand(Command):
                     try:
                         helper.create_language(cursor, extlang)
                     except Exception as exc:
-                        print '-> ERROR:', exc
-                        print '-> could not create language %s, some stored procedures might be unusable' % extlang
+                        print('-> ERROR:', exc)
+                        print('-> could not create language %s, some stored procedures might be unusable' % extlang)
                         cnx.rollback()
                     else:
                         cnx.commit()
-        print '-> database for instance %s created and necessary extensions installed.' % appid
-        print
+        print('-> database for instance %s created and necessary extensions installed.' % appid)
+        print()
         if automatic:
             CWCTL.run(['db-init', '--automatic', '--config-level', '0',
                        config.appid])
@@ -414,8 +415,8 @@ class CreateInstanceDBCommand(Command):
             CWCTL.run(['db-init', '--config-level',
                        str(self.config.config_level), config.appid])
         else:
-            print ('-> nevermind, you can do it later with '
-                   '"cubicweb-ctl db-init %s".' % config.appid)
+            print('-> nevermind, you can do it later with '
+                  '"cubicweb-ctl db-init %s".' % config.appid)
 
 
 class InitInstanceCommand(Command):
@@ -452,7 +453,7 @@ class InitInstanceCommand(Command):
 
     def run(self, args):
         check_options_consistency(self.config)
-        print '\n'+underline_title('Initializing the system database')
+        print('\n'+underline_title('Initializing the system database'))
         from cubicweb.server import init_repository
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
@@ -506,7 +507,7 @@ class AddSourceCommand(Command):
                     type = raw_input('source type (%s): '
                                         % ', '.join(sorted(SOURCE_TYPES)))
                     if type not in SOURCE_TYPES:
-                        print '-> unknown source type, use one of the available types.'
+                        print('-> unknown source type, use one of the available types.')
                         continue
                     sourcemodule = SOURCE_TYPES[type].module
                     if not sourcemodule.startswith('cubicweb.'):
@@ -524,16 +525,16 @@ class AddSourceCommand(Command):
                                         % ', '.join(sorted(repo.vreg['parsers'])))
                     if parser in repo.vreg['parsers']:
                         break
-                    print '-> unknown parser identifier, use one of the available types.'
+                    print('-> unknown parser identifier, use one of the available types.')
                 while True:
                     sourceuri = raw_input('source identifier (a unique name used to '
                                           'tell sources apart): ').strip()
                     if not sourceuri:
-                        print '-> mandatory.'
+                        print('-> mandatory.')
                     else:
                         sourceuri = unicode(sourceuri, sys.stdin.encoding)
                         if sourceuri in used:
-                            print '-> uri already used, choose another one.'
+                            print('-> uri already used, choose another one.')
                         else:
                             break
                 url = raw_input('source URL (leave empty for none): ').strip()
@@ -583,10 +584,10 @@ class GrantUserOnInstanceCommand(Command):
             cnx.rollback()
             import traceback
             traceback.print_exc()
-            print '-> an error occurred:', ex
+            print('-> an error occurred:', ex)
         else:
             cnx.commit()
-            print '-> rights granted to %s on instance %s.' % (appid, user)
+            print('-> rights granted to %s on instance %s.' % (appid, user))
 
 
 class ResetAdminPasswordCommand(Command):
@@ -617,7 +618,7 @@ class ResetAdminPasswordCommand(Command):
         try:
             adminlogin = sourcescfg['admin']['login']
         except KeyError:
-            print '-> Error: could not get cubicweb administrator login.'
+            print('-> Error: could not get cubicweb administrator login.')
             sys.exit(1)
         cnx = source_cnx(sourcescfg['system'])
         driver = sourcescfg['system']['db-driver']
@@ -627,9 +628,9 @@ class ResetAdminPasswordCommand(Command):
         cursor.execute("SELECT * FROM cw_CWUser WHERE cw_login=%(l)s",
                        {'l': adminlogin})
         if not cursor.fetchall():
-            print ("-> error: admin user %r specified in sources doesn't exist "
-                   "in the database" % adminlogin)
-            print "   fix your sources file before running this command"
+            print("-> error: admin user %r specified in sources doesn't exist "
+                  "in the database" % adminlogin)
+            print("   fix your sources file before running this command")
             cnx.close()
             sys.exit(1)
         if self.config.password is None:
@@ -650,10 +651,10 @@ class ResetAdminPasswordCommand(Command):
             cnx.rollback()
             import traceback
             traceback.print_exc()
-            print '-> an error occurred:', ex
+            print('-> an error occurred:', ex)
         else:
             cnx.commit()
-            print '-> password reset, sources file regenerated.'
+            print('-> password reset, sources file regenerated.')
         cnx.close()
 
 
@@ -666,17 +667,17 @@ def _remote_dump(host, appid, output, sudo=False):
     if sudo:
         dmpcmd = 'sudo %s' % (dmpcmd)
     dmpcmd = 'ssh -t %s "%s"' % (host, dmpcmd)
-    print dmpcmd
+    print(dmpcmd)
     if os.system(dmpcmd):
         raise ExecutionError('Error while dumping the database')
     if output is None:
         output = filename
     cmd = 'scp %s:/tmp/%s %s' % (host, filename, output)
-    print cmd
+    print(cmd)
     if os.system(cmd):
         raise ExecutionError('Error while retrieving the dump at /tmp/%s' % filename)
     rmcmd = 'ssh -t %s "rm -f /tmp/%s"' % (host, filename)
-    print rmcmd
+    print(rmcmd)
     if os.system(rmcmd) and not ASK.confirm(
         'An error occurred while deleting remote dump at /tmp/%s. '
         'Continue anyway?' % filename):
@@ -701,23 +702,23 @@ def _local_restore(appid, backupfile, drop, format='native'):
     dbversions = repo.get_versions()
     mih.shutdown()
     if not dbversions:
-        print "bad or missing version information in the database, don't upgrade file system"
+        print("bad or missing version information in the database, don't upgrade file system")
         return
     # version of installed software
     eversion = dbversions['cubicweb']
     status = instance_status(config, eversion, dbversions)
     # * database version > installed software
     if status == 'needsoftupgrade':
-        print "** The database of %s is more recent than the installed software!" % config.appid
-        print "** Upgrade your software, then migrate the database by running the command"
-        print "** 'cubicweb-ctl upgrade %s'" % config.appid
+        print("** The database of %s is more recent than the installed software!" % config.appid)
+        print("** Upgrade your software, then migrate the database by running the command")
+        print("** 'cubicweb-ctl upgrade %s'" % config.appid)
         return
     # * database version < installed software, an upgrade will be necessary
     #   anyway, just rewrite vc.conf and warn user he has to upgrade
     elif status == 'needapplupgrade':
-        print "** The database of %s is older than the installed software." % config.appid
-        print "** Migrate the database by running the command"
-        print "** 'cubicweb-ctl upgrade %s'" % config.appid
+        print("** The database of %s is older than the installed software." % config.appid)
+        print("** Migrate the database by running the command")
+        print("** 'cubicweb-ctl upgrade %s'" % config.appid)
         return
     # * database version = installed software, database version = instance fs version
     #   ok!
@@ -732,12 +733,12 @@ def instance_status(config, cubicwebapplversion, vcconf):
         try:
             softversion = config.cube_version(cube)
         except ConfigurationError:
-            print '-> Error: no cube version information for %s, please check that the cube is installed.' % cube
+            print('-> Error: no cube version information for %s, please check that the cube is installed.' % cube)
             continue
         try:
             applversion = vcconf[cube]
         except KeyError:
-            print '-> Error: no cube version information for %s in version configuration.' % cube
+            print('-> Error: no cube version information for %s in version configuration.' % cube)
             continue
         if softversion == applversion:
             continue
@@ -883,7 +884,7 @@ class DBCopyCommand(Command):
         _local_restore(destappid, output, not self.config.no_drop,
                        self.config.format)
         if self.config.keep_dump:
-            print '-> you can get the dump file at', output
+            print('-> you can get the dump file at', output)
         else:
             os.remove(output)
 
@@ -1003,7 +1004,7 @@ class SynchronizeSourceCommand(Command):
             repo.shutdown()
         for key, val in stats.iteritems():
             if val:
-                print key, ':', val
+                print(key, ':', val)
 
 
 

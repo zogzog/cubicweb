@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.sources.rql2sql"""
+from __future__ import print_function
 
 import sys
 import os
@@ -1246,13 +1247,13 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
         except Exception as ex:
             if 'r' in locals():
                 try:
-                    print (r%args).strip()
+                    print((r%args).strip())
                 except KeyError:
-                    print 'strange, missing substitution'
-                    print r, nargs
-                print '!='
-                print sql.strip()
-            print 'RQL:', rql
+                    print('strange, missing substitution')
+                    print(r, nargs)
+                print('!=')
+                print(sql.strip())
+            print('RQL:', rql)
             raise
 
     def _parse(self, rqls):
@@ -1269,11 +1270,11 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
             r, args, cbs = self.o.generate(rqlst, args)
             self.assertEqual((r.strip(), args), sql)
         except Exception as ex:
-            print rql
+            print(rql)
             if 'r' in locals():
-                print r.strip()
-                print '!='
-                print sql[0].strip()
+                print(r.strip())
+                print('!=')
+                print(sql[0].strip())
             raise
         return
 

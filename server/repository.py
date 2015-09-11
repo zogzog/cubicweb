@@ -25,6 +25,8 @@ repository mainly:
   point to a cubicweb instance.
 * handles session management
 """
+from __future__ import print_function
+
 __docformat__ = "restructuredtext en"
 
 import threading
@@ -912,7 +914,7 @@ class Repository(object):
         # set caches asap
         extid = self.init_entity_caches(cnx, entity, source)
         if server.DEBUG & server.DBG_REPO:
-            print 'ADD entity', self, entity.cw_etype, entity.eid, edited
+            print('ADD entity', self, entity.cw_etype, entity.eid, edited)
         prefill_entity_caches(entity)
         self.hm.call_hooks('before_add_entity', cnx, entity=entity)
         relations = preprocess_inlined_relations(cnx, entity)
@@ -943,8 +945,8 @@ class Repository(object):
         """
         entity = edited.entity
         if server.DEBUG & server.DBG_REPO:
-            print 'UPDATE entity', entity.cw_etype, entity.eid, \
-                  entity.cw_attr_cache, edited
+            print('UPDATE entity', entity.cw_etype, entity.eid,
+                  entity.cw_attr_cache, edited)
         hm = self.hm
         eschema = entity.e_schema
         cnx.set_entity_cache(entity)
@@ -1038,7 +1040,7 @@ class Repository(object):
         source = self.system_source
         for etype, entities in data_by_etype.iteritems():
             if server.DEBUG & server.DBG_REPO:
-                print 'DELETE entities', etype, [entity.eid for entity in entities]
+                print('DELETE entities', etype, [entity.eid for entity in entities])
             self.hm.call_hooks('before_delete_entity', cnx, entities=entities)
             self._delete_cascade_multi(cnx, entities)
             source.delete_entities(cnx, entities)
@@ -1063,7 +1065,7 @@ class Repository(object):
         for rtype, eids_subj_obj in relations.iteritems():
             if server.DEBUG & server.DBG_REPO:
                 for subjeid, objeid in eids_subj_obj:
-                    print 'ADD relation', subjeid, rtype, objeid
+                    print('ADD relation', subjeid, rtype, objeid)
             for subjeid, objeid in eids_subj_obj:
                 if rtype in relations_by_rtype:
                     relations_by_rtype[rtype].append((subjeid, objeid))
@@ -1113,7 +1115,7 @@ class Repository(object):
     def glob_delete_relation(self, cnx, subject, rtype, object):
         """delete a relation from the repository"""
         if server.DEBUG & server.DBG_REPO:
-            print 'DELETE relation', subject, rtype, object
+            print('DELETE relation', subject, rtype, object)
         source = self.system_source
         self.hm.call_hooks('before_delete_relation', cnx,
                            eidfrom=subject, rtype=rtype, eidto=object)

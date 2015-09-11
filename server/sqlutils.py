@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """SQL utilities functions and classes."""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -43,7 +44,7 @@ lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
 def _run_command(cmd):
-    print ' '.join(cmd)
+    print(' '.join(cmd))
     return subprocess.call(cmd)
 
 
@@ -94,7 +95,7 @@ def sqlexec(sqlstmts, cursor_or_execute, withpb=True,
             if cnx:
                 cnx.commit()
     if withpb:
-        print
+        print()
     if sqlstmts_as_string:
         failed = delimiter.join(failed)
     return failed

@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some i18n/gettext utilities."""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -80,7 +81,7 @@ def compile_i18n_catalogs(sourcedirs, destdir, langs):
     """
     from subprocess import CalledProcessError
     from logilab.common.fileutils import ensure_fs_mode
-    print '-> compiling message catalogs to %s' % destdir
+    print('-> compiling message catalogs to %s' % destdir)
     errors = []
     for lang in langs:
         langdir = join(destdir, lang, 'LC_MESSAGES')

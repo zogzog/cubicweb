@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb post creation script, set user's workflow"""
+from __future__ import print_function
 
 # insert versions
 create_entity('CWProperty', pkey=u'system.version.cubicweb',
@@ -46,8 +47,8 @@ userwf.add_transition(_('activate'), (deactivated,), activated,
 if hasattr(config, 'anonymous_user'):
     anonlogin, anonpwd = config.anonymous_user()
     if anonlogin == session.user.login:
-        print 'you are using a manager account as anonymous user.'
-        print 'Hopefully this is not a production instance...'
+        print('you are using a manager account as anonymous user.')
+        print('Hopefully this is not a production instance...')
     elif anonlogin:
         from cubicweb.server import create_user
         create_user(session, unicode(anonlogin), anonpwd, u'guests')

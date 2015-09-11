@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """This modules defines func / methods for creating test repositories"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -363,7 +364,7 @@ def select(constraints, cnx, selectvar='O', objtype=None):
             rql += ', %s is %s' % (selectvar, objtype)
         rset = cnx.execute(rql)
     except Exception:
-        print "could restrict eid_list with given constraints (%r)" % constraints
+        print("could restrict eid_list with given constraints (%r)" % constraints)
         return []
     return set(eid for eid, in rset.rows)
 

@@ -18,6 +18,8 @@
 """this module contains base classes and utilities for integration with running
 http server
 """
+from __future__ import print_function
+
 __docformat__ = "restructuredtext en"
 
 import random
@@ -178,5 +180,5 @@ class CubicWebServerTC(CubicWebTC):
             self.stop_server()
         except error.ReactorNotRunning as err:
             # Server could be launched manually
-            print err
+            print(err)
         super(CubicWebServerTC, self).tearDown()

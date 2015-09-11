@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """some utilities for cubicweb command line tools"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -62,29 +63,29 @@ def create_dir(directory):
     """create a directory if it doesn't exist yet"""
     try:
         makedirs(directory)
-        print '-> created directory %s' % directory
+        print('-> created directory %s' % directory)
     except OSError as ex:
         import errno
         if ex.errno != errno.EEXIST:
             raise
-        print '-> no need to create existing directory %s' % directory
+        print('-> no need to create existing directory %s' % directory)
 
 def create_symlink(source, target):
     """create a symbolic link"""
     if exists(target):
         remove(target)
     symlink(source, target)
-    print '[symlink] %s <-- %s' % (target, source)
+    print('[symlink] %s <-- %s' % (target, source))
 
 def create_copy(source, target):
     import shutil
-    print '[copy] %s <-- %s' % (target, source)
+    print('[copy] %s <-- %s' % (target, source))
     shutil.copy2(source, target)
 
 def rm(whatever):
     import shutil
     shutil.rmtree(whatever)
-    print '-> removed %s' % whatever
+    print('-> removed %s' % whatever)
 
 def show_diffs(appl_file, ref_file, askconfirm=True):
     """interactivly replace the old file with the new file according to
@@ -95,8 +96,8 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
     diffs = pipe.stdout.read()
     if diffs:
         if askconfirm:
-            print
-            print diffs
+            print()
+            print(diffs)
             action = ASK.ask('Replace ?', ('Y', 'n', 'q'), 'Y').lower()
         else:
             action = 'y'
@@ -106,7 +107,7 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
             except IOError:
                 os.system('chmod a+w %s' % appl_file)
                 shutil.copyfile(ref_file, appl_file)
-            print 'replaced'
+            print('replaced')
         elif action == 'q':
             sys.exit(0)
         else:
@@ -114,9 +115,9 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
             copy = file(copy_file, 'w')
             copy.write(open(ref_file).read())
             copy.close()
-            print 'keep current version, the new file has been written to', copy_file
+            print('keep current version, the new file has been written to', copy_file)
     else:
-        print 'no diff between %s and %s' % (appl_file, ref_file)
+        print('no diff between %s and %s' % (appl_file, ref_file))
 
 SKEL_EXCLUDE = ('*.py[co]', '*.orig', '*~', '*_flymake.py')
 def copy_skeleton(skeldir, targetdir, context,
@@ -143,7 +144,7 @@ def copy_skeleton(skeldir, targetdir, context,
                 if not askconfirm or not exists(tfpath) or \
                        ASK.confirm('%s exists, overwrite?' % tfpath):
                     fill_templated_file(fpath, tfpath, context)
-                    print '[generate] %s <-- %s' % (tfpath, fpath)
+                    print('[generate] %s <-- %s' % (tfpath, fpath))
             elif exists(tfpath):
                 show_diffs(tfpath, fpath, askconfirm)
             else:
@@ -160,7 +161,7 @@ def restrict_perms_to_user(filepath, log=None):
     if log:
         log('set permissions to 0600 for %s', filepath)
     else:
-        print '-> set permissions to 0600 for %s' % filepath
+        print('-> set permissions to 0600 for %s' % filepath)
     chmod(filepath, 0600)
 
 def read_config(config_file, raise_if_unreadable=False):
@@ -234,7 +235,7 @@ class Command(BaseCommand):
             raise ConfigurationError(msg)
 
     def fail(self, reason):
-        print "command failed:", reason
+        print("command failed:", reason)
         sys.exit(1)
 
 

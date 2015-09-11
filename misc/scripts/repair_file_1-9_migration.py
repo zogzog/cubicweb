@@ -4,13 +4,14 @@ FYI, this migration occurred :
 * on our intranet on July 07 2010
 * on our extranet on July 16 2010
 """
+from __future__ import print_function
 
 try:
     backupinstance, = __args__
 except ValueError:
-    print 'USAGE: cubicweb-ctl shell <instance> repair_file_1-9_migration.py -- <backup instance id>'
-    print
-    print 'you should restored the backup on a new instance, accessible through pyro'
+    print('USAGE: cubicweb-ctl shell <instance> repair_file_1-9_migration.py -- <backup instance id>')
+    print()
+    print('you should restored the backup on a new instance, accessible through pyro')
 
 from cubicweb import cwconfig, dbapi
 from cubicweb.server.session import hooks_control
@@ -32,20 +33,20 @@ with hooks_control(session, session.HOOKS_DENY_ALL):
                                    'XX from_entity YY, YY name "File")'):
         if rtype in ('is', 'is_instance_of'):
             continue
-        print rtype
+        print(rtype)
         for feid, xeid in backupcu.execute('Any F,X WHERE F %s X, F is IN (File,Image)' % rtype):
-            print 'restoring relation %s between file %s and %s' % (rtype, feid, xeid),
-            print rql('SET F %s X WHERE F eid %%(f)s, X eid %%(x)s, NOT F %s X' % (rtype, rtype),
-                      {'f': feid, 'x': xeid})
+            print('restoring relation %s between file %s and %s' % (rtype, feid, xeid), end=' ')
+            print(rql('SET F %s X WHERE F eid %%(f)s, X eid %%(x)s, NOT F %s X' % (rtype, rtype),
+                      {'f': feid, 'x': xeid}))
 
     for rtype, in backupcu.execute('DISTINCT Any RTN WHERE X relation_type RT, RT name RTN,'
                                    'X to_entity Y, Y name "Image", X is CWRelation, '
                                    'EXISTS(XX is CWRelation, XX relation_type RT, '
                                    'XX to_entity YY, YY name "File")'):
-        print rtype
+        print(rtype)
         for feid, xeid in backupcu.execute('Any F,X WHERE X %s F, F is IN (File,Image)' % rtype):
-            print 'restoring relation %s between %s and file %s' % (rtype, xeid, feid),
-            print rql('SET X %s F WHERE F eid %%(f)s, X eid %%(x)s, NOT X %s F' % (rtype, rtype),
-                      {'f': feid, 'x': xeid})
+            print('restoring relation %s between %s and file %s' % (rtype, xeid, feid), end=' ')
+            print(rql('SET X %s F WHERE F eid %%(f)s, X eid %%(x)s, NOT X %s F' % (rtype, rtype),
+                      {'f': feid, 'x': xeid}))
 
 commit()
