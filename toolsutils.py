@@ -162,7 +162,7 @@ def restrict_perms_to_user(filepath, log=None):
         log('set permissions to 0600 for %s', filepath)
     else:
         print('-> set permissions to 0600 for %s' % filepath)
-    chmod(filepath, 0600)
+    chmod(filepath, 0o600)
 
 def read_config(config_file, raise_if_unreadable=False):
     """read some simple configuration from `config_file` and return it as a

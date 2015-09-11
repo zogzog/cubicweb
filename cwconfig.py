@@ -351,7 +351,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
           }),
         ('umask',
          {'type' : 'int',
-          'default': 077,
+          'default': 0o077,
           'help': 'permission umask for files created by the server',
           'group': 'main', 'level': 2,
           }),

@@ -21,6 +21,7 @@
 
 from datetime import date, datetime, timedelta, tzinfo
 
+from six import PY2
 from logilab.common.testlib import TestCase, unittest_main
 from rql import BadRQLQuery, RQLSyntaxError
 
@@ -263,8 +264,9 @@ class UtilsTC(BaseQuerierTC):
         self.assertEqual(rset.description[0][0], 'Datetime')
         rset = self.qexecute('Any %(x)s', {'x': 1})
         self.assertEqual(rset.description[0][0], 'Int')
-        rset = self.qexecute('Any %(x)s', {'x': 1L})
-        self.assertEqual(rset.description[0][0], 'Int')
+        if PY2:
+            rset = self.qexecute('Any %(x)s', {'x': long(1)})
+            self.assertEqual(rset.description[0][0], 'Int')
         rset = self.qexecute('Any %(x)s', {'x': True})
         self.assertEqual(rset.description[0][0], 'Boolean')
         rset = self.qexecute('Any %(x)s', {'x': 1.0})

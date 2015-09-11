@@ -105,7 +105,7 @@ def fsimport(cnx):
 
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
-    def __init__(self, defaultdir, fsencoding='utf-8', wmode=0444):
+    def __init__(self, defaultdir, fsencoding='utf-8', wmode=0o444):
         if type(defaultdir) is unicode:
             defaultdir = defaultdir.encode(fsencoding)
         self.default_directory = defaultdir

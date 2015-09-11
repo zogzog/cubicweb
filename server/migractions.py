@@ -207,7 +207,7 @@ class ServerMigrationHelper(MigrationHelper):
             print('-> no backup done.')
             return
         open(backupfile,'w').close() # kinda lock
-        os.chmod(backupfile, 0600)
+        os.chmod(backupfile, 0o600)
         # backup
         source = repo.system_source
         tmpdir = tempfile.mkdtemp()
