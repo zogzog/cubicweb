@@ -26,7 +26,7 @@ __docformat__ = "restructuredtext en"
 
 import csv
 import re
-from StringIO import StringIO
+from io import StringIO
 
 from six import string_types, integer_types
 
