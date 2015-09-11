@@ -106,7 +106,7 @@ class ManageView(StartupView):
 
     def entity_types_table(self, eschemas):
         infos = sorted(self.entity_types(eschemas),
-                       key=lambda (l,a,e): unormalize(l))
+                       key=lambda t: unormalize(t[0]))
         q, r = divmod(len(infos), 2)
         if r:
             infos.append( (None, '&#160;', '&#160;') )

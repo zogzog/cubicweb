@@ -128,13 +128,15 @@ class SupervisionEmailView(Component):
         # XXX print changes
         self.w(u'  %s' % changedescr.entity.absolute_url())
 
-    def delete_entity(self, (eid, etype, title)):
+    def delete_entity(self, args):
+        eid, etype, title = args
         msg = self._cw._('deleted %(etype)s #%(eid)s (%(title)s)')
         etype = display_name(self._cw, etype).lower()
         self.w(msg % locals())
 
-    def change_state(self, (entity, fromstate, tostate)):
+    def change_state(self, args):
         _ = self._cw._
+        entity, fromstate, tostate = args
         msg = _('changed state of %(etype)s #%(eid)s (%(title)s)')
         self.w(u'%s\n' % (msg % self._entity_context(entity)))
         self.w(_('  from state %(fromstate)s to state %(tostate)s\n' %

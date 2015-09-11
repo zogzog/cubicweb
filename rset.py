@@ -215,10 +215,10 @@ class ResultSet(object):
         rset = self.copy(rows, descr)
         if col >= 0:
             entities = sorted(enumerate(self.entities(col)),
-                              key=lambda (i, e): keyfunc(e), reverse=reverse)
+                              key=lambda t: keyfunc(t[1]), reverse=reverse)
         else:
             entities = sorted(enumerate(self),
-                              key=lambda (i, e): keyfunc(e), reverse=reverse)
+                              key=lambda t: keyfunc(t[1]), reverse=reverse)
         for index, _ in entities:
             rows.append(self.rows[index])
             descr.append(self.description[index])

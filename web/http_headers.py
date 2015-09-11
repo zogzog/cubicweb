@@ -766,7 +766,8 @@ def parseCacheControl(kv):
             v = [field.strip().lower() for field in v.split(',')]
     return k, v
 
-def generateCacheControl((k, v)):
+def generateCacheControl(args):
+    k, v = args
     if v is None:
         return str(k)
     else:

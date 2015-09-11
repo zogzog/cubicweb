@@ -490,7 +490,8 @@ def _remove_pending(req, eidfrom, rel, eidto, kind):
     pendings.remove( (int(eidfrom), rel, int(eidto)) )
 
 @ajaxfunc(output_type='json')
-def remove_pending_insert(self, (eidfrom, rel, eidto)):
+def remove_pending_insert(self, args):
+    eidfrom, rel, eidto = args
     _remove_pending(self._cw, eidfrom, rel, eidto, 'insert')
 
 @ajaxfunc(output_type='json')
@@ -499,11 +500,13 @@ def add_pending_inserts(self, tripletlist):
         _add_pending(self._cw, eidfrom, rel, eidto, 'insert')
 
 @ajaxfunc(output_type='json')
-def remove_pending_delete(self, (eidfrom, rel, eidto)):
+def remove_pending_delete(self, args):
+    eidfrom, rel, eidto = args
     _remove_pending(self._cw, eidfrom, rel, eidto, 'delete')
 
 @ajaxfunc(output_type='json')
-def add_pending_delete(self, (eidfrom, rel, eidto)):
+def add_pending_delete(self, args):
+    eidfrom, rel, eidto = args
     _add_pending(self._cw, eidfrom, rel, eidto, 'delete')
 
 
