@@ -940,7 +940,9 @@ class CubicWebTC(TestCase):
                 msg = '[%s in %s] %s' % (klass, view.__regid__, exc)
             except Exception:
                 msg = '[%s in %s] undisplayable exception' % (klass, view.__regid__)
-            raise AssertionError, msg, tcbk
+            exc = AssertionError(msg)
+            exc.__traceback__ = tcbk
+            raise exc
         return self._check_html(output, view, template)
 
     def get_validator(self, view=None, content_type=None, output=None):
@@ -1015,7 +1017,9 @@ class CubicWebTC(TestCase):
                                          for idx, line in enumerate(content)
                                          if line_context_filter(idx+1, position))
                     msg += u'\nfor content:\n%s' % content
-            raise AssertionError, msg, tcbk
+            exc = AssertionError(msg)
+            exc.__traceback__ = tcbk
+            raise exc
 
     def assertDocTestFile(self, testfile):
         # doctest returns tuple (failure_count, test_count)

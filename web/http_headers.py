@@ -295,9 +295,9 @@ def tokenize(header, foldCase=True):
         cur = cur+1
 
     if qpair:
-        raise ValueError, "Missing character after '\\'"
+        raise ValueError("Missing character after '\\'")
     if quoted:
-        raise ValueError, "Missing end quote"
+        raise ValueError("Missing end quote")
 
     if start != cur:
         if foldCase:
@@ -347,7 +347,7 @@ def filterTokens(seq):
 ##### parser utilities:
 def checkSingleToken(tokens):
     if len(tokens) != 1:
-        raise ValueError, "Expected single token, not %s." % (tokens,)
+        raise ValueError("Expected single token, not %s." % (tokens,))
     return tokens[0]
 
 def parseKeyValue(val):
@@ -355,7 +355,7 @@ def parseKeyValue(val):
         return val[0], None
     elif len(val) == 3 and val[1] == Token('='):
         return val[0], val[2]
-    raise ValueError, "Expected key or key=value, but got %s." % (val,)
+    raise ValueError("Expected key or key=value, but got %s." % (val,))
 
 def parseArgs(field):
     args = split(field, Token(';'))
@@ -506,7 +506,7 @@ def parseAccept(field):
     type, args = parseArgs(field)
 
     if len(type) != 3 or type[1] != Token('/'):
-        raise ValueError, "MIME Type "+str(type)+" invalid."
+        raise ValueError("MIME Type "+str(type)+" invalid.")
 
     # okay, this spec is screwy. A 'q' parameter is used as the separator
     # between MIME parameters and (as yet undefined) additional HTTP
@@ -569,7 +569,7 @@ def parseContentType(header):
     type, args = parseArgs(header)
 
     if len(type) != 3 or type[1] != Token('/'):
-        raise ValueError, "MIME Type "+str(type)+" invalid."
+        raise ValueError("MIME Type "+str(type)+" invalid.")
 
     args = [(kv[0].lower(), kv[1]) for kv in args]
 

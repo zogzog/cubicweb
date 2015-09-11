@@ -184,7 +184,10 @@ class CubicWebTemplate(simpleTAL.HTMLTemplate):
             interpreter.execute(self)
         except UnicodeError as unierror:
             LOGGER.exception(str(unierror))
-            raise simpleTALES.ContextContentException("found non-unicode %r string in Context!" % unierror.args[1]), None, sys.exc_info()[-1]
+            exc = simpleTALES.ContextContentException(
+                "found non-unicode %r string in Context!" % unierror.args[1])
+            exc.__traceback__ = sys.exc_info()[-1]
+            raise exc
 
 
 def compile_template(template):
@@ -232,7 +235,8 @@ def evaluatePython (self, expr):
         result = eval(expr, globals, locals)
     except Exception as ex:
         ex = ex.__class__('in %r: %s' % (expr, ex))
-        raise ex, None, sys.exc_info()[-1]
+        ex.__traceback__ = sys.exc_info()[-1]
+        raise ex
     if (isinstance (result, simpleTALES.ContextVariable)):
         return result.value()
     return result

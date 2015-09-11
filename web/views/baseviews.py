@@ -231,7 +231,7 @@ class TextView(EntityView):
         """
         rset = self.cw_rset
         if rset is None:
-            raise NotImplementedError, self
+            raise NotImplementedError(self)
         for i in xrange(len(rset)):
             self.wview(self.__regid__, rset, row=i, **kwargs)
             if len(rset) > 1:
