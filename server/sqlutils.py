@@ -86,7 +86,7 @@ def sqlexec(sqlstmts, cursor_or_execute, withpb=True,
         try:
             # some dbapi modules doesn't accept unicode for sql string
             execute(str(sql))
-        except Exception, err:
+        except Exception as err:
             if cnx:
                 cnx.rollback()
             failed.append(sql)

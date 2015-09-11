@@ -167,7 +167,7 @@ class XMLSyntaxValidator(Validator):
         inpsrc.setByteStream(StringIO(data))
         try:
             self._parser.parse(inpsrc)
-        except sax.SAXParseException, exc:
+        except sax.SAXParseException as exc:
             new_exc = AssertionError(u'invalid document: %s' % exc)
             new_exc.position = (exc._linenum, exc._colnum)
             raise new_exc

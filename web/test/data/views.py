@@ -45,7 +45,7 @@ def fileupload(self):
         for key, value in self._cw.form.iteritems():
             result_dict[key] = _recursive_replace_stream_by_content(value)
         return result_dict
-    except Exception, ex:
+    except Exception as ex:
         import traceback as tb
         tb.print_exc(ex)
 

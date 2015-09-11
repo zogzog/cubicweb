@@ -50,7 +50,7 @@ def process_request(req, config):
                 process_preflight(req, config)
         else: # Simple CORS or actual request
             process_simple(req, config)
-    except CORSFailed, exc:
+    except CORSFailed as exc:
         info('Cross origin resource sharing failed: %s' % exc)
     except CORSPreflight:
         info('Cross origin resource sharing: valid Preflight request %s')

@@ -541,7 +541,7 @@ def startpgcluster(pyfile):
         try:
             subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8', '--locale=C'])
 
-        except OSError, err:
+        except OSError as err:
             if err.errno == errno.ENOENT:
                 raise OSError('"initdb" could not be found. '
                               'You should add the postgresql bin folder to your PATH '
@@ -560,7 +560,7 @@ def startpgcluster(pyfile):
         subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir,
                                '-o', options],
                               env=env)
-    except OSError, err:
+    except OSError as err:
         if err.errno == errno.ENOENT:
             raise OSError('"pg_ctl" could not be found. '
                           'You should add the postgresql bin folder to your PATH '

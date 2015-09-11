@@ -168,7 +168,7 @@ def bookmark_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
         rql = params['rql']
         if vid is None:
             vid = params.get('vid')
-    except (ValueError, KeyError), exc:
+    except (ValueError, KeyError) as exc:
         msg = inliner.reporter.error('Could not parse bookmark path %s [%s].'
                                      % (bookmark.path, exc), line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
@@ -182,7 +182,7 @@ def bookmark_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
             vid = 'noresult'
         view = _cw.vreg['views'].select(vid, _cw, rset=rset)
         content = view.render()
-    except Exception, exc:
+    except Exception as exc:
         content = 'An error occurred while interpreting directive bookmark: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []

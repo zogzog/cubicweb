@@ -427,7 +427,7 @@ class RQLRewriter(object):
     def insert_varmap_snippets(self, varmap, rqlexprs, varexistsmap):
         try:
             self.init_from_varmap(varmap, varexistsmap)
-        except VariableFromSubQuery, ex:
+        except VariableFromSubQuery as ex:
             # variable may have been moved to a newly inserted subquery
             # we should insert snippet in that subquery
             subquery = self.select.aliases[ex.variable].query
