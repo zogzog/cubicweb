@@ -91,9 +91,9 @@ class IDownloadableTC(CubicWebTC):
 
     def test_header_with_space_and_comma(self):
         with self.admin_access.web_request() as req:
-            self.create_user(req, login=ur'c " l\ a', password='babar')
+            self.create_user(req, login=u'c " l\\ a', password='babar')
             req.cnx.commit()
-        with self.new_access(ur'c " l\ a').web_request() as req:
+        with self.new_access(u'c " l\\ a').web_request() as req:
             req.form['vid'] = 'download'
             req.form['eid'] = str(req.user.eid)
             data = self.ctrl_publish(req,'view')

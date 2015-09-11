@@ -136,7 +136,7 @@ def _copyfrom_buffer_convert_string(value, **opts):
     :encoding: resulting string encoding (default: utf-8)
     '''
     encoding = opts.get('encoding','utf-8')
-    escape_chars = ((u'\\', ur'\\'), (u'\t', u'\\t'), (u'\r', u'\\r'),
+    escape_chars = ((u'\\', u'\\\\'), (u'\t', u'\\t'), (u'\r', u'\\r'),
                     (u'\n', u'\\n'))
     for char, replace in escape_chars:
         value = value.replace(char, replace)
