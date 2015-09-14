@@ -19,7 +19,8 @@
 """unit tests for module cubicweb.utils"""
 
 from urlparse import urlsplit
-import pickle
+
+from six.moves import cPickle as pickle
 
 from rql import parse
 
@@ -100,7 +101,9 @@ class ResultSetTC(CubicWebTC):
 
     def test_pickle(self):
         del self.rset.req
-        self.assertEqual(len(pickle.dumps(self.rset)), 376)
+        # 373 for python 2.7's cPickle
+        # 376 for the old python pickle implementation
+        self.assertIn(len(pickle.dumps(self.rset)), (373, 376))
 
     def test_build_url(self):
         with self.admin_access.web_request() as req:

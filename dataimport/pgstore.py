@@ -20,13 +20,14 @@ from __future__ import print_function
 
 import threading
 import warnings
-import cPickle
 import os.path as osp
 from StringIO import StringIO
 from time import asctime
 from datetime import date, datetime, time
 from collections import defaultdict
 from base64 import b64encode
+
+from six.moves import cPickle as pickle
 
 from cubicweb.utils import make_uid
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -110,7 +111,7 @@ def _execmany_thread(sql_connect, statements, dump_output_dir=None,
                     try:
                         with open(osp.join(dump_output_dir,
                                            '%s.pickle' % filename), 'wb') as fobj:
-                            cPickle.dump(pdata, fobj)
+                            pickle.dump(pdata, fobj)
                     except IOError:
                         print('ERROR while pickling in', dump_output_dir, filename+'.pickle')
                 cnx.rollback()

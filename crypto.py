@@ -18,8 +18,9 @@
 """Simple cryptographic routines, based on python-crypto."""
 __docformat__ = "restructuredtext en"
 
-from pickle import dumps, loads
 from base64 import b64encode, b64decode
+
+from six.moves import cPickle as pickle
 
 from Crypto.Cipher import Blowfish
 
@@ -34,7 +35,7 @@ def _cypherer(seed):
 
 
 def encrypt(data, seed):
-    string = dumps(data)
+    string = pickle.dumps(data)
     string = string + '*' * (8 - len(string) % 8)
     string = b64encode(_cypherer(seed).encrypt(string))
     return unicode(string)
@@ -43,4 +44,4 @@ def encrypt(data, seed):
 def decrypt(string, seed):
     # pickle ignores trailing characters so we do not need to strip them off
     string = _cypherer(seed).decrypt(b64decode(string))
-    return loads(string)
+    return pickle.loads(string)

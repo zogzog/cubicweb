@@ -25,7 +25,6 @@ import sys
 import errno
 import logging
 import shutil
-import pickle
 import glob
 import subprocess
 import warnings
@@ -35,6 +34,8 @@ from hashlib import sha1 # pylint: disable=E0611
 from datetime import timedelta
 from os.path import (abspath, realpath, join, exists, split, isabs, isdir)
 from functools import partial
+
+from six.moves import cPickle as pickle
 
 from logilab.common.date import strptime
 from logilab.common.decorators import cached, clear_cache

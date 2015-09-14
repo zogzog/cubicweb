@@ -22,7 +22,6 @@ __docformat__ = "restructuredtext en"
 
 # ignore the pygments UserWarnings
 import warnings
-import cPickle
 import zlib
 warnings.filterwarnings('ignore', category=UserWarning,
                         message='.*was already imported',
@@ -39,6 +38,8 @@ CW_SOFTWARE_ROOT = __path__[0]
 
 import sys, os, logging
 from StringIO import StringIO
+
+from six.moves import cPickle as pickle
 
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
@@ -132,12 +133,12 @@ class Binary(StringIO):
     def zpickle(cls, obj):
         """ return a Binary containing a gzipped pickle of obj """
         retval = cls()
-        retval.write(zlib.compress(cPickle.dumps(obj, protocol=2)))
+        retval.write(zlib.compress(pickle.dumps(obj, protocol=2)))
         return retval
 
     def unzpickle(self):
         """ decompress and loads the stream before returning it """
-        return cPickle.loads(zlib.decompress(self.getvalue()))
+        return pickle.loads(zlib.decompress(self.getvalue()))
 
 
 def check_password(eschema, value):

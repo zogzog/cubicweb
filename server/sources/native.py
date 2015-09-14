@@ -27,8 +27,6 @@ from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
-from cPickle import loads, dumps
-import cPickle as pickle
 from threading import Lock
 from datetime import datetime
 from base64 import b64encode
@@ -39,6 +37,8 @@ import itertools
 import zipfile
 import logging
 import sys
+
+from six.moves import cPickle as pickle
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.configuration import Method
@@ -623,7 +623,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 changes = self._save_attrs(cnx, entity, attrs)
                 self._record_tx_action(cnx, 'tx_entity_actions', u'U',
                                        etype=unicode(entity.cw_etype), eid=entity.eid,
-                                       changes=self._binary(dumps(changes)))
+                                       changes=self._binary(pickle.dumps(changes)))
             sql = self.sqlgen.update(SQL_PREFIX + entity.cw_etype, attrs,
                                      ['cw_eid'])
             self.doexec(cnx, sql, attrs)
@@ -638,7 +638,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 changes = self._save_attrs(cnx, entity, attrs)
                 self._record_tx_action(cnx, 'tx_entity_actions', u'D',
                                        etype=unicode(entity.cw_etype), eid=entity.eid,
-                                       changes=self._binary(dumps(changes)))
+                                       changes=self._binary(pickle.dumps(changes)))
             attrs = {'cw_eid': entity.eid}
             sql = self.sqlgen.delete(SQL_PREFIX + entity.cw_etype, attrs)
             self.doexec(cnx, sql, attrs)
@@ -1044,7 +1044,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                                   'etype', 'eid', 'changes'))
         with cnx.ensure_cnx_set:
             cu = self.doexec(cnx, sql, restr)
-            actions = [tx.EntityAction(a,p,o,et,e,c and loads(self.binary_to_str(c)))
+            actions = [tx.EntityAction(a,p,o,et,e,c and pickle.loads(self.binary_to_str(c)))
                        for a,p,o,et,e,c in cu.fetchall()]
         sql = self.sqlgen.select('tx_relation_actions', restr,
                                  ('txa_action', 'txa_public', 'txa_order',
@@ -1708,7 +1708,7 @@ class DatabaseIndependentBackupRestore(object):
         return tuple(columns), rows
 
     def _serialize(self, name, columns, rows):
-        return dumps((name, columns, rows), pickle.HIGHEST_PROTOCOL)
+        return pickle.dumps((name, columns, rows), pickle.HIGHEST_PROTOCOL)
 
     def restore(self, backupfile):
         archive = zipfile.ZipFile(backupfile, 'r', allowZip64=True)
@@ -1756,7 +1756,7 @@ class DatabaseIndependentBackupRestore(object):
         return sequences, numranges, tables, table_chunks
 
     def read_sequence(self, archive, seq):
-        seqname, columns, rows = loads(archive.read('sequences/%s' % seq))
+        seqname, columns, rows = pickle.loads(archive.read('sequences/%s' % seq))
         assert seqname == seq
         assert len(rows) == 1
         assert len(rows[0]) == 1
@@ -1766,7 +1766,7 @@ class DatabaseIndependentBackupRestore(object):
         self.cnx.commit()
 
     def read_numrange(self, archive, numrange):
-        rangename, columns, rows = loads(archive.read('numrange/%s' % numrange))
+        rangename, columns, rows = pickle.loads(archive.read('numrange/%s' % numrange))
         assert rangename == numrange
         assert len(rows) == 1
         assert len(rows[0]) == 1
@@ -1781,7 +1781,7 @@ class DatabaseIndependentBackupRestore(object):
         self.cnx.commit()
         row_count = 0
         for filename in filenames:
-            tablename, columns, rows = loads(archive.read(filename))
+            tablename, columns, rows = pickle.loads(archive.read(filename))
             assert tablename == table
             if not rows:
                 continue
