@@ -20,7 +20,7 @@
 import re
 import sys
 from xml import sax
-from cStringIO import StringIO
+from io import BytesIO
 
 from lxml import etree
 
@@ -164,7 +164,7 @@ class XMLSyntaxValidator(Validator):
 
     def _parse(self, data):
         inpsrc = sax.InputSource()
-        inpsrc.setByteStream(StringIO(data))
+        inpsrc.setByteStream(BytesIO(data))
         try:
             self._parser.parse(inpsrc)
         except sax.SAXParseException as exc:

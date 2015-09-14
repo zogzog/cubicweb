@@ -22,11 +22,11 @@ __docformat__ = "restructuredtext en"
 import time
 import random
 import base64
-from StringIO import StringIO
 from hashlib import sha1 # pylint: disable=E0611
 from calendar import timegm
 from datetime import date, datetime
 from warnings import warn
+from io import BytesIO
 
 from six import string_types
 from six.moves import http_client
@@ -143,7 +143,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         #: form parameters
         self.setup_params(form)
         #: received body
-        self.content = StringIO()
+        self.content = BytesIO()
         # prepare output header
         #: Header used for the final response
         self.headers_out = Headers()
