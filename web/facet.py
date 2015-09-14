@@ -922,9 +922,7 @@ class RelationAttributeFacet(RelationFacet):
         if self.rql_sort:
             return [(_(value), value) for value, in rset]
         values = [(_(value), value) for value, in rset]
-        if self.sortasc:
-            return sorted(values)
-        return reversed(sorted(values))
+        return sorted(values, reverse=not self.sortasc)
 
 
 class AttributeFacet(RelationAttributeFacet):
