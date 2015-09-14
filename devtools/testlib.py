@@ -908,8 +908,11 @@ class CubicWebTC(TestCase):
         view = viewsreg.select(vid, req, rset=rset, **kwargs)
         # set explicit test description
         if rset is not None:
+            # coerce to "bytes" on py2 because the description will be sent to
+            # sys.stdout/stderr which takes "bytes" on py2 and "unicode" on py3
+            rql = str(rset.printable_rql())
             self.set_description("testing vid=%s defined in %s with (%s)" % (
-                vid, view.__module__, rset.printable_rql()))
+                vid, view.__module__, rql))
         else:
             self.set_description("testing vid=%s defined in %s without rset" % (
                 vid, view.__module__))
