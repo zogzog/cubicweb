@@ -842,7 +842,7 @@ def install_sqlite_patch(querier):
                             except Exception:
                                 # DateTime used as Time?
                                 row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
-                        if vtype == 'Interval' and type(value) is int:
+                        if vtype == 'Interval' and isinstance(value, int):
                             found_date = True
                             row[cellindex] = timedelta(0, value, 0) # XXX value is in number of seconds?
                     if not found_date:
