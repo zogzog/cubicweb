@@ -18,6 +18,7 @@
 """unittests for cw.devtools.testlib module"""
 
 from cStringIO import StringIO
+from io import BytesIO
 
 from unittest import TextTestRunner
 
@@ -33,7 +34,7 @@ class FakeFormTC(TestCase):
         class entity:
             cw_etype = 'Entity'
             eid = 0
-        sio = StringIO('hop\n')
+        sio = BytesIO(b'hop\n')
         form = CubicWebTC.fake_form('import',
                                     {'file': ('filename.txt', sio),
                                      'encoding': u'utf-8',
