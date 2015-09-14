@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unittest for cubicweb.dataimport.csv"""
 
-from StringIO import StringIO
+from io import BytesIO
 
 from logilab.common.testlib import TestCase, unittest_main
 
@@ -27,7 +27,7 @@ from cubicweb.dataimport import csv
 class UcsvreaderTC(TestCase):
 
     def test_empty_lines_skipped(self):
-        stream = StringIO('''a,b,c,d,
+        stream = BytesIO(b'''a,b,c,d,
 1,2,3,4,
 ,,,,
 ,,,,
@@ -45,7 +45,7 @@ class UcsvreaderTC(TestCase):
                          list(csv.ucsvreader(stream, skip_empty=False)))
 
     def test_skip_first(self):
-        stream = StringIO('a,b,c,d,\n1,2,3,4,\n')
+        stream = BytesIO(b'a,b,c,d,\n1,2,3,4,\n')
         reader = csv.ucsvreader(stream, skipfirst=True, ignore_errors=True)
         self.assertEqual(list(reader),
                          [[u'1', u'2', u'3', u'4', u'']])
