@@ -57,6 +57,8 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
+from six import string_types
+
 from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool, RelationTagsSet,
                             RelationTagsDict, NoTargetRelationTagsDict,
@@ -650,7 +652,7 @@ class ActionBoxUicfg(RelationTagsBool):
                 self.tag_relation((sschema, rschema, oschema, role), True)
 
     def _tag_etype_attr(self, etype, attr, desttype='*', *args, **kwargs):
-        if isinstance(attr, basestring):
+        if isinstance(attr, string_types):
             attr, role = attr, 'subject'
         else:
             attr, role = attr

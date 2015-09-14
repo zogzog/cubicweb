@@ -24,6 +24,7 @@ import logging
 from warnings import warn
 from operator import eq
 
+from six import string_types
 from six.moves import range
 
 from logilab.common.deprecation import deprecated
@@ -613,7 +614,7 @@ class is_instance(EClassPredicate):
         super(is_instance, self).__init__(**kwargs)
         self.expected_etypes = expected_etypes
         for etype in self.expected_etypes:
-            assert isinstance(etype, basestring), etype
+            assert isinstance(etype, string_types), etype
 
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__,
@@ -1093,7 +1094,7 @@ def on_fire_transition(etype, tr_names, from_state_name=None):
     """
     if from_state_name is not None:
         warn("on_fire_transition's from_state_name argument is unused", DeprecationWarning)
-    if isinstance(tr_names, basestring):
+    if isinstance(tr_names, string_types):
         tr_names = set((tr_names,))
     def match_etype_and_transition(trinfo):
         # take care trinfo.transition is None when calling change_state
@@ -1293,7 +1294,7 @@ class match_form_params(ExpectedValuePredicate):
             raise ValueError("match_form_params() can't be called with both "
                              "positional and named arguments")
         if expected:
-            if len(expected) == 1 and not isinstance(expected[0], basestring):
+            if len(expected) == 1 and not isinstance(expected[0], string_types):
                 raise ValueError("match_form_params() positional arguments "
                                  "must be strings")
             super(match_form_params, self).__init__(*expected)

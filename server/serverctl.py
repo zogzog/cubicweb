@@ -29,6 +29,8 @@ from contextlib import contextmanager
 import logging
 import subprocess
 
+from six import string_types
+
 from logilab.common import nullobject
 from logilab.common.configuration import Configuration, merge_options
 from logilab.common.shellutils import ASK, generate_password
@@ -1020,7 +1022,7 @@ def permissionshandler(relation, perms):
     for p in ('read', 'add', 'update', 'delete'):
         rule = perms.get(p)
         if rule:
-            perms[p] = tuple(str(x) if isinstance(x, basestring) else x
+            perms[p] = tuple(str(x) if isinstance(x, string_types) else x
                              for x in rule)
     return perms, perms in defaultrelperms or perms in defaulteperms
 

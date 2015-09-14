@@ -19,6 +19,7 @@
 
 __docformat__ = "restructuredtext en"
 
+from six import string_types
 
 from logilab.common.decorators import classproperty
 
@@ -134,7 +135,7 @@ class AnyEntity(Entity):
             return self.dc_title().lower()
         value = self.cw_attr_value(rtype)
         # do not restrict to `unicode` because Bytes will return a `str` value
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             return self.printable_value(rtype, format='text/plain').lower()
         return value
 

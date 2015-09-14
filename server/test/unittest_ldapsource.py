@@ -26,6 +26,7 @@ from os.path import join, exists
 import subprocess
 import tempfile
 
+from six import string_types
 from six.moves import range
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object, Tags
@@ -155,7 +156,7 @@ class LDAPFeedTestBase(CubicWebTC):
         """
         modcmd = ['dn: %s'%dn, 'changetype: add']
         for key, values in mods.iteritems():
-            if isinstance(values, basestring):
+            if isinstance(values, string_types):
                 values = [values]
             for value in values:
                 modcmd.append('%s: %s'%(key, value))
@@ -175,7 +176,7 @@ class LDAPFeedTestBase(CubicWebTC):
         modcmd = ['dn: %s'%dn, 'changetype: modify']
         for (kind, key), values in mods.iteritems():
             modcmd.append('%s: %s' % (kind, key))
-            if isinstance(values, basestring):
+            if isinstance(values, string_types):
                 values = [values]
             for value in values:
                 modcmd.append('%s: %s'%(key, value))

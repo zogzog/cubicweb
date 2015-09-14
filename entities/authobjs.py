@@ -19,6 +19,8 @@
 
 __docformat__ = "restructuredtext en"
 
+from six import string_types
+
 from logilab.common.decorators import cached
 
 from cubicweb import Unauthorized
@@ -126,7 +128,7 @@ class CWUser(AnyEntity):
         :type groups: str or iterable(str)
         :param groups: a group name or an iterable on group names
         """
-        if isinstance(groups, basestring):
+        if isinstance(groups, string_types):
             groups = frozenset((groups,))
         elif isinstance(groups, (tuple, list)):
             groups = frozenset(groups)

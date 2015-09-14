@@ -27,6 +27,7 @@ from datetime import date, datetime, time
 from collections import defaultdict
 from base64 import b64encode
 
+from six import string_types
 from six.moves import cPickle as pickle, range
 
 from cubicweb.utils import make_uid
@@ -166,7 +167,7 @@ def _copyfrom_buffer_convert_time(value, **opts):
 _COPYFROM_BUFFER_CONVERTERS = [
     (type(None), _copyfrom_buffer_convert_None),
     ((long, int, float), _copyfrom_buffer_convert_number),
-    (basestring, _copyfrom_buffer_convert_string),
+    (string_types, _copyfrom_buffer_convert_string),
     (datetime, _copyfrom_buffer_convert_datetime),
     (date, _copyfrom_buffer_convert_date),
     (time, _copyfrom_buffer_convert_time),

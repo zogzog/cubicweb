@@ -66,6 +66,8 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from datetime import datetime, timedelta
 
+from six import string_types
+
 from logilab.mtconverter import xml_escape
 from logilab.common import nullobject
 from logilab.common.date import ustrftime
@@ -842,7 +844,7 @@ class BigIntField(Field):
             self.widget.attrs.setdefault('size', self.default_text_input_size)
 
     def _ensure_correctly_typed(self, form, value):
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             value = value.strip()
             if not value:
                 return None
@@ -924,7 +926,7 @@ class FloatField(IntField):
         return self.format_single_value(req, 1.234)
 
     def _ensure_correctly_typed(self, form, value):
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             value = value.strip()
             if not value:
                 return None
@@ -956,7 +958,7 @@ class TimeIntervalField(StringField):
         return u'20s, 10min, 24h, 4d'
 
     def _ensure_correctly_typed(self, form, value):
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             value = value.strip()
             if not value:
                 return None
@@ -986,7 +988,7 @@ class DateField(StringField):
         return self.format_single_value(req, datetime.now())
 
     def _ensure_correctly_typed(self, form, value):
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             value = value.strip()
             if not value:
                 return None

@@ -20,6 +20,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from six import string_types
+
 from logilab.common.ureports import Section, Title, Table, Link, Span, Text
 
 from yams.schema2dot import CARD_MAP
@@ -226,7 +228,7 @@ class SchemaViewer(object):
                     elif isinstance(val, (list, tuple)):
                         val = sorted(val)
                         val = ', '.join(str(v) for v in val)
-                    elif val and isinstance(val, basestring):
+                    elif val and isinstance(val, string_types):
                         val = _(val)
                     else:
                         val = str(val)

@@ -99,6 +99,8 @@ from functools import reduce
 from datetime import date
 from warnings import warn
 
+from six import string_types
+
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
 from logilab.common.date import todatetime
@@ -282,7 +284,7 @@ class FieldWidget(object):
         """
         posted = form._cw.form
         val = posted.get(field.input_name(form, self.suffix))
-        if isinstance(val, basestring):
+        if isinstance(val, string_types):
             val = val.strip()
         return val
 
@@ -993,12 +995,12 @@ class EditableURLWidget(FieldWidget):
         req = form._cw
         values = {}
         path = req.form.get(field.input_name(form, 'path'))
-        if isinstance(path, basestring):
+        if isinstance(path, string_types):
             path = path.strip()
         if path is None:
             path = u''
         fqs = req.form.get(field.input_name(form, 'fqs'))
-        if isinstance(fqs, basestring):
+        if isinstance(fqs, string_types):
             fqs = fqs.strip() or None
             if fqs:
                 for i, line in enumerate(fqs.split('\n')):

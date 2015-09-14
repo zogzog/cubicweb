@@ -40,6 +40,8 @@ __docformat__ = "restructuredtext en"
 import logging
 from warnings import warn
 
+from six import string_types
+
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.registry import RegistrableInstance, yes
 
@@ -145,7 +147,7 @@ class RelationTags(RegistrableRtags):
         return tag
 
     def _tag_etype_attr(self, etype, attr, desttype='*', *args, **kwargs):
-        if isinstance(attr, basestring):
+        if isinstance(attr, string_types):
             attr, role = attr, 'subject'
         else:
             attr, role = attr

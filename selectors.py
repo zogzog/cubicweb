@@ -18,6 +18,8 @@
 
 from warnings import warn
 
+from six import string_types
+
 from logilab.common.deprecation import deprecated, class_renamed
 
 from cubicweb.predicates import *
@@ -84,7 +86,7 @@ class _but_etype(EntityPredicate):
 
     See `EntityPredicate` documentation for behaviour when row is not specified.
 
-    :param *etypes: entity types (`basestring`) which should be refused
+    :param *etypes: entity types (`string_types`) which should be refused
     """
     def __init__(self, *etypes):
         super(_but_etype, self).__init__()

@@ -25,6 +25,7 @@ from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
+from six import string_types
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
@@ -259,10 +260,10 @@ class BaseTransition(AnyEntity):
                                     'WHERE T eid %(x)s, G name %(gn)s',
                                     {'x': self.eid, 'gn': unicode(gname)})
             assert rset, '%s is not a known group' % gname
-        if isinstance(conditions, basestring):
+        if isinstance(conditions, string_types):
             conditions = (conditions,)
         for expr in conditions:
-            if isinstance(expr, basestring):
+            if isinstance(expr, string_types):
                 kwargs = {'expr': unicode(expr)}
             else:
                 assert isinstance(expr, dict)
@@ -529,7 +530,7 @@ class IWorkflowableAdapter(EntityAdapter):
 
     def _get_transition(self, tr):
         assert self.current_workflow
-        if isinstance(tr, basestring):
+        if isinstance(tr, string_types):
             _tr = self.current_workflow.transition_by_name(tr)
             assert _tr is not None, 'not a %s transition: %s' % (
                 self.__regid__, tr)

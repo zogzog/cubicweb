@@ -22,6 +22,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from functools import partial
 
+from six import string_types
 from six.moves import range
 
 from logilab.common.decorators import cached
@@ -281,7 +282,7 @@ class Entity(AppObject):
             select = Select()
             mainvar = select.get_variable(mainvar)
             select.add_selected(mainvar)
-        elif isinstance(mainvar, basestring):
+        elif isinstance(mainvar, string_types):
             assert mainvar in select.defined_vars
             mainvar = select.get_variable(mainvar)
         # eases string -> syntax tree test transition: please remove once stable
@@ -697,7 +698,7 @@ class Entity(AppObject):
         attr = str(attr)
         if value is _marker:
             value = getattr(self, attr)
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             value = value.strip()
         if value is None or value == '': # don't use "not", 0 is an acceptable value
             return u''

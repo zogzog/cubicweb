@@ -27,6 +27,7 @@ import subprocess
 from os.path import abspath
 from logging import getLogger
 
+from six import string_types
 from six.moves import filter
 
 from logilab import database as db, common as lgc
@@ -70,7 +71,7 @@ def sqlexec(sqlstmts, cursor_or_execute, withpb=True,
     else:
         execute = cursor_or_execute
     sqlstmts_as_string = False
-    if isinstance(sqlstmts, basestring):
+    if isinstance(sqlstmts, string_types):
         sqlstmts_as_string = True
         sqlstmts = sqlstmts.split(delimiter)
     if withpb:

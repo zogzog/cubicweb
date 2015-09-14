@@ -18,6 +18,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.utils"""
 
+from six import string_types
 from six.moves import cPickle as pickle
 from six.moves.urllib.parse import urlsplit
 
@@ -552,17 +553,17 @@ class ResultSetTC(CubicWebTC):
     def test_str(self):
         with self.admin_access.web_request() as req:
             rset = req.execute('(Any X,N WHERE X is CWGroup, X name N)')
-            self.assertIsInstance(str(rset), basestring)
+            self.assertIsInstance(str(rset), string_types)
             self.assertEqual(len(str(rset).splitlines()), 1)
 
     def test_repr(self):
         with self.admin_access.web_request() as req:
             rset = req.execute('(Any X,N WHERE X is CWGroup, X name N)')
-            self.assertIsInstance(repr(rset), basestring)
+            self.assertIsInstance(repr(rset), string_types)
             self.assertTrue(len(repr(rset).splitlines()) > 1)
 
             rset = req.execute('(Any X WHERE X is CWGroup, X name "managers")')
-            self.assertIsInstance(str(rset), basestring)
+            self.assertIsInstance(str(rset), string_types)
             self.assertEqual(len(str(rset).splitlines()), 1)
 
     def test_nonregr_symmetric_relation(self):

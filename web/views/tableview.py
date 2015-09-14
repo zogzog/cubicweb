@@ -67,6 +67,7 @@ from warnings import warn
 from copy import copy
 from types import MethodType
 
+from six import string_types
 from six.moves import range
 
 from logilab.mtconverter import xml_escape
@@ -286,7 +287,7 @@ class TableLayout(component.Component):
         attrs = renderer.attributes.copy()
         if renderer.sortable:
             sortvalue = renderer.sortvalue(rownum)
-            if isinstance(sortvalue, basestring):
+            if isinstance(sortvalue, string_types):
                 sortvalue = sortvalue[:self.sortvalue_limit]
             if sortvalue is not None:
                 attrs[u'cubicweb:sortvalue'] = js_dumps(sortvalue)

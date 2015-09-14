@@ -28,6 +28,8 @@ import csv
 import re
 from StringIO import StringIO
 
+from six import string_types
+
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
 from logilab.common.deprecation import deprecated
@@ -559,7 +561,7 @@ class limitsize(object):
     def __call__(self, function):
         def newfunc(*args, **kwargs):
             ret = function(*args, **kwargs)
-            if isinstance(ret, basestring):
+            if isinstance(ret, string_types):
                 return ret[:self.maxsize]
             return ret
         return newfunc
@@ -568,6 +570,6 @@ class limitsize(object):
 def htmlescape(function):
     def newfunc(*args, **kwargs):
         ret = function(*args, **kwargs)
-        assert isinstance(ret, basestring)
+        assert isinstance(ret, string_types)
         return xml_escape(ret)
     return newfunc

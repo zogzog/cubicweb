@@ -20,6 +20,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from six import string_types
+
 from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape
 
@@ -114,7 +116,7 @@ class TabsMixin(LazyViewMixin):
         active_tab = uilib.domid(default_tab)
         viewsvreg = self._cw.vreg['views']
         for tab in tabs:
-            if isinstance(tab, basestring):
+            if isinstance(tab, string_types):
                 tabid, tabkwargs = tab, {}
             else:
                 tabid, tabkwargs = tab

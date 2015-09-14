@@ -22,11 +22,13 @@ import csv as csvmod
 import warnings
 import os.path as osp
 
+from six import string_types
+
 from logilab.common import shellutils
 
 
 def count_lines(stream_or_filename):
-    if isinstance(stream_or_filename, basestring):
+    if isinstance(stream_or_filename, string_types):
         f = open(stream_or_filename)
     else:
         f = stream_or_filename
@@ -47,7 +49,7 @@ def ucsvreader_pb(stream_or_path, encoding='utf-8', delimiter=',', quotechar='"'
     if quote is not None:
         quotechar = quote
         warnings.warn("[3.20] 'quote' kwarg is deprecated, use 'quotechar' instead")
-    if isinstance(stream_or_path, basestring):
+    if isinstance(stream_or_path, string_types):
         if not osp.exists(stream_or_path):
             raise Exception("file doesn't exists: %s" % stream_or_path)
         stream = open(stream_or_path)

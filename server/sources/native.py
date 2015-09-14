@@ -38,6 +38,7 @@ import zipfile
 import logging
 import sys
 
+from six import string_types
 from six.moves import range, cPickle as pickle
 
 from logilab.common.decorators import cached, clear_cache
@@ -558,7 +559,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 sql, qargs, cbs = self._rql_sqlgen.generate(union, args, varmap)
                 self._cache[cachekey] = sql, qargs, cbs
         args = self.merge_args(args, qargs)
-        assert isinstance(sql, basestring), repr(sql)
+        assert isinstance(sql, string_types), repr(sql)
         cursor = self.doexec(cnx, sql, args)
         results = self.process_result(cursor, cnx, cbs)
         assert dbg_results(results)

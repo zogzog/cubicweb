@@ -28,6 +28,7 @@ from calendar import timegm
 from datetime import date, datetime
 from warnings import warn
 
+from six import string_types
 from six.moves import http_client
 from six.moves.urllib.parse import urlsplit, quote as urlquote
 from six.moves.http_cookies import SimpleCookie
@@ -437,7 +438,7 @@ class _CubicWebRequestBase(RequestSessionBase):
             eids = form['eid']
         except KeyError:
             raise NothingToEdit(self._('no selected entities'))
-        if isinstance(eids, basestring):
+        if isinstance(eids, string_types):
             eids = (eids,)
         for peid in eids:
             if withtype:
@@ -596,7 +597,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         :param localfile: if True, the default data dir prefix is added to the
                           JS filename
         """
-        if isinstance(jsfiles, basestring):
+        if isinstance(jsfiles, string_types):
             jsfiles = (jsfiles,)
         for jsfile in jsfiles:
             if localfile:
@@ -616,7 +617,7 @@ class _CubicWebRequestBase(RequestSessionBase):
                        the css inclusion. cf:
                        http://msdn.microsoft.com/en-us/library/ms537512(VS.85).aspx
         """
-        if isinstance(cssfiles, basestring):
+        if isinstance(cssfiles, string_types):
             cssfiles = (cssfiles,)
         if ieonly:
             if self.ie_browser():

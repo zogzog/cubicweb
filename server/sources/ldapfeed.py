@@ -21,6 +21,8 @@ from __future__ import division # XXX why?
 
 from datetime import datetime
 
+from six import string_types
+
 import ldap
 from ldap.ldapobject import ReconnectLDAPObject
 from ldap.filter import filter_format
@@ -376,7 +378,7 @@ You can set multiple groups by separating them by a comma.',
                     itemdict[key] = value
         # we expect memberUid to be a list of user ids, make sure of it
         member = self.group_rev_attrs['member']
-        if isinstance(itemdict.get(member), basestring):
+        if isinstance(itemdict.get(member), string_types):
             itemdict[member] = [itemdict[member]]
         return itemdict
 

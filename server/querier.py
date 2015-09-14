@@ -24,6 +24,7 @@ __docformat__ = "restructuredtext en"
 
 from itertools import repeat
 
+from six import string_types
 from six.moves import range
 
 from rql import RQLSyntaxError, CoercionError
@@ -450,11 +451,11 @@ class InsertPlan(ExecutionPlan):
         relations = {}
         for subj, rtype, obj in self.relation_defs():
             # if a string is given into args instead of an int, we get it here
-            if isinstance(subj, basestring):
+            if isinstance(subj, string_types):
                 subj = int(subj)
             elif not isinstance(subj, (int, long)):
                 subj = subj.entity.eid
-            if isinstance(obj, basestring):
+            if isinstance(obj, string_types):
                 obj = int(obj)
             elif not isinstance(obj, (int, long)):
                 obj = obj.entity.eid

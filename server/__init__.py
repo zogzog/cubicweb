@@ -29,6 +29,8 @@ from os.path import join, exists
 from glob import glob
 from contextlib import contextmanager
 
+from six import string_types
+
 from logilab.common.modutils import LazyObject
 from logilab.common.textutils import splitstrip
 from logilab.common.registry import yes
@@ -139,7 +141,7 @@ def set_debug(debugmode):
     if not debugmode:
         DEBUG = 0
         return
-    if isinstance(debugmode, basestring):
+    if isinstance(debugmode, string_types):
         for mode in splitstrip(debugmode, sep='|'):
             DEBUG |= globals()[mode]
     else:

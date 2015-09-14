@@ -27,6 +27,8 @@ import tempfile
 from os.path import exists, join, basename, splitext
 from itertools import chain
 
+from six import string_types
+
 from logilab.common import IGNORED_EXTENSIONS
 from logilab.common.decorators import cached
 from logilab.common.configuration import REQUIRED, read_old_config
@@ -397,7 +399,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         """modify the list of used cubes in the in-memory config
         returns newly inserted cubes, including dependencies
         """
-        if isinstance(cubes, basestring):
+        if isinstance(cubes, string_types):
             cubes = (cubes,)
         origcubes = self.config.cubes()
         newcubes = [p for p in self.config.expand_cubes(cubes)

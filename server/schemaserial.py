@@ -24,6 +24,8 @@ import os
 import json
 import sys
 
+from six import string_types
+
 from logilab.common.shellutils import ProgressBar, DummyProgressBar
 
 from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
@@ -614,7 +616,7 @@ def _erperms2rql(erschema, groupmap):
             # may occurs when modifying persistent schema
             continue
         for group_or_rqlexpr in grantedto:
-            if isinstance(group_or_rqlexpr, basestring):
+            if isinstance(group_or_rqlexpr, string_types):
                 # group
                 try:
                     yield ('SET X %s_permission Y WHERE Y eid %%(g)s, X eid %%(x)s' % action,

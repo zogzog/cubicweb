@@ -57,6 +57,8 @@ from warnings import warn
 from copy import deepcopy
 from datetime import datetime, timedelta
 
+from six import string_types
+
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import has_path
 from logilab.common.decorators import cached, cachedproperty
@@ -754,7 +756,7 @@ class RelationFacet(VocabularyFacet):
         # XXX handle rel is None case in RQLPathFacet?
         if self.restr_attr != 'eid':
             self.select.set_distinct(True)
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             # only one value selected
             if value:
                 self.select.add_constant_restriction(
@@ -1071,7 +1073,7 @@ class RQLPathFacet(RelationFacet):
         assert self.path and isinstance(self.path, (list, tuple)), \
             'path should be a list of 3-uples, not %s' % self.path
         for part in self.path:
-            if isinstance(part, basestring):
+            if isinstance(part, string_types):
                 part = part.split()
             assert len(part) == 3, \
                    'path should be a list of 3-uples, not %s' % part
@@ -1147,7 +1149,7 @@ class RQLPathFacet(RelationFacet):
         varmap = {'X': self.filtered_variable}
         actual_filter_variable = None
         for part in self.path:
-            if isinstance(part, basestring):
+            if isinstance(part, string_types):
                 part = part.split()
             subject, rtype, object = part
             if skiplabel and object == self.label_variable:
@@ -1390,7 +1392,7 @@ class AbstractRangeRQLPathFacet(RQLPathFacet):
             skiplabel=True, skipattrfilter=True)
         restrel = None
         for part in self.path:
-            if isinstance(part, basestring):
+            if isinstance(part, string_types):
                 part = part.split()
             subject, rtype, object = part
             if object == self.filter_variable:

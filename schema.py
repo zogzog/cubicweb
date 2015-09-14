@@ -26,6 +26,7 @@ from os.path import join, basename
 from logging import getLogger
 from warnings import warn
 
+from six import string_types
 from six.moves import range
 
 from logilab.common import tempattr
@@ -207,7 +208,7 @@ class RQLExpression(object):
         """
         self.eid = eid # eid of the entity representing this rql expression
         assert mainvars, 'bad mainvars %s' % mainvars
-        if isinstance(mainvars, basestring):
+        if isinstance(mainvars, string_types):
             mainvars = set(splitstrip(mainvars))
         elif not isinstance(mainvars, set):
             mainvars = set(mainvars)
@@ -579,7 +580,7 @@ def get_groups(self, action):
     assert action in self.ACTIONS, action
     #assert action in self._groups, '%s %s' % (self, action)
     try:
-        return frozenset(g for g in self.permissions[action] if isinstance(g, basestring))
+        return frozenset(g for g in self.permissions[action] if isinstance(g, string_types))
     except KeyError:
         return ()
 PermissionMixIn.get_groups = get_groups
@@ -598,7 +599,7 @@ def get_rqlexprs(self, action):
     assert action in self.ACTIONS, action
     #assert action in self._rqlexprs, '%s %s' % (self, action)
     try:
-        return tuple(g for g in self.permissions[action] if not isinstance(g, basestring))
+        return tuple(g for g in self.permissions[action] if not isinstance(g, string_types))
     except KeyError:
         return ()
 PermissionMixIn.get_rqlexprs = get_rqlexprs

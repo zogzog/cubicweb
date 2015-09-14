@@ -28,6 +28,7 @@ from contextlib import contextmanager
 from warnings import warn
 from itertools import chain
 
+from six import string_types
 from six.moves import range
 from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
 
@@ -521,7 +522,7 @@ class CubicWebTC(TestCase):
         """
         torestore = []
         for erschema, etypeperms in chain(perm_overrides, perm_kwoverrides.iteritems()):
-            if isinstance(erschema, basestring):
+            if isinstance(erschema, string_types):
                 erschema = self.schema[erschema]
             for action, actionperms in etypeperms.iteritems():
                 origperms = erschema.permissions[action]

@@ -7,6 +7,7 @@ from calendar import timegm
 import base64
 import re
 
+from six import string_types
 from six.moves.urllib.parse import urlparse
 
 
@@ -382,7 +383,7 @@ def last(seq):
 
 def unique(seq):
     '''if seq is not a string, check it's a sequence of one element and return it'''
-    if isinstance(seq, basestring):
+    if isinstance(seq, string_types):
         return seq
     if len(seq) != 1:
         raise ValueError('single value required, not %s' % seq)
@@ -454,10 +455,10 @@ def generateTrueFalse(value):
 
     """
     if (value in (True, 1) or
-            isinstance(value, basestring) and value.lower() == 'true'):
+            isinstance(value, string_types) and value.lower() == 'true'):
         return 'true'
     if (value in (False, 0) or
-            isinstance(value, basestring) and value.lower() == 'false'):
+            isinstance(value, string_types) and value.lower() == 'false'):
         return 'false'
     raise ValueError("Invalid true/false header value: %s" % value)
 
