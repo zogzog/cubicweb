@@ -180,6 +180,8 @@ from os.path import (exists, join, expanduser, abspath, normpath,
                      basename, isdir, dirname, splitext)
 from warnings import warn, filterwarnings
 
+from six import text_type
+
 from logilab.common.decorators import cached, classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods, init_log
@@ -651,7 +653,7 @@ this option is set to yes",
         self.adjust_sys_path()
         self.load_defaults()
         # will be properly initialized later by _gettext_init
-        self.translations = {'en': (unicode, lambda ctx, msgid: unicode(msgid) )}
+        self.translations = {'en': (text_type, lambda ctx, msgid: text_type(msgid) )}
         self._site_loaded = set()
         # don't register ReStructured Text directives by simple import, avoid pb
         # with eg sphinx.
@@ -1009,7 +1011,7 @@ the repository',
         # set to true while creating an instance
         self.creating = creating
         super(CubicWebConfiguration, self).__init__(debugmode)
-        fake_gettext = (unicode, lambda ctx, msgid: unicode(msgid))
+        fake_gettext = (text_type, lambda ctx, msgid: text_type(msgid))
         for lang in self.available_languages():
             self.translations[lang] = fake_gettext
         self._cubes = None

@@ -24,6 +24,8 @@ from time import time
 from logging import getLogger
 from base64 import b64decode
 
+from six import text_type
+
 from logilab.common import configuration
 from logilab.common.deprecation import deprecated
 
@@ -139,7 +141,7 @@ class AbstractSource(object):
         pass
 
     @classmethod
-    def check_conf_dict(cls, eid, confdict, _=unicode, fail_if_unknown=True):
+    def check_conf_dict(cls, eid, confdict, _=text_type, fail_if_unknown=True):
         """check configuration of source entity. Return config dict properly
         typed with defaults set.
         """
@@ -156,7 +158,7 @@ class AbstractSource(object):
                 try:
                     value = configuration._validate(value, optdict, optname)
                 except Exception as ex:
-                    msg = unicode(ex) # XXX internationalization
+                    msg = text_type(ex) # XXX internationalization
                     raise ValidationError(eid, {role_name('config', 'subject'): msg})
             processed[optname] = value
         # cw < 3.10 bw compat

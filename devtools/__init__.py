@@ -35,6 +35,7 @@ from datetime import timedelta
 from os.path import (abspath, realpath, join, exists, split, isabs, isdir)
 from functools import partial
 
+from six import text_type
 from six.moves import cPickle as pickle
 
 from logilab.common.date import strptime
@@ -94,7 +95,7 @@ DEFAULT_SOURCES = {'system': {'adapter' : 'native',
 DEFAULT_PSQL_SOURCES = DEFAULT_SOURCES.copy()
 DEFAULT_PSQL_SOURCES['system'] = DEFAULT_SOURCES['system'].copy()
 DEFAULT_PSQL_SOURCES['system']['db-driver'] = 'postgres'
-DEFAULT_PSQL_SOURCES['system']['db-user'] = unicode(getpass.getuser())
+DEFAULT_PSQL_SOURCES['system']['db-user'] = text_type(getpass.getuser())
 DEFAULT_PSQL_SOURCES['system']['db-password'] = None
 
 def turn_repo_off(repo):
@@ -415,7 +416,7 @@ class TestDataBaseHandler(object):
         from cubicweb.repoapi import connect
         repo = self.get_repo()
         sources = self.config.read_sources_file()
-        login  = unicode(sources['admin']['login'])
+        login  = text_type(sources['admin']['login'])
         password = sources['admin']['password'] or 'xxx'
         cnx = connect(repo, login, password=password)
         return cnx
@@ -829,14 +830,14 @@ def install_sqlite_patch(querier):
                 found_date = False
                 for row, rowdesc in zip(rset, rset.description):
                     for cellindex, (value, vtype) in enumerate(zip(row, rowdesc)):
-                        if vtype in ('Date', 'Datetime') and type(value) is unicode:
+                        if vtype in ('Date', 'Datetime') and isinstance(value, text_type):
                             found_date = True
                             value = value.rsplit('.', 1)[0]
                             try:
                                 row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
                             except Exception:
                                 row[cellindex] = strptime(value, '%Y-%m-%d')
-                        if vtype == 'Time' and type(value) is unicode:
+                        if vtype == 'Time' and isinstance(value, text_type):
                             found_date = True
                             try:
                                 row[cellindex] = strptime(value, '%H:%M:%S')
