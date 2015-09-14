@@ -109,11 +109,10 @@ def _execmany_thread(sql_connect, statements, dump_output_dir=None,
                     filename = make_uid()
                     try:
                         with open(osp.join(dump_output_dir,
-                                           '%s.pickle' % filename), 'w') as fobj:
-                            fobj.write(cPickle.dumps(pdata))
+                                           '%s.pickle' % filename), 'wb') as fobj:
+                            cPickle.dump(pdata, fobj)
                     except IOError:
                         print('ERROR while pickling in', dump_output_dir, filename+'.pickle')
-                        pass
                 cnx.rollback()
                 raise
     finally:
