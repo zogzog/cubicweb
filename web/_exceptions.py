@@ -20,7 +20,7 @@
 
 __docformat__ = "restructuredtext en"
 
-import httplib
+from six.moves import http_client
 
 from cubicweb._exceptions import *
 from cubicweb.utils import json_dumps
@@ -41,7 +41,7 @@ class PublishException(CubicWebException):
     """base class for publishing related exception"""
 
     def __init__(self, *args, **kwargs):
-        self.status = kwargs.pop('status', httplib.OK)
+        self.status = kwargs.pop('status', http_client.OK)
         super(PublishException, self).__init__(*args, **kwargs)
 
 class LogOut(PublishException):
@@ -52,7 +52,7 @@ class LogOut(PublishException):
 
 class Redirect(PublishException):
     """raised to redirect the http request"""
-    def __init__(self, location, status=httplib.SEE_OTHER):
+    def __init__(self, location, status=http_client.SEE_OTHER):
         super(Redirect, self).__init__(status=status)
         self.location = location
 
@@ -71,7 +71,7 @@ class RequestError(PublishException):
     """raised when a request can't be served because of a bad input"""
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('status', httplib.BAD_REQUEST)
+        kwargs.setdefault('status', http_client.BAD_REQUEST)
         super(RequestError, self).__init__(*args, **kwargs)
 
 
@@ -79,14 +79,14 @@ class NothingToEdit(RequestError):
     """raised when an edit request doesn't specify any eid to edit"""
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('status', httplib.BAD_REQUEST)
+        kwargs.setdefault('status', http_client.BAD_REQUEST)
         super(NothingToEdit, self).__init__(*args, **kwargs)
 
 class ProcessFormError(RequestError):
     """raised when posted data can't be processed by the corresponding field
     """
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('status', httplib.BAD_REQUEST)
+        kwargs.setdefault('status', http_client.BAD_REQUEST)
         super(ProcessFormError, self).__init__(*args, **kwargs)
 
 class NotFound(RequestError):
@@ -94,13 +94,13 @@ class NotFound(RequestError):
        a 404 error should be returned"""
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('status', httplib.NOT_FOUND)
+        kwargs.setdefault('status', http_client.NOT_FOUND)
         super(NotFound, self).__init__(*args, **kwargs)
 
 class RemoteCallFailed(RequestError):
     """raised when a json remote call fails
     """
-    def __init__(self, reason='', status=httplib.INTERNAL_SERVER_ERROR):
+    def __init__(self, reason='', status=http_client.INTERNAL_SERVER_ERROR):
         super(RemoteCallFailed, self).__init__(reason, status=status)
         self.reason = reason
 

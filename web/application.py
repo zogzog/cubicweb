@@ -25,7 +25,7 @@ from contextlib import contextmanager
 from warnings import warn
 import json
 
-import httplib
+from six.moves import http_client
 
 from logilab.common.deprecation import deprecated
 
@@ -290,7 +290,7 @@ class CubicWebPublisher(object):
                 if self.vreg.config['auth-mode'] == 'cookie' and ex.url:
                     req.headers_out.setHeader('location', str(ex.url))
                 if ex.status is not None:
-                    req.status_out = httplib.SEE_OTHER
+                    req.status_out = http_client.SEE_OTHER
                 # When the authentification is handled by http we must
                 # explicitly ask for authentification to flush current http
                 # authentification information
@@ -310,18 +310,18 @@ class CubicWebPublisher(object):
             # the request does not use https, redirect to login form
             https_url = self.vreg.config['https-url']
             if https_url and req.base_url() != https_url:
-                req.status_out = httplib.SEE_OTHER
+                req.status_out = http_client.SEE_OTHER
                 req.headers_out.setHeader('location', https_url + 'login')
             else:
                 # We assume here that in http auth mode the user *May* provide
                 # Authentification Credential if asked kindly.
                 if self.vreg.config['auth-mode'] == 'http':
-                    req.status_out = httplib.UNAUTHORIZED
+                    req.status_out = http_client.UNAUTHORIZED
                 # In the other case (coky auth) we assume that there is no way
                 # for the user to provide them...
                 # XXX But WHY ?
                 else:
-                    req.status_out = httplib.FORBIDDEN
+                    req.status_out = http_client.FORBIDDEN
                 # If previous error handling already generated a custom content
                 # do not overwrite it. This is used by LogOut Except
                 # XXX ensure we don't actually serve content
@@ -394,12 +394,12 @@ class CubicWebPublisher(object):
         except Unauthorized as ex:
             req.data['errmsg'] = req._('You\'re not authorized to access this page. '
                                        'If you think you should, please contact the site administrator.')
-            req.status_out = httplib.FORBIDDEN
+            req.status_out = http_client.FORBIDDEN
             result = self.error_handler(req, ex, tb=False)
         except Forbidden as ex:
             req.data['errmsg'] = req._('This action is forbidden. '
                                        'If you think it should be allowed, please contact the site administrator.')
-            req.status_out = httplib.FORBIDDEN
+            req.status_out = http_client.FORBIDDEN
             result = self.error_handler(req, ex, tb=False)
         except (BadRQLQuery, RequestError) as ex:
             result = self.error_handler(req, ex, tb=False)
@@ -413,7 +413,7 @@ class CubicWebPublisher(object):
             raise
         ### Last defense line
         except BaseException as ex:
-            req.status_out = httplib.INTERNAL_SERVER_ERROR
+            req.status_out = http_client.INTERNAL_SERVER_ERROR
             result = self.error_handler(req, ex, tb=True)
         finally:
             if req.cnx and not commited:
@@ -453,9 +453,9 @@ class CubicWebPublisher(object):
             # messages.
             location = req.form['__errorurl'].rsplit('#', 1)[0]
             req.headers_out.setHeader('location', str(location))
-            req.status_out = httplib.SEE_OTHER
+            req.status_out = http_client.SEE_OTHER
             return ''
-        req.status_out = httplib.CONFLICT
+        req.status_out = http_client.CONFLICT
         return self.error_handler(req, ex, tb=False)
 
     def error_handler(self, req, ex, tb=False):
@@ -491,7 +491,7 @@ class CubicWebPublisher(object):
 
     def ajax_error_handler(self, req, ex):
         req.set_header('content-type', 'application/json')
-        status = httplib.INTERNAL_SERVER_ERROR
+        status = http_client.INTERNAL_SERVER_ERROR
         if isinstance(ex, PublishException) and ex.status is not None:
             status = ex.status
         if req.status_out < 400:

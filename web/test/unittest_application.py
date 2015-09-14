@@ -18,7 +18,8 @@
 """unit tests for cubicweb.web.application"""
 
 import base64, Cookie
-import httplib
+
+from six.moves import http_client
 
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache, classproperty
@@ -267,7 +268,7 @@ class ApplicationTC(CubicWebTC):
                 with self.admin_access.web_request(vid='test.ajax.error') as req:
                     req.ajax_request = True
                     page = app.handle_request(req, '')
-        self.assertEqual(httplib.INTERNAL_SERVER_ERROR,
+        self.assertEqual(http_client.INTERNAL_SERVER_ERROR,
                          req.status_out)
 
     def _test_cleaned(self, kwargs, injected, cleaned):

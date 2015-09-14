@@ -25,8 +25,8 @@ __docformat__ = "restructuredtext en"
 import random
 import threading
 import socket
-import httplib
 
+from six.moves import http_client
 from six.moves.urllib.parse import urlparse
 
 from twisted.internet import reactor, error
@@ -113,8 +113,8 @@ class CubicWebServerTC(CubicWebTC):
         #pre init utils connection
         parseurl = urlparse(self.config['base-url'])
         assert parseurl.port == self.config['port'], (self.config['base-url'], self.config['port'])
-        self._web_test_cnx = httplib.HTTPConnection(parseurl.hostname,
-                                                    parseurl.port)
+        self._web_test_cnx = http_client.HTTPConnection(parseurl.hostname,
+                                                        parseurl.port)
         self._ident_cookie = None
 
     def stop_server(self, timeout=15):
@@ -142,7 +142,7 @@ class CubicWebServerTC(CubicWebTC):
             passwd = user
         response = self.web_get("login?__login=%s&__password=%s" %
                                 (user, passwd))
-        assert response.status == httplib.SEE_OTHER, response.status
+        assert response.status == http_client.SEE_OTHER, response.status
         self._ident_cookie = response.getheader('Set-Cookie')
         assert self._ident_cookie
         return True
@@ -154,7 +154,7 @@ class CubicWebServerTC(CubicWebTC):
         self._ident_cookie = None
 
     def web_request(self, path='', method='GET', body=None, headers=None):
-        """Return an httplib.HTTPResponse object for the specified path
+        """Return an http_client.HTTPResponse object for the specified path
 
         Use available credential if available.
         """

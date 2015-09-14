@@ -27,9 +27,9 @@ from hashlib import sha1 # pylint: disable=E0611
 from Cookie import SimpleCookie
 from calendar import timegm
 from datetime import date, datetime
-import httplib
 from warnings import warn
 
+from six.moves import http_client
 from six.moves.urllib.parse import urlsplit, quote as urlquote
 
 from rql.utils import rqlvar_maker
@@ -738,9 +738,9 @@ class _CubicWebRequestBase(RequestSessionBase):
             # overwrite headers_out to forge a brand new not-modified response
             self.headers_out = self._forge_cached_headers()
             if self.http_method() in ('HEAD', 'GET'):
-                self.status_out = httplib.NOT_MODIFIED
+                self.status_out = http_client.NOT_MODIFIED
             else:
-                self.status_out = httplib.PRECONDITION_FAILED
+                self.status_out = http_client.PRECONDITION_FAILED
             # XXX replace by True once validate_cache bw compat method is dropped
             return self.status_out
         # XXX replace by False once validate_cache bw compat method is dropped
