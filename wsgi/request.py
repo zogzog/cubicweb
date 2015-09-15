@@ -27,7 +27,7 @@ __docformat__ = "restructuredtext en"
 
 import tempfile
 
-from StringIO import StringIO
+from io import BytesIO
 
 from six.moves.urllib.parse import parse_qs
 
@@ -58,7 +58,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
             length = 0
         # wsgi.input is not seekable, so copy the request contents to a temporary file
         if length < 100000:
-            self.content = StringIO()
+            self.content = BytesIO()
         else:
             self.content = tempfile.TemporaryFile()
         copy_file(environ['wsgi.input'], self.content, maxread=length)
