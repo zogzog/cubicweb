@@ -149,13 +149,13 @@ class Binary(BytesIO):
 
 
 def check_password(eschema, value):
-    return isinstance(value, (str, Binary))
+    return isinstance(value, (binary_type, Binary))
 BASE_CHECKERS['Password'] = check_password
 
 def str_or_binary(value):
     if isinstance(value, Binary):
         return value
-    return str(value)
+    return binary_type(value)
 BASE_CONVERTERS['Password'] = str_or_binary
 
 
