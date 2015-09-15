@@ -29,7 +29,7 @@ from os.path import join, exists
 from glob import glob
 from contextlib import contextmanager
 
-from six import string_types
+from six import text_type, string_types
 
 from logilab.common.modutils import LazyObject
 from logilab.common.textutils import splitstrip
@@ -199,7 +199,7 @@ def create_user(session, login, pwd, *groups):
     user = session.create_entity('CWUser', login=login, upassword=pwd)
     for group in groups:
         session.execute('SET U in_group G WHERE U eid %(u)s, G name %(group)s',
-                        {'u': user.eid, 'group': unicode(group)})
+                        {'u': user.eid, 'group': text_type(group)})
     return user
 
 def init_repository(config, interactive=True, drop=False, vreg=None,
@@ -272,17 +272,17 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
         # insert base groups and default admin
         print('-> inserting default user and default groups.')
         try:
-            login = unicode(sourcescfg['admin']['login'])
+            login = text_type(sourcescfg['admin']['login'])
             pwd = sourcescfg['admin']['password']
         except KeyError:
             if interactive:
                 msg = 'enter login and password of the initial manager account'
                 login, pwd = manager_userpasswd(msg=msg, confirm=True)
             else:
-                login, pwd = unicode(source['db-user']), source['db-password']
+                login, pwd = text_type(source['db-user']), source['db-password']
         # sort for eid predicatability as expected in some server tests
         for group in sorted(BASE_GROUPS):
-            cnx.create_entity('CWGroup', name=unicode(group))
+            cnx.create_entity('CWGroup', name=text_type(group))
         admin = create_user(cnx, login, pwd, u'managers')
         cnx.execute('SET X owned_by U WHERE X is IN (CWGroup,CWSource), U eid %(u)s',
                         {'u': admin.eid})
