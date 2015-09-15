@@ -995,7 +995,7 @@ class CubicWebSchema(Schema):
 
     etype_name_re = r'[A-Z][A-Za-z0-9]*[a-z]+[A-Za-z0-9]*$'
     def add_entity_type(self, edef):
-        edef.name = edef.name.encode()
+        edef.name = str(edef.name)
         edef.name = bw_normalize_etype(edef.name)
         if not re.match(self.etype_name_re, edef.name):
             raise BadSchemaDefinition(
@@ -1020,7 +1020,7 @@ class CubicWebSchema(Schema):
             raise BadSchemaDefinition(
                 '%r is not a valid name for a relation type. It should be '
                 'lower cased' % rdef.name)
-        rdef.name = rdef.name.encode()
+        rdef.name = str(rdef.name)
         rschema = super(CubicWebSchema, self).add_relation_type(rdef)
         self._eid_index[rschema.eid] = rschema
         return rschema
