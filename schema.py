@@ -25,7 +25,7 @@ from os.path import join, basename
 from logging import getLogger
 from warnings import warn
 
-from six import string_types
+from six import string_types, add_metaclass
 from six.moves import range
 
 from logilab.common import tempattr
@@ -1296,12 +1296,13 @@ class workflowable_definition(ybo.metadefinition):
             make_workflowable(cls)
         return cls
 
+
+@add_metaclass(workflowable_definition)
 class WorkflowableEntityType(ybo.EntityType):
     """Use this base class instead of :class:`EntityType` to have workflow
     relations (i.e. `in_state`, `wf_info_for` and `custom_workflow`) on your
     entity type.
     """
-    __metaclass__ = workflowable_definition
     __abstract__ = True
 
 
