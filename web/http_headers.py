@@ -2,7 +2,7 @@
 # http://twistedmatrix.com/trac/wiki/TwistedWeb2
 
 
-import types, time
+import time
 from calendar import timegm
 import base64
 import re

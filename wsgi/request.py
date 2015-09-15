@@ -28,12 +28,10 @@ __docformat__ = "restructuredtext en"
 import tempfile
 
 from StringIO import StringIO
-from urllib import quote
 from urlparse import parse_qs
-from warnings import warn
 
 from cubicweb.multipart import (
-    copy_file, parse_form_data, MultipartError, parse_options_header)
+    copy_file, parse_form_data, parse_options_header)
 from cubicweb.web import RequestError
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.wsgi import pformat, normalize_header

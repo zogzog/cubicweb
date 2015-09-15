@@ -28,7 +28,6 @@ from urllib import unquote
 from math import log
 from contextlib import contextmanager
 from warnings import warn
-from types import NoneType
 from itertools import chain
 
 import yams.schema

@@ -28,8 +28,6 @@ __docformat__ = "restructuredtext en"
 
 from email import message, message_from_string
 from Cookie import SimpleCookie
-from StringIO import StringIO
-from cgi import parse_header
 from pprint import pformat as _pformat
 
 
