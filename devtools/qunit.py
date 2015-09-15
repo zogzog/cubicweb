@@ -19,10 +19,11 @@
 import os, os.path as osp
 from tempfile import mkdtemp, NamedTemporaryFile, TemporaryFile
 import tempfile
-from Queue import Queue, Empty
 from subprocess import Popen, check_call, CalledProcessError
 from shutil import rmtree, copy as copyfile
 from uuid import uuid4
+
+from six.moves.queue import Queue, Empty
 
 # imported by default to simplify further import statements
 from logilab.common.testlib import unittest_main, with_tempdir, InnerTest, Tags

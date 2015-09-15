@@ -30,11 +30,12 @@ from __future__ import print_function
 __docformat__ = "restructuredtext en"
 
 import threading
-import Queue
 from warnings import warn
 from itertools import chain
 from time import time, localtime, strftime
 from contextlib import contextmanager
+
+from six.moves import queue
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
@@ -199,7 +200,7 @@ class Repository(object):
     def init_cnxset_pool(self):
         """should be called bootstrap_repository, as this is what it does"""
         config = self.config
-        self._cnxsets_pool = Queue.Queue()
+        self._cnxsets_pool = queue.Queue()
         # 0. init a cnxset that will be used to fetch bootstrap information from
         #    the database
         self._cnxsets_pool.put_nowait(self.system_source.wrapped_connection())
@@ -379,7 +380,7 @@ class Repository(object):
     def _get_cnxset(self):
         try:
             return self._cnxsets_pool.get(True, timeout=5)
-        except Queue.Empty:
+        except queue.Empty:
             raise Exception('no connections set available after 5 secs, probably either a '
                             'bug in code (too many uncommited/rolled back '
                             'connections) or too much load on the server (in '
