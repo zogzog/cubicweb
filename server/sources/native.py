@@ -38,7 +38,7 @@ import zipfile
 import logging
 import sys
 
-from six.moves import cPickle as pickle
+from six.moves import range, cPickle as pickle
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.configuration import Method
@@ -1687,7 +1687,7 @@ class DatabaseIndependentBackupRestore(object):
         self.logger.info('number of rows: %d', rowcount)
         blocksize = self.blocksize
         if rowcount > 0:
-            for i, start in enumerate(xrange(0, rowcount, blocksize)):
+            for i, start in enumerate(range(0, rowcount, blocksize)):
                 rows = list(itertools.islice(rows_iterator, blocksize))
                 serialized = self._serialize(table, columns, rows)
                 archive.writestr('tables/%s.%04d' % (table, i), serialized)

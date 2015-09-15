@@ -24,6 +24,9 @@ _ = unicode
 
 import logging
 from itertools import repeat
+
+from six.moves import range
+
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
 
@@ -95,7 +98,7 @@ class CWSourceMainTab(tabs.PrimaryTab):
             if hostconfig:
                 self.w(u'<h3>%s</h3>' % self._cw._('CWSourceHostConfig_plural'))
                 self._cw.view('table', hostconfig, w=self.w,
-                              displaycols=range(2),
+                              displaycols=list(range(2)),
                               cellvids={1: 'editable-final'})
 
 

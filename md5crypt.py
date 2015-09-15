@@ -43,6 +43,9 @@ ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 from hashlib import md5 # pylint: disable=E0611
 
+from six.moves import range
+
+
 def to64 (v, n):
     ret = ''
     while (n - 1 >= 0):
@@ -62,7 +65,7 @@ def crypt(pw, salt):
     salt = salt[:8]
     ctx = pw + MAGIC + salt
     final = md5(pw + salt + pw).digest()
-    for pl in xrange(len(pw), 0, -16):
+    for pl in range(len(pw), 0, -16):
         if pl > 16:
             ctx = ctx + final[:16]
         else:
@@ -79,7 +82,7 @@ def crypt(pw, salt):
     # The following is supposed to make
     # things run slower.
     # my question: WTF???
-    for i in xrange(1000):
+    for i in range(1000):
         ctx1 = ''
         if i & 1:
             ctx1 = ctx1 + pw

@@ -67,6 +67,8 @@ from warnings import warn
 from copy import copy
 from types import MethodType
 
+from six.moves import range
+
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
 from logilab.common.deprecation import class_deprecated
@@ -225,7 +227,7 @@ class TableLayout(component.Component):
 
     def render_table_body(self, w, colrenderers):
         w(u'<tbody>')
-        for rownum in xrange(self.view.table_size):
+        for rownum in range(self.view.table_size):
             self.render_row(w, rownum, colrenderers)
         w(u'</tbody>')
 
@@ -646,10 +648,10 @@ class RsetTableView(TableMixIn, AnyRsetView):
         # compute displayed columns
         if self.displaycols is None:
             if headers is not None:
-                displaycols = range(len(headers))
+                displaycols = list(range(len(headers)))
             else:
                 rqlst = self.cw_rset.syntax_tree()
-                displaycols = range(len(rqlst.children[0].selection))
+                displaycols = list(range(len(rqlst.children[0].selection)))
         else:
             displaycols = self.displaycols
         # compute table headers
@@ -977,9 +979,9 @@ class TableView(AnyRsetView):
             if 'displaycols' in self._cw.form:
                 displaycols = [int(idx) for idx in self._cw.form['displaycols']]
             elif headers is not None:
-                displaycols = range(len(headers))
+                displaycols = list(range(len(headers)))
             else:
-                displaycols = range(len(self.cw_rset.syntax_tree().children[0].selection))
+                displaycols = list(range(len(self.cw_rset.syntax_tree().children[0].selection)))
         return displaycols
 
     def _setup_tablesorter(self, divid):
@@ -1298,7 +1300,7 @@ class EntityAttributesTableView(EntityView):
         self.w(u'<table class="%s">' % self.table_css)
         self.table_header(sample)
         self.w(u'<tbody>')
-        for row in xrange(self.cw_rset.rowcount):
+        for row in range(self.cw_rset.rowcount):
             self.cell_call(row=row, col=0)
         self.w(u'</tbody>')
         self.w(u'</table>')

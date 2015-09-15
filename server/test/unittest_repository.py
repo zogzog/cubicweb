@@ -22,6 +22,8 @@ import threading
 import time
 import logging
 
+from six.moves import range
+
 from yams.constraints import UniqueConstraint
 from yams import register_base_type, unregister_base_type
 
@@ -589,11 +591,11 @@ class PerformanceTest(CubicWebTC):
         with self.admin_access.repo_cnx() as cnx:
             personnes = []
             t0 = time.time()
-            for i in xrange(2000):
+            for i in range(2000):
                 p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
                 personnes.append(p)
             abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
-            for j in xrange(0, 2000, 100):
+            for j in range(0, 2000, 100):
                 abraham.cw_set(personne_composite=personnes[j:j+100])
             t1 = time.time()
             self.info('creation: %.2gs', (t1 - t0))
@@ -610,7 +612,7 @@ class PerformanceTest(CubicWebTC):
     def test_add_relation_non_inlined(self):
         with self.admin_access.repo_cnx() as cnx:
             personnes = []
-            for i in xrange(2000):
+            for i in range(2000):
                 p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
                 personnes.append(p)
             cnx.commit()
@@ -619,7 +621,7 @@ class PerformanceTest(CubicWebTC):
                                         personne_composite=personnes[:100])
             t1 = time.time()
             self.info('creation: %.2gs', (t1 - t0))
-            for j in xrange(100, 2000, 100):
+            for j in range(100, 2000, 100):
                 abraham.cw_set(personne_composite=personnes[j:j+100])
             t2 = time.time()
             self.info('more relations: %.2gs', (t2-t1))
@@ -630,7 +632,7 @@ class PerformanceTest(CubicWebTC):
     def test_add_relation_inlined(self):
         with self.admin_access.repo_cnx() as cnx:
             personnes = []
-            for i in xrange(2000):
+            for i in range(2000):
                 p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
                 personnes.append(p)
             cnx.commit()
@@ -639,7 +641,7 @@ class PerformanceTest(CubicWebTC):
                                         personne_inlined=personnes[:100])
             t1 = time.time()
             self.info('creation: %.2gs', (t1 - t0))
-            for j in xrange(100, 2000, 100):
+            for j in range(100, 2000, 100):
                 abraham.cw_set(personne_inlined=personnes[j:j+100])
             t2 = time.time()
             self.info('more relations: %.2gs', (t2-t1))
@@ -652,7 +654,7 @@ class PerformanceTest(CubicWebTC):
         """ to be compared with test_session_add_relations"""
         with self.admin_access.repo_cnx() as cnx:
             personnes = []
-            for i in xrange(2000):
+            for i in range(2000):
                 p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
                 personnes.append(p)
             abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
@@ -669,7 +671,7 @@ class PerformanceTest(CubicWebTC):
         """ to be compared with test_session_add_relation"""
         with self.admin_access.repo_cnx() as cnx:
             personnes = []
-            for i in xrange(2000):
+            for i in range(2000):
                 p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
                 personnes.append(p)
             abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
@@ -686,7 +688,7 @@ class PerformanceTest(CubicWebTC):
         """ to be compared with test_session_add_relations"""
         with self.admin_access.repo_cnx() as cnx:
             personnes = []
-            for i in xrange(2000):
+            for i in range(2000):
                 p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
                 personnes.append(p)
             abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
@@ -703,7 +705,7 @@ class PerformanceTest(CubicWebTC):
         """ to be compared with test_session_add_relation"""
         with self.admin_access.repo_cnx() as cnx:
             personnes = []
-            for i in xrange(2000):
+            for i in range(2000):
                 p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
                 personnes.append(p)
             abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')

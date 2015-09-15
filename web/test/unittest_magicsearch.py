@@ -21,6 +21,8 @@
 import sys
 from contextlib import contextmanager
 
+from six.moves import range
+
 from logilab.common.testlib import TestCase, unittest_main
 
 from rql import BadRQLQuery, RQLSyntaxError
@@ -330,7 +332,7 @@ class RQLSuggestionsBuilderTC(CubicWebTC):
         # suggestions should contain any possible value for
         # a given attribute (limited to 10)
         with self.admin_access.web_request() as req:
-            for i in xrange(15):
+            for i in range(15):
                 req.create_entity('Personne', nom=u'n%s' % i, prenom=u'p%s' % i)
             req.cnx.commit()
         self.assertListEqual(['Any X WHERE X is Personne, X nom "n0"',

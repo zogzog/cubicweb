@@ -23,6 +23,8 @@ _ = unicode
 from base64 import b64encode
 from time import timezone
 
+from six.moves import range
+
 from logilab.mtconverter import xml_escape
 
 from cubicweb.predicates import (is_instance, non_final_entity, one_line_rset,
@@ -64,7 +66,7 @@ class XMLView(EntityView):
         """display a list of entities by calling their <item_vid> view"""
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self._cw.encoding)
         self.w(u'<%s size="%s">\n' % (self.xml_root, len(self.cw_rset)))
-        for i in xrange(self.cw_rset.rowcount):
+        for i in range(self.cw_rset.rowcount):
             self.cell_call(i, 0)
         self.w(u'</%s>\n' % self.xml_root)
 
@@ -256,7 +258,7 @@ class RSSView(XMLView):
     def call(self):
         """display a list of entities by calling their <item_vid> view"""
         self._open()
-        for i in xrange(self.cw_rset.rowcount):
+        for i in range(self.cw_rset.rowcount):
             self.cell_call(i, 0)
         self._close()
 

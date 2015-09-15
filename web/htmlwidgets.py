@@ -24,6 +24,8 @@ serialization time
 import random
 from math import floor
 
+from six.moves import range
+
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated
 
@@ -343,7 +345,7 @@ class TableWidget(HTMLWidget):
             self.w(u'<th %s>%s</th>' % (' '.join(attrs), column.name or u''))
         self.w(u'</tr>')
         self.w(u'</thead><tbody>')
-        for rowindex in xrange(len(self.model.get_rows())):
+        for rowindex in range(len(self.model.get_rows())):
             klass = (rowindex%2==1) and 'odd' or 'even'
             self.w(u'<tr class="%s" %s>' % (klass, self.highlight))
             for column, sortvalue in self.itercols(rowindex):

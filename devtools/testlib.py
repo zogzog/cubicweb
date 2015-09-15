@@ -28,6 +28,7 @@ from contextlib import contextmanager
 from warnings import warn
 from itertools import chain
 
+from six.moves import range
 from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
 
 import yams.schema
@@ -1182,7 +1183,7 @@ class AutoPopulateTest(CubicWebTC):
                 else:
                     rql = 'Any X WHERE X is %s' % etype
                 rset = req.execute(rql)
-                for row in xrange(len(rset)):
+                for row in range(len(rset)):
                     if limit and row > limit:
                         break
                     # XXX iirk

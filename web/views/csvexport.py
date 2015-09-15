@@ -20,6 +20,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from six.moves import range
+
 from cubicweb.schema import display_name
 from cubicweb.predicates import any_rset, empty_rset
 from cubicweb.uilib import UnicodeCSVWriter
@@ -88,7 +90,7 @@ class CSVEntityView(CSVMixIn, EntityView):
         rows_by_type = {}
         writer = self.csvwriter()
         rowdef_by_type = {}
-        for index in xrange(len(self.cw_rset)):
+        for index in range(len(self.cw_rset)):
             entity = self.cw_rset.complete_entity(index)
             if entity.e_schema not in rows_by_type:
                 rowdef_by_type[entity.e_schema] = [rs for rs, at in entity.e_schema.attribute_definitions()

@@ -20,6 +20,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from six.moves import range
+
 from yams import xy
 from rql import TypeResolverException
 
@@ -111,7 +113,7 @@ class SparqlResultXmlView(AnyRsetView):
         rqlst = self.cw_rset.syntax_tree().children[0]
         varnames = [var.name for var in rqlst.selection]
         results = E.results()
-        for rowidx in xrange(len(self.cw_rset)):
+        for rowidx in range(len(self.cw_rset)):
             result = E.result()
             for colidx, varname in enumerate(varnames):
                 result.append(self.cell_binding(rowidx, colidx, varname))

@@ -24,6 +24,8 @@ from io import BytesIO
 from warnings import warn
 from functools import partial
 
+from six.moves import range
+
 from logilab.common.deprecation import deprecated
 from logilab.common.registry import yes
 from logilab.mtconverter import xml_escape
@@ -173,7 +175,7 @@ class View(AppObject):
         # specific view
         if rset.rowcount != 1:
             kwargs.setdefault('initargs', self.cw_extra_kwargs)
-            for i in xrange(len(rset)):
+            for i in range(len(rset)):
                 if wrap:
                     self.w(u'<div class="section">')
                 self.wview(self.__regid__, rset, row=i, **kwargs)
@@ -394,7 +396,7 @@ class EntityStartupView(EntityView):
         if rset is None:
             rset = self.cw_rset = self._cw.execute(self.startup_rql())
         if rset:
-            for i in xrange(len(rset)):
+            for i in range(len(rset)):
                 self.wview(self.__regid__, rset, row=i, **kwargs)
         else:
             self.no_entities(**kwargs)

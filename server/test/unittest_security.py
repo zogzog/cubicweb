@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """functional tests for server'security"""
 
+from six.moves import range
+
 from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
@@ -666,7 +668,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
                 rset = cnx.execute('Any X, U WHERE X is EmailAddress, U use_email X')
                 msg = ['Preexisting email readable by anon found!']
                 tmpl = '  - "%s" used by user "%s"'
-                for i in xrange(len(rset)):
+                for i in range(len(rset)):
                     email, user = rset.get_entity(i, 0), rset.get_entity(i, 1)
                     msg.append(tmpl % (email.dc_title(), user.dc_title()))
                 raise RuntimeError('\n'.join(msg))

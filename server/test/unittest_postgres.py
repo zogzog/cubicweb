@@ -19,6 +19,8 @@
 from datetime import datetime
 from threading import Thread
 
+from six.moves import range
+
 from logilab.common.testlib import SkipTest
 
 from cubicweb import ValidationError
@@ -55,7 +57,7 @@ class PostgresFTITC(CubicWebTC):
         range1 = []
         range2 = []
         def allocate_eid_ranges(session, target):
-            for x in xrange(1, 10):
+            for x in range(1, 10):
                 eid = source.create_eid(session, count=x)
                 target.extend(range(eid-x, eid))
 

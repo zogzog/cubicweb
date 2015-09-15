@@ -123,6 +123,8 @@ _ = unicode
 
 from warnings import warn
 
+from six.moves import range
+
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.deprecation import deprecated
@@ -610,7 +612,7 @@ class GenericRelationsField(ff.Field):
                     toggleable_rel_link_func = toggleable_relation_link
                 else:
                     toggleable_rel_link_func = lambda x, y, z: u''
-                for row in xrange(rset.rowcount):
+                for row in range(rset.rowcount):
                     nodeid = relation_id(entity.eid, rschema, role,
                                          rset[row][0])
                     if nodeid in pending_deletes:

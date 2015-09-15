@@ -24,6 +24,8 @@ import logging
 from warnings import warn
 from operator import eq
 
+from six.moves import range
+
 from logilab.common.deprecation import deprecated
 from logilab.common.registry import Predicate, objectify_predicate, yes
 
@@ -332,7 +334,7 @@ class adaptable(appobject_selectable):
             # on rset containing several entity types, each row may be
             # individually adaptable, while the whole rset won't be if the
             # same adapter can't be used for each type
-            for row in xrange(len(kwargs['rset'])):
+            for row in range(len(kwargs['rset'])):
                 kwargs.setdefault('col', 0)
                 _score = super(adaptable, self).__call__(cls, req, row=row, **kwargs)
                 if not _score:

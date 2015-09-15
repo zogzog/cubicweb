@@ -26,7 +26,7 @@ import random
 import threading
 import socket
 
-from six.moves import http_client
+from six.moves import range, http_client
 from six.moves.urllib.parse import urlparse
 
 from twisted.internet import reactor, error

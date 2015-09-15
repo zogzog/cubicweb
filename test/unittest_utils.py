@@ -21,6 +21,7 @@ import re
 import decimal
 import datetime
 
+from six.moves import range
 
 from logilab.common.testlib import TestCase, DocTest, unittest_main
 
@@ -67,7 +68,7 @@ class TestQueryCache(TestCase):
     def test_querycache(self):
         c = QueryCache(ceiling=20)
         # write only
-        for x in xrange(10):
+        for x in range(10):
             c[x] = x
         self.assertEqual(c._usage_report(),
                          {'transientcount': 0,
@@ -75,7 +76,7 @@ class TestQueryCache(TestCase):
                           'permanentcount': 0})
         c = QueryCache(ceiling=10)
         # we should also get a warning
-        for x in xrange(20):
+        for x in range(20):
             c[x] = x
         self.assertEqual(c._usage_report(),
                          {'transientcount': 0,
@@ -83,8 +84,8 @@ class TestQueryCache(TestCase):
                           'permanentcount': 0})
         # write + reads
         c = QueryCache(ceiling=20)
-        for n in xrange(4):
-            for x in xrange(10):
+        for n in range(4):
+            for x in range(10):
                 c[x] = x
                 c[x]
         self.assertEqual(c._usage_report(),
@@ -92,8 +93,8 @@ class TestQueryCache(TestCase):
                           'itemcount': 10,
                           'permanentcount': 0})
         c = QueryCache(ceiling=20)
-        for n in xrange(17):
-            for x in xrange(10):
+        for n in range(17):
+            for x in range(10):
                 c[x] = x
                 c[x]
         self.assertEqual(c._usage_report(),
@@ -101,8 +102,8 @@ class TestQueryCache(TestCase):
                           'itemcount': 10,
                           'permanentcount': 10})
         c = QueryCache(ceiling=20)
-        for n in xrange(17):
-            for x in xrange(10):
+        for n in range(17):
+            for x in range(10):
                 c[x] = x
                 if n % 2:
                     c[x]
@@ -169,14 +170,14 @@ class SizeConstrainedListTC(TestCase):
 
     def test_append(self):
         l = SizeConstrainedList(10)
-        for i in xrange(12):
+        for i in range(12):
             l.append(i)
-        self.assertEqual(l, range(2, 12))
+        self.assertEqual(l, list(range(2, 12)))
 
     def test_extend(self):
-        testdata = [(range(5), range(5)),
-                    (range(10), range(10)),
-                    (range(12), range(2, 12)),
+        testdata = [(list(range(5)), list(range(5))),
+                    (list(range(10)), list(range(10))),
+                    (list(range(12)), list(range(2, 12))),
                     ]
         for extension, expected in testdata:
             l = SizeConstrainedList(10)

@@ -20,6 +20,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from six.moves import range
+
 from logilab.mtconverter import xml_escape
 from logilab.common.date import ONEDAY, date_range, todatetime
 
@@ -51,7 +53,7 @@ class TimeTableView(EntityView):
         users = []
         users_max = {}
         # XXX: try refactoring with calendar.py:OneMonthCal
-        for row in xrange(self.cw_rset.rowcount):
+        for row in range(self.cw_rset.rowcount):
             task = self.cw_rset.get_entity(row, 0)
             icalendarable = task.cw_adapt_to('ICalendarable')
             if len(self.cw_rset[row]) > 1 and self.cw_rset.description[row][1] == 'CWUser':
@@ -88,7 +90,7 @@ class TimeTableView(EntityView):
 
         rows = []
         # colors here are class names defined in cubicweb.css
-        colors = ["col%x" % i for i in xrange(12)]
+        colors = ["col%x" % i for i in range(12)]
         next_color_index = 0
 
         visited_tasks = {} # holds a description of a task for a user

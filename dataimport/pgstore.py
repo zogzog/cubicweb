@@ -27,7 +27,7 @@ from datetime import date, datetime, time
 from collections import defaultdict
 from base64 import b64encode
 
-from six.moves import cPickle as pickle
+from six.moves import cPickle as pickle, range
 
 from cubicweb.utils import make_uid
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -42,7 +42,7 @@ def _import_statements(sql_connect, statements, nb_threads=3,
     try:
         chunksize = (len(statements) / nb_threads) + 1
         threads = []
-        for i in xrange(nb_threads):
+        for i in range(nb_threads):
             chunks = statements[i*chunksize:(i+1)*chunksize]
             thread = threading.Thread(target=_execmany_thread,
                                       args=(sql_connect, chunks,
@@ -186,7 +186,7 @@ def _create_copyfrom_buffer(data, columns=None, **convert_opts):
     rows = []
     if columns is None:
         if isinstance(data[0], (tuple, list)):
-            columns = range(len(data[0]))
+            columns = list(range(len(data[0])))
         elif isinstance(data[0], dict):
             columns = data[0].keys()
         else:

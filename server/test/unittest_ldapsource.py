@@ -26,6 +26,8 @@ from os.path import join, exists
 import subprocess
 import tempfile
 
+from six.moves import range
+
 from logilab.common.testlib import TestCase, unittest_main, mock_object, Tags
 
 from cubicweb import AuthenticationError
@@ -70,7 +72,7 @@ def create_slapd_configuration(cls):
         sys.stderr.write(stderr)
 
     #ldapuri = 'ldapi://' + join(basedir, "ldapi").replace('/', '%2f')
-    port = get_available_port(xrange(9000, 9100))
+    port = get_available_port(range(9000, 9100))
     host = 'localhost:%s' % port
     ldapuri = 'ldap://%s' % host
     cmdline = ["/usr/sbin/slapd", "-f",  slapdconf,  "-h",  ldapuri, "-d", "0"]

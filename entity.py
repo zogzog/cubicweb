@@ -22,6 +22,8 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from functools import partial
 
+from six.moves import range
+
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.common.registry import yes
@@ -892,10 +894,10 @@ class Entity(AppObject):
                 raise Exception('unable to fetch attributes for entity with eid %s'
                                 % self.eid)
             # handle attributes
-            for i in xrange(1, lastattr):
+            for i in range(1, lastattr):
                 self.cw_attr_cache[str(selected[i-1][0])] = rset[i]
             # handle relations
-            for i in xrange(lastattr, len(rset)):
+            for i in range(lastattr, len(rset)):
                 rtype, role = selected[i-1][0]
                 value = rset[i]
                 if value is None:

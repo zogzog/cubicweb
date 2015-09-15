@@ -35,7 +35,7 @@ from itertools import chain
 from time import time, localtime, strftime
 from contextlib import contextmanager
 
-from six.moves import queue
+from six.moves import range, queue
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
@@ -243,7 +243,7 @@ class Repository(object):
         #    proper initialization
         self._get_cnxset().close(True)
         self.cnxsets = [] # list of available cnxsets (can't iterate on a Queue)
-        for i in xrange(config['connections-pool-size']):
+        for i in range(config['connections-pool-size']):
             self.cnxsets.append(self.system_source.wrapped_connection())
             self._cnxsets_pool.put_nowait(self.cnxsets[-1])
 

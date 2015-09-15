@@ -24,6 +24,8 @@ __docformat__ = "restructuredtext en"
 
 from itertools import repeat
 
+from six.moves import range
+
 from rql import RQLSyntaxError, CoercionError
 from rql.stmts import Union
 from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj, Relation, Exists, Not
@@ -643,7 +645,7 @@ class QuerierHelper(object):
                 # so compute description manually even if there is only
                 # one solution
                 basedescr = [None] * len(plan.selected)
-                todetermine = zip(xrange(len(plan.selected)), repeat(False))
+                todetermine = zip(range(len(plan.selected)), repeat(False))
                 descr = _build_descr(cnx, results, basedescr, todetermine)
             # FIXME: get number of affected entities / relations on non
             # selection queries ?
@@ -670,7 +672,7 @@ def manual_build_descr(cnx, rqlst, args, result):
     unstables = rqlst.get_variable_indices()
     basedescr = []
     todetermine = []
-    for i in xrange(len(rqlst.children[0].selection)):
+    for i in range(len(rqlst.children[0].selection)):
         ttype = _selection_idx_type(i, rqlst, args)
         if ttype is None or ttype == 'Any':
             ttype = None

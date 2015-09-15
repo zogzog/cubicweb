@@ -21,6 +21,8 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
+from six.moves import range
+
 from logilab.common import nullobject
 from logilab.common.decorators import cached, clear_cache, copy_cache
 from rql import nodes, stmts
@@ -186,7 +188,7 @@ class ResultSet(object):
         """
         rows, descr = [], []
         rset = self.copy(rows, descr)
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             if not filtercb(self.get_entity(i, col)):
                 continue
             rows.append(self.rows[i])
@@ -311,7 +313,7 @@ class ResultSet(object):
             newselect.limit = limit
             newselect.offset = offset
             aliases = [nodes.VariableRef(newselect.get_variable(chr(65+i), i))
-                       for i in xrange(len(rqlst.children[0].selection))]
+                       for i in range(len(rqlst.children[0].selection))]
             for vref in aliases:
                 newselect.append_selected(nodes.VariableRef(vref.variable))
             newselect.set_with([nodes.SubQuery(aliases, rqlst)], check=False)
@@ -387,7 +389,7 @@ class ResultSet(object):
 
     def entities(self, col=0):
         """iter on entities with eid in the `col` column of the result set"""
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             # may have None values in case of outer join (or aggregat on eid
             # hacks)
             if self.rows[i][col] is not None:
@@ -606,7 +608,7 @@ class ResultSet(object):
                 except AttributeError:
                     # not a variable
                     continue
-                for i in xrange(len(select.selection)):
+                for i in range(len(select.selection)):
                     if i == col:
                         continue
                     coletype = self.description[row][i]

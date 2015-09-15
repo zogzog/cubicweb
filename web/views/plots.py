@@ -20,6 +20,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from six.moves import range
+
 from logilab.common.date import datetime2ticks
 from logilab.common.deprecation import class_deprecated
 from logilab.common.registry import objectify_predicate
@@ -154,7 +156,7 @@ class PlotView(baseviews.AnyRsetView):
         abscissa = [row[0] for row in self.cw_rset]
         plots = []
         nbcols = len(self.cw_rset.rows[0])
-        for col in xrange(1, nbcols):
+        for col in range(1, nbcols):
             data = [row[col] for row in self.cw_rset]
             plots.append(filterout_nulls(abscissa, data))
         plotwidget = FlotPlotWidget(varnames, plots, timemode=self.timemode)

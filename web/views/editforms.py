@@ -24,6 +24,8 @@ _ = unicode
 
 from copy import copy
 
+from six.moves import range
+
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 from logilab.common.registry import yes
@@ -230,7 +232,7 @@ class TableEditForm(forms.CompositeForm):
     def __init__(self, req, rset, **kwargs):
         kwargs.setdefault('__redirectrql', rset.printable_rql())
         super(TableEditForm, self).__init__(req, rset=rset, **kwargs)
-        for row in xrange(len(self.cw_rset)):
+        for row in range(len(self.cw_rset)):
             form = self._cw.vreg['forms'].select('edition', self._cw,
                                                  rset=self.cw_rset, row=row,
                                                  formtype='muledit',

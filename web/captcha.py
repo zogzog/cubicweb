@@ -24,6 +24,8 @@ __docformat__ = "restructuredtext en"
 from random import randint, choice
 from io import BytesIO
 
+from six.moves import range
+
 from PIL import Image, ImageFont, ImageDraw, ImageFilter
 
 
@@ -51,7 +53,7 @@ def pil_captcha(text, fontfile, fontsize):
     draw = ImageDraw.Draw(img)
     # draw 100 random colored boxes on the background
     x, y = img.size
-    for num in xrange(100):
+    for num in range(100):
         draw.rectangle((randint(0, x), randint(0, y),
                         randint(0, x), randint(0, y)),
                        fill=randint(0, 0xffffff))

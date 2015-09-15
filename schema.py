@@ -26,6 +26,8 @@ from os.path import join, basename
 from logging import getLogger
 from warnings import warn
 
+from six.moves import range
+
 from logilab.common import tempattr
 from logilab.common.decorators import cached, clear_cache, monkeypatch, cachedproperty
 from logilab.common.logging_ext import set_log_methods
@@ -364,7 +366,7 @@ class RQLExpression(object):
             get_eschema = _cw.vreg.schema.eschema
             try:
                 for eaction, col in has_perm_defs:
-                    for i in xrange(len(rset)):
+                    for i in range(len(rset)):
                         eschema = get_eschema(rset.description[i][col])
                         eschema.check_perm(_cw, eaction, eid=rset[i][col])
                 if self.eid is not None:
