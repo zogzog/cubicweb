@@ -557,8 +557,9 @@ class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
     def __init__(self, visitor, cw):
         self.visitor = visitor
         self.cw = cw
-        self.nextcolor = cycle( ('#ff7700', '#000000',
-                                 '#ebbc69', '#888888') ).next
+        self._cycle = iter(cycle(('#ff7700', '#000000', '#ebbc69', '#888888')))
+        self.nextcolor = lambda: next(self._cycle)
+
         self.colors = {}
 
     def node_properties(self, eschema):
