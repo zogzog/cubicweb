@@ -64,7 +64,7 @@ def crypt_password(passwd, salt=None):
     """return the encrypted password using the given salt or a generated one
     """
     if salt is None:
-        return _CRYPTO_CTX.encrypt(passwd)
+        return _CRYPTO_CTX.encrypt(passwd).encode('ascii')
     # empty hash, accept any password for backwards compat
     if salt == '':
         return salt
@@ -74,7 +74,7 @@ def crypt_password(passwd, salt=None):
     except ValueError: # e.g. couldn't identify hash
         pass
     # wrong password
-    return ''
+    return b''
 
 
 def eschema_eid(cnx, eschema):
