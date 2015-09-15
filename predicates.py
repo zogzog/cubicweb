@@ -106,7 +106,7 @@ class EClassPredicate(Predicate):
             if accept_none is None:
                 accept_none = self.accept_none
             if not accept_none and \
-                   any(rset[i][col] is None for i in xrange(len(rset))):
+                   any(row[col] is None for row in rset):
                 return 0
             etypes = rset.column_types(col)
         else:
