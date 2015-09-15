@@ -24,7 +24,7 @@ import os
 import json
 import sys
 
-from six import string_types
+from six import PY2, text_type, string_types
 
 from logilab.common.shellutils import ProgressBar, DummyProgressBar
 
@@ -369,7 +369,7 @@ def serialize_schema(cnx, schema):
     cstrtypemap = {}
     rql = 'INSERT CWConstraintType X: X name %(ct)s'
     for cstrtype in CONSTRAINTS:
-        cstrtypemap[cstrtype] = execute(rql, {'ct': unicode(cstrtype)},
+        cstrtypemap[cstrtype] = execute(rql, {'ct': text_type(cstrtype)},
                                         build_descr=False)[0][0]
         pb.update()
     # serialize relations
@@ -474,7 +474,7 @@ def _uniquetogether2rql(eschema, unique_together):
     for i, name in enumerate(unique_together):
         rschema = eschema.schema.rschema(name)
         rtype = 'T%d' % i
-        substs[rtype] = unicode(rschema.type)
+        substs[rtype] = text_type(rschema.type)
         relations.append('C relations %s' % rtype)
         restrictions.append('%(rtype)s name %%(%(rtype)s)s' % {'rtype': rtype})
     relations = ', '.join(relations)
@@ -486,11 +486,11 @@ def _uniquetogether2rql(eschema, unique_together):
 
 def _ervalues(erschema):
     try:
-        type_ = unicode(erschema.type)
+        type_ = text_type(erschema.type)
     except UnicodeDecodeError as e:
         raise Exception("can't decode %s [was %s]" % (erschema.type, e))
     try:
-        desc = unicode(erschema.description) or u''
+        desc = text_type(erschema.description) or u''
     except UnicodeDecodeError as e:
         raise Exception("can't decode %s [was %s]" % (erschema.description, e))
     return {
@@ -522,7 +522,7 @@ def rschema_relations_values(rschema):
     values['final'] = rschema.final
     values['symmetric'] = rschema.symmetric
     values['inlined'] = rschema.inlined
-    if isinstance(rschema.fulltext_container, str):
+    if PY2 and isinstance(rschema.fulltext_container, str):
         values['fulltext_container'] = unicode(rschema.fulltext_container)
     else:
         values['fulltext_container'] = rschema.fulltext_container
@@ -538,7 +538,7 @@ def crschema2rql(crschema, groupmap):
 
 def crschema_relations_values(crschema):
     values = _ervalues(crschema)
-    values['rule'] = unicode(crschema.rule)
+    values['rule'] = text_type(crschema.rule)
     # XXX why oh why?
     del values['final']
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
@@ -584,7 +584,7 @@ def _rdef_values(rdef):
             value = bool(value)
         elif prop == 'ordernum':
             value = int(value)
-        elif isinstance(value, str):
+        elif PY2 and isinstance(value, str):
             value = unicode(value)
         if value is not None and prop == 'default':
             value = Binary.zpickle(value)
@@ -597,7 +597,7 @@ def _rdef_values(rdef):
 def constraints2rql(cstrtypemap, constraints, rdefeid=None):
     for constraint in constraints:
         values = {'ct': cstrtypemap[constraint.type()],
-                  'value': unicode(constraint.serialize()),
+                  'value': text_type(constraint.serialize()),
                   'x': rdefeid} # when not specified, will have to be set by the caller
         yield 'INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE \
 CT eid %(ct)s, EDEF eid %(x)s', values
@@ -630,9 +630,9 @@ def _erperms2rql(erschema, groupmap):
                 rqlexpr = group_or_rqlexpr
                 yield ('INSERT RQLExpression E: E expression %%(e)s, E exprtype %%(t)s, '
                        'E mainvars %%(v)s, X %s_permission E WHERE X eid %%(x)s' % action,
-                       {'e': unicode(rqlexpr.expression),
-                        'v': unicode(','.join(sorted(rqlexpr.mainvars))),
-                        't': unicode(rqlexpr.__class__.__name__)})
+                       {'e': text_type(rqlexpr.expression),
+                        'v': text_type(','.join(sorted(rqlexpr.mainvars))),
+                        't': text_type(rqlexpr.__class__.__name__)})
 
 # update functions
 
@@ -644,7 +644,7 @@ def updateeschema2rql(eschema, eid):
 def updaterschema2rql(rschema, eid):
     if rschema.rule:
         yield ('SET X rule %(r)s WHERE X eid %(x)s',
-               {'x': eid, 'r': unicode(rschema.rule)})
+               {'x': eid, 'r': text_type(rschema.rule)})
     else:
         relations, values = rschema_relations_values(rschema)
         values['x'] = eid
