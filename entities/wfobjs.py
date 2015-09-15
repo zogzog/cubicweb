@@ -25,7 +25,7 @@ from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
-from six import string_types
+from six import text_type, string_types
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
@@ -99,7 +99,7 @@ class Workflow(AnyEntity):
     def transition_by_name(self, trname):
         rset = self._cw.execute('Any T, TN WHERE T name TN, T name %(n)s, '
                                 'T transition_of WF, WF eid %(wf)s',
-                                {'n': unicode(trname), 'wf': self.eid})
+                                {'n': text_type(trname), 'wf': self.eid})
         if rset:
             return rset.get_entity(0, 0)
         return None
@@ -116,7 +116,7 @@ class Workflow(AnyEntity):
 
     def add_state(self, name, initial=False, **kwargs):
         """add a state to this workflow"""
-        state = self._cw.create_entity('State', name=unicode(name), **kwargs)
+        state = self._cw.create_entity('State', name=text_type(name), **kwargs)
         self._cw.execute('SET S state_of WF WHERE S eid %(s)s, WF eid %(wf)s',
                          {'s': state.eid, 'wf': self.eid})
         if initial:
@@ -128,7 +128,7 @@ class Workflow(AnyEntity):
 
     def _add_transition(self, trtype, name, fromstates,
                         requiredgroups=(), conditions=(), **kwargs):
-        tr = self._cw.create_entity(trtype, name=unicode(name), **kwargs)
+        tr = self._cw.create_entity(trtype, name=text_type(name), **kwargs)
         self._cw.execute('SET T transition_of WF '
                          'WHERE T eid %(t)s, WF eid %(wf)s',
                          {'t': tr.eid, 'wf': self.eid})
@@ -258,13 +258,13 @@ class BaseTransition(AnyEntity):
         for gname in requiredgroups:
             rset = self._cw.execute('SET T require_group G '
                                     'WHERE T eid %(x)s, G name %(gn)s',
-                                    {'x': self.eid, 'gn': unicode(gname)})
+                                    {'x': self.eid, 'gn': text_type(gname)})
             assert rset, '%s is not a known group' % gname
         if isinstance(conditions, string_types):
             conditions = (conditions,)
         for expr in conditions:
             if isinstance(expr, string_types):
-                kwargs = {'expr': unicode(expr)}
+                kwargs = {'expr': text_type(expr)}
             else:
                 assert isinstance(expr, dict)
                 kwargs = expr
@@ -416,7 +416,7 @@ class IWorkflowableAdapter(EntityAdapter):
         """return the default workflow for entities of this type"""
         # XXX CWEType method
         wfrset = self._cw.execute('Any WF WHERE ET default_workflow WF, '
-                                  'ET name %(et)s', {'et': unicode(self.entity.cw_etype)})
+                                  'ET name %(et)s', {'et': text_type(self.entity.cw_etype)})
         if wfrset:
             return wfrset.get_entity(0, 0)
         self.warning("can't find any workflow for %s", self.entity.cw_etype)
@@ -481,7 +481,7 @@ class IWorkflowableAdapter(EntityAdapter):
             'Any T,TT, TN WHERE S allowed_transition T, S eid %(x)s, '
             'T type TT, T type %(type)s, '
             'T name TN, T transition_of WF, WF eid %(wfeid)s',
-            {'x': self.current_state.eid, 'type': unicode(type),
+            {'x': self.current_state.eid, 'type': text_type(type),
              'wfeid': self.current_workflow.eid})
         for tr in rset.entities():
             if tr.may_be_fired(self.entity.eid):

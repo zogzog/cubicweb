@@ -19,6 +19,8 @@
 
 __docformat__ = "restructuredtext en"
 
+from six import text_type
+
 from rql.stmts import Union, Select
 from rql.nodes import Constant, Relation
 
@@ -54,7 +56,7 @@ def _extract_const_attributes(plan, rqlst, to_build):
                 value = rhs.eval(plan.args)
                 eschema = edef.entity.e_schema
                 attrtype = eschema.subjrels[rtype].objects(eschema)[0]
-                if attrtype == 'Password' and isinstance(value, unicode):
+                if attrtype == 'Password' and isinstance(value, text_type):
                     value = value.encode('UTF8')
                 edef.edited_attribute(rtype, value)
             elif str(rhs) in to_build:
