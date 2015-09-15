@@ -44,7 +44,7 @@ from __pkginfo__ import modname, version, license, description, web, \
     author, author_email, classifiers
 
 if exists('README'):
-    long_description = file('README').read()
+    long_description = open('README').read()
 else:
     long_description = ''
 

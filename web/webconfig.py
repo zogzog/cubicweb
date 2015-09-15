@@ -460,7 +460,7 @@ have the python imaging library installed to use captcha)',
             staticdir = join(staticdir, rdir)
             if not isdir(staticdir) and 'w' in mode:
                 os.makedirs(staticdir)
-        return file(join(staticdir, filename), mode)
+        return open(join(staticdir, filename), mode)
 
     def static_file_add(self, rpath, data):
         stream = self.static_file_open(rpath)

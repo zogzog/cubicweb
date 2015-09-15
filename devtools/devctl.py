@@ -322,7 +322,7 @@ class UpdateCubicWebCatalogCommand(Command):
         potfiles.append(schemapot)
         # explicit close necessary else the file may not be yet flushed when
         # we'll using it below
-        schemapotstream = file(schemapot, 'w')
+        schemapotstream = open(schemapot, 'w')
         generate_schema_pot(schemapotstream.write, cubedir=None)
         schemapotstream.close()
         print('TAL', end=' ')
@@ -446,7 +446,7 @@ def update_cube_catalogs(cubedir):
     potfiles.append(schemapot)
     # explicit close necessary else the file may not be yet flushed when
     # we'll using it below
-    schemapotstream = file(schemapot, 'w')
+    schemapotstream = open(schemapot, 'w')
     generate_schema_pot(schemapotstream.write, cubedir)
     schemapotstream.close()
     print('TAL', end=' ')
@@ -712,7 +712,7 @@ class ExamineLogCommand(Command):
         requests = {}
         for filepath in args:
             try:
-                stream = file(filepath)
+                stream = open(filepath)
             except OSError as ex:
                 raise BadCommandUsage("can't open rql log file %s: %s"
                                       % (filepath, ex))

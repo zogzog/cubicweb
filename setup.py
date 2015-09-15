@@ -42,7 +42,7 @@ from distutils.command import install_data
 from __pkginfo__ import modname, version, license, description, web, \
      author, author_email
 
-long_description = file('README').read()
+long_description = open('README').read()
 
 # import optional features
 import __pkginfo__

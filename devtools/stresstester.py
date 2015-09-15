@@ -156,7 +156,7 @@ def run(args):
         elif opt in ('-P', '--profile'):
             prof_file = val
         elif opt in ('-o', '--report-output'):
-            report_output = file(val, 'w')
+            report_output = open(val, 'w')
     if len(args) != 2:
         usage(1)
     queries =  [query for query in lines(args[1]) if not query.startswith('#')]

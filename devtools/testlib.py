@@ -63,7 +63,7 @@ class CubicWebDebugger(Debugger):
     def do_view(self, arg):
         import webbrowser
         data = self._getval(arg)
-        with file('/tmp/toto.html', 'w') as toto:
+        with open('/tmp/toto.html', 'w') as toto:
             toto.write(data)
         webbrowser.open('file:///tmp/toto.html')
 

@@ -215,7 +215,7 @@ class StorageTC(CubicWebTC):
             f1 = cnx.create_entity('File', data=Binary(filepath),
                                    data_format=u'text/plain', data_name=u'foo')
             cw_value = f1.data.getvalue()
-            fs_value = file(filepath).read()
+            fs_value = open(filepath).read()
             if cw_value != fs_value:
                 self.fail('cw value %r is different from file content' % cw_value)
 
@@ -304,7 +304,7 @@ class StorageTC(CubicWebTC):
             old_fspath = self.fspath(cnx, f1)
             cnx.transaction_data['fs_importing'] = True
             new_fspath = osp.join(self.tempdir, 'newfile.txt')
-            file(new_fspath, 'w').write('the new data')
+            open(new_fspath, 'w').write('the new data')
             cnx.execute('SET F data %(d)s WHERE F eid %(f)s',
                          {'d': Binary(new_fspath), 'f': f1.eid})
             cnx.commit()

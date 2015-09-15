@@ -112,7 +112,7 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
             sys.exit(0)
         else:
             copy_file = appl_file + '.default'
-            copy = file(copy_file, 'w')
+            copy = open(copy_file, 'w')
             copy.write(open(ref_file).read())
             copy.close()
             print('keep current version, the new file has been written to', copy_file)
@@ -151,8 +151,8 @@ def copy_skeleton(skeldir, targetdir, context,
                 shutil.copyfile(fpath, tfpath)
 
 def fill_templated_file(fpath, tfpath, context):
-    fobj = file(tfpath, 'w')
-    templated = file(fpath).read()
+    fobj = open(tfpath, 'w')
+    templated = open(fpath).read()
     fobj.write(templated % context)
     fobj.close()
 

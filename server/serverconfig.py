@@ -235,7 +235,7 @@ notified of every changes.',
 
     def bootstrap_cubes(self):
         from logilab.common.textutils import splitstrip
-        for line in file(join(self.apphome, 'bootstrap_cubes')):
+        for line in open(join(self.apphome, 'bootstrap_cubes')):
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
@@ -246,7 +246,7 @@ notified of every changes.',
             self.init_cubes(())
 
     def write_bootstrap_cubes_file(self, cubes):
-        stream = file(join(self.apphome, 'bootstrap_cubes'), 'w')
+        stream = open(join(self.apphome, 'bootstrap_cubes'), 'w')
         stream.write('# this is a generated file only used for bootstraping\n')
         stream.write('# you should not have to edit this\n')
         stream.write('%s\n' % ','.join(cubes))

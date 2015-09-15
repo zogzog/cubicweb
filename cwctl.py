@@ -115,7 +115,7 @@ class InstanceCommand(Command):
         _allinstances = list_instances(regdir)
         if isfile(join(regdir, 'startorder')):
             allinstances = []
-            for line in file(join(regdir, 'startorder')):
+            for line in open(join(regdir, 'startorder')):
                 line = line.strip()
                 if line and not line.startswith('#'):
                     try:

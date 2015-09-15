@@ -52,7 +52,7 @@ class ValueGeneratorTC(TestCase):
             return None
 
     def _available_Person_firstname(self, etype, attrname):
-        return [f.strip() for f in file(osp.join(DATADIR, 'firstnames.txt'))]
+        return [f.strip() for f in open(osp.join(DATADIR, 'firstnames.txt'))]
 
     def setUp(self):
         config = ApptestConfiguration('data', apphome=DATADIR)

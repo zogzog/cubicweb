@@ -961,7 +961,7 @@ the repository',
             i = 1
             while exists(path) and i < 100: # arbitrary limit to avoid infinite loop
                 try:
-                    file(path, 'a')
+                    open(path, 'a')
                     break
                 except IOError:
                     path = '%s-%s.log' % (basepath, i)

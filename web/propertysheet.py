@@ -96,7 +96,7 @@ class PropertySheet(dict):
             if not osp.exists(rcachedir):
                 os.makedirs(rcachedir)
             sourcefile = osp.join(rdirectory, rid)
-            content = file(sourcefile).read()
+            content = open(sourcefile).read()
             # XXX replace % not followed by a paren by %% to avoid having to do
             # this in the source css file ?
             try:
@@ -105,7 +105,7 @@ class PropertySheet(dict):
                 self.error("can't process %s/%s: %s", rdirectory, rid, ex)
                 adirectory = rdirectory
             else:
-                stream = file(cachefile, 'w')
+                stream = open(cachefile, 'w')
                 stream.write(content)
                 stream.close()
                 adirectory = self._cache_directory

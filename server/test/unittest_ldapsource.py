@@ -55,8 +55,8 @@ def create_slapd_configuration(cls):
     slapddir = tempfile.mkdtemp('cw-unittest-ldap')
     config = cls.config
     slapdconf = join(config.apphome, "slapd.conf")
-    confin = file(join(config.apphome, "slapd.conf.in")).read()
-    confstream = file(slapdconf, 'w')
+    confin = open(join(config.apphome, "slapd.conf.in")).read()
+    confstream = open(slapdconf, 'w')
     confstream.write(confin % {'apphome': config.apphome, 'testdir': slapddir})
     confstream.close()
     # fill ldap server with some data

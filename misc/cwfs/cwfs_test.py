@@ -30,7 +30,7 @@ def spec_parser(filename) :
     sections = []
     buffer = ""
     in_section = False
-    for line in file(filename) :
+    for line in open(filename) :
         if line.startswith('Test::'):
             in_section = True
             buffer = ""
