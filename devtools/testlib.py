@@ -28,7 +28,7 @@ from contextlib import contextmanager
 from warnings import warn
 from itertools import chain
 
-from six import string_types
+from six import text_type, string_types
 from six.moves import range
 from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
 
@@ -348,7 +348,7 @@ class CubicWebTC(TestCase):
         been properly bootstrapped.
         """
         admincfg = config.default_admin_config
-        cls.admlogin = unicode(admincfg['login'])
+        cls.admlogin = text_type(admincfg['login'])
         cls.admpassword = admincfg['password']
         # uncomment the line below if you want rql queries to be logged
         #config.global_set_option('query-log-file',

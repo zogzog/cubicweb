@@ -19,7 +19,7 @@
 
 __docformat__ = "restructuredtext en"
 
-from six import string_types
+from six import text_type, string_types
 
 from logilab.common.decorators import classproperty
 
@@ -36,7 +36,7 @@ class AnyEntity(Entity):
     @classproperty
     def cw_etype(cls):
         """entity type as a unicode string"""
-        return unicode(cls.__regid__)
+        return text_type(cls.__regid__)
 
     @classmethod
     def cw_create_url(cls, req, **kwargs):

@@ -24,7 +24,7 @@ __docformat__ = "restructuredtext en"
 
 from itertools import repeat
 
-from six import string_types, integer_types
+from six import text_type, string_types, integer_types
 from six.moves import range
 
 from rql import RQLSyntaxError, CoercionError
@@ -512,7 +512,7 @@ class QuerierHelper(object):
     def parse(self, rql, annotate=False):
         """return a rql syntax tree for the given rql"""
         try:
-            return self._parse(unicode(rql), annotate=annotate)
+            return self._parse(text_type(rql), annotate=annotate)
         except UnicodeError:
             raise RQLSyntaxError(rql)
 
