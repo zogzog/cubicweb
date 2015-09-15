@@ -51,6 +51,7 @@ __docformat__ = "restructuredtext en"
 
 import threading
 
+from six import PY2
 from six.moves import range
 
 from logilab.database import FunctionDescr, SQL_FUNCTIONS_REGISTRY
@@ -1514,7 +1515,7 @@ class SQLGenerator(object):
                 return self._mapped_term(constant, '%%(%s)s' % value)[0]
             except KeyError:
                 _id = value
-                if isinstance(_id, unicode):
+                if PY2 and isinstance(_id, unicode):
                     _id = _id.encode()
         else:
             _id = str(id(constant)).replace('-', '', 1)
