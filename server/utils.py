@@ -25,6 +25,9 @@ import logging
 from threading import Timer, Thread
 from getpass import getpass
 
+from six import PY2, text_type
+from six.moves import input
+
 from passlib.utils import handlers as uh, to_hash_str
 from passlib.context import CryptContext
 
@@ -82,7 +85,7 @@ def eschema_eid(cnx, eschema):
     if eschema.eid is None:
         eschema.eid = cnx.execute(
             'Any X WHERE X is CWEType, X name %(name)s',
-            {'name': unicode(eschema)})[0][0]
+            {'name': text_type(eschema)})[0][0]
     return eschema.eid
 
 
@@ -95,8 +98,9 @@ def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
         if msg:
             print(msg)
         while not user:
-            user = raw_input('login: ')
-        user = unicode(user, sys.stdin.encoding)
+            user = input('login: ')
+        if PY2:
+            user = unicode(user, sys.stdin.encoding)
     passwd = getpass('%s: ' % passwdmsg)
     if confirm:
         while True:
