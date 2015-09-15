@@ -247,7 +247,7 @@ class CheckUniqueHook(IntegrityHook):
     def __call__(self):
         entity = self.entity
         eschema = entity.e_schema
-        for attr, val in entity.cw_edited.iteritems():
+        for attr, val in entity.cw_edited.items():
             if eschema.subjrels[attr].final and eschema.has_unique_values(attr):
                 if val is None:
                     continue
@@ -286,7 +286,7 @@ class TidyHtmlFields(IntegrityHook):
         entity = self.entity
         metaattrs = entity.e_schema.meta_attributes()
         edited = entity.cw_edited
-        for metaattr, (metadata, attr) in metaattrs.iteritems():
+        for metaattr, (metadata, attr) in metaattrs.items():
             if metadata == 'format' and attr in edited:
                 try:
                     value = edited[attr]

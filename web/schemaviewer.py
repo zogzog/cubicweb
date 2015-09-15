@@ -220,7 +220,7 @@ class SchemaViewer(object):
                     elif prop == 'constraints':
                         val = ', '.join([c.expression for c in val])
                     elif isinstance(val, dict):
-                        for key, value in val.iteritems():
+                        for key, value in val.items():
                             if isinstance(value, (list, tuple)):
                                 val[key] = ', '.join(sorted( str(v) for v in value))
                         val = str(val)

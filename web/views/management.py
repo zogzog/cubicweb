@@ -169,7 +169,7 @@ def text_error_description(ex, excinfo, req, eversion, cubes):
     binfo += u'\n\n:URL: %s\n' % req.url()
     if not '__bugreporting' in req.form:
         binfo += u'\n:form params:\n'
-        binfo += u'\n'.join(u'  * %s = %s' % (k, v) for k, v in req.form.iteritems())
+        binfo += u'\n'.join(u'  * %s = %s' % (k, v) for k, v in req.form.items())
     binfo += u'\n\n:CubicWeb version: %s\n'  % (eversion,)
     for pkg, pkgversion in cubes:
         binfo += u":Cube %s version: %s\n" % (pkg, pkgversion)

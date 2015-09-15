@@ -31,7 +31,7 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         self._twreq = req
         super(CubicWebTwistedRequestAdapter, self).__init__(
             vreg, https, req.args, headers=req.received_headers)
-        for key, name_stream_list in req.files.iteritems():
+        for key, name_stream_list in req.files.items():
             for name, stream in name_stream_list:
                 if name is not None:
                     name = unicode(name, self.encoding)

@@ -66,7 +66,7 @@ def update_varmap(varmap, selected, table):
 def check_no_password_selected(rqlst):
     """check that Password entities are not selected"""
     for solution in rqlst.solutions:
-        for var, etype in solution.iteritems():
+        for var, etype in solution.items():
             if etype == 'Password':
                 raise Unauthorized('Password selection is not allowed (%s)' % var)
 
@@ -290,7 +290,7 @@ class ExecutionPlan(object):
                 newsolutions.append(solution)
                 # try to benefit of rqlexpr.check cache for entities which
                 # are specified by eid in query'args
-                for varname, eid in varkwargs.iteritems():
+                for varname, eid in varkwargs.items():
                     try:
                         rqlexprs = localcheck.pop(varname)
                     except KeyError:
@@ -308,7 +308,7 @@ class ExecutionPlan(object):
                 # mark variables protected by an rql expression
                 restricted_vars.update(localcheck)
                 # turn local check into a dict key
-                localcheck = tuple(sorted(localcheck.iteritems()))
+                localcheck = tuple(sorted(localcheck.items()))
                 localchecks.setdefault(localcheck, []).append(solution)
         # raise Unautorized exception if the user can't access to any solution
         if not newsolutions:
@@ -606,7 +606,7 @@ class QuerierHelper(object):
             if args:
                 # different SQL generated when some argument is None or not (IS
                 # NULL). This should be considered when computing sql cache key
-                cachekey += tuple(sorted([k for k, v in args.iteritems()
+                cachekey += tuple(sorted([k for k, v in args.items()
                                           if v is None]))
         # make an execution plan
         plan = self.plan_factory(rqlst, args, cnx)

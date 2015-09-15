@@ -733,7 +733,7 @@ class ExamineLogCommand(Command):
                 except Exception as exc:
                     sys.stderr.write('Line %s: %s (%s)\n' % (lineno, exc, line))
         stat = []
-        for rql, times in requests.iteritems():
+        for rql, times in requests.items():
             stat.append( (sum(time[0] for time in times),
                           sum(time[1] for time in times),
                           len(times), rql) )

@@ -555,9 +555,9 @@ class JSString(str):
 
 def _dict2js(d, predictable=False):
     if predictable:
-        it = sorted(d.iteritems())
+        it = sorted(d.items())
     else:
-        it = d.iteritems()
+        it = d.items()
     res = [key + ': ' + js_dumps(val, predictable)
            for key, val in it]
     return '{%s}' % ', '.join(res)

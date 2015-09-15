@@ -186,7 +186,7 @@ class PropagationAnalyzer(object):
 
     def add_colors_legend(self, graph):
         """Add a legend of used colors to the graph."""
-        for package, color in sorted(_COLORS.iteritems()):
+        for package, color in sorted(_COLORS.items()):
             graph.add_node(package, color=color, fontcolor=color, shape='record')
 
 

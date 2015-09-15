@@ -162,7 +162,7 @@ class IFTIndexableAdapter(view.EntityAdapter):
         return words
 
 def merge_weight_dict(maindict, newdict):
-    for weight, words in newdict.iteritems():
+    for weight, words in newdict.items():
         maindict.setdefault(weight, []).extend(words)
 
 class IDownloadableAdapter(view.EntityAdapter):

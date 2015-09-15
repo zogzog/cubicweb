@@ -181,7 +181,7 @@ class NotificationView(EntityView):
 
     def context(self, **kwargs):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
-        for key, val in kwargs.iteritems():
+        for key, val in kwargs.items():
             if val and isinstance(val, unicode) and val.strip():
                kwargs[key] = self._cw._(val)
         kwargs.update({'user': self.user_data['login'],

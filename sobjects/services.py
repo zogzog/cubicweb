@@ -94,9 +94,9 @@ class GcStatsService(Service):
         results = {}
         counters, ocounters, garbage = gc_info(lookupclasses,
                                                viewreferrersclasses=())
-        values = sorted(counters.iteritems(), key=lambda x: x[1], reverse=True)
+        values = sorted(counters.items(), key=lambda x: x[1], reverse=True)
         results['lookupclasses'] = values
-        values = sorted(ocounters.iteritems(), key=lambda x: x[1], reverse=True)[:nmax]
+        values = sorted(ocounters.items(), key=lambda x: x[1], reverse=True)[:nmax]
         results['referenced'] = values
         results['unreachable'] = garbage
         return results

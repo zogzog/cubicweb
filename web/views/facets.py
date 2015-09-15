@@ -168,7 +168,7 @@ class FacetFilterMixIn(object):
                  DeprecationWarning, stacklevel=2)
         else:
             vidargs = {}
-        vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
+        vidargs = dict((k, v) for k, v in vidargs.items() if v)
         facetargs = xml_escape(json_dumps([divid, vid, paginate, vidargs]))
         w(u'<form id="%sForm" class="%s" method="post" action="" '
           'cubicweb:facetargs="%s" >' % (divid, cssclass, facetargs))

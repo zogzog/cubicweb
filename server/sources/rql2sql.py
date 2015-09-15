@@ -174,7 +174,7 @@ def remove_unused_solutions(rqlst, solutions, varmap, schema):
     existssols = {}
     unstable = set()
     invariants = {}
-    for vname, var in rqlst.defined_vars.iteritems():
+    for vname, var in rqlst.defined_vars.items():
         vtype = newsols[0][vname]
         if var._q_invariant or vname in varmap:
             # remove invariant variable from solutions to remove duplicates
@@ -207,11 +207,11 @@ def remove_unused_solutions(rqlst, solutions, varmap, schema):
         newsols = newsols_
         # reinsert solutions for invariants
         for sol in newsols:
-            for invvar, vartype in invariants[id(sol)].iteritems():
+            for invvar, vartype in invariants[id(sol)].items():
                 sol[invvar] = vartype
         for sol in existssols:
             try:
-                for invvar, vartype in invariants[id(sol)].iteritems():
+                for invvar, vartype in invariants[id(sol)].items():
                     sol[invvar] = vartype
             except KeyError:
                 continue
@@ -602,7 +602,7 @@ class StateInfo(object):
             self.outer_chains.remove(lchain)
             rchain += lchain
             self.mark_as_used_in_outer_join(leftalias)
-            for alias, (aouter, aconditions, achain) in outer_tables.iteritems():
+            for alias, (aouter, aconditions, achain) in outer_tables.items():
                 if achain is lchain:
                     outer_tables[alias] = (aouter, aconditions, rchain)
         else:
@@ -1611,7 +1611,7 @@ class SQLGenerator(object):
 
     def _temp_table_scope(self, select, table):
         scope = 9999
-        for var, sql in self._varmap.iteritems():
+        for var, sql in self._varmap.items():
             # skip "attribute variable" in varmap (such 'T.login')
             if not '.' in var and table == sql.split('.', 1)[0]:
                 try:

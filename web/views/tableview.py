@@ -1146,7 +1146,7 @@ class TableView(AnyRsetView):
             else:
                 column.append_renderer(subvid or 'incontext', colindex)
             if cellattrs and colindex in cellattrs:
-                for name, value in cellattrs[colindex].iteritems():
+                for name, value in cellattrs[colindex].items():
                     column.add_attr(name, value)
             # add column
             columns.append(column)

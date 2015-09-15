@@ -506,7 +506,7 @@ this option is set to yes",
                 deps = {}
             else:
                 deps = dict( (x[len('cubicweb-'):], v)
-                             for x, v in gendeps.iteritems()
+                             for x, v in gendeps.items()
                              if x.startswith('cubicweb-'))
         for depcube in deps:
             try:

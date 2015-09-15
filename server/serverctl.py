@@ -1004,7 +1004,7 @@ class SynchronizeSourceCommand(Command):
                 stats = source.pull_data(cnx, force=True, raise_on_error=True)
         finally:
             repo.shutdown()
-        for key, val in stats.iteritems():
+        for key, val in stats.items():
             if val:
                 print(key, ':', val)
 
@@ -1082,7 +1082,7 @@ def configure_instance2(self, appid):
     if self.config.db is not None:
         appcfg = ServerConfiguration.config_for(appid)
         srccfg = appcfg.read_sources_file()
-        for key, value in self.config.db.iteritems():
+        for key, value in self.config.db.items():
             if '.' in key:
                 section, key = key.split('.', 1)
             else:

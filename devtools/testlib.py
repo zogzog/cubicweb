@@ -521,10 +521,10 @@ class CubicWebTC(TestCase):
         similar to `orig_permissions.update(partial_perms)`.
         """
         torestore = []
-        for erschema, etypeperms in chain(perm_overrides, perm_kwoverrides.iteritems()):
+        for erschema, etypeperms in chain(perm_overrides, perm_kwoverrides.items()):
             if isinstance(erschema, string_types):
                 erschema = self.schema[erschema]
-            for action, actionperms in etypeperms.iteritems():
+            for action, actionperms in etypeperms.items():
                 origperms = erschema.permissions[action]
                 erschema.set_action_permissions(action, actionperms)
                 torestore.append([erschema, action, origperms])
@@ -887,7 +887,7 @@ class CubicWebTC(TestCase):
         }
     # maps vid : validator name (override content_type_validators)
     vid_validators = dict((vid, htmlparser.VALMAP[valkey])
-                          for vid, valkey in VIEW_VALIDATORS.iteritems())
+                          for vid, valkey in VIEW_VALIDATORS.items())
 
 
     def view(self, vid, rset=None, req=None, template='main-template',
@@ -1106,7 +1106,7 @@ def how_many_dict(schema, cnx, how_many, skip):
     # new num for etype = max(current num, sum(num for possible target etypes))
     #
     # XXX we should first check there is no cycle then propagate changes
-    for (rschema, etype), targets in relmap.iteritems():
+    for (rschema, etype), targets in relmap.items():
         relfactor = sum(howmanydict[e] for e in targets)
         howmanydict[str(etype)] = max(relfactor, howmanydict[etype])
     return howmanydict
@@ -1314,7 +1314,7 @@ def not_selected(vreg, appobject):
 
 
 # def print_untested_objects(testclass, skipregs=('hooks', 'etypes')):
-#     for regname, reg in testclass._env.vreg.iteritems():
+#     for regname, reg in testclass._env.vreg.items():
 #         if regname in skipregs:
 #             continue
 #         for appobjects in reg.itervalues():

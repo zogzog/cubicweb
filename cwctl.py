@@ -773,7 +773,7 @@ given, appropriate sources for migration will be automatically selected \
         vcconf = repo.get_versions()
         helper = self.config_helper(config, required=False)
         if self.config.force_cube_version:
-            for cube, version in self.config.force_cube_version.iteritems():
+            for cube, version in self.config.force_cube_version.items():
                 vcconf[cube] = Version(version)
         toupgrade = []
         for cube in config.cubes():
@@ -1049,7 +1049,7 @@ class ConfigureInstanceCommand(InstanceCommand):
     def configure_instance(self, appid):
         if self.config.param is not None:
             appcfg = cwcfg.config_for(appid)
-            for key, value in self.config.param.iteritems():
+            for key, value in self.config.param.items():
                 try:
                     appcfg.global_set_option(key, value)
                 except KeyError:

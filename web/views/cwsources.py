@@ -189,7 +189,7 @@ class MappingChecker(object):
                     warning(_('relation %(rtype)s with %(etype)s as %(role)s is '
                               'supported but no target type supported') %
                             {'rtype': rschema, 'role': role, 'etype': etype})
-        for rtype, rdefs in self.srelations.iteritems():
+        for rtype, rdefs in self.srelations.items():
             if rdefs is None:
                 rschema = self.schema[rtype]
                 for subj, obj in rschema.rdefs:

@@ -153,7 +153,7 @@ class LDAPFeedTestBase(CubicWebTC):
         add an LDAP entity
         """
         modcmd = ['dn: %s'%dn, 'changetype: add']
-        for key, values in mods.iteritems():
+        for key, values in mods.items():
             if isinstance(values, string_types):
                 values = [values]
             for value in values:
@@ -172,7 +172,7 @@ class LDAPFeedTestBase(CubicWebTC):
         modify one or more attributes of an LDAP entity
         """
         modcmd = ['dn: %s'%dn, 'changetype: modify']
-        for (kind, key), values in mods.iteritems():
+        for (kind, key), values in mods.items():
             modcmd.append('%s: %s' % (kind, key))
             if isinstance(values, string_types):
                 values = [values]

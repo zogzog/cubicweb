@@ -95,7 +95,7 @@ def diseasome_import(session, file_name, store):
     # Perform a first commit, of the entities
     store.flush()
     kwargs = {}
-    for uri, relations in all_relations.iteritems():
+    for uri, relations in all_relations.items():
         from_eid = uri_to_eid.get(uri)
         # ``subjtype`` should be initialized if ``SQLGenObjectStore`` is used
         # and there are inlined relations in the schema.
@@ -108,7 +108,7 @@ def diseasome_import(session, file_name, store):
         kwargs['subjtype'] = uri_to_etype.get(uri)
         if not from_eid:
             continue
-        for rtype, rels in relations.iteritems():
+        for rtype, rels in relations.items():
             if rtype in ('classes', 'possible_drugs', 'omim', 'omim_page',
                          'chromosomal_location', 'same_as', 'gene_id',
                          'hgnc_id', 'hgnc_page'):

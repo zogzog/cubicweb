@@ -209,7 +209,7 @@ class PageInfo(object):
     def matching_nodes(self, tag, **attrs):
         for elt in self.etree.iterfind(self._iterstr(tag)):
             eltattrs  = elt.attrib
-            for attr, value in attrs.iteritems():
+            for attr, value in attrs.items():
                 try:
                     if eltattrs[attr] != value:
                         break

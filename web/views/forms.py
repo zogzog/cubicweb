@@ -377,7 +377,7 @@ class EntityFieldsForm(FieldsForm):
 
         Warning: this method must be called only when all form fields are setup
         """
-        for (rtype, role), eids in self.linked_to.iteritems():
+        for (rtype, role), eids in self.linked_to.items():
             # if the relation is already setup by a form field, do not add it
             # in a __linkto hidden to avoid setting it twice in the controller
             try:

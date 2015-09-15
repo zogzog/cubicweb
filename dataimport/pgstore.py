@@ -348,7 +348,7 @@ class SQLGenSourceWrapper(object):
             # In that case, simply update the insert dict and remove
             # the need to make the
             # UPDATE statement
-            for statement, datalist in _inlined_relations_sql.iteritems():
+            for statement, datalist in _inlined_relations_sql.items():
                 new_datalist = []
                 # for a given inlined relation,
                 # browse each couple to be inserted

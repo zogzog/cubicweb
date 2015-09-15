@@ -42,7 +42,7 @@ def fileupload(self):
     """
     try:
         result_dict = {}
-        for key, value in self._cw.form.iteritems():
+        for key, value in self._cw.form.items():
             result_dict[key] = _recursive_replace_stream_by_content(value)
         return result_dict
     except Exception as ex:

@@ -131,7 +131,7 @@ class SecurityViewMixIn(object):
         _ = self._cw._
         w(u'<div style="margin: 0px 1.5em">')
         tmpl = u'<strong>%s</strong> %s <strong>%s</strong>'
-        for perm, rdefs in perms.iteritems():
+        for perm, rdefs in perms.items():
             w(u'<div>%s</div>' % u', '.join(
                 tmpl % (_(s.type), _(rschema.type), _(o.type)) for s, o in rdefs))
             # accessing rdef from previous loop by design: only used to get

@@ -299,7 +299,7 @@ class RequestSessionBase(object):
     def build_url_params(self, **kwargs):
         """return encoded params to incorporate them in a URL"""
         args = []
-        for param, values in kwargs.iteritems():
+        for param, values in kwargs.items():
             if not isinstance(values, (list, tuple)):
                 values = (values,)
             for value in values:
@@ -352,7 +352,7 @@ class RequestSessionBase(object):
         schema, netloc, path, query, fragment = urlsplit(url)
         query = parse_qs(query)
         # sort for testing predictability
-        for key, val in sorted(newparams.iteritems()):
+        for key, val in sorted(newparams.items()):
             query[key] = (self.url_quote(val),)
         query = '&'.join(u'%s=%s' % (param, value)
                          for param, values in sorted(query.items())

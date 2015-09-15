@@ -222,7 +222,7 @@ class ServerMigrationHelper(MigrationHelper):
                 format_file.write('%s\n' % format)
             with open(osp.join(tmpdir, 'versions.txt'), 'w') as version_file:
                 versions = repo.get_versions()
-                for cube, version in versions.iteritems():
+                for cube, version in versions.items():
                     version_file.write('%s %s\n' % (cube, version))
             if not failed:
                 bkup = tarfile.open(backupfile, 'w|gz')

@@ -108,7 +108,7 @@ def build_cstr_with_linkto_infos(cstr, args, searchedvar, evar,
     """
     st = cstr.snippet_rqlst.copy()
     # replace relations in ST by eid infos from linkto where possible
-    for (info_rtype, info_role), eids in lt_infos.iteritems():
+    for (info_rtype, info_role), eids in lt_infos.items():
         eid = eids[0] # NOTE: we currently assume a pruned lt_info with only 1 eid
         for rel in st.iget_nodes(RqlRelation):
             targetvar = rel_matches(rel, info_rtype, info_role, evar.name)
@@ -135,7 +135,7 @@ def build_cstr_with_linkto_infos(cstr, args, searchedvar, evar,
 
 def pruned_lt_info(eschema, lt_infos):
     pruned = {}
-    for (lt_rtype, lt_role), eids in lt_infos.iteritems():
+    for (lt_rtype, lt_role), eids in lt_infos.items():
         # we can only use lt_infos describing relation with a cardinality
         # of value 1 towards the linked entity
         if not len(eids) == 1:

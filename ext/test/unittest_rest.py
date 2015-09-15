@@ -221,7 +221,7 @@ class RestTC(CubicWebTC):
    %(rql)s
                 """ % {'rql': rql,
                        'colvids': ', '.join(["%d=%s" % (k, v)
-                                             for k, v in colvids.iteritems()])
+                                             for k, v in colvids.items()])
                    })
             view = self.vreg['views'].select('table', req, rset=req.execute(rql))
             view.cellvids = colvids

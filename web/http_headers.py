@@ -502,7 +502,7 @@ class MimeType(object):
         return "MimeType(%r, %r, %r)" % (self.mediaType, self.mediaSubtype, self.params)
 
     def __hash__(self):
-        return hash(self.mediaType)^hash(self.mediaSubtype)^hash(tuple(self.params.iteritems()))
+        return hash(self.mediaType)^hash(self.mediaSubtype)^hash(tuple(self.params.items()))
 
 ##### Specific header parsers.
 def parseAccept(field):
@@ -733,7 +733,7 @@ def generateAccept(accept):
 
     out ="%s/%s"%(mimeType.mediaType, mimeType.mediaSubtype)
     if mimeType.params:
-        out+=';'+generateKeyValues(mimeType.params.iteritems())
+        out+=';'+generateKeyValues(mimeType.params.items())
 
     if q != 1.0:
         out+=(';q=%.3f' % (q,)).rstrip('0').rstrip('.')
@@ -837,7 +837,7 @@ def generateRetryAfter(when):
 def generateContentType(mimeType):
     out = "%s/%s" % (mimeType.mediaType, mimeType.mediaSubtype)
     if mimeType.params:
-        out += ';' + generateKeyValues(mimeType.params.iteritems())
+        out += ';' + generateKeyValues(mimeType.params.items())
     return out
 
 def generateIfRange(dateOrETag):
@@ -858,7 +858,7 @@ def generateWWWAuthenticate(headers):
 
         try:
             l = []
-            for k, v in dict(challenge).iteritems():
+            for k, v in dict(challenge).items():
                 l.append("%s=%s" % (k, quoteString(v)))
 
             _generated.append("%s %s" % (scheme, ", ".join(l)))
@@ -1330,10 +1330,10 @@ class Headers(object):
         self._headers = {}
         self.handler = handler
         if headers is not None:
-            for key, value in headers.iteritems():
+            for key, value in headers.items():
                 self.setHeader(key, value)
         if rawHeaders is not None:
-            for key, value in rawHeaders.iteritems():
+            for key, value in rawHeaders.items():
                 self.setRawHeaders(key, value)
 
     def _setRawHeaders(self, headers):
@@ -1462,7 +1462,7 @@ class Headers(object):
         """Return an iterator of key, value pairs of all headers
         contained in this object, as strings. The keys are capitalized
         in canonical capitalization."""
-        for k, v in self._raw_headers.iteritems():
+        for k, v in self._raw_headers.items():
             if v is _RecalcNeeded:
                 v = self._toRaw(k)
             yield self.canonicalNameCaps(k), v
@@ -1484,7 +1484,7 @@ class Headers(object):
    is strictly an error, but we're nice.).
    """
 
-iteritems = lambda x: x.iteritems()
+iteritems = lambda x: x.items()
 
 
 parser_general_headers = {

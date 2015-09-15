@@ -318,7 +318,7 @@ class IsAmbData(object):
 
     def compute(self, rqlst):
         # set domains for each variable
-        for varname, var in rqlst.defined_vars.iteritems():
+        for varname, var in rqlst.defined_vars.items():
             if var.stinfo['uidrel'] is not None or \
                    self.eschema(rqlst.solutions[0][varname]).final:
                 ptypes = var.stinfo['possibletypes']
@@ -356,7 +356,7 @@ class IsAmbData(object):
 
     def _debug_print(self):
         print('varsols', dict((x, sorted(str(v) for v in values))
-                               for x, values in self.varsols.iteritems()))
+                               for x, values in self.varsols.items()))
         print('ambiguous vars', sorted(self.ambiguousvars))
 
     def set_rel_constraint(self, term, rel, etypes_func):

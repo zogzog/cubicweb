@@ -99,11 +99,11 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             return
         if myuris:
             byetype = {}
-            for extid, (eid, etype) in myuris.iteritems():
+            for extid, (eid, etype) in myuris.items():
                 if self.is_deleted(extid, etype, eid):
                     byetype.setdefault(etype, []).append(str(eid))
 
-            for etype, eids in byetype.iteritems():
+            for etype, eids in byetype.items():
                 if etype != 'CWUser':
                     continue
                 self.info('deactivate %s %s entities', len(eids), etype)
@@ -123,7 +123,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 self.info('user %s reactivated', entity.login)
         mdate = attrs.get('modification_date')
         if not mdate or mdate > entity.modification_date:
-            attrs = dict( (k, v) for k, v in attrs.iteritems()
+            attrs = dict( (k, v) for k, v in attrs.items()
                           if v != getattr(entity, k))
             if attrs:
                 entity.cw_set(**attrs)
@@ -135,9 +135,9 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         if tdict is None:
             tdict = {}
         if etype == 'CWUser':
-            items = self.source.user_attrs.iteritems()
+            items = self.source.user_attrs.items()
         elif etype == 'CWGroup':
-            items = self.source.group_attrs.iteritems()
+            items = self.source.group_attrs.items()
         for sattr, tattr in items:
             if tattr not in self.non_attribute_keys:
                 try:

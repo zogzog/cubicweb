@@ -505,7 +505,7 @@ def html_traceback(info, exception, title='',
             local_context = tcbk.tb_frame.f_locals
             html_info = []
             chars = 0
-            for name, value in local_context.iteritems():
+            for name, value in local_context.items():
                 value = xml_escape(repr(value))
                 info = u'<span class="name">%s</span>=%s, ' % (name, value)
                 line_length = len(name) + len(value)

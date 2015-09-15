@@ -146,7 +146,7 @@ class QueryInfo(object):
 
     def finalize(self):
         """return corresponding rql query (string) / args (dict)"""
-        for varname, ptypes in self.possible_types.iteritems():
+        for varname, ptypes in self.possible_types.items():
             if len(ptypes) == 1:
                 self.restrictions.append('%s is %s' % (varname, iter(ptypes).next()))
         unions = []

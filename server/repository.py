@@ -571,7 +571,7 @@ class Repository(object):
         """
         sources = {}
         # remove sensitive information
-        for uri, source in self.sources_by_uri.iteritems():
+        for uri, source in self.sources_by_uri.items():
             sources[uri] = source.public_config
         return sources
 
@@ -1039,7 +1039,7 @@ class Repository(object):
             except KeyError:
                 data_by_etype[etype] = [entity]
         source = self.system_source
-        for etype, entities in data_by_etype.iteritems():
+        for etype, entities in data_by_etype.items():
             if server.DEBUG & server.DBG_REPO:
                 print('DELETE entities', etype, [entity.eid for entity in entities])
             self.hm.call_hooks('before_delete_entity', cnx, entities=entities)
@@ -1063,7 +1063,7 @@ class Repository(object):
         subjects_by_types = {}
         objects_by_types = {}
         activintegrity = cnx.is_hook_category_activated('activeintegrity')
-        for rtype, eids_subj_obj in relations.iteritems():
+        for rtype, eids_subj_obj in relations.items():
             if server.DEBUG & server.DBG_REPO:
                 for subjeid, objeid in eids_subj_obj:
                     print('ADD relation', subjeid, rtype, objeid)
@@ -1101,15 +1101,15 @@ class Repository(object):
                         objects[objeid] = len(relations_by_rtype[rtype])
                         continue
                     objects[objeid] = len(relations_by_rtype[rtype])
-        for rtype, source_relations in relations_by_rtype.iteritems():
+        for rtype, source_relations in relations_by_rtype.items():
             self.hm.call_hooks('before_add_relation', cnx,
                                rtype=rtype, eids_from_to=source_relations)
-        for rtype, source_relations in relations_by_rtype.iteritems():
+        for rtype, source_relations in relations_by_rtype.items():
             source.add_relations(cnx, rtype, source_relations)
             rschema = self.schema.rschema(rtype)
             for subjeid, objeid in source_relations:
                 cnx.update_rel_cache_add(subjeid, rtype, objeid, rschema.symmetric)
-        for rtype, source_relations in relations_by_rtype.iteritems():
+        for rtype, source_relations in relations_by_rtype.items():
             self.hm.call_hooks('after_add_relation', cnx,
                                rtype=rtype, eids_from_to=source_relations)
 

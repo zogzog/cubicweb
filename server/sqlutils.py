@@ -373,7 +373,7 @@ class SQLAdapterMixIn(object):
     def merge_args(self, args, query_args):
         if args is not None:
             newargs = {}
-            for key, val in args.iteritems():
+            for key, val in args.items():
                 # convert cubicweb binary into db binary
                 if isinstance(val, Binary):
                     val = self._binary(val.getvalue())
@@ -444,7 +444,7 @@ class SQLAdapterMixIn(object):
         attrs = {}
         eschema = entity.e_schema
         converters = getattr(self.dbhelper, 'TYPE_CONVERTERS', {})
-        for attr, value in entity.cw_edited.iteritems():
+        for attr, value in entity.cw_edited.items():
             if value is not None and eschema.subjrels[attr].final:
                 atype = str(entity.e_schema.destination(attr))
                 if atype in converters:

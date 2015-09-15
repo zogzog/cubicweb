@@ -465,7 +465,7 @@ class TestDataBaseHandler(object):
             dbname, data = data.split('-', 1)
             db_id, filetype = data.split('.', 1)
             entries.setdefault((dbname, db_id), {})[filetype] = filepath
-        for (dbname, db_id), entry in entries.iteritems():
+        for (dbname, db_id), entry in entries.items():
             # apply necessary transformation from the driver
             value = self.process_cache_entry(directory, dbname, db_id, entry)
             assert 'config' in entry

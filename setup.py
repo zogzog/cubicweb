@@ -51,7 +51,7 @@ if USE_SETUPTOOLS:
     for entry in ("__depends__",): # "__recommends__"):
         requires.update(getattr(__pkginfo__, entry, {}))
     install_requires = [("%s %s" % (d, v and v or "")).strip()
-                       for d, v in requires.iteritems()]
+                       for d, v in requires.items()]
 else:
     install_requires = []
 

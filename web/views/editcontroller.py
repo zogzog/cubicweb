@@ -143,7 +143,7 @@ class EditController(basecontrollers.ViewController):
         values_by_eid = dict((eid, req.extract_entity_params(eid, minparams=2))
                              for eid in req.edited_eids())
         # iterate over all the edited entities
-        for eid, values in values_by_eid.iteritems():
+        for eid, values in values_by_eid.items():
             # add eid to the dependency graph
             graph.setdefault(eid, set())
             # search entity's edited fields for mandatory inlined relation
@@ -355,7 +355,7 @@ class EditController(basecontrollers.ViewController):
         for eid, etype in eidtypes:
             entity = self._cw.entity_from_eid(eid, etype)
             path, params = entity.cw_adapt_to('IEditControl').after_deletion_path()
-            redirect_info.add( (path, tuple(params.iteritems())) )
+            redirect_info.add( (path, tuple(params.items())) )
             entity.cw_delete()
         if len(redirect_info) > 1:
             # In the face of ambiguity, refuse the temptation to guess.

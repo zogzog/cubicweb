@@ -120,7 +120,7 @@ class Form(AppObject):
         extrakw = {}
         # search for navigation parameters and customization of existing
         # attributes; remaining stuff goes in extrakwargs
-        for key, val in kwargs.iteritems():
+        for key, val in kwargs.items():
             if key in controller.NAV_FORM_PARAMETERS:
                 hiddens.append( (key, val) )
             elif key == 'redirect_path':

@@ -42,7 +42,7 @@ class _CWSourceCfgMixIn(object):
         cfg.update(config)
         options = SOURCE_TYPES[self.type].options
         sconfig = SourceConfiguration(self._cw.vreg.config, options=options)
-        for opt, val in cfg.iteritems():
+        for opt, val in cfg.items():
             try:
                 sconfig.set_option(opt, val)
             except OptionError:

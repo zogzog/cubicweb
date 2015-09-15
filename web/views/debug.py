@@ -170,7 +170,7 @@ class RegistryView(StartupView):
                 continue
             self.w(u'<h3 id="%s">%s</h3>' % (key, key))
             if self._cw.vreg[key]:
-                values = sorted(self._cw.vreg[key].iteritems())
+                values = sorted(self._cw.vreg[key].items())
                 self.wview('pyvaltable', pyvalue=[(key, xml_escape(repr(val)))
                                                   for key, val in values])
             else:

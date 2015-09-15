@@ -84,7 +84,7 @@ def optional_kwargs(extraargs):
     if extraargs is None:
         return {}
     # we receive unicode keys which is not supported by the **syntax
-    return dict((str(key), value) for key, value in extraargs.iteritems())
+    return dict((str(key), value) for key, value in extraargs.items())
 
 
 class AjaxController(Controller):

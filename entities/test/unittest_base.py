@@ -60,7 +60,7 @@ class MetadataTC(BaseEntityTC):
         # XXX move to yams
         self.assertEqual(self.schema['CWUser'].meta_attributes(), {})
         self.assertEqual(dict((str(k), v)
-                              for k, v in self.schema['State'].meta_attributes().iteritems()),
+                              for k, v in self.schema['State'].meta_attributes().items()),
                           {'description_format': ('format', 'description')})
 
     def test_fti_rql_method(self):

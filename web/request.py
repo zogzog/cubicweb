@@ -138,7 +138,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         #: received headers
         self._headers_in = Headers()
         if headers is not None:
-            for k, v in headers.iteritems():
+            for k, v in headers.items():
                 self._headers_in.addRawHeader(k, v)
         #: form parameters
         self.setup_params(form)
@@ -251,7 +251,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         if params is None:
             return
         encoding = self.encoding
-        for param, val in params.iteritems():
+        for param, val in params.items():
             if isinstance(val, (tuple, list)):
                 val = [unicode(x, encoding) for x in val]
                 if len(val) == 1:
@@ -801,7 +801,7 @@ class _CubicWebRequestBase(RequestSessionBase):
     def header_accept_language(self):
         """returns an ordered list of preferred languages"""
         acceptedlangs = self.get_header('Accept-Language', raw=False) or {}
-        for lang, _ in sorted(acceptedlangs.iteritems(), key=lambda x: x[1],
+        for lang, _ in sorted(acceptedlangs.items(), key=lambda x: x[1],
                               reverse=True):
             lang = lang.split('-')[0]
             yield lang

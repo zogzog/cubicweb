@@ -306,7 +306,7 @@ def varmap_test_repr(varmap, tablesinorder):
     if varmap is None:
         return varmap
     maprepr = {}
-    for var, sql in varmap.iteritems():
+    for var, sql in varmap.items():
         table, col = sql.split('.')
         maprepr[var] = '%s.%s' % (tablesinorder[table], col)
     return maprepr
@@ -527,7 +527,7 @@ class UpdateStep(Step):
             result[i] = newrow
         # update entities
         repo.glob_add_relations(cnx, relations)
-        for eid, edited in edefs.iteritems():
+        for eid, edited in edefs.items():
             repo.glob_update_entity(cnx, edited)
         return result
 

@@ -151,7 +151,7 @@ class MigrationCommandsTC(MigrationTC):
             orderdict2 = dict(mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                          'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
             whateverorder = migrschema['whatever'].rdef('Note', 'Int').order
-            for k, v in orderdict.iteritems():
+            for k, v in orderdict.items():
                 if v >= whateverorder:
                     orderdict[k] = v+1
             orderdict['whatever'] = whateverorder

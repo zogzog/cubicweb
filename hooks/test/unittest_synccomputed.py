@@ -62,7 +62,7 @@ class FormulaDependenciesMatrixTC(TestCase):
     def test_computed_attribute_by_relation(self):
         comp_by_rdef = self.dependencies.computed_attribute_by_relation
         self.assertEqual(len(comp_by_rdef), 1)
-        key, values = iter(comp_by_rdef.iteritems()).next()
+        key, values = iter(comp_by_rdef.items()).next()
         self.assertEqual(key.rtype, 'works_for')
         self.assertEqual(len(values), 1)
         self.assertEqual(values[0].rtype, 'total_salary')
@@ -73,7 +73,7 @@ class FormulaDependenciesMatrixTC(TestCase):
         values = comp_by_attr['Person']
         self.assertEqual(len(values), 2)
         values = set((rdef.formula, tuple(v))
-                     for rdef, v in values.iteritems())
+                     for rdef, v in values.items())
         self.assertEquals(values,
                           set((('Any 2014 - D WHERE X birth_year D', tuple(('birth_year',))),
                                ('Any SUM(SA) GROUPBY X WHERE P works_for X, P salary SA', tuple(('salary',)))))

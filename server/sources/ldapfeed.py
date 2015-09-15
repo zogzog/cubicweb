@@ -185,7 +185,7 @@ You can set multiple groups by separating them by a comma.',
         self.user_default_groups = typedconfig['user-default-group']
         self.user_attrs = {'dn': 'eid', 'modifyTimestamp': 'modification_date'}
         self.user_attrs.update(typedconfig['user-attrs-map'])
-        self.user_rev_attrs = dict((v, k) for k, v in self.user_attrs.iteritems())
+        self.user_rev_attrs = dict((v, k) for k, v in self.user_attrs.items())
         self.base_filters = [filter_format('(%s=%s)', ('objectClass', o))
                              for o in typedconfig['user-classes']]
         if typedconfig['user-filter']:
@@ -195,7 +195,7 @@ You can set multiple groups by separating them by a comma.',
         self.group_attrs = typedconfig['group-attrs-map']
         self.group_attrs = {'dn': 'eid', 'modifyTimestamp': 'modification_date'}
         self.group_attrs.update(typedconfig['group-attrs-map'])
-        self.group_rev_attrs = dict((v, k) for k, v in self.group_attrs.iteritems())
+        self.group_rev_attrs = dict((v, k) for k, v in self.group_attrs.items())
         self.group_base_filters = [filter_format('(%s=%s)', ('objectClass', o))
                                    for o in typedconfig['group-classes']]
         if typedconfig['group-filter']:
@@ -349,7 +349,7 @@ You can set multiple groups by separating them by a comma.',
             # This appears to be some sort of internal referral, but
             # we can't handle it, so we need to skip over it.
             try:
-                items = rec_dict.iteritems()
+                items = rec_dict.items()
             except AttributeError:
                 continue
             else:

@@ -140,7 +140,7 @@ class TreeView(EntityView):
             ajaxargs = json.loads(form.pop('morekwargs'))
             # got unicode & python keywords must be strings
             morekwargs.update(dict((str(k), v)
-                                   for k, v in ajaxargs.iteritems()))
+                                   for k, v in ajaxargs.items()))
         toplevel_thru_ajax = form.pop('treeview_top', False) or initial_thru_ajax
         toplevel = toplevel_thru_ajax or (initial_load and not form.get('fname'))
         return subvid, treeid, toplevel_thru_ajax, toplevel

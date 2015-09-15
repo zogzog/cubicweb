@@ -119,10 +119,10 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         _ = self._cw._
         self.w(u'<h1>%s</h1>\n' % _(self.title))
         for label, group, form in sorted((_(g), g, f)
-                                         for g, f in mainforms.iteritems()):
+                                         for g, f in mainforms.items()):
             self.wrap_main_form(group, label, form)
         for label, group, objects in sorted((_(g), g, o)
-                                            for g, o in groupedforms.iteritems()):
+                                            for g, o in groupedforms.items()):
             self.wrap_grouped_form(group, label, objects)
 
     @property
@@ -224,7 +224,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
           (make_togglable_link('fieldset_' + group, label)))
         self.w(u'<div id="fieldset_%s" %s>' % (group, status))
         sorted_objects = sorted((self._cw.__('%s_%s' % (group, o)), o, f)
-                                for o, f in objects.iteritems())
+                                for o, f in objects.items())
         for label, oid, form in sorted_objects:
             self.wrap_object_form(group, oid, label, form)
         self.w(u'</div>')

@@ -449,10 +449,10 @@ class DataFeedParser(AppObject):
     def handle_deletion(self, config, cnx, myuris):
         if config['delete-entities'] and myuris:
             byetype = {}
-            for extid, (eid, etype) in myuris.iteritems():
+            for extid, (eid, etype) in myuris.items():
                 if self.is_deleted(extid, etype, eid):
                     byetype.setdefault(etype, []).append(str(eid))
-            for etype, eids in byetype.iteritems():
+            for etype, eids in byetype.items():
                 self.warning('delete %s %s entities', len(eids), etype)
                 cnx.execute('DELETE %s X WHERE X eid IN (%s)'
                             % (etype, ','.join(eids)))
@@ -465,7 +465,7 @@ class DataFeedParser(AppObject):
         self.notify_checked(entity)
         mdate = attrs.get('modification_date')
         if not mdate or mdate > entity.modification_date:
-            attrs = dict( (k, v) for k, v in attrs.iteritems()
+            attrs = dict( (k, v) for k, v in attrs.items()
                           if v != getattr(entity, k))
             if attrs:
                 entity.cw_set(**attrs)

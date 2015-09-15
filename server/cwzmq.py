@@ -65,7 +65,7 @@ class ZMQComm(object):
 
     def add_subscriber(self, address):
         subscriber = Subscriber(self.ioloop, address)
-        for topic, callback in self._topics.iteritems():
+        for topic, callback in self._topics.items():
             subscriber.subscribe(topic, callback)
         self._subscribers.append(subscriber)
 

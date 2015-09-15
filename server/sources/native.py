@@ -674,7 +674,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     etypes[etype].append((subject, object))
                 else:
                     etypes[etype] = [(subject, object)]
-            for subj_etype, subj_obj_list in etypes.iteritems():
+            for subj_etype, subj_obj_list in etypes.items():
                 attrs = [{'cw_eid': subject, SQL_PREFIX + rtype: object}
                          for subject, object in subj_obj_list]
                 sql.append((self.sqlgen.update(SQL_PREFIX + etype, attrs[0],
@@ -976,7 +976,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if actionfilters.pop('public', True):
                 genrestr['txa_public'] = True
             # put additional filters in trarestr and/or tearestr
-            for key, val in actionfilters.iteritems():
+            for key, val in actionfilters.items():
                 if key == 'etype':
                     # filtering on etype implies filtering on entity actions
                     # only, and with no eid specified

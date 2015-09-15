@@ -81,7 +81,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
                                                   headers= headers_in)
         self.content = environ['wsgi.input']
         if files is not None:
-            for key, part in files.iteritems():
+            for key, part in files.items():
                 self.form[key] = (part.filename, part.file)
 
     def __repr__(self):
@@ -148,7 +148,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         if params is None:
             return
         encoding = self.encoding
-        for param, val in params.iteritems():
+        for param, val in params.items():
             if isinstance(val, (tuple, list)):
                 val = [
                     unicode(x, encoding) if isinstance(x, str) else x

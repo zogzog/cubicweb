@@ -493,8 +493,8 @@ class ConfigurationProblem(object):
             self.dependencies[cube] = dict(self.config.cube_dependencies(cube))
             self.dependencies[cube]['cubicweb'] = self.config.cube_depends_cubicweb_version(cube)
         # compute reverse dependencies
-        for cube, dependencies in self.dependencies.iteritems():
-            for name, constraint in dependencies.iteritems():
+        for cube, dependencies in self.dependencies.items():
+            for name, constraint in dependencies.items():
                 self.reverse_dependencies.setdefault(name,set())
                 if constraint:
                     try:

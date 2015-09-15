@@ -382,7 +382,7 @@ class CWRegistryStore(RegistryStore):
         return [item for item in super(CWRegistryStore, self).items()
                 if not item[0] in ('propertydefs', 'propertyvalues')]
     def iteritems(self):
-        return (item for item in super(CWRegistryStore, self).iteritems()
+        return (item for item in super(CWRegistryStore, self).items()
                 if not item[0] in ('propertydefs', 'propertyvalues'))
 
     def values(self):
@@ -576,7 +576,7 @@ class CWRegistryStore(RegistryStore):
         if withsitewide:
             return sorted(k for k in self['propertydefs']
                           if not k.startswith('sources.'))
-        return sorted(k for k, kd in self['propertydefs'].iteritems()
+        return sorted(k for k, kd in self['propertydefs'].items()
                       if not kd['sitewide'] and not k.startswith('sources.'))
 
     def register_property(self, key, type, help, default=None, vocabulary=None,

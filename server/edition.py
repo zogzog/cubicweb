@@ -96,7 +96,7 @@ class EditedEntity(dict):
             setitem = self.__setitem__
         else:
             setitem = self.edited_attribute
-        for attr, value in values.iteritems():
+        for attr, value in values.items():
             setitem(attr, value)
 
     def edited_attribute(self, attr, value):

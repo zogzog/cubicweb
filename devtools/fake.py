@@ -112,7 +112,7 @@ class FakeRequest(ConnectionCubicWebRequestBase):
     def build_url_params(self, **kwargs):
         # overriden to get predictable resultts
         args = []
-        for param, values in sorted(kwargs.iteritems()):
+        for param, values in sorted(kwargs.items()):
             if not isinstance(values, (list, tuple)):
                 values = (values,)
             for value in values:

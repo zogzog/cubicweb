@@ -292,7 +292,7 @@ class AutoClickAndEditFormView(EntityView):
             cwtarget='eformframe', cssclass='releditForm',
             **formargs)
         # pass reledit arguments
-        for pname, pvalue in event_args.iteritems():
+        for pname, pvalue in event_args.items():
             form.add_hidden('__reledit|' + pname, pvalue)
         # handle buttons
         if form.form_buttons: # edition, delete

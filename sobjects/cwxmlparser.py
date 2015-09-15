@@ -125,7 +125,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
 
     def list_actions(self):
         reg = self._cw.vreg['components']
-        return sorted(clss[0].action for rid, clss in reg.iteritems()
+        return sorted(clss[0].action for rid, clss in reg.items()
                       if rid.startswith('cw.entityxml.action.'))
 
     # mapping handling #########################################################
@@ -221,7 +221,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
 
     def process_relations(self, entity, rels):
         etype = entity.cw_etype
-        for (rtype, role, action), rules in self.source.mapping.get(etype, {}).iteritems():
+        for (rtype, role, action), rules in self.source.mapping.get(etype, {}).items():
             try:
                 related_items = rels[role][rtype]
             except KeyError:

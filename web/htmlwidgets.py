@@ -341,7 +341,7 @@ class TableWidget(HTMLWidget):
         self.w(u'<thead>')
         self.w(u'<tr class="header">')
         for column in self.columns:
-            attrs = ('%s="%s"' % (name, value) for name, value in column.cell_attrs.iteritems())
+            attrs = ('%s="%s"' % (name, value) for name, value in column.cell_attrs.items())
             self.w(u'<th %s>%s</th>' % (' '.join(attrs), column.name or u''))
         self.w(u'</tr>')
         self.w(u'</thead><tbody>')
@@ -351,7 +351,7 @@ class TableWidget(HTMLWidget):
             for column, sortvalue in self.itercols(rowindex):
                 attrs = dict(column.cell_attrs)
                 attrs["cubicweb:sortvalue"] = sortvalue
-                attrs = ('%s="%s"' % (name, value) for name, value in attrs.iteritems())
+                attrs = ('%s="%s"' % (name, value) for name, value in attrs.items())
                 self.w(u'<td %s>' % (' '.join(attrs)))
                 for cellvid, colindex in column.cellrenderers:
                     self.model.render_cell(cellvid, rowindex, colindex, w=self.w)

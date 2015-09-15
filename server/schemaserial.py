@@ -149,7 +149,7 @@ def deserialize_schema(schema, cnx):
                     {'x': etype, 'n': netype})
             cnx.commit(False)
             tocleanup = [eid]
-            tocleanup += (eid for eid, cached in repo._type_source_cache.iteritems()
+            tocleanup += (eid for eid, cached in repo._type_source_cache.items()
                           if etype == cached[0])
             repo.clear_caches(tocleanup)
             cnx.commit(False)
@@ -334,7 +334,7 @@ def set_perms(erschema, permsidx):
         thispermsdict = permsidx[erschema.eid]
     except KeyError:
         return
-    for action, somethings in thispermsdict.iteritems():
+    for action, somethings in thispermsdict.items():
         erschema.permissions[action] = tuple(
             isinstance(p, tuple) and erschema.rql_expression(*p) or p
             for p in somethings)
@@ -384,7 +384,7 @@ def serialize_schema(cnx, schema):
             continue
         execschemarql(execute, rschema, rschema2rql(rschema, addrdef=False))
         if rschema.symmetric:
-            rdefs = [rdef for k, rdef in rschema.rdefs.iteritems()
+            rdefs = [rdef for k, rdef in rschema.rdefs.items()
                      if (rdef.subject, rdef.object) == k]
         else:
             rdefs = rschema.rdefs.itervalues()

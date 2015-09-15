@@ -56,7 +56,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
     eschema = schema.eschema
     allpossibletypes = {}
     for solution in solutions:
-        for varname, etype in solution.iteritems():
+        for varname, etype in solution.items():
             # XXX not considering aliases by design, right ?
             if varname not in newroot.defined_vars or eschema(etype).final:
                 continue
@@ -332,7 +332,7 @@ class RQLRewriter(object):
             union.replace(select, newselect)
         elif not () in localchecks:
             union.remove(select)
-        for lcheckdef, lchecksolutions in localchecks.iteritems():
+        for lcheckdef, lchecksolutions in localchecks.items():
             if not lcheckdef:
                 continue
             myrqlst = select.copy(solutions=lchecksolutions)
@@ -648,7 +648,7 @@ class RQLRewriter(object):
         # insert "is" where necessary
         varexistsmap = {}
         self.removing_ambiguity = True
-        for (erqlexpr, varmap, oldvarname), etype in variantes[0].iteritems():
+        for (erqlexpr, varmap, oldvarname), etype in variantes[0].items():
             varname = self.rewritten[(erqlexpr, varmap, oldvarname)]
             var = self.select.defined_vars[varname]
             exists = var.references()[0].scope
@@ -657,7 +657,7 @@ class RQLRewriter(object):
         # insert ORED exists where necessary
         for variante in variantes[1:]:
             self.insert_snippets(snippets, varexistsmap)
-            for key, etype in variante.iteritems():
+            for key, etype in variante.items():
                 varname = self.rewritten[key]
                 try:
                     var = self.select.defined_vars[varname]
@@ -676,7 +676,7 @@ class RQLRewriter(object):
         variantes = set()
         for sol in newsolutions:
             variante = []
-            for key, newvar in self.rewritten.iteritems():
+            for key, newvar in self.rewritten.items():
                 variante.append( (key, sol[newvar]) )
             variantes.add(tuple(variante))
         # rebuild variantes as dict

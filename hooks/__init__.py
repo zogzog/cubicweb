@@ -52,7 +52,7 @@ class UpdateFeedsStartupHook(hook.Hook):
         def update_feeds(repo):
             # take a list to avoid iterating on a dictionary whose size may
             # change
-            for uri, source in list(repo.sources_by_uri.iteritems()):
+            for uri, source in list(repo.sources_by_uri.items()):
                 if (uri == 'system'
                     or not repo.config.source_enabled(source)
                     or not source.config['synchronize']):
@@ -72,7 +72,7 @@ class DataImportsCleanupStartupHook(hook.Hook):
 
     def __call__(self):
         def expire_dataimports(repo=self.repo):
-            for uri, source in repo.sources_by_uri.iteritems():
+            for uri, source in repo.sources_by_uri.items():
                 if (uri == 'system'
                     or not repo.config.source_enabled(source)):
                     continue

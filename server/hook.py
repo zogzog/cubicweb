@@ -372,7 +372,7 @@ class HooksRegistry(CWRegistry):
         pruned = set()
         cnx.pruned_hooks_cache[cache_key] = pruned
         if look_for_selector is not None:
-            for id, hooks in self.iteritems():
+            for id, hooks in self.items():
                 for hook in hooks:
                     enabled_cat, main_filter = hook.filterable_selectors()
                     if enabled_cat is not None:

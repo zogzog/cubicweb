@@ -269,7 +269,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
         if not 'inlined' in sectdict:
             sectdict['inlined'] = sectdict['main']
         # recompute formsections and set it to avoid recomputing
-        for formtype, section in sectdict.iteritems():
+        for formtype, section in sectdict.items():
             formsections.add('%s_%s' % (formtype, section))
 
     def tag_relation(self, key, formtype, section):
@@ -304,7 +304,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
                 rtags[section] = value
         cls = self.tag_container_cls
         rtags = cls('_'.join([section,value])
-                    for section,value in rtags.iteritems())
+                    for section,value in rtags.items())
         return rtags
 
     def get(self, *key):

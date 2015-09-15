@@ -40,7 +40,7 @@ class RecomputeAttributeOperation(hook.DataOperationMixIn, hook.Operation):
             self._container[computed_attribute] = set((eid,))
 
     def precommit_event(self):
-        for computed_attribute_rdef, eids in self.get_data().iteritems():
+        for computed_attribute_rdef, eids in self.get_data().items():
             attr = computed_attribute_rdef.rtype
             formula  = computed_attribute_rdef.formula
             select = self.cnx.repo.vreg.rqlhelper.parse(formula).children[0]
@@ -110,7 +110,7 @@ class AttributeInvolvedInCAModifiedHook(hook.Hook):
 
     def __call__(self):
         edited_attributes = frozenset(self.entity.cw_edited)
-        for rdef, used_attributes in self.attributes_computed_attributes.iteritems():
+        for rdef, used_attributes in self.attributes_computed_attributes.items():
             if edited_attributes.intersection(used_attributes):
                 # XXX optimize if the modified attributes belong to the same
                 # entity as the computed attribute
@@ -178,7 +178,7 @@ class _FormulaDependenciesMatrix(object):
                             self.computed_attribute_by_relation[depend_on_rdef].append(rdef)
 
     def generate_entity_creation_hooks(self):
-        for etype, computed_attributes in self.computed_attribute_by_etype.iteritems():
+        for etype, computed_attributes in self.computed_attribute_by_etype.items():
             regid = 'computed_attribute.%s_created' % etype
             selector = hook.is_instance(etype)
             yield type('%sCreatedHook' % etype,
@@ -188,7 +188,7 @@ class _FormulaDependenciesMatrix(object):
                         'computed_attributes': computed_attributes})
 
     def generate_relation_change_hooks(self):
-        for rdef, computed_attributes in self.computed_attribute_by_relation.iteritems():
+        for rdef, computed_attributes in self.computed_attribute_by_relation.items():
             regid = 'computed_attribute.%s_modified' % rdef.rtype
             selector = hook.match_rtype(rdef.rtype.type,
                                         frometypes=(rdef.subject.type,),
@@ -206,7 +206,7 @@ class _FormulaDependenciesMatrix(object):
                         'optimized_computed_attributes': optimized_computed_attributes})
 
     def generate_entity_update_hooks(self):
-        for etype, attributes_computed_attributes in self.computed_attribute_by_etype_attrs.iteritems():
+        for etype, attributes_computed_attributes in self.computed_attribute_by_etype_attrs.items():
             regid = 'computed_attribute.%s_updated' % etype
             selector = hook.is_instance(etype)
             yield type('%sModifiedHook' % etype,

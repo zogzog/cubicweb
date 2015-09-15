@@ -168,7 +168,7 @@ class NoHookRQLObjectStore(RQLObjectStore):
         """Given an entity type, attributes and inlined relations, returns the inserted entity's
         eid.
         """
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             kwargs[k] = getattr(v, 'eid', v)
         entity, rels = self.metagen.base_etype_dicts(etype)
         # make a copy to keep cached entity pristine
@@ -183,7 +183,7 @@ class NoHookRQLObjectStore(RQLObjectStore):
         kwargs = dict()
         if inspect.getargspec(self.add_relation).keywords:
             kwargs['subjtype'] = entity.cw_etype
-        for rtype, targeteids in rels.iteritems():
+        for rtype, targeteids in rels.items():
             # targeteids may be a single eid or a list of eids
             inlined = self.rschema(rtype).inlined
             try:

@@ -103,7 +103,7 @@ class ResultSet(object):
         if self._rsetactions is None:
             self._rsetactions = {}
         if kwargs:
-            key = tuple(sorted(kwargs.iteritems()))
+            key = tuple(sorted(kwargs.items()))
         else:
             key = None
         try:
@@ -509,9 +509,9 @@ class ResultSet(object):
             eschema = entity.e_schema
             eid_col, attr_cols, rel_cols = self._rset_structure(eschema, col)
             entity.eid = rowvalues[eid_col]
-            for attr, col_idx in attr_cols.iteritems():
+            for attr, col_idx in attr_cols.items():
                 entity.cw_attr_cache[attr] = rowvalues[col_idx]
-            for (rtype, role), col_idx in rel_cols.iteritems():
+            for (rtype, role), col_idx in rel_cols.items():
                 value = rowvalues[col_idx]
                 if value is None:
                     if role == 'subject':

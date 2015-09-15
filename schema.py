@@ -329,7 +329,7 @@ class RQLExpression(object):
         """
         creating = kwargs.get('creating')
         if not creating and self.eid is not None:
-            key = (self.eid, tuple(sorted(kwargs.iteritems())))
+            key = (self.eid, tuple(sorted(kwargs.items())))
             try:
                 return _cw.local_perm_cache[key]
             except KeyError:
@@ -717,7 +717,7 @@ orig_check_permission_definitions = RelationDefinitionSchema.check_permission_de
 def check_permission_definitions(self):
     orig_check_permission_definitions(self)
     schema = self.subject.schema
-    for action, groups in self.permissions.iteritems():
+    for action, groups in self.permissions.items():
         for group_or_rqlexpr in groups:
             if action == 'read' and \
                    isinstance(group_or_rqlexpr, RQLExpression):
