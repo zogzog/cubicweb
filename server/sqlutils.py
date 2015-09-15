@@ -25,8 +25,9 @@ import os
 import re
 import subprocess
 from os.path import abspath
-from itertools import ifilter
 from logging import getLogger
+
+from six.moves import filter
 
 from logilab import database as db, common as lgc
 from logilab.common.shellutils import ProgressBar, DummyProgressBar
@@ -178,9 +179,9 @@ def sql_drop_all_user_tables(driver_or_helper, sqlcursor):
     # for mssql, we need to drop views before tables
     if hasattr(dbhelper, 'list_views'):
         cmds += ['DROP VIEW %s;' % name
-                 for name in ifilter(_SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION, dbhelper.list_views(sqlcursor))]
+                 for name in filter(_SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION, dbhelper.list_views(sqlcursor))]
     cmds += ['DROP TABLE %s;' % name
-             for name in ifilter(_SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION, dbhelper.list_tables(sqlcursor))]
+             for name in filter(_SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION, dbhelper.list_tables(sqlcursor))]
     return '\n'.join(cmds)
 
 
