@@ -19,6 +19,8 @@
 
 __docformat__ = "restructuredtext en"
 
+from six import PY2
+
 from logilab.mtconverter import xml_escape
 from logilab.common.registry import yes
 from logilab.common.deprecation import deprecated
@@ -87,7 +89,7 @@ class Controller(AppObject):
         rql = req.form.get('rql')
         if rql:
             req.ensure_ro_rql(rql)
-            if not isinstance(rql, unicode):
+            if PY2 and not isinstance(rql, unicode):
                 rql = unicode(rql, req.encoding)
             pp = req.vreg['components'].select_or_none('magicsearch', req)
             if pp is not None:
