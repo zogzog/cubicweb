@@ -226,8 +226,10 @@ class UStringIO(list):
         self.tracewrites = tracewrites
         super(UStringIO, self).__init__(*args, **kwargs)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
+
+    __nonzero__ = __bool__
 
     def write(self, value):
         assert isinstance(value, text_type), u"unicode required not %s : %s"\
