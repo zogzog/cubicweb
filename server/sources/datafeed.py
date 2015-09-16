@@ -22,11 +22,11 @@ database
 import StringIO
 from os.path import exists
 from datetime import datetime, timedelta
-from cookielib import CookieJar
 
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.request import Request, build_opener, HTTPCookieProcessor
 from six.moves.urllib.error import HTTPError
+from six.moves.http_cookiejar import CookieJar
 
 from lxml import etree
 
