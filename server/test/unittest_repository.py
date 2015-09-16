@@ -339,6 +339,15 @@ class RepositoryTC(CubicWebTC):
                 self.assertEqual(cm.exception.errors, {'hip': 'hop'})
                 cnx.rollback()
 
+    def test_attribute_cache(self):
+        with self.admin_access.repo_cnx() as cnx:
+            bk = cnx.create_entity('Bookmark', title=u'index', path=u'/')
+            cnx.commit()
+            self.assertEqual(bk.title, 'index')
+            bk.cw_set(title=u'root')
+            self.assertEqual(bk.title, 'root')
+            cnx.commit()
+            self.assertEqual(bk.title, 'root')
 
 class SchemaDeserialTC(CubicWebTC):
 
