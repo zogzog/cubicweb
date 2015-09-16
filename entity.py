@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from functools import partial
 
-from six import string_types, integer_types
+from six import text_type, string_types, integer_types
 from six.moves import range
 
 from logilab.common.decorators import cached
@@ -60,7 +60,7 @@ def can_use_rest_path(value):
     """return True if value can be used at the end of a Rest URL path"""
     if value is None:
         return False
-    value = unicode(value)
+    value = text_type(value)
     # the check for ?, /, & are to prevent problems when running
     # behind Apache mod_proxy
     if value == u'' or u'?' in value or u'/' in value or u'&' in value:
@@ -680,8 +680,8 @@ class Entity(AppObject):
         if path is None:
             # fallback url: <base-url>/<eid> url is used as cw entities uri,
             # prefer it to <base-url>/<etype>/eid/<eid>
-            return unicode(value)
-        return '%s/%s' % (path, self._cw.url_quote(value))
+            return text_type(value)
+        return u'%s/%s' % (path, self._cw.url_quote(value))
 
     def cw_attr_metadata(self, attr, metadata):
         """return a metadata for an attribute (None if unspecified)"""

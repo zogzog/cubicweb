@@ -24,6 +24,8 @@ from cubicweb import _
 
 from threading import Lock
 
+from six import text_type
+
 from cubicweb import validation_error, neg_role
 from cubicweb.schema import (META_RTYPES, WORKFLOW_RTYPES,
                              RQLConstraint, RQLUniqueConstraint)
@@ -292,7 +294,7 @@ class TidyHtmlFields(IntegrityHook):
                     value = edited[attr]
                 except KeyError:
                     continue # no text to tidy
-                if isinstance(value, unicode): # filter out None and Binary
+                if isinstance(value, text_type): # filter out None and Binary
                     if getattr(entity, str(metaattr)) == 'text/html':
                         edited[attr] = soup2xhtml(value, self._cw.encoding)
 

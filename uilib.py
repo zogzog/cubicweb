@@ -28,7 +28,7 @@ import csv
 import re
 from io import StringIO
 
-from six import string_types, integer_types
+from six import PY3, text_type, binary_type, string_types, integer_types
 
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
@@ -64,7 +64,7 @@ def print_string(value, req, props, displaytime=True):
     return value
 
 def print_int(value, req, props, displaytime=True):
-    return unicode(value)
+    return text_type(value)
 
 def print_date(value, req, props, displaytime=True):
     return ustrftime(value, req.property_value('ui.date-format'))
@@ -124,7 +124,7 @@ def print_boolean(value, req, props, displaytime=True):
     return req._('no')
 
 def print_float(value, req, props, displaytime=True):
-    return unicode(req.property_value('ui.float-format') % value)
+    return text_type(req.property_value('ui.float-format') % value) # XXX cast needed ?
 
 PRINTERS = {
     'Bytes': print_bytes,
@@ -391,7 +391,7 @@ HTML4_EMPTY_TAGS = frozenset(('base', 'meta', 'link', 'hr', 'br', 'param',
                               'img', 'area', 'input', 'col'))
 
 def sgml_attributes(attrs):
-    return u' '.join(u'%s="%s"' % (attr, xml_escape(unicode(value)))
+    return u' '.join(u'%s="%s"' % (attr, xml_escape(text_type(value)))
                      for attr, value in sorted(attrs.items())
                      if value is not None)
 
@@ -409,7 +409,7 @@ def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
         value += u' ' + sgml_attributes(attrs)
     if content:
         if escapecontent:
-            content = xml_escape(unicode(content))
+            content = xml_escape(text_type(content))
         value += u'>%s</%s>' % (content, tag)
     else:
         if tag in HTML4_EMPTY_TAGS:
@@ -438,8 +438,8 @@ def ureport_as_html(layout):
     stream = StringIO() #UStringIO() don't want unicode assertion
     formater.format(layout, stream)
     res = stream.getvalue()
-    if isinstance(res, str):
-        res = unicode(res, 'UTF8')
+    if isinstance(res, binary_type):
+        res = res.decode('UTF8')
     return res
 
 # traceback formatting ########################################################
@@ -447,14 +447,17 @@ def ureport_as_html(layout):
 import traceback
 
 def exc_message(ex, encoding):
-    try:
-        excmsg = unicode(ex)
-    except Exception:
+    if PY3:
+        excmsg = str(ex)
+    else:
         try:
-            excmsg = unicode(str(ex), encoding, 'replace')
+            excmsg = unicode(ex)
         except Exception:
-            excmsg = unicode(repr(ex), encoding, 'replace')
-    exctype = unicode(ex.__class__.__name__)
+            try:
+                excmsg = unicode(str(ex), encoding, 'replace')
+            except Exception:
+                excmsg = unicode(repr(ex), encoding, 'replace')
+    exctype = ex.__class__.__name__
     return u'%s: %s' % (exctype, excmsg)
 
 
@@ -541,7 +544,7 @@ class UnicodeCSVWriter:
     def writerow(self, row):
         csvrow = []
         for elt in row:
-            if isinstance(elt, unicode):
+            if isinstance(elt, text_type):
                 csvrow.append(elt.encode(self.encoding))
             else:
                 csvrow.append(str(elt))

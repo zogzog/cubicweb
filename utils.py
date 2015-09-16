@@ -101,7 +101,7 @@ class wrap_on_write(object):
     """
     def __init__(self, w, tag, closetag=None):
         self.written = False
-        self.tag = unicode(tag)
+        self.tag = text_type(tag)
         self.closetag = closetag
         self.w = w
 
@@ -117,7 +117,7 @@ class wrap_on_write(object):
     def __exit__(self, exctype, value, traceback):
         if self.written is True:
             if self.closetag:
-                self.w(unicode(self.closetag))
+                self.w(text_type(self.closetag))
             else:
                 self.w(self.tag.replace('<', '</', 1))
 

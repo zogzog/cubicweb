@@ -25,7 +25,7 @@ from os.path import join, basename
 from logging import getLogger
 from warnings import warn
 
-from six import string_types, add_metaclass
+from six import text_type, string_types, add_metaclass
 from six.moves import range
 
 from logilab.common import tempattr
@@ -557,9 +557,9 @@ def display_name(req, key, form='', context=None):
         key = key + '_' + form
     # ensure unicode
     if context is not None:
-        return unicode(req.pgettext(context, key))
+        return text_type(req.pgettext(context, key))
     else:
-        return unicode(req._(key))
+        return text_type(req._(key))
 
 
 # Schema objects definition ###################################################

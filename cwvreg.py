@@ -28,6 +28,8 @@ from warnings import warn
 from datetime import datetime, date, time, timedelta
 from functools import reduce
 
+from six import text_type, binary_type
+
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.modutils import cleanup_sys_modules
@@ -221,9 +223,9 @@ class ViewsRegistry(CWRegistry):
         """
         obj = self.select(oid, req, rset=rset, **kwargs)
         res = obj.render(**kwargs)
-        if isinstance(res, unicode):
+        if isinstance(res, text_type):
             return res.encode(req.encoding)
-        assert isinstance(res, str)
+        assert isinstance(res, binary_type)
         return res
 
     def possible_views(self, req, rset=None, **kwargs):

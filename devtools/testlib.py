@@ -961,11 +961,11 @@ class CubicWebTC(TestCase):
         if content_type is None:
             content_type = 'text/html'
         if content_type in ('text/html', 'application/xhtml+xml') and output:
-            if output.startswith('<!DOCTYPE html>'):
+            if output.startswith(b'<!DOCTYPE html>'):
                 # only check XML well-formness since HTMLValidator isn't html5
                 # compatible and won't like various other extensions
                 default_validator = htmlparser.XMLSyntaxValidator
-            elif output.startswith('<?xml'):
+            elif output.startswith(b'<?xml'):
                 default_validator = htmlparser.DTDValidator
             else:
                 default_validator = htmlparser.HTMLValidator
@@ -1006,7 +1006,7 @@ class CubicWebTC(TestCase):
                 str_exc = str(exc)
             except Exception:
                 str_exc = 'undisplayable exception'
-            msg += str_exc
+            msg += str_exc.encode(sys.getdefaultencoding(), 'replace')
             if content is not None:
                 position = getattr(exc, "position", (0,))[0]
                 if position:
