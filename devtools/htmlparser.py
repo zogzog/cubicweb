@@ -33,7 +33,7 @@ TRANSITIONAL_DOCTYPE = str(TRANSITIONAL_DOCTYPE)
 
 ERR_COUNT = 0
 
-_REM_SCRIPT_RGX = re.compile(r"<script[^>]*>.*?</script>", re.U|re.M|re.I|re.S)
+_REM_SCRIPT_RGX = re.compile(br"<script[^>]*>.*?</script>", re.M|re.I|re.S)
 def _remove_script_tags(data):
     """Remove the script (usually javascript) tags to help the lxml
     XMLParser / HTMLParser do their job. Without that, they choke on
@@ -70,7 +70,7 @@ def _remove_script_tags(data):
     #
     # using that, we'll miss most actual validation error we want to
     # catch. For now, use dumb regexp
-    return _REM_SCRIPT_RGX.sub('', data)
+    return _REM_SCRIPT_RGX.sub(b'', data)
 
 
 class Validator(object):

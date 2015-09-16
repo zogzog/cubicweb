@@ -66,7 +66,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from datetime import datetime, timedelta
 
-from six import string_types
+from six import text_type, string_types
 
 from logilab.mtconverter import xml_escape
 from logilab.common import nullobject
@@ -281,7 +281,7 @@ class Field(object):
             return u''
         if value is True:
             return u'1'
-        return unicode(value)
+        return text_type(value)
 
     def get_widget(self, form):
         """return the widget instance associated to this field"""
@@ -796,7 +796,7 @@ class EditableFileField(FileField):
             if data:
                 encoding = self.encoding(form)
                 try:
-                    form.formvalues[(self, form)] = unicode(data.getvalue(), encoding)
+                    form.formvalues[(self, form)] = data.getvalue().decode(encoding)
                 except UnicodeError:
                     pass
                 else:
@@ -817,7 +817,7 @@ class EditableFileField(FileField):
 
     def _process_form_value(self, form):
         value = form._cw.form.get(self.input_name(form))
-        if isinstance(value, unicode):
+        if isinstance(value, text_type):
             # file modified using a text widget
             return Binary(value.encode(self.encoding(form)))
         return super(EditableFileField, self)._process_form_value(form)
@@ -948,7 +948,7 @@ class TimeIntervalField(StringField):
     def format_single_value(self, req, value):
         if value:
             value = format_time(value.days * 24 * 3600 + value.seconds)
-            return unicode(value)
+            return text_type(value)
         return u''
 
     def example_format(self, req):
@@ -995,7 +995,7 @@ class DateField(StringField):
             try:
                 value = form._cw.parse_datetime(value, self.etype)
             except ValueError as ex:
-                raise ProcessFormError(unicode(ex))
+                raise ProcessFormError(text_type(ex))
         return value
 
 
@@ -1085,7 +1085,7 @@ class RelationField(Field):
         linkedto = form.linked_to.get((self.name, self.role))
         if linkedto:
             buildent = form._cw.entity_from_eid
-            return [(buildent(eid).view('combobox'), unicode(eid))
+            return [(buildent(eid).view('combobox'), text_type(eid))
                     for eid in linkedto]
         return []
 
@@ -1097,7 +1097,7 @@ class RelationField(Field):
         # vocabulary doesn't include current values, add them
         if form.edited_entity.has_eid():
             rset = form.edited_entity.related(self.name, self.role)
-            vocab += [(e.view('combobox'), unicode(e.eid))
+            vocab += [(e.view('combobox'), text_type(e.eid))
                       for e in rset.entities()]
         return vocab
 
@@ -1131,11 +1131,11 @@ class RelationField(Field):
             if entity.eid in done:
                 continue
             done.add(entity.eid)
-            res.append((entity.view('combobox'), unicode(entity.eid)))
+            res.append((entity.view('combobox'), text_type(entity.eid)))
         return res
 
     def format_single_value(self, req, value):
-        return unicode(value)
+        return text_type(value)
 
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""
