@@ -26,6 +26,8 @@ from uuid import uuid4
 from os.path import join, exists, split, isdir
 from warnings import warn
 
+from six import text_type
+
 from logilab.common.decorators import cached, cachedproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.configuration import merge_options
@@ -293,7 +295,7 @@ have the python imaging library installed to use captcha)',
             user   = self['anonymous-user'] or None
             passwd = self['anonymous-password']
             if user:
-                user = unicode(user)
+                user = text_type(user)
         except KeyError:
             user, passwd = None, None
         except UnicodeDecodeError:
@@ -305,17 +307,17 @@ have the python imaging library installed to use captcha)',
         """This random key/salt is used to sign content to be sent back by
         browsers, eg. in the error report form.
         """
-        return str(uuid4())
+        return str(uuid4()).encode('ascii')
 
     def sign_text(self, text):
         """sign some text for later checking"""
         # hmac.new expect bytes
-        if isinstance(text, unicode):
+        if isinstance(text, text_type):
             text = text.encode('utf-8')
         # replace \r\n so we do not depend on whether a browser "reencode"
         # original message using \r\n or not
         return hmac.new(self._instance_salt,
-                        text.strip().replace('\r\n', '\n')).hexdigest()
+                        text.strip().replace(b'\r\n', b'\n')).hexdigest()
 
     def check_text_sign(self, text, signature):
         """check the text signature is equal to the given signature"""
