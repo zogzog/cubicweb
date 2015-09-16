@@ -21,6 +21,7 @@ BuildRoot:      %%{_tmppath}/%%{name}-%%{version}-%%{release}-buildroot
 
 BuildRequires:  %%{python} %%{python}-setuptools
 Requires:       cubicweb >= %(version)s
+Requires:       %{python}-six >= 1.4.0
 
 %%description
 %(longdesc)s

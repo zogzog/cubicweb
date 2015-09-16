@@ -650,7 +650,8 @@ layout, and a full featured cube with "full" layout.',
         if verbose:
             longdesc = raw_input(
                 'Enter a long description (leave empty to reuse the short one): ')
-        dependencies = {'cubicweb': '>= %s' % cubicwebversion}
+        dependencies = {'cubicweb': '>= %s' % cubicwebversion,
+                        'six': '>= 1.4.0',}
         if verbose:
             dependencies.update(self._ask_for_dependencies())
         context = {'cubename' : cubename,
