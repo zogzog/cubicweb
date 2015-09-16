@@ -19,7 +19,7 @@
 
 import re
 
-from six import string_types
+from six import string_types, add_metaclass
 
 from cubicweb.uilib import domid
 from cubicweb.appobject import AppObject
@@ -53,6 +53,7 @@ class metarewriter(type):
         return super(metarewriter, mcs).__new__(mcs, name, bases, classdict)
 
 
+@add_metaclass(metarewriter)
 class URLRewriter(AppObject):
     """Base class for URL rewriters.
 
@@ -66,7 +67,6 @@ class URLRewriter(AppObject):
     should be tried first. The higher the priority is, the earlier the
     rewriter will be tried.
     """
-    __metaclass__ = metarewriter
     __registry__ = 'urlrewriting'
     __abstract__ = True
     priority = 1

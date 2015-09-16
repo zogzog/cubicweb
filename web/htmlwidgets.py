@@ -24,6 +24,7 @@ serialization time
 import random
 from math import floor
 
+from six import add_metaclass
 from six.moves import range
 
 from logilab.mtconverter import xml_escape
@@ -117,9 +118,9 @@ class BoxWidget(HTMLWidget): # XXX Deprecated
         self.w(u'</div>')
 
 
+@add_metaclass(class_deprecated)
 class SideBoxWidget(BoxWidget):
     """default CubicWeb's sidebox widget"""
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
 
     title_class = u'sideBoxTitle'
@@ -209,9 +210,9 @@ class PopupBoxMenu(BoxMenu):
         self.w(u'</ul></div></div>')
 
 
+@add_metaclass(class_deprecated)
 class BoxField(HTMLWidget):
     """couples label / value meant to be displayed in a box"""
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
     def __init__(self, label, value):
         self.label = label
@@ -222,18 +223,19 @@ class BoxField(HTMLWidget):
                u'<span class="value">%s</span></div></li>'
                % (self.label, self.value))
 
+
+@add_metaclass(class_deprecated)
 class BoxSeparator(HTMLWidget):
     """a menu separator"""
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
 
     def _render(self):
         self.w(u'</ul><hr class="boxSeparator"/><ul>')
 
 
+@add_metaclass(class_deprecated)
 class BoxLink(HTMLWidget):
     """a link in a box"""
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
     def __init__(self, href, label, _class='', title='', ident='', escape=False):
         self.href = href
@@ -254,9 +256,9 @@ class BoxLink(HTMLWidget):
             self.w(u'<li class="%s">%s</li>\n' % (self._class, link))
 
 
+@add_metaclass(class_deprecated)
 class BoxHtml(HTMLWidget):
     """a form in a box"""
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
     def __init__(self, rawhtml):
         self.rawhtml = rawhtml

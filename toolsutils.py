@@ -38,6 +38,8 @@ except ImportError:
     def symlink(*args):
         raise NotImplementedError
 
+from six import add_metaclass
+
 from logilab.common.clcommands import Command as BaseCommand
 from logilab.common.shellutils import ASK
 
@@ -210,11 +212,12 @@ class metacmdhandler(type):
         return cls
 
 
+@add_metaclass(metacmdhandler)
 class CommandHandler(object):
     """configuration specific helper for cubicweb-ctl commands"""
-    __metaclass__ = metacmdhandler
     def __init__(self, config):
         self.config = config
+
 
 class Command(BaseCommand):
     """base class for cubicweb-ctl commands"""

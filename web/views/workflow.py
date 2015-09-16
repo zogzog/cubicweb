@@ -27,6 +27,8 @@ from cubicweb import _
 import os
 from warnings import warn
 
+from six import add_metaclass
+
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import escape
 from logilab.common.deprecation import class_deprecated
@@ -429,8 +431,8 @@ class WorkflowGraphView(DotGraphView):
         return WorkflowDotPropsHandler(self._cw)
 
 
+@add_metaclass(class_deprecated)
 class TmpPngView(TmpFileViewMixin, EntityView):
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.18] %(cls)s is deprecated'
     __regid__ = 'tmppng'
     __select__ = match_form_params('tmpfile')

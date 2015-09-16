@@ -67,7 +67,7 @@ from warnings import warn
 from copy import copy
 from types import MethodType
 
-from six import string_types
+from six import string_types, add_metaclass
 from six.moves import range
 
 from logilab.mtconverter import xml_escape
@@ -921,13 +921,13 @@ class EmptyCellView(AnyRsetView):
 ################################################################################
 
 
+@add_metaclass(class_deprecated)
 class TableView(AnyRsetView):
     """The table view accepts any non-empty rset. It uses introspection on the
     result set to compute column names and the proper way to display the cells.
 
     It is however highly configurable and accepts a wealth of options.
     """
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.14] %(cls)s is deprecated'
     __regid__ = 'table'
     title = _('table')
@@ -1187,8 +1187,8 @@ class EditableTableView(TableView):
     title = _('editable-table')
 
 
+@add_metaclass(class_deprecated)
 class CellView(EntityView):
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.14] %(cls)s is deprecated'
     __regid__ = 'cell'
     __select__ = nonempty_rset()
@@ -1274,6 +1274,7 @@ class EditableInitialTableTableView(InitialTableView):
     finalview = 'editable-final'
 
 
+@add_metaclass(class_deprecated)
 class EntityAttributesTableView(EntityView):
     """This table displays entity attributes in a table and allow to set a
     specific method to help building cell content for each attribute as well as
@@ -1285,7 +1286,6 @@ class EntityAttributesTableView(EntityView):
     Table will render column header using the method header_for_COLNAME if
     defined otherwise COLNAME will be used.
     """
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.14] %(cls)s is deprecated'
     __abstract__ = True
     columns = ()

@@ -30,6 +30,8 @@ from cubicweb import _
 
 from warnings import warn
 
+from six import add_metaclass
+
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated
 
@@ -231,9 +233,9 @@ class RsetBox(component.CtxComponent):
 
  # helper classes ##############################################################
 
+@add_metaclass(class_deprecated)
 class SideBoxView(EntityView):
     """helper view class to display some entities in a sidebox"""
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.10] SideBoxView is deprecated, use RsetBox instead (%(cls)s)'
 
     __regid__ = 'sidebox'

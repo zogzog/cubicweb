@@ -20,6 +20,7 @@
 __docformat__ = "restructuredtext en"
 from cubicweb import _
 
+from six import add_metaclass
 from six.moves import range
 
 from logilab.common.date import datetime2ticks
@@ -85,9 +86,10 @@ class PlotWidget(object):
     def _render(self, *args, **kwargs):
         raise NotImplementedError
 
+
+@add_metaclass(class_deprecated)
 class FlotPlotWidget(PlotWidget):
     """PlotRenderer widget using Flot"""
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.14] cubicweb.web.views.plots module is deprecated, use the jqplot cube instead'
     onload = u"""
 var fig = jQuery('#%(figid)s');
@@ -139,8 +141,8 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
                                      'dateformat': '"%s"' % fmt})
 
 
+@add_metaclass(class_deprecated)
 class PlotView(baseviews.AnyRsetView):
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.14] cubicweb.web.views.plots module is deprecated, use the jqplot cube instead'
     __regid__ = 'plot'
     title = _('generic plot')

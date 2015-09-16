@@ -27,6 +27,7 @@ from copy import deepcopy
 from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 
+from six import add_metaclass
 from six.moves import range
 
 from logilab.common import attrdict
@@ -262,8 +263,10 @@ class autoextend(type):
                 setattr(_ValueGenerator, attrname, attrvalue)
         return type.__new__(mcs, name, bases, classdict)
 
+
+@add_metaclass(autoextend)
 class ValueGenerator(_ValueGenerator):
-    __metaclass__ = autoextend
+    pass
 
 
 def _default_choice_func(etype, attrname):

@@ -24,6 +24,8 @@ from cubicweb import _
 
 from warnings import warn
 
+from six import add_metaclass
+
 from logilab.common.deprecation import class_deprecated, class_renamed, deprecated
 from logilab.mtconverter import xml_escape
 
@@ -677,6 +679,7 @@ class RelatedObjectsCtxComponent(EntityCtxComponent):
 
 # old contextual components, deprecated ########################################
 
+@add_metaclass(class_deprecated)
 class EntityVComponent(Component):
     """abstract base class for additinal components displayed in content
     headers and footer according to:
@@ -687,7 +690,6 @@ class EntityVComponent(Component):
     it should be configured using .accepts, .etype, .rtype, .target and
     .context class attributes
     """
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.10] *VComponent classes are deprecated, use *CtxComponent instead (%(cls)s)'
 
     __registry__ = 'ctxcomponents'

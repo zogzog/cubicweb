@@ -20,6 +20,8 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
+from six import add_metaclass
+
 from logilab.common.decorators import iclassmethod
 from logilab.common.deprecation import deprecated
 
@@ -74,8 +76,8 @@ class FieldNotFound(Exception):
     found
     """
 
+@add_metaclass(metafieldsform)
 class Form(AppObject):
-    __metaclass__ = metafieldsform
     __registry__ = 'forms'
 
     parent_form = None

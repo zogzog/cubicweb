@@ -45,6 +45,7 @@ be clearer to read than a bunch of sequential function calls.
 """
 __docformat__ = "restructuredtext en"
 
+from six import add_metaclass
 
 from logilab.common.deprecation import deprecated
 from cubicweb.web.views import uicfg
@@ -93,6 +94,7 @@ class meta_formconfig(type):
         super(meta_formconfig, cls).__init__(name, bases, classdict)
 
 
+@add_metaclass(meta_formconfig)
 class FormConfig:
     """helper base class to define uicfg rules on a given entity type.
 
@@ -162,7 +164,6 @@ class FormConfig:
       inlined = ('use_email',)
 
     """
-    __metaclass__ = meta_formconfig
     formtype = 'main'
     etype = None # must be defined in concrete subclasses
     hidden = ()

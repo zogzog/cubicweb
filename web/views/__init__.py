@@ -23,6 +23,8 @@ import os
 import sys
 import tempfile
 
+from six import add_metaclass
+
 from rql import nodes
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated
@@ -127,8 +129,8 @@ def add_etype_button(req, etype, csscls='addButton right', **urlkwargs):
 
 
 
+@add_metaclass(class_deprecated)
 class TmpFileViewMixin(object):
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.18] %(cls)s is deprecated'
     binary = True
     content_type = 'application/octet-stream'

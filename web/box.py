@@ -20,6 +20,8 @@
 __docformat__ = "restructuredtext en"
 from cubicweb import _
 
+from six import add_metaclass
+
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated, class_renamed
 
@@ -53,6 +55,7 @@ def sort_by_category(actions, categories_in_order=None):
 
 # old box system, deprecated ###################################################
 
+@add_metaclass(class_deprecated)
 class BoxTemplate(View):
     """base template for boxes, usually a (contextual) list of possible
     actions. Various classes attributes may be used to control the box
@@ -66,7 +69,6 @@ class BoxTemplate(View):
 
         box.render(self.w)
     """
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.10] *BoxTemplate classes are deprecated, use *CtxComponent instead (%(cls)s)'
 
     __registry__ = 'ctxcomponents'

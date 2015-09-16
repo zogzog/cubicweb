@@ -18,6 +18,9 @@
 """Official API to access the content of a repository
 """
 from warnings import warn
+
+from six import add_metaclass
+
 from logilab.common.deprecation import class_deprecated
 
 from cubicweb.utils import parse_repo_uri
@@ -63,6 +66,6 @@ def anonymous_cnx(repo):
     return connect(repo, anon_login, password=anon_password)
 
 
+@add_metaclass(class_deprecated)
 class ClientConnection(Connection):
-    __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.20] %(cls)s is deprecated, use Connection instead'
