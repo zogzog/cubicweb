@@ -274,7 +274,7 @@ class ResultSetTC(CubicWebTC):
         """make sure syntax tree is cached"""
         rqlst1 = self.rset.syntax_tree()
         rqlst2 = self.rset.syntax_tree()
-        self.assert_(rqlst1 is rqlst2)
+        self.assertIs(rqlst1, rqlst2)
 
     def test_get_entity_simple(self):
         with self.admin_access.web_request() as req:

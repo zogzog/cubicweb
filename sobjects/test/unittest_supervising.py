@@ -77,7 +77,7 @@ class SupervisingTC(CubicWebTC):
             # check prepared email
             op._prepare_email()
             self.assertEqual(len(op.to_send), 1)
-            self.assert_(op.to_send[0][0])
+            self.assertTrue(op.to_send[0][0])
             self.assertEqual(op.to_send[0][1], ['test@logilab.fr'])
             cnx.commit()
             # some other changes #######

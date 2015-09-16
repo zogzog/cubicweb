@@ -64,7 +64,7 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
             rqlst = self._prepare(cnx, 'Any A,B,C WHERE A eid 12,A comment B, '
                                   'A ?wf_info_for C')
             self.assertEqual(rqlst.defined_vars['A']._q_invariant, False)
-            self.assert_(rqlst.defined_vars['B'].stinfo['attrvar'])
+            self.assertTrue(rqlst.defined_vars['B'].stinfo['attrvar'])
             self.assertEqual(rqlst.defined_vars['C']._q_invariant, False)
             self.assertEqual(rqlst.solutions, [{'A': 'TrInfo', 'B': 'String', 'C': 'Affaire'},
                                           {'A': 'TrInfo', 'B': 'String', 'C': 'CWUser'},
@@ -87,7 +87,7 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
                                   'Y nom NX, X eid XE, not Y eid XE')
             self.assertEqual(rqlst.defined_vars['X']._q_invariant, False)
             self.assertEqual(rqlst.defined_vars['Y']._q_invariant, False)
-            self.assert_(rqlst.defined_vars['XE'].stinfo['attrvar'])
+            self.assertTrue(rqlst.defined_vars['XE'].stinfo['attrvar'])
 
     def test_0_8(self):
         with self.session.new_cnx() as cnx:

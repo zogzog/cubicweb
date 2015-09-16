@@ -559,7 +559,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             rset = cnx.execute('CWUser X')
             self.assertEqual([[anon.eid]], rset.rows)
             # anonymous user can read groups (necessary to check allowed transitions for instance)
-            self.assert_(cnx.execute('CWGroup X'))
+            self.assertTrue(cnx.execute('CWGroup X'))
             # should only be able to read the anonymous user, not another one
             self.assertRaises(Unauthorized,
                               cnx.execute, 'CWUser X WHERE X eid %(x)s', {'x': admineid})

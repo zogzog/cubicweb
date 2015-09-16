@@ -77,7 +77,7 @@ class RepositoryTC(CubicWebTC):
 
     def test_connect(self):
         cnxid = self.repo.connect(self.admlogin, password=self.admpassword)
-        self.assert_(cnxid)
+        self.assertTrue(cnxid)
         self.repo.close(cnxid)
         self.assertRaises(AuthenticationError,
                           self.repo.connect, self.admlogin, password='nimportnawak')
@@ -100,7 +100,7 @@ class RepositoryTC(CubicWebTC):
             cnx.commit()
         repo = self.repo
         cnxid = repo.connect(u"barnabé", password=u"héhéhé".encode('UTF8'))
-        self.assert_(cnxid)
+        self.assertTrue(cnxid)
         repo.close(cnxid)
 
     def test_rollback_on_execute_validation_error(self):
@@ -145,7 +145,7 @@ class RepositoryTC(CubicWebTC):
     def test_close(self):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        self.assert_(cnxid)
+        self.assertTrue(cnxid)
         repo.close(cnxid)
 
     def test_check_session(self):
@@ -192,7 +192,7 @@ class RepositoryTC(CubicWebTC):
         constraints = schema.rschema('relation_type').rdef('CWAttribute', 'CWRType').constraints
         self.assertEqual(len(constraints), 1)
         cstr = constraints[0]
-        self.assert_(isinstance(cstr, RQLConstraint))
+        self.assertIsInstance(cstr, RQLConstraint)
         self.assertEqual(cstr.expression, 'O final TRUE')
 
         ownedby = schema.rschema('owned_by')

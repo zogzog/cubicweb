@@ -115,7 +115,7 @@ class TestQueryCache(TestCase):
 
 class UStringIOTC(TestCase):
     def test_boolean_value(self):
-        self.assert_(UStringIO())
+        self.assertTrue(UStringIO())
 
 
 class RepeatListTC(TestCase):

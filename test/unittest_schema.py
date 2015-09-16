@@ -158,7 +158,7 @@ class SchemaReaderClassTest(TestCase):
 
     def test_knownValues_load_schema(self):
         schema = loader.load(config)
-        self.assert_(isinstance(schema, CubicWebSchema))
+        self.assertIsInstance(schema, CubicWebSchema)
         self.assertEqual(schema.name, 'data')
         entities = sorted([str(e) for e in schema.entities()])
         expected_entities = ['Ami', 'BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
