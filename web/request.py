@@ -28,7 +28,7 @@ from datetime import date, datetime
 from warnings import warn
 from io import BytesIO
 
-from six import text_type, string_types
+from six import PY2, text_type, string_types
 from six.moves import http_client
 from six.moves.urllib.parse import urlsplit, quote as urlquote
 from six.moves.http_cookies import SimpleCookie
@@ -253,10 +253,11 @@ class _CubicWebRequestBase(RequestSessionBase):
         encoding = self.encoding
         for param, val in params.items():
             if isinstance(val, (tuple, list)):
-                val = [unicode(x, encoding) for x in val]
+                if PY2:
+                    val = [unicode(x, encoding) for x in val]
                 if len(val) == 1:
                     val = val[0]
-            elif isinstance(val, str):
+            elif PY2 and isinstance(val, str):
                 val = unicode(val, encoding)
             if param in self.no_script_form_params and val:
                 val = self.no_script_form_param(param, val)
