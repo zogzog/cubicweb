@@ -531,7 +531,9 @@ def html_traceback(info, exception, title='',
 # csv files / unicode support #################################################
 
 class UnicodeCSVWriter:
-    """proxies calls to csv.writer.writerow to be able to deal with unicode"""
+    """proxies calls to csv.writer.writerow to be able to deal with unicode
+
+    Under Python 3, this code no longer encodes anything."""
 
     def __init__(self, wfunc, encoding, **kwargs):
         self.writer = csv.writer(self, **kwargs)
@@ -542,6 +544,9 @@ class UnicodeCSVWriter:
         self.wfunc(data)
 
     def writerow(self, row):
+        if PY3:
+            self.writer.writerow(row)
+            return
         csvrow = []
         for elt in row:
             if isinstance(elt, text_type):

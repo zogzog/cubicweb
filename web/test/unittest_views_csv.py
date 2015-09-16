@@ -30,7 +30,7 @@ class CSVExportViewsTC(CubicWebTC):
             self.assertEqual(req.headers_out.getRawHeaders('content-type'),
                              ['text/comma-separated-values;charset=UTF-8'])
             expected_data = "String;COUNT(CWUser)\nguests;1\nmanagers;1"
-            self.assertMultiLineEqual(expected_data, data)
+            self.assertMultiLineEqual(expected_data, data.decode('utf-8'))
 
     def test_csvexport_on_empty_rset(self):
         """Should return the CSV header.
@@ -42,7 +42,7 @@ class CSVExportViewsTC(CubicWebTC):
             self.assertEqual(req.headers_out.getRawHeaders('content-type'),
                              ['text/comma-separated-values;charset=UTF-8'])
             expected_data = "String;COUNT(CWUser)"
-            self.assertMultiLineEqual(expected_data, data)
+            self.assertMultiLineEqual(expected_data, data.decode('utf-8'))
 
 
 if __name__ == '__main__':

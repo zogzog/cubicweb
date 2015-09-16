@@ -20,6 +20,7 @@
 __docformat__ = "restructuredtext en"
 from cubicweb import _
 
+from six import PY2
 from six.moves import range
 
 from cubicweb.schema import display_name
@@ -31,7 +32,7 @@ class CSVMixIn(object):
     """mixin class for CSV views"""
     templatable = False
     content_type = "text/comma-separated-values"
-    binary = True # avoid unicode assertion
+    binary = PY2 # python csv module is unicode aware in py3k
     csv_params = {'dialect': 'excel',
                   'quotechar': '"',
                   'delimiter': ';',
