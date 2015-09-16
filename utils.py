@@ -35,6 +35,7 @@ from warnings import warn
 from threading import Lock
 from logging import getLogger
 
+from six import text_type
 from six.moves.urllib.parse import urlparse
 
 from logilab.mtconverter import xml_escape
@@ -229,7 +230,7 @@ class UStringIO(list):
         return True
 
     def write(self, value):
-        assert isinstance(value, unicode), u"unicode required not %s : %s"\
+        assert isinstance(value, text_type), u"unicode required not %s : %s"\
                                      % (type(value).__name__, repr(value))
         if self.tracewrites:
             from traceback import format_stack

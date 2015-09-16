@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from datetime import time, datetime, timedelta
 
-from six import text_type
+from six import PY2, text_type
 from six.moves.urllib.parse import parse_qs, parse_qsl, quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
 
 from logilab.common.decorators import cached
@@ -313,7 +313,7 @@ class RequestSessionBase(object):
         necessary encoding / decoding. Also it's designed to quote each
         part of a url path and so the '/' character will be encoded as well.
         """
-        if isinstance(value, unicode):
+        if PY2 and isinstance(value, unicode):
             quoted = urlquote(value.encode(self.encoding), safe=safe)
             return unicode(quoted, self.encoding)
         return urlquote(str(value), safe=safe)

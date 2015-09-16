@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
+from six import PY3
 from six.moves import range
 
 from logilab.common import nullobject
@@ -375,6 +376,8 @@ class ResultSet(object):
             warn('[3.21] the "encoded" argument is deprecated', DeprecationWarning)
         encoding = self.req.encoding
         rqlstr = self.syntax_tree().as_string(kwargs=self.args)
+        if PY3:
+            return rqlstr
         # sounds like we get encoded or unicode string due to a bug in as_string
         if not encoded:
             if isinstance(rqlstr, unicode):

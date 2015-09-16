@@ -34,6 +34,7 @@ Example of mapping for CWEntityXMLParser::
 from datetime import datetime, time
 import urllib
 
+from six import text_type
 from six.moves.urllib.parse import urlparse, urlunparse, parse_qs
 
 from logilab.common.date import todate, totime
@@ -51,7 +52,7 @@ from cubicweb.server.hook import match_rtype
 # XXX see cubicweb.cwvreg.YAMS_TO_PY
 # XXX see cubicweb.web.views.xmlrss.SERIALIZERS
 DEFAULT_CONVERTERS = BASE_CONVERTERS.copy()
-DEFAULT_CONVERTERS['String'] = unicode
+DEFAULT_CONVERTERS['String'] = text_type
 DEFAULT_CONVERTERS['Password'] = lambda x: x.encode('utf8')
 def convert_date(ustr):
     return todate(datetime.strptime(ustr, '%Y-%m-%d'))
@@ -315,7 +316,7 @@ class CWEntityXMLItemBuilder(Component):
         """
         node = self.node
         item = dict(node.attrib.items())
-        item['cwtype'] = unicode(node.tag)
+        item['cwtype'] = text_type(node.tag)
         item.setdefault('cwsource', None)
         try:
             item['eid'] = int(item['eid'])
@@ -332,7 +333,7 @@ class CWEntityXMLItemBuilder(Component):
                 related += self.parser.parse_etree(child)
             elif child.text:
                 # attribute
-                item[child.tag] = unicode(child.text)
+                item[child.tag] = text_type(child.text)
             else:
                 # None attribute (empty tag)
                 item[child.tag] = None

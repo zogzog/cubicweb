@@ -286,7 +286,7 @@ class CubicWebTC(TestCase):
         """provide a new RepoAccess object for a given user
 
         The access is automatically closed at the end of the test."""
-        login = unicode(login)
+        login = text_type(login)
         access = RepoAccess(self.repo, login, self.requestcls)
         self._open_access.add(access)
         return access
@@ -313,7 +313,7 @@ class CubicWebTC(TestCase):
         db_handler.restore_database(self.test_db_id)
         self.repo = db_handler.get_repo(startup=True)
         # get an admin session (without actual login)
-        login = unicode(db_handler.config.default_admin_config['login'])
+        login = text_type(db_handler.config.default_admin_config['login'])
         self.admin_access = self.new_access(login)
         self._admin_session = self.admin_access._session
 
@@ -456,14 +456,14 @@ class CubicWebTC(TestCase):
         if password is None:
             password = login
         if login is not None:
-            login = unicode(login)
+            login = text_type(login)
         user = req.create_entity('CWUser', login=login,
                                  upassword=password, **kwargs)
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
                     % ','.join(repr(str(g)) for g in groups),
                     {'x': user.eid})
         if email is not None:
-            req.create_entity('EmailAddress', address=unicode(email),
+            req.create_entity('EmailAddress', address=text_type(email),
                               reverse_primary_email=user)
         user.cw_clear_relation_cache('in_group', 'subject')
         if commit:
