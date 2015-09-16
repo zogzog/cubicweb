@@ -64,7 +64,7 @@ class JsonpController(basecontrollers.ViewController):
             # use ``application/javascript`` if ``callback`` parameter is
             # provided, keep ``application/json`` otherwise
             self._cw.set_content_type('application/javascript')
-            json_data = b'%s(%s)' % (json_padding, json_data)
+            json_data = json_padding + b'(' + json_data + b')'
         return json_data
 
 
@@ -85,7 +85,8 @@ class JsonMixIn(object):
             indent = int(self._cw.form['_indent'])
         else:
             indent = None
-        self.w(json_dumps(data, indent=indent))
+        # python's json.dumps escapes non-ascii characters
+        self.w(json_dumps(data, indent=indent).encode('ascii'))
 
 
 class JsonRsetView(JsonMixIn, AnyRsetView):

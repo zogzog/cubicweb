@@ -88,7 +88,7 @@ def unprotected_entities(schema, strict=False):
 
 class JsonValidator(object):
     def parse_string(self, data):
-        return json.loads(data)
+        return json.loads(data.decode('ascii'))
 
 @contextmanager
 def real_error_handling(app):

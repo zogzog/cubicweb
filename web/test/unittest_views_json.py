@@ -16,12 +16,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+from six import binary_type
+
 from cubicweb.devtools.testlib import CubicWebTC
 
 
 class JsonViewsTC(CubicWebTC):
     anonymize = True
-    res_jsonp_data = '[["guests", 1]]'
+    res_jsonp_data = b'[["guests", 1]]'
 
     def setUp(self):
         super(JsonViewsTC, self).setUp()
@@ -47,10 +49,10 @@ class JsonViewsTC(CubicWebTC):
                              'rql': u'Any GN,COUNT(X) GROUPBY GN ORDERBY GN '
                              'WHERE X in_group G, G name GN'})
             data = self.ctrl_publish(req, ctrl='jsonp')
-            self.assertIsInstance(data, str)
+            self.assertIsInstance(data, binary_type)
             self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/javascript'])
             # because jsonp anonymizes data, only 'guests' group should be found
-            self.assertEqual(data, 'foo(%s)' % self.res_jsonp_data)
+            self.assertEqual(data, b'foo(' + self.res_jsonp_data + b')')
 
     def test_json_rsetexport_with_jsonp_and_bad_vid(self):
         with self.admin_access.web_request() as req:
@@ -61,7 +63,7 @@ class JsonViewsTC(CubicWebTC):
             data = self.ctrl_publish(req, ctrl='jsonp')
             self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/javascript'])
             # result should be plain json, not the table view
-            self.assertEqual(data, 'foo(%s)' % self.res_jsonp_data)
+            self.assertEqual(data, b'foo(' + self.res_jsonp_data + b')')
 
     def test_json_ersetexport(self):
         with self.admin_access.web_request() as req:
@@ -79,7 +81,7 @@ class JsonViewsTC(CubicWebTC):
 
 class NotAnonymousJsonViewsTC(JsonViewsTC):
     anonymize = False
-    res_jsonp_data = '[["guests", 1], ["managers", 1]]'
+    res_jsonp_data = b'[["guests", 1], ["managers", 1]]'
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
