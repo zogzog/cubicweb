@@ -186,13 +186,13 @@ class RepeatList(object):
     def __iter__(self):
         return repeat(self._item, self._size)
     def __getitem__(self, index):
+        if isinstance(index, slice):
+            # XXX could be more efficient, but do we bother?
+            return ([self._item] * self._size)[index]
         return self._item
     def __delitem__(self, idc):
         assert self._size > 0
         self._size -= 1
-    def __getslice__(self, i, j):
-        # XXX could be more efficient, but do we bother?
-        return ([self._item] * self._size)[i:j]
     def __add__(self, other):
         if isinstance(other, RepeatList):
             if other._item == self._item:

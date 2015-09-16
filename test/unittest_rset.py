@@ -566,6 +566,19 @@ class ResultSetTC(CubicWebTC):
             self.assertIsInstance(str(rset), string_types)
             self.assertEqual(len(str(rset).splitlines()), 1)
 
+    def test_slice(self):
+        rs = ResultSet([[12000, 'adim', u'Adim chez les pinguins'],
+                        [12000, 'adim', u'Jardiner facile'],
+                        [13000, 'syt',  u'Le carrelage en 42 leçons'],
+                        [14000, 'nico', u'La tarte tatin en 15 minutes'],
+                        [14000, 'nico', u"L'épluchage du castor commun"]],
+                       'Any U, L, T WHERE U is CWUser, U login L,'\
+                       'D created_by U, D title T',
+                       description=[['CWUser', 'String', 'String']] * 5)
+        self.assertEqual(rs[1::2],
+            [[12000, 'adim', u'Jardiner facile'],
+             [14000, 'nico', u'La tarte tatin en 15 minutes']])
+
     def test_nonregr_symmetric_relation(self):
         # see https://www.cubicweb.org/ticket/4739253
         with self.admin_access.client_cnx() as cnx:
