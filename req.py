@@ -22,6 +22,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from datetime import time, datetime, timedelta
 
+from six import text_type
 from six.moves.urllib.parse import parse_qs, parse_qsl, quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
 
 from logilab.common.decorators import cached
@@ -72,7 +73,7 @@ class RequestSessionBase(object):
         # connection
         self.user = None
         self.local_perm_cache = {}
-        self._ = unicode
+        self._ = text_type
 
     def _set_user(self, orig_user):
         """set the user for this req_session_base

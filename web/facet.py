@@ -57,7 +57,7 @@ from warnings import warn
 from copy import deepcopy
 from datetime import datetime, timedelta
 
-from six import string_types
+from six import text_type, string_types
 
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import has_path
@@ -721,14 +721,14 @@ class RelationFacet(VocabularyFacet):
 
     def rset_vocabulary(self, rset):
         if self.i18nable:
-            _ = self._cw._
+            tr = self._cw._
         else:
-            _ = unicode
+            tr = text_type
         if self.rql_sort:
-            values = [(_(label), eid) for eid, label in rset]
+            values = [(tr(label), eid) for eid, label in rset]
         else:
             if self.label_vid is None:
-                values = [(_(label), eid) for eid, label in rset]
+                values = [(tr(label), eid) for eid, label in rset]
             else:
                 values = [(entity.view(self.label_vid), entity.eid)
                           for entity in rset.entities()]
@@ -918,12 +918,12 @@ class RelationAttributeFacet(RelationFacet):
 
     def rset_vocabulary(self, rset):
         if self.i18nable:
-            _ = self._cw._
+            tr = self._cw._
         else:
-            _ = unicode
+            tr = text_type
         if self.rql_sort:
-            return [(_(value), value) for value, in rset]
-        values = [(_(value), value) for value, in rset]
+            return [(tr(value), value) for value, in rset]
+        values = [(tr(value), value) for value, in rset]
         return sorted(values, reverse=not self.sortasc)
 
 

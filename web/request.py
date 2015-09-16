@@ -28,7 +28,7 @@ from datetime import date, datetime
 from warnings import warn
 from io import BytesIO
 
-from six import string_types
+from six import text_type, string_types
 from six.moves import http_client
 from six.moves.urllib.parse import urlsplit, quote as urlquote
 from six.moves.http_cookies import SimpleCookie
@@ -1024,8 +1024,8 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
             self.set_language(lang)
         except KeyError:
             # this occurs usually during test execution
-            self._ = self.__ = unicode
-            self.pgettext = lambda x, y: unicode(y)
+            self._ = self.__ = text_type
+            self.pgettext = lambda x, y: text_type(y)
 
     entity_metas = _cnx_func('entity_metas')
     source_defs = _cnx_func('source_defs')
