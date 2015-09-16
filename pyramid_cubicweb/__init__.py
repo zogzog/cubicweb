@@ -176,6 +176,7 @@ def includeme(config):
         config.include(name)
 
     config.include('pyramid_cubicweb.tools')
+    config.include('pyramid_cubicweb.predicates')
     config.include('pyramid_cubicweb.core')
 
     if asbool(config.registry.settings.get('cubicweb.bwcompat', True)):

@@ -18,7 +18,6 @@ def delete_entity(context, request):
 
 
 def includeme(config):
-    config.add_route_predicate('match_is_etype', MatchIsETypePredicate)
     config.add_route(
         'cwentities', '/{etype}/*traverse',
         factory=ETypeResource.from_match('etype'), match_is_etype='etype')

@@ -16,3 +16,7 @@ class MatchIsETypePredicate(object):
     def __call__(self, info, request):
         return info['match'][self.matchname].lower() in \
             request.registry['cubicweb.registry'].case_insensitive_etypes
+
+
+def includeme(config):
+    config.add_route_predicate('match_is_etype', MatchIsETypePredicate)
