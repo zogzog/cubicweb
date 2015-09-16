@@ -114,7 +114,7 @@ class CloseDeletedUserSessionsHook(SyncSessionHook):
     def __call__(self):
         """modify user permission, need to update users"""
         for session in get_user_sessions(self._cw.repo, self.entity.eid):
-            _DelUserOp(self._cw, session.id)
+            _DelUserOp(self._cw, session.sessionid)
 
 
 # CWProperty hooks #############################################################
