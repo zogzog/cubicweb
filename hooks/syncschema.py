@@ -905,11 +905,6 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
             # duh, schema not found, log error and skip operation
             self.warning('no schema for %s', self.eid)
             return
-        if isinstance(erschema, RelationSchema): # XXX 3.6 migration
-            return
-        if isinstance(erschema, RelationDefinitionSchema) and \
-               self.action in ('delete', 'add'): # XXX 3.6.1 migration
-            return
         perms = list(erschema.action_permissions(self.action))
         if self.group_eid is not None:
             perm = self.cnx.entity_from_eid(self.group_eid).name

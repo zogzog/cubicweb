@@ -784,6 +784,20 @@ class MigrationCommandsComputedTC(MigrationTC):
             self.assertEqual(self.schema['whatever'].subjects(), ('Company',))
             self.assertFalse(self.table_sql(mh, 'whatever_relation'))
 
+    def test_computed_relation_sync_schema_props_perms_security(self):
+        with self.mh() as (cnx, mh):
+            rdef = next(self.schema['perm_changes'].rdefs.itervalues())
+            self.assertEqual(rdef.permissions,
+                             {'add': (), 'delete': (),
+                              'read': ('managers', 'users')})
+            mh.cmd_sync_schema_props_perms('perm_changes')
+            self.assertEqual(self.schema['perm_changes'].permissions,
+                             {'read': ('managers',)})
+            rdef = next(self.schema['perm_changes'].rdefs.itervalues())
+            self.assertEqual(rdef.permissions,
+                             {'add': (), 'delete': (),
+                              'read': ('managers',)})
+
     def test_computed_relation_sync_schema_props_perms_on_rdef(self):
         self.assertIn('whatever', self.schema)
         with self.mh() as (cnx, mh):

@@ -458,7 +458,10 @@ class ServerMigrationHelper(MigrationHelper):
             assert reporschema.eid, reporschema
             self.rqlexecall(ss.updaterschema2rql(rschema, reporschema.eid),
                             ask_confirm=self.verbosity>=2)
-        if syncrdefs:
+        if rschema.rule:
+            if syncperms:
+                self._synchronize_permissions(rschema, reporschema.eid)
+        elif syncrdefs:
             for subj, obj in rschema.rdefs:
                 if (subj, obj) not in reporschema.rdefs:
                     continue
@@ -572,6 +575,7 @@ class ServerMigrationHelper(MigrationHelper):
         against its current definition:
         * order and other properties
         * constraints
+        * permissions
         """
         subjtype, objtype = str(subjtype), str(objtype)
         rschema = self.fs_schema.rschema(rtype)

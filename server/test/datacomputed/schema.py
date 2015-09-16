@@ -58,3 +58,8 @@ class whatever(ComputedRelation):
 
 class to_be_renamed(ComputedRelation):
     rule = 'S employees E, O concerns E'
+
+
+class perm_changes(ComputedRelation):
+    __permissions__ = {'read': ('managers', 'users')}
+    rule = 'S employees E, O concerns E'
