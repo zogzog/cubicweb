@@ -21,7 +21,7 @@
 
 from datetime import date, datetime, timedelta, tzinfo
 
-from six import PY2
+from six import PY2, integer_types
 from logilab.common.testlib import TestCase, unittest_main
 from rql import BadRQLQuery, RQLSyntaxError
 
@@ -320,7 +320,7 @@ class QuerierTC(BaseQuerierTC):
     def test_typed_eid(self):
         # should return an empty result set
         rset = self.qexecute('Any X WHERE X eid %(x)s', {'x': '1'})
-        self.assertIsInstance(rset[0][0], (int, long))
+        self.assertIsInstance(rset[0][0], integer_types)
 
     def test_bytes_storage(self):
         feid = self.qexecute('INSERT File X: X data_name "foo.pdf", '

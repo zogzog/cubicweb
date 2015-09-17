@@ -28,7 +28,7 @@ import csv
 import re
 from StringIO import StringIO
 
-from six import string_types
+from six import string_types, integer_types
 
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
@@ -94,7 +94,7 @@ _('%d minutes')
 _('%d seconds')
 
 def print_timedelta(value, req, props, displaytime=True):
-    if isinstance(value, (int, long)):
+    if isinstance(value, integer_types):
         # `date - date`, unlike `datetime - datetime` gives an int
         # (number of days), not a timedelta
         # XXX should rql be fixed to return Int instead of Interval in

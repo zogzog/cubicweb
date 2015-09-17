@@ -24,7 +24,7 @@ __docformat__ = "restructuredtext en"
 
 from itertools import repeat
 
-from six import string_types
+from six import string_types, integer_types
 from six.moves import range
 
 from rql import RQLSyntaxError, CoercionError
@@ -453,11 +453,11 @@ class InsertPlan(ExecutionPlan):
             # if a string is given into args instead of an int, we get it here
             if isinstance(subj, string_types):
                 subj = int(subj)
-            elif not isinstance(subj, (int, long)):
+            elif not isinstance(subj, integer_types):
                 subj = subj.entity.eid
             if isinstance(obj, string_types):
                 obj = int(obj)
-            elif not isinstance(obj, (int, long)):
+            elif not isinstance(obj, integer_types):
                 obj = obj.entity.eid
             if repo.schema.rschema(rtype).inlined:
                 if subj not in edited_entities:

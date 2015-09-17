@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from functools import partial
 
-from six import string_types
+from six import string_types, integer_types
 from six.moves import range
 
 from logilab.common.decorators import cached
@@ -548,12 +548,12 @@ class Entity(AppObject):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
     def __eq__(self, other):
-        if isinstance(self.eid, (int, long)):
+        if isinstance(self.eid, integer_types):
             return self.eid == other.eid
         return self is other
 
     def __hash__(self):
-        if isinstance(self.eid, (int, long)):
+        if isinstance(self.eid, integer_types):
             return self.eid
         return super(Entity, self).__hash__()
 

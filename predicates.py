@@ -24,7 +24,7 @@ import logging
 from warnings import warn
 from operator import eq
 
-from six import string_types
+from six import string_types, integer_types
 from six.moves import range
 
 from logilab.common.deprecation import deprecated
@@ -674,7 +674,7 @@ class score_entity(EntityPredicate):
             score = scorefunc(*args, **kwargs)
             if not score:
                 return 0
-            if isinstance(score, (int, long)):
+            if isinstance(score, integer_types):
                 return score
             return 1
         self.score_entity = intscore
