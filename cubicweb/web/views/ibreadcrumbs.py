@@ -121,13 +121,16 @@ class BreadCrumbEntityVComponent(basecomponents.HeaderComponent):
     def close_breadcrumbs(self, w):
         w(u'</span>')
 
-    def render_breadcrumbs(self, w, contextentity, path):
+    def render_root(self, w, contextentity, path):
         root = path.pop(0)
         if isinstance(root, Entity):
             w(self.link_template % (self._cw.build_url(root.__regid__),
                                          root.dc_type('plural')))
             w(self.separator)
         self.wpath_part(w, root, contextentity, not path)
+ 
+    def render_breadcrumbs(self, w, contextentity, path):
+        self.render_root(w, contextentity, path)
         for i, parent in enumerate(path):
             w(self.separator)
             w(u"\n")
