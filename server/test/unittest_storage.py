@@ -185,8 +185,8 @@ class StorageTC(CubicWebTC):
             self.assertEqual(len(rset), 2)
             self.assertEqual(rset[0][0], f1.eid)
             self.assertEqual(rset[1][0], f1.eid)
-            self.assertEqual(rset[0][1].getvalue(), 'the-data')
-            self.assertEqual(rset[1][1].getvalue(), 'the-data')
+            self.assertEqual(rset[0][1].getvalue(), b'the-data')
+            self.assertEqual(rset[1][1].getvalue(), b'the-data')
             rset = cnx.execute('Any X,LENGTH(D) WHERE X eid %(x)s, X data D',
                                 {'x': f1.eid})
             self.assertEqual(len(rset), 1)
@@ -215,7 +215,7 @@ class StorageTC(CubicWebTC):
             f1 = cnx.create_entity('File', data=Binary(filepath.encode(sys.getfilesystemencoding())),
                                    data_format=u'text/plain', data_name=u'foo')
             cw_value = f1.data.getvalue()
-            fs_value = open(filepath).read()
+            fs_value = open(filepath, 'rb').read()
             if cw_value != fs_value:
                 self.fail('cw value %r is different from file content' % cw_value)
 
@@ -228,10 +228,10 @@ class StorageTC(CubicWebTC):
             #       update f1's local dict. We want the pure rql version to work
             cnx.execute('SET F data %(d)s WHERE F eid %(f)s',
                          {'d': Binary(b'some other data'), 'f': f1.eid})
-            self.assertEqual(f1.data.getvalue(), 'some other data')
+            self.assertEqual(f1.data.getvalue(), b'some other data')
             cnx.commit()
             f2 = cnx.execute('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid}).get_entity(0, 0)
-            self.assertEqual(f2.data.getvalue(), 'some other data')
+            self.assertEqual(f2.data.getvalue(), b'some other data')
 
     @tag('update', 'extension', 'commit')
     def test_bfss_update_with_different_extension_commited(self):
@@ -308,7 +308,7 @@ class StorageTC(CubicWebTC):
             cnx.execute('SET F data %(d)s WHERE F eid %(f)s',
                          {'d': Binary(new_fspath.encode(sys.getfilesystemencoding())), 'f': f1.eid})
             cnx.commit()
-            self.assertEqual(f1.data.getvalue(), 'the new data')
+            self.assertEqual(f1.data.getvalue(), b'the new data')
             self.assertEqual(self.fspath(cnx, f1), new_fspath)
             self.assertFalse(osp.isfile(old_fspath))
 
