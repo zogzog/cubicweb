@@ -22,6 +22,8 @@ from cubicweb import _
 
 from warnings import warn
 
+from six import text_type
+
 from logilab.mtconverter import xml_escape
 
 from cubicweb import tags, uilib
@@ -141,7 +143,7 @@ class BreadCrumbEntityVComponent(basecomponents.HeaderComponent):
                 xml_escape(url), xml_escape(uilib.cut(title, textsize))))
         else:
             textsize = self._cw.property_value('navigation.short-line-size')
-            w(xml_escape(uilib.cut(unicode(part), textsize)))
+            w(xml_escape(uilib.cut(text_type(part), textsize)))
 
 
 class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):

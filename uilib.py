@@ -339,9 +339,9 @@ class _JSId(object):
     def __unicode__(self):
         if self.parent:
             return u'%s.%s' % (self.parent, self.id)
-        return unicode(self.id)
+        return text_type(self.id)
     def __str__(self):
-        return unicode(self).encode('utf8')
+        return text_type(self).encode('utf8')
     def __getattr__(self, attr):
         return _JSId(attr, self)
     def __call__(self, *args):

@@ -86,7 +86,7 @@ def format_mail(uinfo, to_addrs, content, subject="",
     to_addrs and cc_addrs are expected to be a list of email address without
     name
     """
-    assert type(content) is unicode, repr(content)
+    assert isinstance(content, text_type), repr(content)
     msg = MIMEText(content.encode('UTF-8'), 'plain', 'UTF-8')
     # safety: keep only the first newline
     try:
@@ -97,13 +97,13 @@ def format_mail(uinfo, to_addrs, content, subject="",
     if uinfo.get('email'):
         email = uinfo['email']
     elif config and config['sender-addr']:
-        email = unicode(config['sender-addr'])
+        email = text_type(config['sender-addr'])
     else:
         email = u''
     if uinfo.get('name'):
         name = uinfo['name']
     elif config and config['sender-name']:
-        name = unicode(config['sender-name'])
+        name = text_type(config['sender-name'])
     else:
         name = u''
     msg['From'] = addrheader(email, name)
