@@ -340,8 +340,7 @@ class _JSId(object):
         if self.parent:
             return u'%s.%s' % (self.parent, self.id)
         return text_type(self.id)
-    def __str__(self):
-        return text_type(self).encode('utf8')
+    __str__ = __unicode__ if PY3 else lambda self: self.__unicode__().encode('utf-8')
     def __getattr__(self, attr):
         return _JSId(attr, self)
     def __call__(self, *args):
@@ -359,6 +358,7 @@ class _JSCallArgs(_JSId):
         if self.parent:
             return u'%s(%s)' % (self.parent, ','.join(args))
         return ','.join(args)
+    __str__ = __unicode__ if PY3 else lambda self: self.__unicode__().encode('utf-8')
 
 class _JS(object):
     def __getattr__(self, attr):
