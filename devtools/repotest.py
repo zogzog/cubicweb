@@ -30,10 +30,9 @@ from logilab.common.testlib import SkipTest
 def tuplify(mylist):
     return [tuple(item) for item in mylist]
 
-def snippet_cmp(a, b):
-    a = (a[0], [e.expression for e in a[1]])
-    b = (b[0], [e.expression for e in b[1]])
-    return cmp(a, b)
+def snippet_key(a):
+    # a[0] may be a dict or a key/value tuple
+    return (sorted(dict(a[0]).items()), [e.expression for e in a[1]])
 
 def test_plan(self, rql, expected, kwargs=None):
     with self.session.new_cnx() as cnx:
@@ -293,7 +292,7 @@ class BasePlannerTC(BaseQuerierTC):
         return self.o.plan_factory(rqlst, kwargs, cnx)
 
 
-# monkey patch some methods to get predicatable results #######################
+# monkey patch some methods to get predictable results #######################
 
 from cubicweb import rqlrewrite
 _orig_iter_relations = rqlrewrite.iter_relations
@@ -301,7 +300,7 @@ _orig_insert_snippets = rqlrewrite.RQLRewriter.insert_snippets
 _orig_build_variantes = rqlrewrite.RQLRewriter.build_variantes
 
 def _insert_snippets(self, snippets, varexistsmap=None):
-    _orig_insert_snippets(self, sorted(snippets, snippet_cmp), varexistsmap)
+    _orig_insert_snippets(self, sorted(snippets, key=snippet_key), varexistsmap)
 
 def _build_variantes(self, newsolutions):
     variantes = _orig_build_variantes(self, newsolutions)
@@ -309,8 +308,7 @@ def _build_variantes(self, newsolutions):
     for variante in variantes:
         orderedkeys = sorted((k[1], k[2], v) for k, v in variante.items())
         variante = DumbOrderedDict(sorted(variante.items(),
-                                          lambda a, b: cmp((a[0][1],a[0][2],a[1]),
-                                                           (b[0][1],b[0][2],b[1]))))
+                                          key=lambda a: (a[0][1], a[0][2], a[1])))
         sortedvariantes.append( (orderedkeys, variante) )
     return [v for ok, v in sorted(sortedvariantes)]
 
@@ -319,7 +317,7 @@ _orig_check_permissions = ExecutionPlan._check_permissions
 
 def _check_permissions(*args, **kwargs):
     res, restricted = _orig_check_permissions(*args, **kwargs)
-    res = DumbOrderedDict(sorted(res.items(), lambda a, b: cmp(a[1], b[1])))
+    res = DumbOrderedDict(sorted(res.items(), key=lambda x: x[1]))
     return res, restricted
 
 def _dummy_check_permissions(self, rqlst):
