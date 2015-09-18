@@ -24,7 +24,7 @@ from cubicweb import _
 
 from warnings import warn
 
-from six import add_metaclass
+from six import PY3, add_metaclass, text_type
 
 from logilab.common.deprecation import class_deprecated, class_renamed, deprecated
 from logilab.mtconverter import xml_escape
@@ -216,6 +216,9 @@ class Link(object):
 
     def __unicode__(self):
         return tags.a(self.label, href=self.href, **self.attrs)
+
+    if PY3:
+        __str__ = __unicode__
 
     def render(self, w):
         w(tags.a(self.label, href=self.href, **self.attrs))
