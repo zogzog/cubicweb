@@ -57,7 +57,9 @@ class PropertySheet(dict):
     def load(self, fpath):
         scriptglobals = self.context.copy()
         scriptglobals['__file__'] = fpath
-        execfile(fpath, scriptglobals, self)
+        with open(fpath, 'rb') as fobj:
+            code = compile(fobj.read(), fpath, 'exec')
+        exec(code, scriptglobals, self)
         for name, type in TYPE_CHECKS:
             if name in self:
                 if not isinstance(self[name], type):

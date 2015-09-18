@@ -349,7 +349,9 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             else:
                 pyname = splitext(basename(migrscript))[0]
             scriptlocals['__name__'] = pyname
-            execfile(migrscript, scriptlocals)
+            with open(migrscript, 'rb') as fobj:
+                code = compile(fobj.read(), migrscript, 'exec')
+            exec(code, scriptlocals)
             if funcname is not None:
                 try:
                     func = scriptlocals[funcname]
