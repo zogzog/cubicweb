@@ -53,7 +53,6 @@ class PropertySheet(dict):
         self.clear()
         self._ordered_propfiles = []
         self._propfile_mtime = {}
-        self._sourcefile_mtime = {}
 
     def load(self, fpath):
         scriptglobals = self.context.copy()
