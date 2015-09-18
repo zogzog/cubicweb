@@ -383,7 +383,7 @@ class Field(object):
         assert self.choices is not None
         if callable(self.choices):
             # pylint: disable=E1102
-            if getattr(self.choices, 'im_self', None) is self:
+            if getattr(self.choices, '__self__', None) is self:
                 vocab = self.choices(form=form, **kwargs)
             else:
                 vocab = self.choices(form=form, field=self, **kwargs)
