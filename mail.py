@@ -28,16 +28,27 @@ from email.header import Header
 from email.utils import formatdate
 from socket import gethostname
 
+from six import PY2, PY3, text_type
+
+
 def header(ustring):
+    if PY3:
+        return Header(ustring, 'utf-8')
     return Header(ustring.encode('UTF-8'), 'UTF-8')
 
 def addrheader(uaddr, uname=None):
     # even if an email address should be ascii, encode it using utf8 since
     # automatic tests may generate non ascii email address
-    addr = uaddr.encode('UTF-8')
+    if PY2:
+        addr = uaddr.encode('UTF-8')
+    else:
+        addr = uaddr
     if uname:
-        return '%s <%s>' % (header(uname).encode(), addr)
-    return addr
+        val = '%s <%s>' % (header(uname).encode(), addr)
+    else:
+        val = addr
+    assert isinstance(val, str)  # bytes in py2, ascii-encoded unicode in py3
+    return val
 
 
 def construct_message_id(appid, eid, withtimestamp=True):
@@ -46,7 +57,7 @@ def construct_message_id(appid, eid, withtimestamp=True):
     else:
         addrpart = 'eid=%s' % eid
     # we don't want any equal sign nor trailing newlines
-    leftpart = b64encode(addrpart, '.-').rstrip().rstrip('=')
+    leftpart = b64encode(addrpart.encode('ascii'), b'.-').decode('ascii').rstrip().rstrip('=')
     return '<%s@%s.%s>' % (leftpart, appid, gethostname())
 
 
