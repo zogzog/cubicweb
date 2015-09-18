@@ -43,7 +43,7 @@ def sort_by_category(actions, categories_in_order=None):
         actions_by_cat.setdefault(action.category, []).append(
             (action.title, action) )
     for key, values in actions_by_cat.items():
-        actions_by_cat[key] = [act for title, act in sorted(values)]
+        actions_by_cat[key] = [act for title, act in sorted(values, key=lambda x: x[0])]
     if categories_in_order:
         for cat in categories_in_order:
             if cat in actions_by_cat:
