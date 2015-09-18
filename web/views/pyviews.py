@@ -19,6 +19,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from six import text_type
 from six.moves import range
 
 from cubicweb.view import View
@@ -40,7 +41,7 @@ class PyValTableColRenderer(tableview.AbstractColumnRenderer):
             w(self.empty_cell_content)
 
     def render_cell(self, w, rownum):
-        w(unicode(self.data[rownum][self.colid]))
+        w(text_type(self.data[rownum][self.colid]))
 
 
 class PyValTableView(tableview.TableMixIn, View):

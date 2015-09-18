@@ -319,7 +319,7 @@ class _CubicWebRequestBase(RequestSessionBase):
                 return None
 
     def set_message(self, msg):
-        assert isinstance(msg, unicode)
+        assert isinstance(msg, text_type)
         self.reset_message()
         self._msg = msg
 
@@ -332,7 +332,7 @@ class _CubicWebRequestBase(RequestSessionBase):
 
     def set_redirect_message(self, msg):
         # TODO - this should probably be merged with append_to_redirect_message
-        assert isinstance(msg, unicode)
+        assert isinstance(msg, text_type)
         msgid = self.redirect_message_id()
         self.session.data[msgid] = msg
         return msgid

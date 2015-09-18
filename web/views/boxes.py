@@ -30,7 +30,7 @@ from cubicweb import _
 
 from warnings import warn
 
-from six import add_metaclass
+from six import text_type, add_metaclass
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated
@@ -218,7 +218,7 @@ class RsetBox(component.CtxComponent):
 
     @property
     def domid(self):
-        return super(RsetBox, self).domid + unicode(abs(id(self))) + unicode(abs(id(self.cw_rset)))
+        return super(RsetBox, self).domid + text_type(abs(id(self))) + text_type(abs(id(self.cw_rset)))
 
     def render_title(self, w):
         w(self.cw_extra_kwargs['title'])

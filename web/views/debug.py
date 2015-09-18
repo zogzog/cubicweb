@@ -22,6 +22,8 @@ from cubicweb import _
 
 from time import strftime, localtime
 
+from six import text_type
+
 from logilab.mtconverter import xml_escape
 
 from cubicweb.predicates import none_rset, match_user_groups
@@ -106,7 +108,7 @@ class ProcessInformationView(StartupView):
                 stats[k] = '%s / %s' % (stats[k]['size'], stats[k]['maxsize'])
         for element in sorted(stats):
             w(u'<tr><th align="left">%s</th><td>%s %s</td></tr>'
-                   % (element, xml_escape(unicode(stats[element])),
+                   % (element, xml_escape(text_type(stats[element])),
                       element.endswith('percent') and '%' or '' ))
         w(u'</table>')
         if req.cnx.is_repo_in_memory and req.user.is_in_group('managers'):
@@ -116,7 +118,7 @@ class ProcessInformationView(StartupView):
                 w(u'<ul>')
                 for session in sessions:
                     w(u'<li>%s (%s: %s)<br/>' % (
-                        xml_escape(unicode(session)),
+                        xml_escape(text_type(session)),
                         _('last usage'),
                         strftime(dtformat, localtime(session.timestamp))))
                     dict_to_html(w, session.data)

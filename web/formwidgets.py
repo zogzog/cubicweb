@@ -99,7 +99,7 @@ from functools import reduce
 from datetime import date
 from warnings import warn
 
-from six import string_types
+from six import text_type, string_types
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
@@ -476,7 +476,7 @@ class Select(FieldWidget):
             options.append(u'</optgroup>')
         if not 'size' in attrs:
             if self._multiple:
-                size = unicode(min(self.default_size, len(vocab) or 1))
+                size = text_type(min(self.default_size, len(vocab) or 1))
             else:
                 size = u'1'
             attrs['size'] = size
@@ -708,7 +708,7 @@ class JQueryDatePicker(FieldWidget):
         else:
             value = self.value
         attrs = self.attributes(form, field)
-        attrs.setdefault('size', unicode(self.default_size))
+        attrs.setdefault('size', text_type(self.default_size))
         return tags.input(name=field.input_name(form, self.suffix),
                           value=value, type='text', **attrs)
 
@@ -781,13 +781,13 @@ class JQueryDateTimePicker(FieldWidget):
         try:
             date = todatetime(req.parse_datetime(datestr, 'Date'))
         except ValueError as exc:
-            raise ProcessFormError(unicode(exc))
+            raise ProcessFormError(text_type(exc))
         if timestr is None:
             return date
         try:
             time = req.parse_datetime(timestr, 'Time')
         except ValueError as exc:
-            raise ProcessFormError(unicode(exc))
+            raise ProcessFormError(text_type(exc))
         return date.replace(hour=time.hour, minute=time.minute, second=time.second)
 
 

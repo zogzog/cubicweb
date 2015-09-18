@@ -672,7 +672,7 @@ class RelationFacet(VocabularyFacet):
                 insert_attr_select_relation(
                     select, self.filtered_variable, self.rtype, self.role,
                     self.target_attr, select_target_entity=False)
-            values = [unicode(x) for x, in self.rqlexec(select.as_string())]
+            values = [text_type(x) for x, in self.rqlexec(select.as_string())]
         except Exception:
             self.exception('while computing values for %s', self)
             return []
@@ -1126,7 +1126,7 @@ class RQLPathFacet(RelationFacet):
             cleanup_select(select, self.filtered_variable)
             varmap, restrvar = self.add_path_to_select(skiplabel=True)
             select.append_selected(nodes.VariableRef(restrvar))
-            values = [unicode(x) for x, in self.rqlexec(select.as_string())]
+            values = [text_type(x) for x, in self.rqlexec(select.as_string())]
         except Exception:
             self.exception('while computing values for %s', self)
             return []
@@ -1253,7 +1253,7 @@ class RangeFacet(AttributeFacet):
         rset = self._range_rset()
         if rset:
             minv, maxv = rset[0]
-            return [(unicode(minv), minv), (unicode(maxv), maxv)]
+            return [(text_type(minv), minv), (text_type(maxv), maxv)]
         return []
 
     def possible_values(self):
@@ -1272,7 +1272,7 @@ class RangeFacet(AttributeFacet):
 
     def formatvalue(self, value):
         """format `value` before in order to insert it in the RQL query"""
-        return unicode(value)
+        return text_type(value)
 
     def infvalue(self, min=False):
         if min:
@@ -1373,7 +1373,7 @@ class AbstractRangeRQLPathFacet(RQLPathFacet):
         # *list* (see rqlexec implementation)
         if rset:
             minv, maxv = rset[0]
-            return [(unicode(minv), minv), (unicode(maxv), maxv)]
+            return [(text_type(minv), minv), (text_type(maxv), maxv)]
         return []
 
 
@@ -1516,7 +1516,7 @@ class BitFieldFacet(AttributeFacet):
                        if not val or val & mask])
 
     def possible_values(self):
-        return [unicode(val) for label, val in self.vocabulary()]
+        return [text_type(val) for label, val in self.vocabulary()]
 
 
 ## html widets ################################################################
@@ -1595,7 +1595,7 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
         if selected:
             cssclass += ' facetValueSelected'
         w(u'<div class="%s" cubicweb:value="%s">\n'
-          % (cssclass, xml_escape(unicode(value))))
+          % (cssclass, xml_escape(text_type(value))))
         # If it is overflowed one must add padding to compensate for the vertical
         # scrollbar; given current css values, 4 blanks work perfectly ...
         padding = u'&#160;' * self.scrollbar_padding_factor if overflow else u''
@@ -1754,7 +1754,7 @@ class CheckBoxFacetWidget(htmlwidgets.HTMLWidget):
             imgsrc = self._cw.data_url(self.unselected_img)
             imgalt = self._cw._('not selected')
         w(u'<div class="%s" cubicweb:value="%s">\n'
-          % (cssclass, xml_escape(unicode(self.value))))
+          % (cssclass, xml_escape(text_type(self.value))))
         w(u'<div>')
         w(u'<img src="%s" alt="%s" cubicweb:unselimg="true" />&#160;' % (imgsrc, imgalt))
         w(u'<label class="facetTitle" cubicweb:facetName="%s">%s</label>'
