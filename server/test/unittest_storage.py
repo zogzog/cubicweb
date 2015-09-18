@@ -17,12 +17,15 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.sources.storages"""
 
+from six import PY2
+
 from logilab.common.testlib import unittest_main, tag, Tags
 from cubicweb.devtools.testlib import CubicWebTC
 
 from glob import glob
 import os
 import os.path as osp
+import sys
 import shutil
 import tempfile
 
@@ -57,12 +60,14 @@ class StorageTC(CubicWebTC):
     def setup_database(self):
         self.tempdir = tempfile.mkdtemp()
         bfs_storage = storages.BytesFileSystemStorage(self.tempdir)
+        self.bfs_storage = bfs_storage
         storages.set_attribute_storage(self.repo, 'File', 'data', bfs_storage)
         storages.set_attribute_storage(self.repo, 'BFSSTestable', 'opt_attr', bfs_storage)
 
     def tearDown(self):
         super(StorageTC, self).tearDown()
         storages.unset_attribute_storage(self.repo, 'File', 'data')
+        del self.bfs_storage
         shutil.rmtree(self.tempdir)
 
 
@@ -73,8 +78,8 @@ class StorageTC(CubicWebTC):
 
     def fspath(self, cnx, entity):
         fspath = cnx.execute('Any fspath(D) WHERE F eid %(f)s, F data D',
-                             {'f': entity.eid})[0][0]
-        return fspath.getvalue()
+                             {'f': entity.eid})[0][0].getvalue()
+        return fspath if PY2 else fspath.decode('utf-8')
 
     def test_bfss_wrong_fspath_usage(self):
         with self.admin_access.repo_cnx() as cnx:
