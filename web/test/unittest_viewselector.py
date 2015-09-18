@@ -477,12 +477,12 @@ class VRegistryTC(ViewSelectorTC):
 
 
     def test_properties(self):
-        self.assertEqual(sorted(k for k in self.vreg['propertydefs'].iterkeys()
+        self.assertEqual(sorted(k for k in self.vreg['propertydefs']
                                 if k.startswith('ctxcomponents.edit_box')),
                          ['ctxcomponents.edit_box.context',
                           'ctxcomponents.edit_box.order',
                           'ctxcomponents.edit_box.visible'])
-        self.assertEqual([k for k in self.vreg['propertyvalues'].iterkeys()
+        self.assertEqual([k for k in self.vreg['propertyvalues']
                           if not k.startswith('system.version')],
                          [])
         self.assertEqual(self.vreg.property_value('ctxcomponents.edit_box.visible'), True)

@@ -241,7 +241,7 @@ class FormRenderer(AppObject):
         if form.fieldsets_in_order:
             fieldsets = form.fieldsets_in_order
         else:
-            fieldsets = byfieldset.iterkeys()
+            fieldsets = byfieldset
         for fieldset in list(fieldsets):
             try:
                 fields = byfieldset.pop(fieldset)
