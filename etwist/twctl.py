@@ -17,10 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb-clt handlers for twisted"""
 
-from os.path import join
-
-from logilab.common.shellutils import rm
-
 from cubicweb.toolsutils import CommandHandler
 from cubicweb.web.webctl import WebCreateHandler, WebUpgradeHandler
 
@@ -36,9 +32,6 @@ class TWStartHandler(CommandHandler):
 
     def start_server(self, config):
         from cubicweb.etwist import server
-        config.info('clear ui caches')
-        for cachedir in ('uicache', 'uicachehttps'):
-            rm(join(config.appdatahome, cachedir, '*'))
         return server.run(config)
 
 class TWStopHandler(CommandHandler):
