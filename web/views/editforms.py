@@ -147,7 +147,7 @@ class CreationFormView(EditionFormView):
         # selector
         etype = kwargs.pop('etype', self._cw.form.get('etype'))
         entity = self._cw.vreg['etypes'].etype_class(etype)(self._cw)
-        entity.eid = self._cw.varmaker.next()
+        entity.eid = next(self._cw.varmaker)
         self.render_form(entity)
 
     def form_title(self, entity):
@@ -199,7 +199,7 @@ class CopyFormView(EditionFormView):
         entity.complete()
         self.newentity = copy(entity)
         self.copying = entity
-        self.newentity.eid = self._cw.varmaker.next()
+        self.newentity.eid = next(self._cw.varmaker)
         self.w(u'<script type="text/javascript">updateMessage("%s");</script>\n'
                % self._cw._(self.warning_message))
         super(CopyFormView, self).render_form(self.newentity)

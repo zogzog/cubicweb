@@ -458,7 +458,7 @@ class Entity(AppObject):
                 if len(value) == 0:
                     continue # avoid crash with empty IN clause
                 elif len(value) == 1:
-                    value = iter(value).next()
+                    value = next(iter(value))
                 else:
                     # prepare IN clause
                     pendingrels.append( (attr, role, value) )
@@ -852,7 +852,7 @@ class Entity(AppObject):
         if attributes is None:
             self._cw_completed = True
         varmaker = rqlvar_maker()
-        V = varmaker.next()
+        V = next(varmaker)
         rql = ['WHERE %s eid %%(x)s' % V]
         selected = []
         for attr in (attributes or self._cw_to_complete_attributes(skip_bytes, skip_pwd)):
@@ -860,7 +860,7 @@ class Entity(AppObject):
             if attr in self.cw_attr_cache:
                 continue
             # case where attribute must be completed, but is not yet in entity
-            var = varmaker.next()
+            var = next(varmaker)
             rql.append('%s %s %s' % (V, attr, var))
             selected.append((attr, var))
         # +1 since this doesn't include the main variable
@@ -879,7 +879,7 @@ class Entity(AppObject):
                 # * user has read perm on the relation and on the target entity
                 assert rschema.inlined
                 assert role == 'subject'
-                var = varmaker.next()
+                var = next(varmaker)
                 # keep outer join anyway, we don't want .complete to crash on
                 # missing mandatory relation (see #1058267)
                 rql.append('%s %s %s?' % (V, rtype, var))

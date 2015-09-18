@@ -82,7 +82,7 @@ def rtype_facet_title(facet):
         ptypes = facet.cw_rset.column_types(0)
         if len(ptypes) == 1:
             return display_name(facet._cw, facet.rtype, form=facet.role,
-                                context=iter(ptypes).next())
+                                context=next(iter(ptypes)))
     return display_name(facet._cw, facet.rtype, form=facet.role)
 
 def get_facet(req, facetid, select, filtered_variable):
@@ -135,7 +135,7 @@ def get_filtered_variable(select, mainvar=None):
     or the first variable selected in column 0
     """
     if mainvar is None:
-        vref = select.selection[0].iget_nodes(nodes.VariableRef).next()
+        vref = next(select.selection[0].iget_nodes(nodes.VariableRef))
         return vref.variable
     return select.defined_vars[mainvar]
 
@@ -831,13 +831,13 @@ class RelationFacet(VocabularyFacet):
         if self._cw.vreg.schema.rschema(self.rtype).final:
             return False
         if self.role == 'object':
-            subj = utils.rqlvar_maker(defined=self.select.defined_vars,
-                                      aliases=self.select.aliases).next()
+            subj = next(utils.rqlvar_maker(defined=self.select.defined_vars,
+                                      aliases=self.select.aliases))
             obj = self.filtered_variable.name
         else:
             subj = self.filtered_variable.name
-            obj = utils.rqlvar_maker(defined=self.select.defined_vars,
-                                     aliases=self.select.aliases).next()
+            obj = next(utils.rqlvar_maker(defined=self.select.defined_vars,
+                                     aliases=self.select.aliases))
         restrictions = []
         if self.select.where:
             restrictions.append(self.select.where.as_string())
@@ -1165,7 +1165,7 @@ class RQLPathFacet(RelationFacet):
                         if len(attrtypes) > 1:
                             raise Exception('ambigous attribute %s, specify attrtype on %s'
                                             % (rtype, self.__class__))
-                        self.restr_attr_type = iter(attrtypes).next()
+                        self.restr_attr_type = next(iter(attrtypes))
                     if skipattrfilter:
                         actual_filter_variable = subject
                         continue

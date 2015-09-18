@@ -93,7 +93,7 @@ class EditBox(component.CtxComponent):
             etypes = self.cw_rset.column_types(0)
             if len(etypes) == 1:
                 plural = self.cw_rset.rowcount > 1 and 'plural' or ''
-                etypelabel = display_name(self._cw, iter(etypes).next(), plural)
+                etypelabel = display_name(self._cw, next(iter(etypes)), plural)
                 title = u'%s - %s' % (title, etypelabel.lower())
         w(title)
 

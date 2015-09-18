@@ -86,7 +86,7 @@ def translate_rql_tree(rqlst, translations, schema):
             else:
                 # Only one possible translation, no ambiguity
                 if len(translation_set) == 1:
-                    relation.r_type = iter(translations[rtype]).next()
+                    relation.r_type = next(iter(translations[rtype]))
                 # More than 1 possible translation => resolve it later
                 else:
                     ambiguous_nodes[relation] = (lhs.name, translation_set)
@@ -589,7 +589,7 @@ class RQLSuggestionsBuilder(Component):
         """
         schema = self._cw.vreg.schema
         relations = set()
-        untyped_dest_var = rqlvar_maker(defined=select.defined_vars).next()
+        untyped_dest_var = next(rqlvar_maker(defined=select.defined_vars))
         # for each solution
         # 1. find each possible relation
         # 2. for each relation:

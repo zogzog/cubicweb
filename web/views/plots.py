@@ -119,7 +119,7 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
         if req.ie_browser():
             req.add_js('excanvas.js')
         req.add_js(('jquery.flot.js', 'cubicweb.flot.js'))
-        figid = u'figure%s' % req.varmaker.next()
+        figid = u'figure%s' % next(req.varmaker)
         plotdefs = []
         plotdata = []
         self.w(u'<div id="%s" style="width: %spx; height: %spx;"></div>' %

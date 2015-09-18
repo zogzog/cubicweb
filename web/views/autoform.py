@@ -357,7 +357,7 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
             self.w(self._cw._('no such entity type %s') % self.etype)
             return
         entity = cls(self._cw)
-        entity.eid = self._cw.varmaker.next()
+        entity.eid = next(self._cw.varmaker)
         return entity
 
     def call(self, i18nctx, **kwargs):

@@ -259,7 +259,7 @@ class AutoClickAndEditFormView(EntityView):
         elif action == 'add':
             add_etype = self._compute_ttypes(rschema, role)[0]
             _new_entity = self._cw.vreg['etypes'].etype_class(add_etype)(self._cw)
-            _new_entity.eid = self._cw.varmaker.next()
+            _new_entity.eid = next(self._cw.varmaker)
             edit_entity = _new_entity
             # XXX see forms.py ~ 276 and entities.linked_to method
             #     is there another way?

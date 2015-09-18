@@ -395,7 +395,7 @@ class SameETypeListView(EntityView):
 
     @property
     def title(self):
-        etype = iter(self.cw_rset.column_types(0)).next()
+        etype = next(iter(self.cw_rset.column_types(0)))
         return display_name(self._cw, etype, form='plural')
 
     def call(self, **kwargs):

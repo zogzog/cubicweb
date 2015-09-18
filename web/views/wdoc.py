@@ -73,7 +73,7 @@ def get_insertion_point(section, index):
 
 def build_toc(config):
     alltocfiles = reversed(tuple(config.locate_all_files('toc.xml')))
-    maintoc = parse(alltocfiles.next()).getroot()
+    maintoc = parse(next(alltocfiles)).getroot()
     maintoc.parent = None
     index = {}
     build_toc_index(maintoc, index)

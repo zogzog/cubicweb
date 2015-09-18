@@ -362,7 +362,7 @@ def parseKeyValue(val):
 
 def parseArgs(field):
     args = split(field, Token(';'))
-    val = args.next()
+    val = next(args)
     args = [parseKeyValue(arg) for arg in args]
     return val, args
 

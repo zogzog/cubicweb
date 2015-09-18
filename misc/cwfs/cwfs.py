@@ -80,17 +80,17 @@ class PathParser :
         self._restrictions = []
 
     def parse(self) :
-        self._entity = self._components.next()
+        self._entity = next(self._components)
         try:
             self.process_entity()
         except StopIteration :
             pass
 
     def process_entity(self) :
-        _next = self._components.next()
+        _next = next(self._components)
         if _next in self.schema.get_attrs(self._entity) :
             self._attr = _next
-            _next = self._components.next()
+            _next = next(self._components)
             self._restrictions.append( (self._entity, self._attr, _next) )
             self._attr = None
             self._rel = None
@@ -136,7 +136,7 @@ class SytPathParser :
 
     def parse(self):
         self._var = self._alphabet.pop(0)
-        self._e_type = self._components.next()
+        self._e_type = next(self._components)
         e_type = self._e_type.capitalize()
         self._restrictions.append('%s is %s' % (self._var, e_type))
         try:
@@ -146,11 +146,11 @@ class SytPathParser :
         return 'Any %s WHERE %s' % (self._var, ', '.join(self._restrictions))
 
     def process_entity(self) :
-        _next = self._components.next()
+        _next = next(self._components)
         if _next in self.schema.get_attrs(self._e_type) :
             attr = _next
             try:
-                _next = self._components.next()
+                _next = next(self._components)
                 self._restrictions.append('%s %s %s' % (self._var, attr, _next))
             except StopIteration:
                 a_var = self._alphabet.pop(0)
@@ -163,7 +163,7 @@ class SytPathParser :
             self._restrictions.append('%s %s %s' % (self._var, rel, r_var))
             self._var = r_var
             try:
-                _next = self._components.next()
+                _next = next(self._components)
                 self._restrictions.append('%s is %s' % (r_var, _next.capitalize()))
             except StopIteration:
                 raise

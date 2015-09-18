@@ -384,7 +384,7 @@ class HooksRegistry(CWRegistry):
                            (main_filter.frometypes is not None  or \
                             main_filter.toetypes is not None):
                             continue
-                        first_kwargs = _iter_kwargs(entities, eids_from_to, kwargs).next()
+                        first_kwargs = next(_iter_kwargs(entities, eids_from_to, kwargs))
                         if not main_filter(hook, cnx, **first_kwargs):
                             pruned.add(hook)
         return pruned

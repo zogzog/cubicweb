@@ -62,7 +62,7 @@ class FormulaDependenciesMatrixTC(TestCase):
     def test_computed_attribute_by_relation(self):
         comp_by_rdef = self.dependencies.computed_attribute_by_relation
         self.assertEqual(len(comp_by_rdef), 1)
-        key, values = iter(comp_by_rdef.items()).next()
+        key, values = next(iter(comp_by_rdef.items()))
         self.assertEqual(key.rtype, 'works_for')
         self.assertEqual(len(values), 1)
         self.assertEqual(values[0].rtype, 'total_salary')

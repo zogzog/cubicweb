@@ -171,7 +171,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
             entity = self.cwprops_rset.get_entity(values[key], 0)
         else:
             entity = self._cw.vreg['etypes'].etype_class('CWProperty')(self._cw)
-            entity.eid = self._cw.varmaker.next()
+            entity.eid = next(self._cw.varmaker)
             entity.cw_attr_cache['pkey'] = key
             entity.cw_attr_cache['value'] = self._cw.vreg.property_value(key)
         return entity

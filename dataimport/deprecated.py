@@ -79,7 +79,7 @@ def lazytable(reader):
 
     >>> data = lazytable(ucsvreader(open(filename)))
     """
-    header = reader.next()
+    header = next(reader)
     for row in reader:
         yield dict(zip(header, row))
 

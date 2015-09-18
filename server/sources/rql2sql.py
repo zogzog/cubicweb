@@ -1477,7 +1477,7 @@ class SQLGenerator(object):
         """generate SQL name for a function"""
         if func.name == 'FTIRANK':
             try:
-                rel = iter(func.children[0].variable.stinfo['ftirels']).next()
+                rel = next(iter(func.children[0].variable.stinfo['ftirels']))
             except KeyError:
                 raise BadRQLQuery("can't use FTIRANK on variable not used in an"
                                   " 'has_text' relation (eg full-text search)")
@@ -1563,7 +1563,7 @@ class SQLGenerator(object):
                     # add additional restriction on entities.type column
                     pts = variable.stinfo['possibletypes']
                     if len(pts) == 1:
-                        etype = iter(variable.stinfo['possibletypes']).next()
+                        etype = next(iter(variable.stinfo['possibletypes']))
                         restr = "%s.type='%s'" % (vtablename, etype)
                     else:
                         etypes = ','.join("'%s'" % et for et in pts)
@@ -1670,7 +1670,7 @@ class SQLGenerator(object):
             except KeyError:
                 pass
         rel = (variable.stinfo.get('principal') or
-               iter(variable.stinfo['rhsrelations']).next())
+               next(iter(variable.stinfo['rhsrelations'])))
         linkedvar = rel.children[0].variable
         if rel.r_type == 'eid':
             return linkedvar.accept(self)

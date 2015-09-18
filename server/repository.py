@@ -619,7 +619,7 @@ class Repository(object):
                 raise Exception('bad input for find_user')
         with self.internal_cnx() as cnx:
             varmaker = rqlvar_maker()
-            vars = [(attr, varmaker.next()) for attr in fetch_attrs]
+            vars = [(attr, next(varmaker)) for attr in fetch_attrs]
             rql = 'Any %s WHERE X is CWUser, ' % ','.join(var[1] for var in vars)
             rql += ','.join('X %s %s' % (var[0], var[1]) for var in vars) + ','
             rset = cnx.execute(rql + ','.join('X %s %%(%s)s' % (attr, attr)

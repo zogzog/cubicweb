@@ -215,7 +215,7 @@ class View(AppObject):
             return self._cw.build_url('view', vid=self.__regid__)
         coltypes = rset.column_types(0)
         if len(coltypes) == 1:
-            etype = iter(coltypes).next()
+            etype = next(iter(coltypes))
             if not self._cw.vreg.schema.eschema(etype).final:
                 if len(rset) == 1:
                     entity = rset.get_entity(0, 0)
@@ -283,7 +283,7 @@ class View(AppObject):
             else :
                 etypes = rset.column_types(0)
                 if len(etypes) == 1:
-                    etype = iter(etypes).next()
+                    etype = next(iter(etypes))
                     clabel = display_name(self._cw, etype, 'plural')
                 else :
                     clabel = u'#[*] (%s)' % vtitle

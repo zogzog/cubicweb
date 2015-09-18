@@ -87,7 +87,7 @@ def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
     it = iter(csvmod.reader(stream, delimiter=delimiter, quotechar=quotechar))
     if not ignore_errors:
         if skipfirst:
-            it.next()
+            next(it)
         for row in it:
             decoded = [item.decode(encoding) for item in row]
             if not skip_empty or any(decoded):
@@ -95,13 +95,13 @@ def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
     else:
         if skipfirst:
             try:
-                row = it.next()
+                row = next(it)
             except csvmod.Error:
                 pass
         # Safe version, that can cope with error in CSV file
         while True:
             try:
-                row = it.next()
+                row = next(it)
             # End of CSV, break
             except StopIteration:
                 break

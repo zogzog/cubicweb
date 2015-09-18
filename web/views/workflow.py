@@ -116,7 +116,7 @@ class ChangeStateFormView(form.FormViewMixIn, EntityView):
             'changestate', self._cw, entity=entity, transition=transition,
             redirect_path=self.redirectpath(entity), **kwargs)
         trinfo = self._cw.vreg['etypes'].etype_class('TrInfo')(self._cw)
-        trinfo.eid = self._cw.varmaker.next()
+        trinfo.eid = next(self._cw.varmaker)
         subform = self._cw.vreg['forms'].select('edition', self._cw, entity=trinfo,
                                                 mainform=False)
         subform.field_by_name('wf_info_for', 'subject').value = entity.eid

@@ -1560,12 +1560,14 @@ class ForRqlIterator:
             else:
                 raise StopIteration
 
-    def next(self):
+    def __next__(self):
         if self._rsetit is not None:
-            return self._rsetit.next()
+            return next(self._rsetit)
         rset = self._get_rset()
         self._rsetit = iter(rset)
-        return self._rsetit.next()
+        return next(self._rsetit)
+
+    next = __next__
 
     def entities(self):
         try:

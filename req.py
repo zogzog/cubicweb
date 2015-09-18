@@ -218,7 +218,7 @@ class RequestSessionBase(object):
                 parts.append(
                     '%(varname)s %(attr)s X, '
                     '%(varname)s eid %%(reverse_%(attr)s)s'
-                    % {'attr': attr, 'varname': varmaker.next()})
+                    % {'attr': attr, 'varname': next(varmaker)})
             else:
                 assert attr in eschema.subjrels, \
                     '%s not in %s subject relations' % (attr, eschema)

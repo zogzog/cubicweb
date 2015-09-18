@@ -195,7 +195,7 @@ def _select_principal(scope, relations, _sort=lambda x:x):
     # if DISTINCT query, can use variable from a different scope as principal
     # since introduced duplicates will be removed
     if scope.stmt.distinct and diffscope_rels:
-        return iter(_sort(diffscope_rels)).next()
+        return next(iter(_sort(diffscope_rels)))
     # XXX could use a relation from a different scope if it can't generate
     # duplicates, so we should have to check cardinality
     raise CantSelectPrincipal()

@@ -94,7 +94,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                     for etype in sorted(possibletypes):
                         node.append(n.Constant(etype, 'etype'))
                 else:
-                    etype = iter(possibletypes).next()
+                    etype = next(iter(possibletypes))
                     node = n.Constant(etype, 'etype')
                 comp = mytyperel.children[1]
                 comp.replace(comp.children[0], node)
@@ -288,7 +288,7 @@ class RQLRewriter(object):
                         if fnode.name == 'FTIRANK':
                             # we've to fetch the has_text relation as well
                             var = fnode.children[0].variable
-                            rel = iter(var.stinfo['ftirels']).next()
+                            rel = next(iter(var.stinfo['ftirels']))
                             assert not rel.ored(), 'unsupported'
                             newselect.add_restriction(rel.copy(newselect))
                             # remove relation from the orig select and
@@ -550,7 +550,7 @@ class RQLRewriter(object):
                     'cant check security of %s, ambigous type for %s in %s',
                     stmt, varname, key[0]) # key[0] == the rql expression
                 raise Unauthorized()
-            etype = iter(ptypes).next()
+            etype = next(iter(ptypes))
             eschema = self.schema.eschema(etype)
             if not eschema.has_perm(self.session, action):
                 rqlexprs = eschema.get_rqlexprs(action)
@@ -684,7 +684,7 @@ class RQLRewriter(object):
         # remove variable which have always the same type
         for key in self.rewritten:
             it = iter(variantes)
-            etype = it.next()[key]
+            etype = next(it)[key]
             for variante in it:
                 if variante[key] != etype:
                     break

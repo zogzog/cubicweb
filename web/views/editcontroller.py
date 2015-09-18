@@ -93,9 +93,9 @@ class RqlQuery(object):
 
     def update_query(self, eid):
         varmaker = rqlvar_maker()
-        var = varmaker.next()
+        var = next(varmaker)
         while var in self.kwargs:
-            var = varmaker.next()
+            var = next(varmaker)
         rql = 'SET %s WHERE X eid %%(%s)s' % (','.join(self.edited), var)
         if self.restrictions:
             rql += ', %s' % ','.join(self.restrictions)
@@ -316,7 +316,7 @@ class EditController(basecontrollers.ViewController):
         """handle edition for the (rschema, x) relation of the given entity
         """
         if values:
-            rqlquery.set_inlined(field.name, iter(values).next())
+            rqlquery.set_inlined(field.name, next(iter(values)))
         elif form.edited_entity.has_eid():
             self.handle_relation(form, field, values, origvalues)
 
@@ -361,7 +361,7 @@ class EditController(basecontrollers.ViewController):
             # In the face of ambiguity, refuse the temptation to guess.
             self._after_deletion_path = 'view', ()
         else:
-            self._after_deletion_path = iter(redirect_info).next()
+            self._after_deletion_path = next(iter(redirect_info))
         if len(eidtypes) > 1:
             self._cw.set_message(self._cw._('entities deleted'))
         else:
