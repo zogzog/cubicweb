@@ -557,7 +557,7 @@ class CompositeSchemaTC(CubicWebTC):
             self.set_description('composite rdefs for %s' % etype)
             yield self.assertEqual, self.composites[etype], \
                              sorted([(r.rtype.type, r.subject.type, r.object.type, role)
-                                     for r, role in sorted(schema[etype].composite_rdef_roles)])
+                                     for r, role in schema[etype].composite_rdef_roles])
 
 
 if __name__ == '__main__':
