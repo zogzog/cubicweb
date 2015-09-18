@@ -273,11 +273,13 @@ class SchemaReaderClassTest(TestCase):
         config = TestConfiguration('data', apphome=join(dirname(__file__), 'data_schemareader'))
         config.bootstrap_cubes()
         schema = loader.load(config)
-        self.assertEqual(schema['in_group'].rdefs.values()[0].permissions,
+        rdef = next(iter(schema['in_group'].rdefs.values()))
+        self.assertEqual(rdef.permissions,
                          {'read': ('managers',),
                           'add': ('managers',),
                           'delete': ('managers',)})
-        self.assertEqual(schema['cw_for_source'].rdefs.values()[0].permissions,
+        rdef = next(iter(schema['cw_for_source'].rdefs.values()))
+        self.assertEqual(rdef.permissions,
                          {'read': ('managers', 'users'),
                           'add': ('managers',),
                           'delete': ('managers',)})
@@ -355,11 +357,11 @@ class SchemaReaderComputedRelationAndAttributesTest(TestCase):
 
         # check object/subject type
         self.assertEqual([('Person','Service')],
-                         schema['produces_and_buys'].rdefs.keys())
+                         list(schema['produces_and_buys'].rdefs.keys()))
         self.assertEqual([('Person','Service')],
-                         schema['produces_and_buys2'].rdefs.keys())
+                         list(schema['produces_and_buys2'].rdefs.keys()))
         self.assertCountEqual([('Company', 'Service'), ('Person', 'Service')],
-                              schema['reproduce'].rdefs.keys())
+                              list(schema['reproduce'].rdefs.keys()))
         # check relation definitions are marked infered
         rdef = schema['produces_and_buys'].rdefs[('Person','Service')]
         self.assertTrue(rdef.infered)
