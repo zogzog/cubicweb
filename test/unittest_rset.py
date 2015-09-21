@@ -101,9 +101,11 @@ class ResultSetTC(CubicWebTC):
 
     def test_pickle(self):
         del self.rset.req
-        # 373 for python 2.7's cPickle
-        # 376 for the old python pickle implementation
-        self.assertIn(len(pickle.dumps(self.rset)), (373, 376))
+        rs2 = pickle.loads(pickle.dumps(self.rset))
+        self.assertEqual(self.rset.rows, rs2.rows)
+        self.assertEqual(self.rset.rowcount, rs2.rowcount)
+        self.assertEqual(self.rset.rql, rs2.rql)
+        self.assertEqual(self.rset.description, rs2.description)
 
     def test_build_url(self):
         with self.admin_access.web_request() as req:
