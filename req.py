@@ -353,7 +353,7 @@ class RequestSessionBase(object):
 
         newparams may only be mono-valued.
         """
-        if isinstance(url, unicode):
+        if PY2 and isinstance(url, unicode):
             url = url.encode(self.encoding)
         schema, netloc, path, query, fragment = urlsplit(url)
         query = parse_qs(query)
