@@ -18,7 +18,10 @@
 import sys
 import os
 from os.path import join
-from cStringIO import StringIO
+from io import StringIO, BytesIO
+
+from six import PY2
+
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.cwconfig import CubicWebConfiguration
@@ -30,7 +33,7 @@ CubicWebConfiguration.load_cwctl_plugins() # XXX necessary?
 
 class CubicWebCtlTC(TestCase):
     def setUp(self):
-        self.stream = StringIO()
+        self.stream = BytesIO() if PY2 else StringIO()
         sys.stdout = self.stream
     def tearDown(self):
         sys.stdout = sys.__stdout__
