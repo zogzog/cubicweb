@@ -456,6 +456,10 @@ set_log_methods(MigrationHelper, getLogger('cubicweb.migration'))
 
 
 def version_strictly_lower(a, b):
+    if a is None:
+        return True
+    if b is None:
+        return False
     if a:
         a = Version(a)
     if b:

@@ -22,7 +22,7 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.cwconfig import CubicWebConfiguration
-from cubicweb.migration import MigrationHelper, filter_scripts
+from cubicweb.migration import MigrationHelper, filter_scripts, version_strictly_lower
 from cubicweb.server.migractions import ServerMigrationHelper
 
 
@@ -88,6 +88,10 @@ class MigrationToolsTC(TestCase):
                                ((0, 1 ,0), TMIGRDIR+'0.1.0_common.py'),
                                ((0, 1 ,0), TMIGRDIR+'0.1.0_repository.py')])
         config.__class__.name = 'repository'
+
+    def test_version_strictly_lower(self):
+        self.assertTrue(version_strictly_lower(None, '1.0.0'))
+        self.assertFalse(version_strictly_lower('1.0.0', None))
 
 
 from cubicweb.devtools import ApptestConfiguration, get_test_db_handler
