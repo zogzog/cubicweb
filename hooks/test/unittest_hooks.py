@@ -24,8 +24,11 @@ Note:
 
 from datetime import datetime
 
+from six import text_type
+
 from cubicweb import ValidationError, AuthenticationError, BadConnectionId
 from cubicweb.devtools.testlib import CubicWebTC
+
 
 class CoreHooksTC(CubicWebTC):
 
@@ -207,7 +210,7 @@ class SchemaHooksTC(CubicWebTC):
             with self.assertRaises(ValidationError) as cm:
                 cnx.execute('INSERT CWUser X: X login "admin"')
             ex = cm.exception
-            ex.translate(unicode)
+            ex.translate(text_type)
             self.assertIsInstance(ex.entity, int)
             self.assertEqual(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
