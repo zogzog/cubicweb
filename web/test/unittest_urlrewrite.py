@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
+from six import text_type
+
 from logilab.common import tempattr
 
 from cubicweb.devtools.testlib import CubicWebTC
@@ -137,8 +139,8 @@ class RgxActionRewriteTC(CubicWebTC):
                  rgx_action(r'Any X WHERE X surname %(sn)s, '
                             'X firstname %(fn)s',
                             argsgroups=('sn', 'fn'),
-                            transforms={'sn' : unicode.capitalize,
-                                        'fn' : unicode.lower,})),
+                            transforms={'sn' : text_type.capitalize,
+                                        'fn' : text_type.lower,})),
                 ]
         with self.admin_access.web_request() as req:
             rewriter = TestSchemaBasedRewriter(req)
