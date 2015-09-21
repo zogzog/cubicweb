@@ -110,7 +110,7 @@ class RQLRewriteTC(TestCase):
     def test_base_var(self):
         constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {})
         self.assertEqual(rqlst.as_string(),
                          u'Any C WHERE C is Card, B eid %(D)s, '
@@ -122,7 +122,7 @@ class RQLRewriteTC(TestCase):
                            'P name "read", P require_group G')
         affaire_constraints = ('X ref LIKE "PUBLIC%"', 'U in_group G, G name "public"')
         kwargs = {'u':2}
-        rqlst = parse('Any S WHERE S documented_by C, C eid %(u)s')
+        rqlst = parse(u'Any S WHERE S documented_by C, C eid %(u)s')
         rewrite(rqlst, {('C', 'X'): (card_constraint,), ('S', 'X'): affaire_constraints},
                 kwargs)
         self.assertMultiLineEqual(
@@ -136,7 +136,7 @@ class RQLRewriteTC(TestCase):
 
     def test_or(self):
         constraint = '(X identity U) OR (X in_state ST, CL identity U, CL in_state ST, ST name "subscribed")'
-        rqlst = parse('Any S WHERE S owned_by C, C eid %(u)s, S is in (CWUser, CWGroup)')
+        rqlst = parse(u'Any S WHERE S owned_by C, C eid %(u)s, S is in (CWUser, CWGroup)')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {'u':1})
         self.assertEqual(rqlst.as_string(),
                          'Any S WHERE S owned_by C, C eid %(u)s, S is IN(CWUser, CWGroup), A eid %(B)s, '
@@ -146,7 +146,7 @@ class RQLRewriteTC(TestCase):
     def test_simplified_rqlst(self):
         constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
-        rqlst = parse('Any 2') # this is the simplified rql st for Any X WHERE X eid 12
+        rqlst = parse(u'Any 2') # this is the simplified rql st for Any X WHERE X eid 12
         rewrite(rqlst, {('2', 'X'): (constraint,)}, {})
         self.assertEqual(rqlst.as_string(),
                          u'Any 2 WHERE B eid %(C)s, '
@@ -156,7 +156,7 @@ class RQLRewriteTC(TestCase):
     def test_optional_var_1(self):
         constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
-        rqlst = parse('Any A,C WHERE A documented_by C?')
+        rqlst = parse(u'Any A,C WHERE A documented_by C?')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {})
         self.assertEqual(rqlst.as_string(),
                          u'Any A,C WHERE A documented_by C?, A is Affaire '
@@ -167,7 +167,7 @@ class RQLRewriteTC(TestCase):
     def test_optional_var_2(self):
         constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
-        rqlst = parse('Any A,C,T WHERE A documented_by C?, C title T')
+        rqlst = parse(u'Any A,C,T WHERE A documented_by C?, C title T')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {})
         self.assertEqual(rqlst.as_string(),
                          u'Any A,C,T WHERE A documented_by C?, A is Affaire '
@@ -180,7 +180,7 @@ class RQLRewriteTC(TestCase):
         constraint1 = ('X in_state S, U in_group G, P require_state S,'
                        'P name "read", P require_group G')
         constraint2 = 'X in_state S, S name "public"'
-        rqlst = parse('Any A,C,T WHERE A documented_by C?, C title T')
+        rqlst = parse(u'Any A,C,T WHERE A documented_by C?, C title T')
         rewrite(rqlst, {('C', 'X'): (constraint1, constraint2)}, {})
         self.assertEqual(rqlst.as_string(),
                          u'Any A,C,T WHERE A documented_by C?, A is Affaire '
@@ -193,7 +193,7 @@ class RQLRewriteTC(TestCase):
         constraint1 = 'A created_by U, X documented_by A'
         constraint2 = 'A created_by U, X concerne A'
         constraint3 = 'X created_by U'
-        rqlst = parse('Any X,LA,Y WHERE LA? documented_by X, LA concerne Y')
+        rqlst = parse(u'Any X,LA,Y WHERE LA? documented_by X, LA concerne Y')
         rewrite(rqlst, {('LA', 'X'): (constraint1, constraint2),
                         ('X', 'X'): (constraint3,),
                         ('Y', 'X'): (constraint3,)}, {})
@@ -210,7 +210,7 @@ class RQLRewriteTC(TestCase):
         # see test of the same name in RewriteFullTC: original problem is
         # unreproducible here because it actually lies in
         # RQLRewriter.insert_local_checks
-        rqlst = parse('Any A,AR,X,CD WHERE A concerne X?, A ref AR, A eid %(a)s, X creation_date CD')
+        rqlst = parse(u'Any A,AR,X,CD WHERE A concerne X?, A ref AR, A eid %(a)s, X creation_date CD')
         rewrite(rqlst, {('X', 'X'): ('X created_by U',),}, {'a': 3})
         self.assertEqual(rqlst.as_string(),
                          u'Any A,AR,X,CD WHERE A concerne X?, A ref AR, A eid %(a)s WITH X,CD BEING (Any X,CD WHERE X creation_date CD, EXISTS(X created_by B), B eid %(A)s, X is IN(Division, Note, Societe))')
@@ -218,7 +218,7 @@ class RQLRewriteTC(TestCase):
     def test_optional_var_inlined(self):
         c1 = ('X require_permission P')
         c2 = ('X inlined_card O, O require_permission P')
-        rqlst = parse('Any C,A,R WHERE A? inlined_card C, A ref R')
+        rqlst = parse(u'Any C,A,R WHERE A? inlined_card C, A ref R')
         rewrite(rqlst, {('C', 'X'): (c1,),
                         ('A', 'X'): (c2,),
                         }, {})
@@ -233,7 +233,7 @@ class RQLRewriteTC(TestCase):
     # def test_optional_var_inlined_has_perm(self):
     #     c1 = ('X require_permission P')
     #     c2 = ('X inlined_card O, U has_read_permission O')
-    #     rqlst = parse('Any C,A,R WHERE A? inlined_card C, A ref R')
+    #     rqlst = parse(u'Any C,A,R WHERE A? inlined_card C, A ref R')
     #     rewrite(rqlst, {('C', 'X'): (c1,),
     #                     ('A', 'X'): (c2,),
     #                     }, {})
@@ -243,7 +243,7 @@ class RQLRewriteTC(TestCase):
     def test_optional_var_inlined_imbricated_error(self):
         c1 = ('X require_permission P')
         c2 = ('X inlined_card O, O require_permission P')
-        rqlst = parse('Any C,A,R,A2,R2 WHERE A? inlined_card C, A ref R,A2? inlined_card C, A2 ref R2')
+        rqlst = parse(u'Any C,A,R,A2,R2 WHERE A? inlined_card C, A ref R,A2? inlined_card C, A2 ref R2')
         self.assertRaises(BadSchemaDefinition,
                           rewrite, rqlst, {('C', 'X'): (c1,),
                                            ('A', 'X'): (c2,),
@@ -253,7 +253,7 @@ class RQLRewriteTC(TestCase):
     def test_optional_var_inlined_linked(self):
         c1 = ('X require_permission P')
         c2 = ('X inlined_card O, O require_permission P')
-        rqlst = parse('Any A,W WHERE A inlined_card C?, C inlined_note N, '
+        rqlst = parse(u'Any A,W WHERE A inlined_card C?, C inlined_note N, '
                       'N inlined_affaire W')
         rewrite(rqlst, {('C', 'X'): (c1,)}, {})
         self.assertEqual(rqlst.as_string(),
@@ -267,7 +267,7 @@ class RQLRewriteTC(TestCase):
         # relation used in the rql expression can be ignored and S replaced by
         # the variable from the incoming query
         snippet = ('X in_state S, S name "hop"')
-        rqlst = parse('Card C WHERE C in_state STATE')
+        rqlst = parse(u'Card C WHERE C in_state STATE')
         rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
                          'Any C WHERE C in_state STATE, C is Card, '
@@ -275,7 +275,7 @@ class RQLRewriteTC(TestCase):
 
     def test_relation_optimization_1_rhs(self):
         snippet = ('TW subworkflow_exit X, TW name "hop"')
-        rqlst = parse('WorkflowTransition C WHERE C subworkflow_exit EXIT')
+        rqlst = parse(u'WorkflowTransition C WHERE C subworkflow_exit EXIT')
         rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
                          'Any C WHERE C subworkflow_exit EXIT, C is WorkflowTransition, '
@@ -284,14 +284,14 @@ class RQLRewriteTC(TestCase):
     def test_relation_optimization_2_lhs(self):
         # optional relation can be shared if also optional in the snippet
         snippet = ('X in_state S?, S name "hop"')
-        rqlst = parse('Card C WHERE C in_state STATE?')
+        rqlst = parse(u'Card C WHERE C in_state STATE?')
         rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
                          'Any C WHERE C in_state STATE?, C is Card, '
                          'EXISTS(STATE name "hop"), STATE is State')
     def test_relation_optimization_2_rhs(self):
         snippet = ('TW? subworkflow_exit X, TW name "hop"')
-        rqlst = parse('SubWorkflowExitPoint EXIT WHERE C? subworkflow_exit EXIT')
+        rqlst = parse(u'SubWorkflowExitPoint EXIT WHERE C? subworkflow_exit EXIT')
         rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
                          'Any EXIT WHERE C? subworkflow_exit EXIT, EXIT is SubWorkflowExitPoint, '
@@ -300,7 +300,7 @@ class RQLRewriteTC(TestCase):
     def test_relation_optimization_3_lhs(self):
         # optional relation in the snippet but not in the orig tree can be shared
         snippet = ('X in_state S?, S name "hop"')
-        rqlst = parse('Card C WHERE C in_state STATE')
+        rqlst = parse(u'Card C WHERE C in_state STATE')
         rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
                          'Any C WHERE C in_state STATE, C is Card, '
@@ -308,7 +308,7 @@ class RQLRewriteTC(TestCase):
 
     def test_relation_optimization_3_rhs(self):
         snippet = ('TW? subworkflow_exit X, TW name "hop"')
-        rqlst = parse('WorkflowTransition C WHERE C subworkflow_exit EXIT')
+        rqlst = parse(u'WorkflowTransition C WHERE C subworkflow_exit EXIT')
         rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
                          'Any C WHERE C subworkflow_exit EXIT, C is WorkflowTransition, '
@@ -317,7 +317,7 @@ class RQLRewriteTC(TestCase):
     def test_relation_non_optimization_1_lhs(self):
         # but optional relation in the orig tree but not in the snippet can't be shared
         snippet = ('X in_state S, S name "hop"')
-        rqlst = parse('Card C WHERE C in_state STATE?')
+        rqlst = parse(u'Card C WHERE C in_state STATE?')
         rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
                          'Any C WHERE C in_state STATE?, C is Card, '
@@ -325,7 +325,7 @@ class RQLRewriteTC(TestCase):
 
     def test_relation_non_optimization_1_rhs(self):
         snippet = ('TW subworkflow_exit X, TW name "hop"')
-        rqlst = parse('SubWorkflowExitPoint EXIT WHERE C? subworkflow_exit EXIT')
+        rqlst = parse(u'SubWorkflowExitPoint EXIT WHERE C? subworkflow_exit EXIT')
         rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
         self.assertEqual(rqlst.as_string(),
                          'Any EXIT WHERE C? subworkflow_exit EXIT, EXIT is SubWorkflowExitPoint, '
@@ -338,7 +338,7 @@ class RQLRewriteTC(TestCase):
         # previously inserted, else this may introduce duplicated results, as N
         # will then be shared by multiple EXISTS and so at SQL generation time,
         # the table will be in the FROM clause of the outermost query
-        rqlst = parse('Any A,C WHERE A inlined_card C')
+        rqlst = parse(u'Any A,C WHERE A inlined_card C')
         rewrite(rqlst, {('A', 'X'): ('X inlined_card C, C inlined_note N, N owned_by U',),
                         ('C', 'X'): ('X inlined_note N, N owned_by U',)}, {})
         self.assertEqual(rqlst.as_string(),
@@ -350,12 +350,12 @@ class RQLRewriteTC(TestCase):
     def test_unsupported_constraint_1(self):
         # CWUser doesn't have require_permission
         trinfo_constraint = ('X wf_info_for Y, Y require_permission P, P name "read"')
-        rqlst = parse('Any U,T WHERE U is CWUser, T wf_info_for U')
+        rqlst = parse(u'Any U,T WHERE U is CWUser, T wf_info_for U')
         self.assertRaises(Unauthorized, rewrite, rqlst, {('T', 'X'): (trinfo_constraint,)}, {})
 
     def test_unsupported_constraint_2(self):
         trinfo_constraint = ('X wf_info_for Y, Y require_permission P, P name "read"')
-        rqlst = parse('Any U,T WHERE U is CWUser, T wf_info_for U')
+        rqlst = parse(u'Any U,T WHERE U is CWUser, T wf_info_for U')
         rewrite(rqlst, {('T', 'X'): (trinfo_constraint, 'X wf_info_for Y, Y in_group G, G name "managers"')}, {})
         self.assertEqual(rqlst.as_string(),
                          u'Any U,T WHERE U is CWUser, T wf_info_for U, '
@@ -364,21 +364,21 @@ class RQLRewriteTC(TestCase):
     def test_unsupported_constraint_3(self):
         self.skipTest('raise unauthorized for now')
         trinfo_constraint = ('X wf_info_for Y, Y require_permission P, P name "read"')
-        rqlst = parse('Any T WHERE T wf_info_for X')
+        rqlst = parse(u'Any T WHERE T wf_info_for X')
         rewrite(rqlst, {('T', 'X'): (trinfo_constraint, 'X in_group G, G name "managers"')}, {})
         self.assertEqual(rqlst.as_string(),
                          u'XXX dunno what should be generated')
 
     def test_add_ambiguity_exists(self):
         constraint = ('X concerne Y')
-        rqlst = parse('Affaire X')
+        rqlst = parse(u'Affaire X')
         rewrite(rqlst, {('X', 'X'): (constraint,)}, {})
         self.assertEqual(rqlst.as_string(),
                          u"Any X WHERE X is Affaire, ((EXISTS(X concerne A, A is Division)) OR (EXISTS(X concerne C, C is Societe))) OR (EXISTS(X concerne B, B is Note))")
 
     def test_add_ambiguity_outerjoin(self):
         constraint = ('X concerne Y')
-        rqlst = parse('Any X,C WHERE X? documented_by C')
+        rqlst = parse(u'Any X,C WHERE X? documented_by C')
         rewrite(rqlst, {('X', 'X'): (constraint,)}, {})
         # ambiguity are kept in the sub-query, no need to be resolved using OR
         self.assertEqual(rqlst.as_string(),
@@ -387,76 +387,76 @@ class RQLRewriteTC(TestCase):
 
     def test_rrqlexpr_nonexistant_subject_1(self):
         constraint = RRQLExpression('S owned_by U')
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SU')
         self.assertEqual(rqlst.as_string(),
                          u"Any C WHERE C is Card, A eid %(B)s, EXISTS(C owned_by A)")
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'OU')
         self.assertEqual(rqlst.as_string(),
                          u"Any C WHERE C is Card")
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SOU')
         self.assertEqual(rqlst.as_string(),
                          u"Any C WHERE C is Card, A eid %(B)s, EXISTS(C owned_by A)")
 
     def test_rrqlexpr_nonexistant_subject_2(self):
         constraint = RRQLExpression('S owned_by U, O owned_by U, O is Card')
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SU')
         self.assertEqual(rqlst.as_string(),
                          'Any C WHERE C is Card, A eid %(B)s, EXISTS(C owned_by A)')
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'OU')
         self.assertEqual(rqlst.as_string(),
                          'Any C WHERE C is Card, B eid %(D)s, EXISTS(A owned_by B, A is Card)')
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SOU')
         self.assertEqual(rqlst.as_string(),
                          'Any C WHERE C is Card, A eid %(B)s, EXISTS(C owned_by A, D owned_by A, D is Card)')
 
     def test_rrqlexpr_nonexistant_subject_3(self):
         constraint = RRQLExpression('U in_group G, G name "users"')
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SU')
         self.assertEqual(rqlst.as_string(),
                          u'Any C WHERE C is Card, A eid %(B)s, EXISTS(A in_group D, D name "users", D is CWGroup)')
 
     def test_rrqlexpr_nonexistant_subject_4(self):
         constraint = RRQLExpression('U in_group G, G name "users", S owned_by U')
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'SU')
         self.assertEqual(rqlst.as_string(),
                          u'Any C WHERE C is Card, A eid %(B)s, EXISTS(A in_group D, D name "users", C owned_by A, D is CWGroup)')
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'OU')
         self.assertEqual(rqlst.as_string(),
                          u'Any C WHERE C is Card, A eid %(B)s, EXISTS(A in_group D, D name "users", D is CWGroup)')
 
     def test_rrqlexpr_nonexistant_subject_5(self):
         constraint = RRQLExpression('S owned_by Z, O owned_by Z, O is Card')
-        rqlst = parse('Card C')
+        rqlst = parse(u'Card C')
         rewrite(rqlst, {('C', 'S'): (constraint,)}, {}, 'S')
         self.assertEqual(rqlst.as_string(),
                          u"Any C WHERE C is Card, EXISTS(C owned_by A, A is CWUser)")
 
     def test_rqlexpr_not_relation_1_1(self):
         constraint = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
-        rqlst = parse('Affaire A WHERE NOT EXISTS(A documented_by C)')
+        rqlst = parse(u'Affaire A WHERE NOT EXISTS(A documented_by C)')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE NOT EXISTS(A documented_by C, EXISTS(C owned_by B, B login "hop", B is CWUser), C is Card), A is Affaire')
 
     def test_rqlexpr_not_relation_1_2(self):
         constraint = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
-        rqlst = parse('Affaire A WHERE NOT EXISTS(A documented_by C)')
+        rqlst = parse(u'Affaire A WHERE NOT EXISTS(A documented_by C)')
         rewrite(rqlst, {('A', 'X'): (constraint,)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE NOT EXISTS(A documented_by C, C is Card), A is Affaire, EXISTS(A owned_by B, B login "hop", B is CWUser)')
 
     def test_rqlexpr_not_relation_2(self):
         constraint = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
-        rqlst = rqlhelper.parse('Affaire A WHERE NOT A documented_by C', annotate=False)
+        rqlst = rqlhelper.parse(u'Affaire A WHERE NOT A documented_by C', annotate=False)
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE NOT EXISTS(A documented_by C, EXISTS(C owned_by B, B login "hop", B is CWUser), C is Card), A is Affaire')
@@ -465,7 +465,7 @@ class RQLRewriteTC(TestCase):
         c1 = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
         c2 = ERQLExpression('X owned_by Z, Z login "hip"', 'X')
         c3 = ERQLExpression('X owned_by Z, Z login "momo"', 'X')
-        rqlst = rqlhelper.parse('Any A WHERE A documented_by C?', annotate=False)
+        rqlst = rqlhelper.parse(u'Any A WHERE A documented_by C?', annotate=False)
         rewrite(rqlst, {('C', 'X'): (c1, c2, c3)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE A documented_by C?, A is Affaire '
@@ -486,12 +486,12 @@ class RQLRewriteTC(TestCase):
         # 4. this variable require a rewrite
         c_bad = ERQLExpression('X documented_by R, A in_state R')
 
-        rqlst = parse('Any A, R WHERE A ref R, S is Affaire')
+        rqlst = parse(u'Any A, R WHERE A ref R, S is Affaire')
         rewrite(rqlst, {('A', 'X'): (c_ok, c_bad)}, {})
 
     def test_nonregr_is_instance_of(self):
         user_expr = ERQLExpression('NOT X in_group AF, AF name "guests"')
-        rqlst = parse('Any O WHERE S use_email O, S is CWUser, O is_instance_of EmailAddress')
+        rqlst = parse(u'Any O WHERE S use_email O, S is CWUser, O is_instance_of EmailAddress')
         rewrite(rqlst, {('S', 'X'): (user_expr,)}, {})
         self.assertEqual(rqlst.as_string(),
                          'Any O WHERE S use_email O, S is CWUser, O is EmailAddress, '
@@ -602,7 +602,7 @@ class RQLRelationRewriterTC(TestCase):
     # Basic tests
     def test_base_rule(self):
         rules = {'participated_in': 'S contributor O'}
-        rqlst = rqlhelper.parse('Any X WHERE X participated_in S')
+        rqlst = rqlhelper.parse(u'Any X WHERE X participated_in S')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any X WHERE X contributor S',
                          rqlst.as_string())
@@ -611,7 +611,7 @@ class RQLRelationRewriterTC(TestCase):
         rules = {'illustrator_of': ('C is Contribution, C contributor S, '
                                     'C manifestation O, C role R, '
                                     'R name "illustrator"')}
-        rqlst = rqlhelper.parse('Any A,B WHERE A illustrator_of B')
+        rqlst = rqlhelper.parse(u'Any A,B WHERE A illustrator_of B')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE C is Contribution, '
                          'C contributor A, C manifestation B, '
@@ -622,7 +622,7 @@ class RQLRelationRewriterTC(TestCase):
         rules = {'illustrator_of': ('C is Contribution, C contributor S, '
                                     'C manifestation O, C role R, '
                                     'R name "illustrator"')}
-        rqlst = rqlhelper.parse('Any A WHERE EXISTS(A illustrator_of B)')
+        rqlst = rqlhelper.parse(u'Any A WHERE EXISTS(A illustrator_of B)')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A WHERE EXISTS(C is Contribution, '
                          'C contributor A, C manifestation B, '
@@ -633,7 +633,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite2(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('Any A,B WHERE A illustrator_of B, C require_permission R, S'
+        rqlst = rqlhelper.parse(u'Any A,B WHERE A illustrator_of B, C require_permission R, S'
                                 'require_state O')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE C require_permission R, S require_state O, '
@@ -644,7 +644,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite3(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('Any A,B WHERE E require_permission T, A illustrator_of B')
+        rqlst = rqlhelper.parse(u'Any A,B WHERE E require_permission T, A illustrator_of B')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE E require_permission T, '
                          'C is Contribution, C contributor A, C manifestation B, '
@@ -654,7 +654,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite4(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('Any A,B WHERE C require_permission R, A illustrator_of B')
+        rqlst = rqlhelper.parse(u'Any A,B WHERE C require_permission R, A illustrator_of B')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE C require_permission R, '
                          'D is Contribution, D contributor A, D manifestation B, '
@@ -664,7 +664,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite5(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('Any A,B WHERE C require_permission R, A illustrator_of B, '
+        rqlst = rqlhelper.parse(u'Any A,B WHERE C require_permission R, A illustrator_of B, '
                                 'S require_state O')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE C require_permission R, S require_state O, '
@@ -676,7 +676,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite_with(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('Any A,B WITH A, B BEING(Any X, Y WHERE X illustrator_of Y)')
+        rqlst = rqlhelper.parse(u'Any A,B WITH A, B BEING(Any X, Y WHERE X illustrator_of Y)')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WITH A,B BEING '
                          '(Any X,Y WHERE A is Contribution, A contributor X, '
@@ -686,7 +686,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite_with2(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('Any A,B WHERE T require_permission C WITH A, B BEING(Any X, Y WHERE X illustrator_of Y)')
+        rqlst = rqlhelper.parse(u'Any A,B WHERE T require_permission C WITH A, B BEING(Any X, Y WHERE X illustrator_of Y)')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE T require_permission C '
                          'WITH A,B BEING (Any X,Y WHERE A is Contribution, '
@@ -695,7 +695,7 @@ class RQLRelationRewriterTC(TestCase):
 
     def test_rewrite_with3(self):
         rules = {'participated_in': 'S contributor O'}
-        rqlst = rqlhelper.parse('Any A,B WHERE A participated_in B '
+        rqlst = rqlhelper.parse(u'Any A,B WHERE A participated_in B '
                                 'WITH A, B BEING(Any X,Y WHERE X contributor Y)')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE A contributor B WITH A,B BEING '
@@ -705,7 +705,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite_with4(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('Any A,B WHERE A illustrator_of B '
+        rqlst = rqlhelper.parse(u'Any A,B WHERE A illustrator_of B '
                                'WITH A, B BEING(Any X, Y WHERE X illustrator_of Y)')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE C is Contribution, '
@@ -719,7 +719,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite_union(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('(Any A,B WHERE A illustrator_of B) UNION'
+        rqlst = rqlhelper.parse(u'(Any A,B WHERE A illustrator_of B) UNION'
                                 '(Any X,Y WHERE X is CWUser, Z manifestation Y)')
         rule_rewrite(rqlst, rules)
         self.assertEqual('(Any A,B WHERE C is Contribution, '
@@ -730,7 +730,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite_union2(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('(Any Y WHERE Y match W) UNION '
+        rqlst = rqlhelper.parse(u'(Any Y WHERE Y match W) UNION '
                                 '(Any A WHERE A illustrator_of B) UNION '
                                 '(Any Y WHERE Y is ArtWork)')
         rule_rewrite(rqlst, rules)
@@ -744,7 +744,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite_exists(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('(Any A,B WHERE A illustrator_of B, '
+        rqlst = rqlhelper.parse(u'(Any A,B WHERE A illustrator_of B, '
                      'EXISTS(B is ArtWork))')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE EXISTS(B is ArtWork), '
@@ -755,7 +755,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite_exists2(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('(Any A,B WHERE B contributor A, EXISTS(A illustrator_of W))')
+        rqlst = rqlhelper.parse(u'(Any A,B WHERE B contributor A, EXISTS(A illustrator_of W))')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE B contributor A, '
                          'EXISTS(C is Contribution, C contributor A, C manifestation W, '
@@ -765,7 +765,7 @@ class RQLRelationRewriterTC(TestCase):
     def test_rewrite_exists3(self):
         rules = {'illustrator_of': 'C is Contribution, C contributor S, '
                 'C manifestation O, C role R, R name "illustrator"'}
-        rqlst = rqlhelper.parse('(Any A,B WHERE A illustrator_of B, EXISTS(A illustrator_of W))')
+        rqlst = rqlhelper.parse(u'(Any A,B WHERE A illustrator_of B, EXISTS(A illustrator_of W))')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE EXISTS(C is Contribution, C contributor A, '
                          'C manifestation W, C role D, D name "illustrator"), '
@@ -776,7 +776,7 @@ class RQLRelationRewriterTC(TestCase):
     # Test for GROUPBY
     def test_rewrite_groupby(self):
         rules = {'participated_in': 'S contributor O'}
-        rqlst = rqlhelper.parse('Any SUM(SA) GROUPBY S WHERE P participated_in S, P manifestation SA')
+        rqlst = rqlhelper.parse(u'Any SUM(SA) GROUPBY S WHERE P participated_in S, P manifestation SA')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any SUM(SA) GROUPBY S WHERE P manifestation SA, P contributor S',
                          rqlst.as_string())
