@@ -19,6 +19,7 @@
 
 import base64
 
+from six import text_type
 from six.moves import http_client
 from six.moves.http_cookies import SimpleCookie
 
@@ -182,7 +183,7 @@ class ApplicationTC(CubicWebTC):
     def test_publish_validation_error(self):
         with self.admin_access.web_request() as req:
             user = self.user(req)
-            eid = unicode(user.eid)
+            eid = text_type(user.eid)
             req.form = {
                 'eid':       eid,
                 '__type:'+eid:    'CWUser', '_cw_entity_fields:'+eid: 'login-subject',
