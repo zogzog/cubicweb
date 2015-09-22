@@ -66,6 +66,8 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from functools import partial
 
+from six import text_type
+
 from logilab.common.date import strptime
 from logilab.common.registry import yes
 from logilab.common.deprecation import deprecated
@@ -150,7 +152,7 @@ class AjaxController(Controller):
         if result is None:
             return ''
         # get unicode on @htmlize methods, encoded string on @jsonize methods
-        elif isinstance(result, unicode):
+        elif isinstance(result, text_type):
             return result.encode(self._cw.encoding)
         return result
 
