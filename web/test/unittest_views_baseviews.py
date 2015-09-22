@@ -129,8 +129,8 @@ class HTMLStreamTests(CubicWebTC):
                 source_lines = [line.strip()
                                 for line in html_source.splitlines(False)
                                 if line.strip()]
-                self.assertListEqual(['<!DOCTYPE html>',
-                                      '<html xmlns:cubicweb="http://www.cubicweb.org" lang="en">'],
+                self.assertListEqual([b'<!DOCTYPE html>',
+                                      b'<html xmlns:cubicweb="http://www.cubicweb.org" lang="en">'],
                                      source_lines[:2])
 
     def test_set_doctype_no_reset_xmldecl(self):
@@ -151,9 +151,9 @@ class HTMLStreamTests(CubicWebTC):
                 source_lines = [line.strip()
                                 for line in html_source.splitlines(False)
                                 if line.strip()]
-                self.assertListEqual([html_doctype,
-                                      '<html xmlns:cubicweb="http://www.cubicweb.org" lang="cz">',
-                                      '<head>'],
+                self.assertListEqual([html_doctype.encode('ascii'),
+                                      b'<html xmlns:cubicweb="http://www.cubicweb.org" lang="cz">',
+                                      b'<head>'],
                                      source_lines[:3])
 
 if __name__ == '__main__':

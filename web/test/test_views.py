@@ -57,12 +57,12 @@ class ManualCubicWebTCs(AutoPopulateTest):
         with self.admin_access.web_request() as req:
             # sortable.js should not be included by default
             rset = req.execute('CWUser X')
-            self.assertNotIn('jquery.tablesorter.js', self.view('oneline', rset, req=req).source)
+            self.assertNotIn(b'jquery.tablesorter.js', self.view('oneline', rset, req=req).source)
 
         with self.admin_access.web_request() as req:
             # but should be included by the tableview
             rset = req.execute('Any P,F,S LIMIT 1 WHERE P is CWUser, P firstname F, P surname S')
-            self.assertIn('jquery.tablesorter.js', self.view('table', rset, req=req).source)
+            self.assertIn(b'jquery.tablesorter.js', self.view('table', rset, req=req).source)
 
     def test_js_added_only_once(self):
         with self.admin_access.web_request() as req:
@@ -70,7 +70,7 @@ class ManualCubicWebTCs(AutoPopulateTest):
             self.vreg.register(SomeView)
             rset = req.execute('CWUser X')
             source = self.view('someview', rset, req=req).source
-            self.assertEqual(source.count('spam.js'), 1)
+            self.assertEqual(source.count(b'spam.js'), 1)
 
     def test_unrelateddivs(self):
         with self.admin_access.client_cnx() as cnx:
