@@ -37,7 +37,8 @@ __docformat__ = "restructuredtext en"
 from itertools import chain
 from logging import getLogger
 from os.path import join
-from urlparse import urlsplit
+
+from six.moves.urllib.parse import urlsplit
 
 from docutils import statemachine, nodes, utils, io
 from docutils.core import Publisher

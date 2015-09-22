@@ -20,10 +20,9 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
-from urlparse import urlsplit, urlunsplit
-from urllib import quote as urlquote, unquote as urlunquote
 from datetime import time, datetime, timedelta
-from cgi import parse_qs, parse_qsl
+
+from six.moves.urllib.parse import parse_qs, parse_qsl, quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated

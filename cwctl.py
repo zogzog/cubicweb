@@ -29,7 +29,6 @@ import sys
 from warnings import warn, filterwarnings
 from os import remove, listdir, system, pathsep
 from os.path import exists, join, isfile, isdir, dirname, abspath
-from urlparse import urlparse
 
 try:
     from os import kill, getpgid
@@ -38,6 +37,8 @@ except ImportError:
         """win32 kill implementation"""
     def getpgid():
         """win32 getpgid implementation"""
+
+from six.moves.urllib.parse import urlparse
 
 from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK

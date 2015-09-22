@@ -24,7 +24,9 @@ import StringIO
 from os.path import exists
 from datetime import datetime, timedelta
 from cookielib import CookieJar
-import urlparse
+
+from six.moves.urllib.parse import urlparse
+
 from lxml import etree
 
 from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, UnknownEid
@@ -327,7 +329,7 @@ class DataFeedParser(AppObject):
         For http URLs, it will try to find a cwclientlib config entry
         (if available) and use it as requester.
         """
-        purl = urlparse.urlparse(url)
+        purl = urlparse(url)
         if purl.scheme == 'file':
             return URLLibResponseAdapter(open(url[7:]), url)
 
@@ -529,7 +531,7 @@ class DataFeedXMLParser(DataFeedParser):
             self.source.debug(str(exc))
 
         # no chance with cwclientlib, fall back to former implementation
-        if urlparse.urlparse(url).scheme in ('http', 'https'):
+        if urlparse(url).scheme in ('http', 'https'):
             try:
                 _OPENER.open(url, timeout=self.source.http_timeout)
             except urllib2.HTTPError as ex:

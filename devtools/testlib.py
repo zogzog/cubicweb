@@ -22,13 +22,13 @@ __docformat__ = "restructuredtext en"
 
 import sys
 import re
-import urlparse
 from os.path import dirname, join, abspath
-from urllib import unquote
 from math import log
 from contextlib import contextmanager
 from warnings import warn
 from itertools import chain
+
+from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
 
 import yams.schema
 
@@ -736,8 +736,8 @@ class CubicWebTC(TestCase):
         req = self.request(url=url)
         if isinstance(url, unicode):
             url = url.encode(req.encoding) # req.setup_params() expects encoded strings
-        querystring = urlparse.urlparse(url)[-2]
-        params = urlparse.parse_qs(querystring)
+        querystring = urlparse(url)[-2]
+        params = parse_qs(querystring)
         req.setup_params(params)
         return req
 
@@ -750,8 +750,8 @@ class CubicWebTC(TestCase):
         with self.admin_access.web_request(url=url) as req:
             if isinstance(url, unicode):
                 url = url.encode(req.encoding) # req.setup_params() expects encoded strings
-            querystring = urlparse.urlparse(url)[-2]
-            params = urlparse.parse_qs(querystring)
+            querystring = urlparse(url)[-2]
+            params = parse_qs(querystring)
             req.setup_params(params)
             yield req
 
@@ -790,7 +790,7 @@ class CubicWebTC(TestCase):
             path = location
             params = {}
         else:
-            cleanup = lambda p: (p[0], unquote(p[1]))
+            cleanup = lambda p: (p[0], urlunquote(p[1]))
             params = dict(cleanup(p.split('=', 1)) for p in params.split('&') if p)
         if path.startswith(req.base_url()): # may be relative
             path = path[len(req.base_url()):]

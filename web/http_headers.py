@@ -6,7 +6,9 @@ import time
 from calendar import timegm
 import base64
 import re
-import urlparse
+
+from six.moves.urllib.parse import urlparse
+
 
 def dashCapitalize(s):
     ''' Capitalize a string, making sure to treat - as a word seperator '''
@@ -398,7 +400,7 @@ def parseAllowOrigin(origin):
     """Ensure origin is a valid URL-base stuff, or null"""
     if origin == 'null':
         return origin
-    p = urlparse.urlparse(origin)
+    p = urlparse(origin)
     if p.params or p.query or p.username or p.path not in ('', '/'):
         raise ValueError('Incorrect Accept-Control-Allow-Origin value %s' % origin)
     if p.scheme not in ('http', 'https'):

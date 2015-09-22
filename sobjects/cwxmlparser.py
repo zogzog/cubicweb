@@ -32,8 +32,9 @@ Example of mapping for CWEntityXMLParser::
 """
 
 from datetime import datetime, time
-import urlparse
 import urllib
+
+from six.moves.urllib.parse import urlparse, urlunparse, parse_qs
 
 from logilab.common.date import todate, totime
 from logilab.common.textutils import splitstrip, text_to_dict
@@ -242,9 +243,9 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
     def normalize_url(self, url):
         """overridden to add vid=xml if vid is not set in the qs"""
         url = super(CWEntityXMLParser, self).normalize_url(url)
-        purl = urlparse.urlparse(url)
+        purl = urlparse(url)
         if purl.scheme in ('http', 'https'):
-            params = urlparse.parse_qs(purl.query)
+            params = parse_qs(purl.query)
             if 'vid' not in params:
                 params['vid'] = ['xml']
                 purl = list(purl)
@@ -263,8 +264,8 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         If `known_relations` is given, it should be a dictionary of already
         known relations, so they don't get queried again.
         """
-        purl = urlparse.urlparse(url)
-        params = urlparse.parse_qs(purl.query)
+        purl = urlparse(url)
+        params = parse_qs(purl.query)
         if etype is None:
             etype = purl.path.split('/')[-1]
         try:
@@ -278,7 +279,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             relations.add('%s-%s' % (rtype, role))
         purl = list(purl)
         purl[4] = urllib.urlencode(params, doseq=True)
-        return urlparse.urlunparse(purl)
+        return urlunparse(purl)
 
     def complete_item(self, item, rels):
         try:

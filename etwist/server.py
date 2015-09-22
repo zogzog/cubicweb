@@ -22,8 +22,10 @@ import sys
 import select
 import traceback
 import threading
-from urlparse import urlsplit, urlunsplit
 from cgi import FieldStorage, parse_header
+
+from six.moves.urllib.parse import urlsplit, urlunsplit
+
 from cubicweb.statsd_logger import statsd_timeit
 
 from twisted.internet import reactor, task, threads

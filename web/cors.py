@@ -14,7 +14,7 @@ See also:
 
 """
 
-import urlparse
+from six.moves.urllib.parse import urlsplit
 
 from cubicweb.web import LOGGER
 info = LOGGER.info
@@ -37,7 +37,7 @@ def process_request(req, config):
 
     In case of non-compliance, no CORS-related header is set.
     """
-    base_url = urlparse.urlsplit(req.base_url())
+    base_url = urlsplit(req.base_url())
     expected_host = '://'.join((base_url.scheme, base_url.netloc))
     if not req.get_header('Origin') or req.get_header('Origin') == expected_host:
         # not a CORS request, nothing to do
@@ -101,7 +101,7 @@ def check_origin(req, config):
     if '*' not in allowed_origins and origin not in allowed_origins:
         raise CORSFailed('Origin is not allowed')
     # bit of sanity check; see "6.3 Security"
-    myhost = urlparse.urlsplit(req.base_url()).netloc
+    myhost = urlsplit(req.base_url()).netloc
     host = req.get_header('Host')
     if host != myhost:
         info('cross origin resource sharing detected possible '

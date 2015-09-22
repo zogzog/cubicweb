@@ -18,9 +18,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.utils"""
 
-from urlparse import urlsplit
-
 from six.moves import cPickle as pickle
+from six.moves.urllib.parse import urlsplit
 
 from rql import parse
 

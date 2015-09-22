@@ -19,9 +19,9 @@
 
 __docformat__ = "restructuredtext en"
 from warnings import warn
-
-from urlparse import urlsplit, urlunsplit
 from datetime import datetime
+
+from six.moves.urllib.parse import urlsplit, urlunsplit
 
 from logilab.mtconverter import xml_escape
 

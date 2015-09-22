@@ -17,7 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
-from urlparse import urlsplit, parse_qsl
+
+from six.moves.urllib.parse import urlsplit, parse_qsl
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.sobjects.cwxmlparser import CWEntityXMLParser

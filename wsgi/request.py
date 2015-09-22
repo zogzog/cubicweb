@@ -28,7 +28,8 @@ __docformat__ = "restructuredtext en"
 import tempfile
 
 from StringIO import StringIO
-from urlparse import parse_qs
+
+from six.moves.urllib.parse import parse_qs
 
 from cubicweb.multipart import (
     copy_file, parse_form_data, parse_options_header)

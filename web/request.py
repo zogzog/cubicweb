@@ -22,15 +22,15 @@ __docformat__ = "restructuredtext en"
 import time
 import random
 import base64
-import urllib
 from StringIO import StringIO
 from hashlib import sha1 # pylint: disable=E0611
 from Cookie import SimpleCookie
 from calendar import timegm
 from datetime import date, datetime
-from urlparse import urlsplit
 import httplib
 from warnings import warn
+
+from six.moves.urllib.parse import urlsplit, quote as urlquote
 
 from rql.utils import rqlvar_maker
 
@@ -580,7 +580,7 @@ class _CubicWebRequestBase(RequestSessionBase):
             header.append('filename="%s"' % ascii_filename)
             if unicode_filename is not None:
                 # encoded filename according RFC5987
-                urlquoted_filename = urllib.quote(unicode_filename.encode('utf-8'), '')
+                urlquoted_filename = urlquote(unicode_filename.encode('utf-8'), '')
                 header.append("filename*=utf-8''" + urlquoted_filename)
             self.set_header('content-disposition', ';'.join(header))
 

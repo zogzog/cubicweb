@@ -26,7 +26,8 @@ import random
 import threading
 import socket
 import httplib
-from urlparse import urlparse
+
+from six.moves.urllib.parse import urlparse
 
 from twisted.internet import reactor, error
 

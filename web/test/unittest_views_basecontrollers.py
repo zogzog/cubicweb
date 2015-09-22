@@ -17,12 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.web.views.basecontrollers unit tests"""
 
-from urlparse import urlsplit, urlunsplit, urljoin
-# parse_qs is deprecated in cgi and has been moved to urlparse in Python 2.6
-try:
-    from urlparse import parse_qs as url_parse_query
-except ImportError:
-    from cgi import parse_qs as url_parse_query
+from six.moves.urllib.parse import urlsplit, urlunsplit, urljoin, parse_qs
 
 import lxml
 
@@ -1042,7 +1037,7 @@ class UndoControllerTC(CubicWebTC):
         """
         with self.admin_access.web_request() as req:
             scheme, netloc, path, query, fragment = urlsplit(url)
-            query_dict = url_parse_query(query)
+            query_dict = parse_qs(query)
             expected_url = urljoin(req.base_url(), expected_path)
             self.assertEqual( urlunsplit((scheme, netloc, path, None, None)), expected_url)
 

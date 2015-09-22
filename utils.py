@@ -33,9 +33,9 @@ from itertools import repeat
 from uuid import uuid4
 from warnings import warn
 from threading import Lock
-from urlparse import urlparse
-
 from logging import getLogger
+
+from six.moves.urllib.parse import urlparse
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
