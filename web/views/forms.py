@@ -48,6 +48,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 import time
+import inspect
 
 from logilab.common import dictattr, tempattr
 from logilab.common.decorators import iclassmethod, cached
@@ -257,7 +258,7 @@ class FieldsForm(form.Form):
                 editedfields = self._cw.form['_cw_fields']
             except KeyError:
                 raise RequestError(self._cw._('no edited fields specified'))
-        entityform = entity and self.field_by_name.im_func.func_code.co_argcount == 4 # XXX
+        entityform = entity and len(inspect.getargspec(self.field_by_name)) == 4 # XXX
         for editedfield in splitstrip(editedfields):
             try:
                 name, role = editedfield.split('-')

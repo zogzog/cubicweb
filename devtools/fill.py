@@ -26,6 +26,7 @@ from random import randint, choice
 from copy import deepcopy
 from datetime import datetime, date, time, timedelta
 from decimal import Decimal
+import inspect
 
 from six import text_type, add_metaclass
 from six.moves import range
@@ -258,7 +259,7 @@ class autoextend(type):
         for attrname, attrvalue in classdict.items():
             if callable(attrvalue):
                 if attrname.startswith('generate_') and \
-                       attrvalue.func_code.co_argcount < 2:
+                       len(inspect.getargspec(attrvalue).args) < 2:
                     raise TypeError('generate_xxx must accept at least 1 argument')
                 setattr(_ValueGenerator, attrname, attrvalue)
         return type.__new__(mcs, name, bases, classdict)
