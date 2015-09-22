@@ -422,7 +422,7 @@ class VRegistryTC(ViewSelectorTC):
 
     def test_interface_selector(self):
         with self.admin_access.web_request() as req:
-            req.create_entity('File', data_name=u'bim.png', data=Binary('bim'))
+            req.create_entity('File', data_name=u'bim.png', data=Binary(b'bim'))
             # image primary view priority
             rset = req.execute('File X WHERE X data_name "bim.png"')
             self.assertIsInstance(self.vreg['views'].select('primary', req, rset=rset),
@@ -431,21 +431,21 @@ class VRegistryTC(ViewSelectorTC):
 
     def test_score_entity_selector(self):
         with self.admin_access.web_request() as req:
-            req.create_entity('File', data_name=u'bim.png', data=Binary('bim'))
+            req.create_entity('File', data_name=u'bim.png', data=Binary(b'bim'))
             # image/ehtml primary view priority
             rset = req.execute('File X WHERE X data_name "bim.png"')
             self.assertIsInstance(self.vreg['views'].select('image', req, rset=rset),
                                   idownloadable.ImageView)
             self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'ehtml', req, rset=rset)
 
-            fileobj = req.create_entity('File', data_name=u'bim.html', data=Binary('<html>bam</html'))
+            fileobj = req.create_entity('File', data_name=u'bim.html', data=Binary(b'<html>bam</html'))
             # image/ehtml primary view priority
             rset = req.execute('File X WHERE X data_name "bim.html"')
             self.assertIsInstance(self.vreg['views'].select('ehtml', req, rset=rset),
                                   idownloadable.EHTMLView)
             self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'image', req, rset=rset)
 
-            fileobj = req.create_entity('File', data_name=u'bim.txt', data=Binary('boum'))
+            fileobj = req.create_entity('File', data_name=u'bim.txt', data=Binary(b'boum'))
             # image/ehtml primary view priority
             rset = req.execute('File X WHERE X data_name "bim.txt"')
             self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'image', req, rset=rset)

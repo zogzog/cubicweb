@@ -37,7 +37,7 @@ from cubicweb.web import action
 class ImplementsTC(CubicWebTC):
     def test_etype_priority(self):
         with self.admin_access.web_request() as req:
-            f = req.create_entity('FakeFile', data_name=u'hop.txt', data=Binary('hop'),
+            f = req.create_entity('FakeFile', data_name=u'hop.txt', data=Binary(b'hop'),
                                   data_format=u'text/plain')
             rset = f.as_rset()
             anyscore = is_instance('Any')(f.__class__, req, rset=rset)

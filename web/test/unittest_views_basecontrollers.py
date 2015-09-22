@@ -226,7 +226,7 @@ class EditControllerTC(CubicWebTC):
 
                         '__type:Y': 'File',
                         '_cw_entity_fields:Y': 'data-subject,described_by_test-object',
-                        'data-subject:Y': (u'coucou.txt', Binary('coucou')),
+                        'data-subject:Y': (u'coucou.txt', Binary(b'coucou')),
                         'described_by_test-object:Y': 'X',
                         }
             path, _params = self.expect_redirect_handle_request(req, 'edit')
@@ -251,7 +251,7 @@ class EditControllerTC(CubicWebTC):
 
                         '__type:Y': 'File',
                         '_cw_entity_fields:Y': 'data-subject',
-                        'data-subject:Y': (u'coucou.txt', Binary('coucou')),
+                        'data-subject:Y': (u'coucou.txt', Binary(b'coucou')),
                         }
             path, _params = self.expect_redirect_handle_request(req, 'edit')
             self.assertTrue(path.startswith('salesterm/'), path)
@@ -349,7 +349,7 @@ class EditControllerTC(CubicWebTC):
     def test_interval_bound_constraint_success(self):
         with self.admin_access.repo_cnx() as cnx:
             feid = cnx.execute('INSERT File X: X data_name "toto.txt", X data %(data)s',
-                               {'data': Binary('yo')})[0][0]
+                               {'data': Binary(b'yo')})[0][0]
             cnx.commit()
 
         with self.admin_access.web_request(rollbackfirst=True) as req:
@@ -395,7 +395,7 @@ class EditControllerTC(CubicWebTC):
         constrained attributes"""
         with self.admin_access.repo_cnx() as cnx:
             feid = cnx.execute('INSERT File X: X data_name "toto.txt", X data %(data)s',
-                               {'data': Binary('yo')})[0][0]
+                               {'data': Binary(b'yo')})[0][0]
             seid = cnx.create_entity('Salesterm', amount=0, described_by_test=feid).eid
             cnx.commit()
 
@@ -732,7 +732,7 @@ class EditControllerTC(CubicWebTC):
 
                             '__type:Y': 'File',
                             '_cw_entity_fields:Y': 'data-subject',
-                            'data-subject:Y': (u'coucou.txt', Binary('coucou')),
+                            'data-subject:Y': (u'coucou.txt', Binary(b'coucou')),
                             }
                 values_by_eid = dict((eid, req.extract_entity_params(eid, minparams=2))
                                      for eid in req.edited_eids())

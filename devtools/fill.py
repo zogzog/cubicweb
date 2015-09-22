@@ -177,7 +177,7 @@ title
     generate_tztime = generate_time # XXX implementation should add a timezone
 
     def generate_bytes(self, entity, attrname, index, format=None):
-        fakefile = Binary("%s%s" % (attrname, index))
+        fakefile = Binary(("%s%s" % (attrname, index)).encode('ascii'))
         fakefile.filename = u"file_%s" % attrname
         return fakefile
 

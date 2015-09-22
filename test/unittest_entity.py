@@ -644,7 +644,7 @@ du :eid:`1:*ReST*`'''
 
     def test_printable_value_bytes(self):
         with self.admin_access.web_request() as req:
-            e = req.create_entity('FakeFile', data=Binary('lambda x: 1'), data_format=u'text/x-python',
+            e = req.create_entity('FakeFile', data=Binary(b'lambda x: 1'), data_format=u'text/x-python',
                                   data_encoding=u'ascii', data_name=u'toto.py')
             from cubicweb import mttransforms
             if mttransforms.HAS_PYGMENTS_TRANSFORMS:
@@ -663,8 +663,10 @@ du :eid:`1:*ReST*`'''
     <span style="color: #C00000;">lambda</span> <span style="color: #000000;">x</span><span style="color: #0000C0;">:</span> <span style="color: #0080C0;">1</span>
 </pre>''')
 
-            e = req.create_entity('FakeFile', data=Binary('*héhéhé*'), data_format=u'text/rest',
-                                data_encoding=u'utf-8', data_name=u'toto.txt')
+            e = req.create_entity('FakeFile',
+                                  data=Binary(u'*héhéhé*'.encode('utf-8')),
+                                  data_format=u'text/rest',
+                                  data_encoding=u'utf-8', data_name=u'toto.txt')
             self.assertEqual(e.printable_value('data'),
                               u'<p><em>héhéhé</em></p>')
 
@@ -717,7 +719,7 @@ du :eid:`1:*ReST*`'''
             e = self.vreg['etypes'].etype_class('FakeFile')(req)
             e.cw_attr_cache['description'] = 'du <em>html</em>'
             e.cw_attr_cache['description_format'] = 'text/html'
-            e.cw_attr_cache['data'] = Binary('some <em>data</em>')
+            e.cw_attr_cache['data'] = Binary(b'some <em>data</em>')
             e.cw_attr_cache['data_name'] = 'an html file'
             e.cw_attr_cache['data_format'] = 'text/html'
             e.cw_attr_cache['data_encoding'] = 'ascii'
