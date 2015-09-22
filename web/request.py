@@ -24,13 +24,13 @@ import random
 import base64
 from StringIO import StringIO
 from hashlib import sha1 # pylint: disable=E0611
-from Cookie import SimpleCookie
 from calendar import timegm
 from datetime import date, datetime
 from warnings import warn
 
 from six.moves import http_client
 from six.moves.urllib.parse import urlsplit, quote as urlquote
+from six.moves.http_cookies import SimpleCookie
 
 from rql.utils import rqlvar_maker
 
