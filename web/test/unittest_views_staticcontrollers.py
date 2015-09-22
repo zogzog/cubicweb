@@ -120,12 +120,12 @@ class ConcatFilesTC(CubicWebTC):
             yield res, req
 
     def expected_content(self, js_files):
-        content = u''
+        content = b''
         for js_file in js_files:
             dirpath, rid = self.config.locate_resource(js_file)
             if dirpath is not None: # ignore resources not found
-                with open(osp.join(dirpath, rid)) as f:
-                    content += f.read() + '\n'
+                with open(osp.join(dirpath, rid), 'rb') as f:
+                    content += f.read() + b'\n'
         return content
 
     def test_cache(self):

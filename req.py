@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from datetime import time, datetime, timedelta
 
-from six import PY2, text_type
+from six import PY2, PY3, text_type
 from six.moves.urllib.parse import parse_qs, parse_qsl, quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
 
 from logilab.common.decorators import cached
@@ -324,6 +324,8 @@ class RequestSessionBase(object):
         decoding is based on `self.encoding` which is the encoding
         used in `url_quote`
         """
+        if PY3:
+            return urlunquote(quoted)
         if isinstance(quoted, unicode):
             quoted = quoted.encode(self.encoding)
         try:
@@ -333,6 +335,9 @@ class RequestSessionBase(object):
 
     def url_parse_qsl(self, querystring):
         """return a list of (key, val) found in the url quoted query string"""
+        if PY3:
+            for key, val in parse_qsl(querystring):
+                yield key, val
         if isinstance(querystring, unicode):
             querystring = querystring.encode(self.encoding)
         for key, val in parse_qsl(querystring):

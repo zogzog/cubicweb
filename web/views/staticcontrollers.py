@@ -167,7 +167,7 @@ class ConcatFilesHandler(object):
                             with open(osp.join(dirpath, rid), 'rb') as source:
                                 for line in source:
                                     f.write(line)
-                            f.write('\n')
+                            f.write(b'\n')
                     f.close()
                 except:
                     os.remove(tmpfile)
