@@ -551,7 +551,7 @@ class IWorkflowableAdapter(EntityAdapter):
         tr = self._get_transition(tr)
         if any(tr_ for tr_ in self.possible_transitions()
                if tr_.eid == tr.eid):
-            self.fire_transition(tr)
+            self.fire_transition(tr, comment, commentformat)
 
     def change_state(self, statename, comment=None, commentformat=None, tr=None):
         """change the entity's state to the given state (name or entity) in
