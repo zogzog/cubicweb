@@ -276,8 +276,8 @@ class ApplicationTC(CubicWebTC):
     def _test_cleaned(self, kwargs, injected, cleaned):
         with self.admin_access.web_request(**kwargs) as req:
             page = self.app_handle_request(req, 'view')
-            self.assertNotIn(injected, page)
-            self.assertIn(cleaned, page)
+            self.assertNotIn(injected.encode('ascii'), page)
+            self.assertIn(cleaned.encode('ascii'), page)
 
     def test_nonregr_script_kiddies(self):
         """test against current script injection"""
