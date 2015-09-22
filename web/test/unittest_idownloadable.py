@@ -42,7 +42,7 @@ class IDownloadableUser(view.EntityAdapter):
         return  self.entity.name() + '.txt'
 
     def download_data(self):
-        return 'Babar is not dead!'
+        return b'Babar is not dead!'
 
 
 class BrokenIDownloadableGroup(IDownloadableUser):
@@ -72,7 +72,7 @@ class IDownloadableTC(CubicWebTC):
                              get('content-disposition'))
             self.assertEqual(['text/plain;charset=ascii'],
                              get('content-type'))
-            self.assertEqual('Babar is not dead!', data)
+            self.assertEqual(b'Babar is not dead!', data)
 
     def test_header_with_space(self):
         with self.admin_access.web_request() as req:
@@ -87,7 +87,7 @@ class IDownloadableTC(CubicWebTC):
                              get('content-disposition'))
             self.assertEqual(['text/plain;charset=ascii'],
                              get('content-type'))
-            self.assertEqual('Babar is not dead!', data)
+            self.assertEqual(b'Babar is not dead!', data)
 
     def test_header_with_space_and_comma(self):
         with self.admin_access.web_request() as req:
@@ -102,7 +102,7 @@ class IDownloadableTC(CubicWebTC):
                              get('content-disposition'))
             self.assertEqual(['text/plain;charset=ascii'],
                              get('content-type'))
-            self.assertEqual('Babar is not dead!', data)
+            self.assertEqual(b'Babar is not dead!', data)
 
     def test_header_unicode_filename(self):
         with self.admin_access.web_request() as req:

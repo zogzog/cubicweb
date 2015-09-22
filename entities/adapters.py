@@ -187,7 +187,7 @@ class IDownloadableAdapter(view.EntityAdapter):
         raise NotImplementedError
 
     def download_data(self):
-        """return actual data of the downloadable content"""
+        """return actual data (bytes) of the downloadable content"""
         raise NotImplementedError
 
 # XXX should propose to use two different relations for children/parent
