@@ -20,17 +20,18 @@
 __docformat__ = "restructuredtext en"
 
 import sys
-import os
 import re
 import subprocess
 from os.path import abspath
 from itertools import ifilter
 from logging import getLogger
+from datetime import time, datetime
 
 from logilab import database as db, common as lgc
 from logilab.common.shellutils import ProgressBar, DummyProgressBar
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
+from logilab.common.date import utctime, utcdatetime
 from logilab.database.sqlgen import SQLGenerator
 
 from cubicweb import Binary, ConfigurationError
@@ -373,8 +374,17 @@ class SQLAdapterMixIn(object):
                 # convert cubicweb binary into db binary
                 if isinstance(val, Binary):
                     val = self._binary(val.getvalue())
+                # convert timestamp to utc.
+                # expect SET TiME ZONE to UTC at connection opening time.
+                # This shouldn't change anything for datetime without TZ.
+                elif isinstance(val, datetime) and val.tzinfo is not None:
+                    val = utcdatetime(val)
+                elif isinstance(val, time) and val.tzinfo is not None:
+                    val = utctime(val)
                 newargs[key] = val
             # should not collide
+            assert not (frozenset(newargs) & frozenset(query_args)), \
+                'unexpected collision: %s' % (frozenset(newargs) & frozenset(query_args))
             newargs.update(query_args)
             return newargs
         return query_args

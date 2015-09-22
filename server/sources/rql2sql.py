@@ -50,9 +50,7 @@ and Informix.
 __docformat__ = "restructuredtext en"
 
 import threading
-from datetime import datetime, time
 
-from logilab.common.date import utcdatetime, utctime
 from logilab.database import FunctionDescr, SQL_FUNCTIONS_REGISTRY
 
 from rql import BadRQLQuery, CoercionError
@@ -1516,14 +1514,6 @@ class SQLGenerator(object):
                 _id = value
                 if isinstance(_id, unicode):
                     _id = _id.encode()
-                # convert timestamp to utc.
-                # expect SET TiME ZONE to UTC at connection opening time.
-                # This shouldn't change anything for datetime without TZ.
-                value = self._args[_id]
-                if isinstance(value, datetime) and value.tzinfo is not None:
-                    self._query_attrs[_id] = utcdatetime(value)
-                elif isinstance(value, time) and value.tzinfo is not None:
-                    self._query_attrs[_id] = utctime(value)
         else:
             _id = str(id(constant)).replace('-', '', 1)
             self._query_attrs[_id] = value

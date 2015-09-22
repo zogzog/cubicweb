@@ -1397,6 +1397,13 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(datenaiss.tzinfo, None)
         self.assertEqual(datenaiss.utctimetuple()[:5], (1977, 6, 7, 1, 0))
 
+    def test_tz_datetime_cache_nonregr(self):
+        datenaiss = datetime(1977, 6, 7, 2, 0, tzinfo=FixedOffset(1))
+        self.qexecute("INSERT Personne X: X nom 'bob', X tzdatenaiss %(date)s",
+                     {'date': datenaiss})
+        self.assertTrue(self.qexecute("Any X WHERE X tzdatenaiss %(d)s", {'d': datenaiss}))
+        self.assertFalse(self.qexecute("Any X WHERE X tzdatenaiss %(d)s", {'d': datenaiss - timedelta(1)}))
+
     # non regression tests #####################################################
 
     def test_nonregr_1(self):
