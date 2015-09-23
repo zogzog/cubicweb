@@ -54,7 +54,8 @@ def tearDownModule(*args):
 
 class MigrationConfig(cubicweb.devtools.TestServerConfiguration):
     default_sources = cubicweb.devtools.DEFAULT_PSQL_SOURCES
-    CUBES_PATH = [osp.join(HERE, 'data-migractions', 'cubes')]
+    CUBES_PATH = cubicweb.devtools.TestServerConfiguration.CUBES_PATH + [
+        osp.join(HERE, 'data-migractions', 'cubes')]
 
 
 class MigrationTC(CubicWebTC):
