@@ -661,6 +661,16 @@ class CWConstraintDelOp(MemSchemaOperation):
         syssource = cnx.repo.system_source
         cstrtype = self.oldcstr.type()
         if cstrtype == 'SizeConstraint':
+            # if the size constraint is being replaced with a new max size, we'll
+            # call update_rdef_column in CWConstraintAddOp, skip it here
+            for cstr in cnx.transaction_data.get('newsizecstr', ()):
+                rdefentity = cstr.reverse_constrained_by[0]
+                cstrrdef = cnx.vreg.schema.schema_by_eid(rdefentity.eid)
+                if cstrrdef == rdef:
+                    return
+
+            # we found that the size constraint for this rdef is really gone,
+            # not just replaced by another
             syssource.update_rdef_column(cnx, rdef)
             self.size_cstr_changed = True
         elif cstrtype == 'UniqueConstraint':
@@ -1114,6 +1124,11 @@ class AfterAddCWConstraintHook(SyncSchemaHook):
     events = ('after_add_entity', 'after_update_entity')
 
     def __call__(self):
+        if self.entity.cstrtype[0].name == 'SizeConstraint':
+            txdata = self._cw.transaction_data
+            if 'newsizecstr' not in txdata:
+                txdata['newsizecstr'] = set()
+            txdata['newsizecstr'].add(self.entity)
         CWConstraintAddOp(self._cw, entity=self.entity)
 
 
