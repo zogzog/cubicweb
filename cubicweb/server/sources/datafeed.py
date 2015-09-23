@@ -314,8 +314,8 @@ class DataFeedSource(AbstractSource):
 class DataFeedParser(AppObject):
     __registry__ = 'parsers'
 
-    def __init__(self, cnx, source, import_log=None, source_uris=None, moved_uris=None, **kwargs):
-        super(DataFeedParser, self).__init__(cnx, **kwargs)
+    def __init__(self, cnx, source, import_log=None, source_uris=None, moved_uris=None):
+        super(DataFeedParser, self).__init__(cnx)
         self.source = source
         self.import_log = import_log
         if source_uris is None:
