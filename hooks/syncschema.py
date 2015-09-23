@@ -750,6 +750,13 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
     entity = cstrname = None # for pylint
     cols = () # for pylint
 
+    def insert_index(self):
+        # We need to run before CWConstraintDelOp: if a size constraint is
+        # removed and the column is part of a unique_together constraint, we
+        # remove the unique_together index before changing the column's type.
+        # SQL Server does not support unique indices on unlimited text columns.
+        return 0
+
     def precommit_event(self):
         cnx = self.cnx
         prefix = SQL_PREFIX
