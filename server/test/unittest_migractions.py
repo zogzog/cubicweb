@@ -733,6 +733,12 @@ class MigrationCommandsTC(MigrationTC):
             self.assertNotIn('%secrit_par' % SQL_PREFIX,
                              self.table_schema(mh, '%sPersonne' % SQL_PREFIX))
 
+    def test_drop_inlined_rdef_delete_data(self):
+        with self.mh() as (cnx, mh):
+            note = mh.cmd_create_entity('Note', ecrit_par=cnx.user.eid)
+            mh.commit()
+            mh.drop_relation_definition('Note', 'ecrit_par', 'CWUser')
+            self.assertFalse(mh.sqlexec('SELECT * FROM cw_Note WHERE cw_ecrit_par IS NOT NULL'))
 
 class MigrationCommandsComputedTC(MigrationTC):
     """ Unit tests for computed relations and attributes

@@ -332,7 +332,7 @@ class CWRTypeUpdateOp(MemSchemaOperation):
         self.oldvalues = dict( (attr, getattr(rschema, attr)) for attr in self.values)
         self.rschema.__dict__.update(self.values)
         # then make necessary changes to the system source database
-        if not 'inlined' in self.values:
+        if 'inlined' not in self.values:
             return # nothing to do
         inlined = self.values['inlined']
         # check in-lining is possible when inlined
@@ -608,8 +608,23 @@ class RDefDelOp(MemSchemaOperation):
                 ptypes = cnx.transaction_data.setdefault('pendingrtypes', set())
                 ptypes.add(rschema.type)
                 DropColumn.get_instance(cnx).add_data((str(rdef.subject), str(rschema)))
+            elif rschema.inlined:
+                cnx.system_sql('UPDATE %s%s SET %s%s=NULL WHERE '
+                               'EXISTS(SELECT 1 FROM entities '
+                               '       WHERE eid=%s%s AND type=%%(to_etype)s)'
+                               % (SQL_PREFIX, rdef.subject, SQL_PREFIX, rdef.rtype,
+                                  SQL_PREFIX, rdef.rtype),
+                               {'to_etype': rdef.object.type})
         elif lastrel:
             DropRelationTable(cnx, str(rschema))
+        else:
+            cnx.system_sql('DELETE FROM %s_relation WHERE '
+                           'EXISTS(SELECT 1 FROM entities '
+                           '       WHERE eid=eid_from AND type=%%(from_etype)s)'
+                           ' AND EXISTS(SELECT 1 FROM entities '
+                           '       WHERE eid=eid_to AND type=%%(to_etype)s)'
+                           % rschema,
+                           {'from_etype': rdef.subject.type, 'to_etype': rdef.object.type})
         # then update the in-memory schema
         if rdef.subject not in ETYPE_NAME_MAP and rdef.object not in ETYPE_NAME_MAP:
             rschema.del_relation_def(rdef.subject, rdef.object)
@@ -969,7 +984,6 @@ class DelCWETypeHook(SyncSchemaHook):
             raise validation_error(self.entity, {None: _("can't be deleted")})
         # delete every entities of this type
         if name not in ETYPE_NAME_MAP:
-            self._cw.execute('DELETE %s X' % name)
             MemSchemaCWETypeDel(self._cw, etype=name)
         DropTable(self._cw, table=SQL_PREFIX + name)
 
@@ -1152,10 +1166,6 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
         else:
             rdeftype = 'CWRelation'
             pendingrdefs.add((subjschema, rschema, objschema))
-            if not (cnx.deleted_in_transaction(subjschema.eid) or
-                    cnx.deleted_in_transaction(objschema.eid)):
-                cnx.execute('DELETE X %s Y WHERE X is %s, Y is %s'
-                            % (rschema, subjschema, objschema))
         RDefDelOp(cnx, rdef=rdef)
 
 

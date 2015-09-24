@@ -901,9 +901,11 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
 
     def cmd_drop_entity_type(self, etype, commit=True):
-        """unregister an existing entity type
+        """Drop an existing entity type.
 
-        This will trigger deletion of necessary relation types and definitions
+        This will trigger deletion of necessary relation types and definitions.
+        Note that existing entities of the given type will be deleted without
+        any hooks called.
         """
         # XXX what if we delete an entity type which is specialized by other types
         # unregister the entity from CWEType
@@ -1062,7 +1064,11 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
 
     def cmd_drop_relation_type(self, rtype, commit=True):
-        """unregister an existing relation type"""
+        """Drop an existing relation type.
+
+        Note that existing relations of the given type will be deleted without
+        any hooks called.
+        """
         self.rqlexec('DELETE CWRType X WHERE X name %r' % rtype,
                      ask_confirm=self.verbosity>=2)
         self.rqlexec('DELETE CWComputedRType X WHERE X name %r' % rtype,
@@ -1122,7 +1128,11 @@ class ServerMigrationHelper(MigrationHelper):
         return rdef
 
     def cmd_drop_relation_definition(self, subjtype, rtype, objtype, commit=True):
-        """unregister an existing relation definition"""
+        """Drop an existing relation definition.
+
+        Note that existing relations of the given definition will be deleted
+        without any hooks called.
+        """
         rschema = self.repo.schema.rschema(rtype)
         if rschema.rule:
             raise ExecutionError('Cannot drop a relation definition for a '
