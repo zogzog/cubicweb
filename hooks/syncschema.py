@@ -159,24 +159,26 @@ class DropRelationTable(DropTable):
         cnx.transaction_data.setdefault('pendingrtypes', set()).add(rtype)
 
 
-class DropColumn(hook.Operation):
+class DropColumn(hook.DataOperationMixIn, hook.Operation):
     """actually remove the attribut's column from entity table in the system
     database
     """
-    table = column = None # make pylint happy
     def precommit_event(self):
-        cnx, table, column = self.cnx, self.table, self.column
-        source = cnx.repo.system_source
-        # drop index if any
-        source.drop_index(cnx, table, column)
-        if source.dbhelper.alter_column_support:
-            cnx.system_sql('ALTER TABLE %s DROP COLUMN %s' % (table, column),
-                           rollback_on_failure=False)
-            self.info('dropped column %s from table %s', column, table)
-        else:
-            # not supported by sqlite for instance
-            self.error('dropping column not supported by the backend, handle '
-                       'it yourself (%s.%s)', table, column)
+        cnx = self.cnx
+        for etype, attr in self.get_data():
+            table = SQL_PREFIX + etype
+            column = SQL_PREFIX + attr
+            source = cnx.repo.system_source
+            # drop index if any
+            source.drop_index(cnx, table, column)
+            if source.dbhelper.alter_column_support:
+                cnx.system_sql('ALTER TABLE %s DROP COLUMN %s' % (table, column),
+                               rollback_on_failure=False)
+                self.info('dropped column %s from table %s', column, table)
+            else:
+                # not supported by sqlite for instance
+                self.error('dropping column not supported by the backend, handle '
+                           'it yourself (%s.%s)', table, column)
 
     # XXX revertprecommit_event
 
@@ -361,8 +363,7 @@ class CWRTypeUpdateOp(MemSchemaOperation):
             # drop existant columns
             #if cnx.repo.system_source.dbhelper.alter_column_support:
             for etype in rschema.subjects():
-                DropColumn(cnx, table=SQL_PREFIX + str(etype),
-                           column=SQL_PREFIX + rtype)
+                DropColumn.get_instance(cnx).add_data((str(etype), rtype))
         else:
             for etype in rschema.subjects():
                 try:
@@ -607,8 +608,7 @@ class RDefDelOp(MemSchemaOperation):
             if rset[0][0] == 0 and not cnx.deleted_in_transaction(rdef.subject.eid):
                 ptypes = cnx.transaction_data.setdefault('pendingrtypes', set())
                 ptypes.add(rschema.type)
-                DropColumn(cnx, table=SQL_PREFIX + str(rdef.subject),
-                           column=SQL_PREFIX + str(rschema))
+                DropColumn.get_instance(cnx).add_data((str(rdef.subject), str(rschema)))
         elif lastrel:
             DropRelationTable(cnx, str(rschema))
         # then update the in-memory schema
