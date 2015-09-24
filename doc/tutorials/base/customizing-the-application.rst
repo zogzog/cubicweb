@@ -422,7 +422,7 @@ In this example:
           entity = self.cw_rset.get_entity(row, col)
           self.w(u'<h1>Welcome to the "%s" community</h1>' % entity.printable_value('name'))
           if entity.display_cw_logo():
-              self.w(u'<img src="http://www.cubicweb.org/doc/en/_static/cubicweb.png"/>')
+              self.w(u'<img src="https://docs.cubicweb.org/_static/logo-cubicweb-small.svg"/>')
           if entity.description:
               self.w(u'<p>%s</p>' % entity.printable_value('description'))
 
@@ -522,7 +522,7 @@ implementation.
 
       def render_entity_attributes(self, entity):
 	  if entity.display_cw_logo():
-	      self.w(u'<img src="http://www.cubicweb.org/doc/en/_static/cubicweb.png"/>')
+	      self.w(u'<img src="https://docs.cubicweb.org/_static/logo-cubicweb-small.svg"/>')
 	  if entity.description:
 	      self.w(u'<p>%s</p>' % entity.printable_value('description'))
 

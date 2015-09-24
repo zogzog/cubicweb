@@ -101,16 +101,16 @@ Notice there are some new boxes that appears in the left column.
 
 You can achieve the same thing by following the same path as we did for the blog
 creation, e.g. by clicking on the `[+]` at the left of the 'Blog entry' link on
-the index page. The diffidence being that since there is no context information,
+the index page. The difference being that since there is no context information,
 the 'blog entry of' selector won't be preset to the blog.
 
 
 If you click on the 'modify' link of the action box, you are back to
 the form to edit the entity you just created, except that the form now
 has another section with a combo-box entitled 'add relation'. It
-provisos a generic way to edit relations which don't appears in the
+provides a generic way to edit relations which don't appears in the
 above form. Choose the relation you want to add and a second combo box
-appears where you can pick existing entities.  If there are too many
+appears where you can pick existing entities. If there are too many
 of them, you will be offered to navigate to the target entity, that is
 go away from the form and go back to it later, once you've selected
 the entity you want to link with.
