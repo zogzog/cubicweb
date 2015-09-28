@@ -24,16 +24,23 @@ from cubicweb.web import formwidgets, formfields
 
 from cubes.file.entities import File
 
-def setUpModule(*args):
-    global schema
-    config = TestServerConfiguration('data', apphome=WidgetsTC.datadir)
-    config.bootstrap_cubes()
-    schema = config.load_schema()
 
 class WidgetsTC(TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        super(WidgetsTC, cls).setUpClass()
+        config = TestServerConfiguration('data', apphome=cls.datadir)
+        config.bootstrap_cubes()
+        cls.schema = config.load_schema()
+
+    @classmethod
+    def tearDownClass(cls):
+        del cls.schema
+        super(WidgetsTC, cls).tearDownClass()
+
     def test_editableurl_widget(self):
-        field = formfields.guess_field(schema['Bookmark'], schema['path'])
+        field = formfields.guess_field(self.schema['Bookmark'], self.schema['path'])
         widget = formwidgets.EditableURLWidget()
         req = fake.FakeRequest(form={'path-subjectfqs:A': 'param=value&vid=view'})
         form = mock(_cw=req, formvalues={}, edited_entity=mock(eid='A'))
@@ -41,7 +48,7 @@ class WidgetsTC(TestCase):
                          '?param=value%26vid%3Dview')
 
     def test_bitselect_widget(self):
-        field = formfields.guess_field(schema['CWAttribute'], schema['ordernum'])
+        field = formfields.guess_field(self.schema['CWAttribute'], self.schema['ordernum'])
         field.choices = [('un', '1',), ('deux', '2',)]
         widget = formwidgets.BitSelect(settabindex=False)
         req = fake.FakeRequest(form={'ordernum-subject:A': ['1', '2']})
