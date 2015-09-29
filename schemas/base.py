@@ -165,7 +165,6 @@ class cwuri(RelationType):
     cardinality = '11'
     subject = '*'
     object = 'String'
-    constraints = [UniqueConstraint()]
 
 
 # XXX find a better relation name
