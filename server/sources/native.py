@@ -1405,7 +1405,7 @@ CREATE TABLE entities (
 CREATE INDEX entities_type_idx ON entities(type);;
 CREATE TABLE moved_entities (
   eid INTEGER PRIMARY KEY NOT NULL,
-  extid VARCHAR(256) UNIQUE
+  extid VARCHAR(256) UNIQUE NOT NULL
 );;
 
 CREATE TABLE transactions (
