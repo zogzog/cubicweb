@@ -103,7 +103,10 @@ cu = session.cnxset.cu
 helper = repo.system_source.dbhelper
 
 helper.drop_index(cu, 'entities', 'extid', False)
-helper.create_index(cu, 'entities', 'extid', True)
+# don't use create_index because it doesn't work for columns that may be NULL
+# on sqlserver
+for query in helper.sqls_create_multicol_unique_index('entities', ['extid']):
+    cu.execute(query)
 
 if 'moved_entities' not in helper.list_tables(cu):
     sql('''

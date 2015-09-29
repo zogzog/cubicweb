@@ -1400,7 +1400,7 @@ CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
   asource VARCHAR(128) NOT NULL,
-  extid VARCHAR(256) UNIQUE
+  extid VARCHAR(256)
 );;
 CREATE INDEX entities_type_idx ON entities(type);;
 CREATE TABLE moved_entities (
@@ -1458,18 +1458,22 @@ FOR EACH ROW BEGIN
     DELETE FROM tx_relation_actions WHERE tx_uuid=OLD.tx_uuid;
 END;;
 '''
+    schema += ';;'.join(helper.sqls_create_multicol_unique_index('entities', ['extid']))
+    schema += ';;\n'
     return schema
 
 
 def sql_drop_schema(driver):
     helper = get_db_helper(driver)
     return """
+%s;
 %s
 DROP TABLE entities;
 DROP TABLE tx_entity_actions;
 DROP TABLE tx_relation_actions;
 DROP TABLE transactions;
-""" % helper.sql_drop_numrange('entities_id_seq')
+""" % (';'.join(helper.sqls_drop_multicol_unique_index('entities', ['extid'])),
+       helper.sql_drop_numrange('entities_id_seq'))
 
 
 def grant_schema(user, set_owner=True):
