@@ -704,6 +704,18 @@ class MigrationCommandsTC(MigrationTC):
             mh.cmd_add_relation_type('same_as')
             self.assertTrue(self.table_sql(mh, 'same_as_relation'))
 
+    def test_change_attribute_type(self):
+        with self.mh() as (cnx, mh):
+            mh.cmd_create_entity('Societe', tel=1)
+            mh.commit()
+            mh.change_attribute_type('Societe', 'tel', 'Float')
+            self.assertNotIn(('Societe', 'Int'), self.schema['tel'].rdefs)
+            self.assertIn(('Societe', 'Float'), self.schema['tel'].rdefs)
+            self.assertEqual(self.schema['tel'].rdefs[('Societe', 'Float')].object, 'Float')
+            tel = mh.rqlexec('Any T WHERE X tel T')[0][0]
+            self.assertEqual(tel, 1.0)
+            self.assertIsInstance(tel, float)
+
 
 class MigrationCommandsComputedTC(MigrationTC):
     """ Unit tests for computed relations and attributes

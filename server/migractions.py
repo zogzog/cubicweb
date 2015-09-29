@@ -1477,19 +1477,28 @@ class ServerMigrationHelper(MigrationHelper):
         * the actual schema won't be updated until next startup
         """
         rschema = self.repo.schema.rschema(attr)
-        oldtype = rschema.objects(etype)[0]
-        rdefeid = rschema.rdef(etype, oldtype).eid
-        allownull = rschema.rdef(etype, oldtype).cardinality[0] != '1'
+        oldschema = rschema.objects(etype)[0]
+        rdef = rschema.rdef(etype, oldschema)
         sql = ("UPDATE cw_CWAttribute "
                "SET cw_to_entity=(SELECT cw_eid FROM cw_CWEType WHERE cw_name='%s')"
-               "WHERE cw_eid=%s") % (newtype, rdefeid)
+               "WHERE cw_eid=%s") % (newtype, rdef.eid)
         self.sqlexec(sql, ask_confirm=False)
         dbhelper = self.repo.system_source.dbhelper
         sqltype = dbhelper.TYPE_MAPPING[newtype]
         cursor = self.cnx.cnxset.cu
-        dbhelper.change_col_type(cursor, 'cw_%s'  % etype, 'cw_%s' % attr, sqltype, allownull)
+        allownull = rdef.cardinality[0] != '1'
+        dbhelper.change_col_type(cursor, 'cw_%s' % etype, 'cw_%s' % attr, sqltype, allownull)
         if commit:
             self.commit()
+            # manually update live schema
+            eschema = self.repo.schema[etype]
+            rschema._subj_schemas[eschema].remove(oldschema)
+            rschema._obj_schemas[oldschema].remove(eschema)
+            newschema = self.repo.schema[newtype]
+            rschema._update(eschema, newschema)
+            rdef.object = newschema
+            del rschema.rdefs[(eschema, oldschema)]
+            rschema.rdefs[(eschema, newschema)] = rdef
 
     def cmd_add_entity_type_table(self, etype, commit=True):
         """low level method to create the sql table for an existing entity.

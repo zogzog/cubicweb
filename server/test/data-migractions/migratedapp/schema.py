@@ -19,7 +19,7 @@
 import datetime as dt
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation, Bytes,
-                            RichString, String, Int, Boolean, Datetime, Date)
+                            RichString, String, Int, Boolean, Datetime, Date, Float)
 from yams.constraints import SizeConstraint, UniqueConstraint
 from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
                              RQLVocabularyConstraint,
@@ -49,7 +49,7 @@ class Societe(WorkflowableEntityType):
         }
     nom  = String(maxsize=64, fulltextindexed=True)
     web  = String(maxsize=128)
-    tel  = Int()
+    tel  = Float()
     fax  = Int()
     rncs = String(maxsize=128)
     ad1  = String(maxsize=128)
