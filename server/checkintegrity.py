@@ -207,7 +207,7 @@ def check_entities(schema, cnx, eids, fix=1):
                                 '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid) '
                                 'ORDER BY e.eid')
     for row in cursor.fetchall():
-        sys.stderr.write(msg % row)
+        sys.stderr.write(msg % tuple(row))
     if fix:
         cnx.system_sql('INSERT INTO is_relation (eid_from, eid_to) '
                            'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
@@ -221,7 +221,7 @@ def check_entities(schema, cnx, eids, fix=1):
                                 '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid) '
                                 'ORDER BY e.eid')
     for row in cursor.fetchall():
-        sys.stderr.write(msg % row)
+        sys.stderr.write(msg % tuple(row))
     if fix:
         cnx.system_sql('INSERT INTO is_instance_of_relation (eid_from, eid_to) '
                            'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
