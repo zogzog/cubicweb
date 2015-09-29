@@ -3,7 +3,7 @@ from cubicweb.server.schema2sql import rschema_has_table
 
 
 def add_foreign_keys():
-    source = repo.sources_by_uri['system']
+    source = repo.system_source
     if not source.dbhelper.alter_column_support:
         return
     for rschema in schema.relations():
@@ -33,14 +33,25 @@ def add_foreign_keys_relation(rschema):
         sql('DELETE FROM %(r)s_relation '
             'WHERE eid_to IN (SELECT eid_to FROM %(r)s_relation EXCEPT SELECT eid FROM entities)' % args)
 
-    sql('ALTER TABLE %(r)s_relation DROP CONSTRAINT IF EXISTS %(r)s_relation_eid_from_fkey' % args,
-        ask_confirm=False)
-    sql('ALTER TABLE %(r)s_relation DROP CONSTRAINT IF EXISTS %(r)s_relation_eid_to_fkey' % args,
-        ask_confirm=False)
-    sql('ALTER TABLE %(r)s_relation ADD CONSTRAINT %(r)s_relation_eid_from_fkey '
+    args['from_fk'] = '%(r)s_relation_eid_from_fkey' % args
+    args['to_fk'] = '%(r)s_relation_eid_to_fkey' % args
+    args['table'] = '%(r)s_relation' % args
+    if repo.system_source.dbdriver == 'postgres':
+        sql('ALTER TABLE %(table)s DROP CONSTRAINT IF EXISTS %(from_fk)s' % args,
+            ask_confirm=False)
+        sql('ALTER TABLE %(table)s DROP CONSTRAINT IF EXISTS %(to_fk)s' % args,
+            ask_confirm=False)
+    elif repo.system_source.dbdriver.startswith('sqlserver'):
+        sql("IF OBJECT_ID('%(from_fk)s', 'F') IS NOT NULL "
+            "ALTER TABLE %(table)s DROP CONSTRAINT %(from_fk)s" % args,
+            ask_confirm=False)
+        sql("IF OBJECT_ID('%(to_fk)s', 'F') IS NOT NULL "
+            "ALTER TABLE %(table)s DROP CONSTRAINT %(to_fk)s" % args,
+            ask_confirm=False)
+    sql('ALTER TABLE %(table)s ADD CONSTRAINT %(from_fk)s '
         'FOREIGN KEY (eid_from) REFERENCES entities (eid)' % args,
         ask_confirm=False)
-    sql('ALTER TABLE %(r)s_relation ADD CONSTRAINT %(r)s_relation_eid_to_fkey '
+    sql('ALTER TABLE %(table)s ADD CONSTRAINT %(to_fk)s '
         'FOREIGN KEY (eid_to) REFERENCES entities (eid)' % args,
         ask_confirm=False)
 
@@ -73,8 +84,14 @@ def add_foreign_keys_inlined(rschema):
                 print '%(e)s.%(r)s references unknown entities, deleting relation' % args
                 sql('UPDATE cw_%(e)s SET cw_%(r)s = NULL WHERE cw_%(r)s IS NOT NULL AND cw_%(r)s IN '
                     '(SELECT cw_%(r)s FROM cw_%(e)s EXCEPT SELECT eid FROM entities)' % args)
-        sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS %(c)s' % args,
-            ask_confirm=False)
+
+        if repo.system_source.dbdriver == 'postgres':
+            sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS %(c)s' % args,
+                ask_confirm=False)
+        elif repo.system_source.dbdriver.startswith('sqlserver'):
+            sql("IF OBJECT_ID('%(c)s', 'F') IS NOT NULL "
+                "ALTER TABLE cw_%(e)s DROP CONSTRAINT %(c)s" % args,
+                ask_confirm=False)
         sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s '
             'FOREIGN KEY (cw_%(r)s) references entities(eid)' % args,
             ask_confirm=False)
@@ -90,9 +107,15 @@ def add_foreign_key_etype(eschema):
         print '%(e)s has nonexistent entities, deleting' % args
         sql('DELETE FROM cw_%(e)s WHERE cw_eid IN '
             '(SELECT cw_eid FROM cw_%(e)s EXCEPT SELECT eid FROM entities)' % args)
-    sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS cw_%(e)s_cw_eid_fkey' % args,
-        ask_confirm=False)
-    sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT cw_%(e)s_cw_eid_fkey '
+    args['c'] = 'cw_%(e)s_cw_eid_fkey' % args
+    if repo.system_source.dbdriver == 'postgres':
+        sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS %(c)s' % args,
+            ask_confirm=False)
+    elif repo.system_source.dbdriver.startswith('sqlserver'):
+        sql("IF OBJECT_ID('%(c)s', 'F') IS NOT NULL "
+            "ALTER TABLE cw_%(e)s DROP CONSTRAINT %(c)s" % args,
+            ask_confirm=False)
+    sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s '
         'FOREIGN KEY (cw_eid) REFERENCES entities (eid)' % args,
         ask_confirm=False)
 
@@ -118,9 +141,10 @@ if 'moved_entities' not in helper.list_tables(cu):
 
 moved_entities = sql('SELECT -eid, extid FROM entities WHERE eid < 0',
                      ask_confirm=False)
-cu.executemany('INSERT INTO moved_entities (eid, extid) VALUES (%s, %s)',
-               moved_entities)
-sql('DELETE FROM entities WHERE eid < 0')
+if moved_entities:
+    cu.executemany('INSERT INTO moved_entities (eid, extid) VALUES (%s, %s)',
+                   moved_entities)
+    sql('DELETE FROM entities WHERE eid < 0')
 
 commit()
 
@@ -138,6 +162,11 @@ for cwconstraint in rql('Any C WHERE R constrained_by C').entities():
         continue
     cstrname, check = check_constraint(rdef.subject, rdef.object, rdef.rtype.type,
             cstr, helper, prefix='cw_')
-    sql('ALTER TABLE %s%s DROP CONSTRAINT IF EXISTS %s' % ('cw_', rdef.subject.type, cstrname))
-    sql('ALTER TABLE %s%s ADD CONSTRAINT %s CHECK(%s)' % ('cw_', rdef.subject.type, cstrname, check))
+    args = {'e': rdef.subject.type, 'c': cstrname, 'v': check}
+    if repo.system_source.dbdriver == 'postgres':
+        sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS %(c)s' % args)
+    elif repo.system_source.dbdriver.startswith('sqlserver'):
+        sql("IF OBJECT_ID('%(c)s', 'C') IS NOT NULL "
+            "ALTER TABLE cw_%(e)s DROP CONSTRAINT %(c)s" % args)
+    sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s CHECK(%(v)s)' % args)
 commit()
