@@ -24,6 +24,8 @@ from cubicweb import _
 
 from warnings import warn
 
+from six import text_type
+
 from logilab.common.deprecation import deprecated
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
@@ -233,7 +235,7 @@ def _validate_form(req, vreg):
     except Exception as ex:
         req.cnx.rollback()
         req.exception('unexpected error while validating form')
-        return (False, str(ex).decode('utf-8'), ctrl._edited_entity)
+        return (False, text_type(ex), ctrl._edited_entity)
     return (False, '???', None)
 
 

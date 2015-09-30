@@ -25,6 +25,7 @@ from contextlib import contextmanager
 from warnings import warn
 import json
 
+from six import text_type
 from six.moves import http_client
 
 from logilab.common.deprecation import deprecated
@@ -80,8 +81,8 @@ class CookieSessionHandler(object):
 
     def reset_session_manager(self):
         data = self.session_manager.dump_data()
-        self.session_manager = self.vreg['components'].select('sessionmanager',
-                                                              repo=self.repo)
+        self.session_manager = self.vreg['sessions'].select('sessionmanager',
+                                                            repo=self.repo)
         self.session_manager.restore_data(data)
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager
@@ -497,7 +498,7 @@ class CubicWebPublisher(object):
         if req.status_out < 400:
             # don't overwrite it if it's already set
             req.status_out = status
-        json_dumper = getattr(ex, 'dumps', lambda : json.dumps({'reason': unicode(ex)}))
+        json_dumper = getattr(ex, 'dumps', lambda : json.dumps({'reason': text_type(ex)}))
         return json_dumper()
 
     # special case handling
