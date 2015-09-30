@@ -257,9 +257,8 @@ class FormValidatorController(Controller):
         # XXX unclear why we have a separated controller here vs
         # js_validate_form on the json controller
         status, args, entity = _validate_form(self._cw, self._cw.vreg)
-        domid = self._cw.form.get('__domid', 'entityForm').encode(
-            self._cw.encoding)
-        return self.response(domid, status, args, entity)
+        domid = self._cw.form.get('__domid', 'entityForm')
+        return self.response(domid, status, args, entity).encode(self._cw.encoding)
 
 
 class JSonController(Controller):
