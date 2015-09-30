@@ -1006,7 +1006,7 @@ class Session(object):
     """
 
     def __init__(self, user, repo, cnxprops=None, _id=None):
-        self.sessionid = _id or make_uid(unormalize(user.login).encode('UTF8'))
+        self.sessionid = _id or make_uid(unormalize(user.login))
         self.user = user # XXX repoapi: deprecated and store only a login.
         self.repo = repo
         self.vreg = repo.vreg
