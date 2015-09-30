@@ -1139,8 +1139,6 @@ for cmdcls in (ListCommand,
 def run(args):
     """command line tool"""
     import os
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
     filterwarnings('default', category=DeprecationWarning)
     cwcfg.load_cwctl_plugins()
     try:
