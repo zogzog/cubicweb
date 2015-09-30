@@ -22,6 +22,7 @@ from cubicweb import _
 
 from hashlib import sha1 # pylint: disable=E0611
 
+from six import text_type
 from six.moves import range
 
 from logilab.mtconverter import xml_escape
@@ -252,6 +253,6 @@ class CWGroupsTable(tableview.EntityTableView):
         'group': tableview.MainEntityColRenderer(),
         'nb_users': tableview.EntityTableColRenderer(
             header=_('num. users'),
-            renderfunc=lambda w,x: w(unicode(x.num_users())),
+            renderfunc=lambda w,x: w(text_type(x.num_users())),
             sortfunc=lambda x: x.num_users()),
         }
