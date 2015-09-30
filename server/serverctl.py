@@ -30,6 +30,7 @@ import logging
 import subprocess
 
 from six import string_types
+from six.moves import input
 
 from logilab.common import nullobject
 from logilab.common.configuration import Configuration, merge_options
@@ -78,7 +79,7 @@ def source_cnx(source, dbname=None, special_privs=False, interactive=True):
                 print(special_privs)
                 print()
             default_user = source.get('db-user', os.environ.get('USER', ''))
-            user = raw_input('Connect as user ? [%r]: ' % default_user)
+            user = input('Connect as user ? [%r]: ' % default_user)
             user = user.strip() or default_user
             if user == source.get('db-user'):
                 password = source.get('db-password')
@@ -506,7 +507,7 @@ class AddSourceCommand(Command):
                 used = set(n for n, in cnx.execute('Any SN WHERE S is CWSource, S name SN'))
                 cubes = repo.get_cubes()
                 while True:
-                    type = raw_input('source type (%s): '
+                    type = input('source type (%s): '
                                         % ', '.join(sorted(SOURCE_TYPES)))
                     if type not in SOURCE_TYPES:
                         print('-> unknown source type, use one of the available types.')
@@ -523,13 +524,13 @@ class AddSourceCommand(Command):
                             continue
                     break
                 while True:
-                    parser = raw_input('parser type (%s): '
+                    parser = input('parser type (%s): '
                                         % ', '.join(sorted(repo.vreg['parsers'])))
                     if parser in repo.vreg['parsers']:
                         break
                     print('-> unknown parser identifier, use one of the available types.')
                 while True:
-                    sourceuri = raw_input('source identifier (a unique name used to '
+                    sourceuri = input('source identifier (a unique name used to '
                                           'tell sources apart): ').strip()
                     if not sourceuri:
                         print('-> mandatory.')
@@ -539,7 +540,7 @@ class AddSourceCommand(Command):
                             print('-> uri already used, choose another one.')
                         else:
                             break
-                url = raw_input('source URL (leave empty for none): ').strip()
+                url = input('source URL (leave empty for none): ').strip()
                 url = unicode(url) if url else None
                 # XXX configurable inputlevel
                 sconfig = ask_source_config(config, type, inputlevel=self.config.config_level)
