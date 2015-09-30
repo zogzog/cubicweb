@@ -150,13 +150,8 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         encoding = self.encoding
         for param, val in params.items():
             if isinstance(val, (tuple, list)):
-                val = [
-                    unicode(x, encoding) if isinstance(x, str) else x
-                    for x in val]
                 if len(val) == 1:
                     val = val[0]
-            elif isinstance(val, str):
-                val = unicode(val, encoding)
             if param in self.no_script_form_params and val:
                 val = self.no_script_form_param(param, val)
             if param == '_cwmsgid':
