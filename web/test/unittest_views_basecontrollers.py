@@ -409,7 +409,7 @@ class EditControllerTC(CubicWebTC):
                     }
             self.assertMultiLineEqual('''<script type="text/javascript">
  window.parent.handleFormValidationResponse('entityForm', null, null, [false, [%s, {"amount-subject": "value -10 must be >= 0"}], null], null);
-</script>'''%seid, self.ctrl_publish(req, 'validateform'))
+</script>'''%seid, self.ctrl_publish(req, 'validateform').decode('ascii'))
 
         # ensure a value that comply a constraint is properly processed
         with self.admin_access.web_request(rollbackfirst=True) as req:
@@ -420,7 +420,7 @@ class EditControllerTC(CubicWebTC):
                     }
             self.assertMultiLineEqual('''<script type="text/javascript">
  window.parent.handleFormValidationResponse('entityForm', null, null, [true, "http://testing.fr/cubicweb/view", null], null);
-</script>''', self.ctrl_publish(req, 'validateform'))
+</script>''', self.ctrl_publish(req, 'validateform').decode('ascii'))
             self.assertEqual(20, req.execute('Any V WHERE X amount V, X eid %(eid)s',
                                              {'eid': seid})[0][0])
 
@@ -448,11 +448,11 @@ class EditControllerTC(CubicWebTC):
             with self.temporary_appobjects(ValidationErrorInOpAfterHook):
                 self.assertMultiLineEqual('''<script type="text/javascript">
  window.parent.handleFormValidationResponse('entityForm', null, null, [false, ["X", {"amount-subject": "value -10 must be >= 0"}], null], null);
-</script>''', self.ctrl_publish(req, 'validateform'))
+</script>''', self.ctrl_publish(req, 'validateform').decode('ascii'))
 
             self.assertMultiLineEqual('''<script type="text/javascript">
  window.parent.handleFormValidationResponse('entityForm', null, null, [true, "http://testing.fr/cubicweb/view", null], null);
-</script>''', self.ctrl_publish(req, 'validateform'))
+</script>''', self.ctrl_publish(req, 'validateform').decode('ascii'))
 
     def test_req_pending_insert(self):
         """make sure req's pending insertions are taken into account"""
@@ -964,7 +964,7 @@ class JSonControllerTC(AjaxControllerTC):
         def js_foo(self):
             return u'hello'
         with self.remote_calling('foo') as (res, _):
-            self.assertEqual(res, u'hello')
+            self.assertEqual(res, b'hello')
 
     def test_monkeypatch_jsoncontroller_xhtmlize(self):
         with self.assertRaises(RemoteCallFailed):
@@ -975,7 +975,7 @@ class JSonControllerTC(AjaxControllerTC):
         def js_foo(self):
             return u'hello'
         with self.remote_calling('foo') as (res, _):
-            self.assertEqual(u'<div>hello</div>', res)
+            self.assertEqual(b'<div>hello</div>', res)
 
     def test_monkeypatch_jsoncontroller_jsonize(self):
         with self.assertRaises(RemoteCallFailed):
@@ -986,7 +986,7 @@ class JSonControllerTC(AjaxControllerTC):
         def js_foo(self):
             return 12
         with self.remote_calling('foo') as (res, _):
-            self.assertEqual(res, '12')
+            self.assertEqual(res, b'12')
 
     def test_monkeypatch_jsoncontroller_stdfunc(self):
         @monkeypatch(JSonController)
@@ -994,7 +994,7 @@ class JSonControllerTC(AjaxControllerTC):
         def js_reledit_form(self):
             return 12
         with self.remote_calling('reledit_form') as (res, _):
-            self.assertEqual(res, '12')
+            self.assertEqual(res, b'12')
 
 
 class UndoControllerTC(CubicWebTC):
