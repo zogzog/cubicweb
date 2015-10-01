@@ -1,7 +1,7 @@
 # encoding=utf-8
 
 import webtest.app
-from StringIO import StringIO
+from io import BytesIO
 
 from cubicweb.devtools.webtest import CubicWebTestTC
 
@@ -21,11 +21,11 @@ class WSGIAppTC(CubicWebTestTC):
         r = webtest.app.TestRequest.blank('/', {
             'CONTENT_LENGTH': 12,
             'CONTENT_TYPE': 'text/plain',
-            'wsgi.input': StringIO('some content')})
+            'wsgi.input': BytesIO(b'some content')})
 
         req = CubicWebWsgiRequest(r.environ, self.vreg)
 
-        self.assertEqual('some content', req.content.read())
+        self.assertEqual(b'some content', req.content.read())
 
     def test_http_scheme(self):
         r = webtest.app.TestRequest.blank('/', {
@@ -52,11 +52,11 @@ class WSGIAppTC(CubicWebTestTC):
         self.assertTrue(req.https)
 
     def test_big_content(self):
-        content = 'x'*100001
+        content = b'x'*100001
         r = webtest.app.TestRequest.blank('/', {
             'CONTENT_LENGTH': len(content),
             'CONTENT_TYPE': 'text/plain',
-            'wsgi.input': StringIO(content)})
+            'wsgi.input': BytesIO(content)})
 
         req = CubicWebWsgiRequest(r.environ, self.vreg)
 
@@ -94,14 +94,14 @@ class WSGIAppTC(CubicWebTestTC):
 
     def test_post_files(self):
         content_type, params = self.webapp.encode_multipart(
-            (), (('filefield', 'aname', 'acontent'),))
+            (), (('filefield', 'aname', b'acontent'),))
         r = webtest.app.TestRequest.blank(
             '/', POST=params, content_type=content_type)
         req = CubicWebWsgiRequest(r.environ, self.vreg)
         self.assertIn('filefield', req.form)
         fieldvalue = req.form['filefield']
         self.assertEqual(u'aname', fieldvalue[0])
-        self.assertEqual('acontent', fieldvalue[1].read())
+        self.assertEqual(b'acontent', fieldvalue[1].read())
 
     def test_post_unicode_urlencoded(self):
         params = 'arg=%C3%A9'
