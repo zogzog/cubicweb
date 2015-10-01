@@ -25,7 +25,7 @@ from contextlib import contextmanager
 from warnings import warn
 import json
 
-from six import text_type
+from six import text_type, binary_type
 from six.moves import http_client
 
 from logilab.common.deprecation import deprecated
@@ -257,7 +257,7 @@ class CubicWebPublisher(object):
             # activate realm-based auth
             realm = self.vreg.config['realm']
             req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
-        content = ''
+        content = b''
         try:
             try:
                 session = self.get_session(req)
@@ -328,6 +328,7 @@ class CubicWebPublisher(object):
                 # XXX ensure we don't actually serve content
                 if not content:
                     content = self.need_login_content(req)
+        assert isinstance(content, binary_type)
         return content
 
 
@@ -369,7 +370,7 @@ class CubicWebPublisher(object):
             except cors.CORSPreflight:
                 # Return directly an empty 200
                 req.status_out = 200
-                result = ''
+                result = b''
             except StatusResponse as ex:
                 warn('[3.16] StatusResponse is deprecated use req.status_out',
                      DeprecationWarning, stacklevel=2)
