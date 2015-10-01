@@ -45,6 +45,7 @@ try:
 except ImportError: # pragma: no cover (fallback for Python 2.5)
     from StringIO import StringIO as BytesIO
 
+from six import text_type
 from six.moves.urllib.parse import parse_qs
 
 ##############################################################################
@@ -87,7 +88,7 @@ class MultiDict(DictMixin):
                 yield key, value
 
 def tob(data, enc='utf8'): # Convert strings to bytes (py2 and py3)
-    return data.encode(enc) if isinstance(data, unicode) else data
+    return data.encode(enc) if isinstance(data, text_type) else data
 
 def copy_file(stream, target, maxread=-1, buffer_size=2*16):
     ''' Read from :stream and write to :target until :maxread or EOF. '''
