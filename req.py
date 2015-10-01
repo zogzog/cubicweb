@@ -338,6 +338,7 @@ class RequestSessionBase(object):
         if PY3:
             for key, val in parse_qsl(querystring):
                 yield key, val
+            return
         if isinstance(querystring, unicode):
             querystring = querystring.encode(self.encoding)
         for key, val in parse_qsl(querystring):
