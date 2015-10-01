@@ -35,7 +35,7 @@ from datetime import datetime, time
 import urllib
 
 from six import text_type
-from six.moves.urllib.parse import urlparse, urlunparse, parse_qs
+from six.moves.urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
 from logilab.common.date import todate, totime
 from logilab.common.textutils import splitstrip, text_to_dict
@@ -250,8 +250,8 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             if 'vid' not in params:
                 params['vid'] = ['xml']
                 purl = list(purl)
-                purl[4] = urllib.urlencode(params, doseq=True)
-                return urlparse.urlunparse(purl)
+                purl[4] = urlencode(params, doseq=True)
+                return urlunparse(purl)
         return url
 
     def complete_url(self, url, etype=None, known_relations=None):
@@ -279,7 +279,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
                 continue
             relations.add('%s-%s' % (rtype, role))
         purl = list(purl)
-        purl[4] = urllib.urlencode(params, doseq=True)
+        purl[4] = urlencode(params, doseq=True)
         return urlunparse(purl)
 
     def complete_item(self, item, rels):
