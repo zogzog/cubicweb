@@ -872,8 +872,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def extid2eid(self, cnx, extid):
         """get eid from an external id. Return None if no record found."""
-        assert isinstance(extid, str)
-        args = {'x': b64encode(extid)}
+        assert isinstance(extid, binary_type)
+        args = {'x': b64encode(extid).decode('ascii')}
         cursor = self.doexec(cnx,
                              'SELECT eid FROM entities WHERE extid=%(x)s',
                              args)
@@ -913,8 +913,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # begin by inserting eid/type/source/extid into the entities table
         if extid is not None:
             assert isinstance(extid, binary_type)
-            extid = b64encode(extid)
-        attrs = {'type': text_type(entity.cw_etype), 'eid': entity.eid, 'extid': extid and text_type(extid),
+            extid = b64encode(extid).decode('ascii')
+        attrs = {'type': text_type(entity.cw_etype), 'eid': entity.eid, 'extid': extid,
                  'asource': text_type(source.uri)}
         self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source

@@ -206,7 +206,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         * `rels` is for relations and structured as
            {role: {relation: [(related item, related rels)...]}
         """
-        entity = self.extid2entity(str(item['cwuri']), item['cwtype'],
+        entity = self.extid2entity(item['cwuri'].encode('ascii'), item['cwtype'],
                                    cwsource=item['cwsource'], item=item,
                                    raise_on_error=raise_on_error)
         if entity is None:

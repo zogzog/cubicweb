@@ -23,6 +23,7 @@ from io import BytesIO
 from os.path import exists
 from datetime import datetime, timedelta
 
+from six import text_type
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.request import Request, build_opener, HTTPCookieProcessor
 from six.moves.urllib.error import HTTPError
@@ -390,11 +391,11 @@ class DataFeedParser(AppObject):
         else:
             source = self.source
         sourceparams['parser'] = self
-        if isinstance(uri, unicode):
+        if isinstance(uri, text_type):
             uri = uri.encode('utf-8')
         try:
-            eid = cnx.repo.extid2eid(source, str(uri), etype, cnx,
-                                         sourceparams=sourceparams)
+            eid = cnx.repo.extid2eid(source, uri, etype, cnx,
+                                     sourceparams=sourceparams)
         except ValidationError as ex:
             if raise_on_error:
                 raise
