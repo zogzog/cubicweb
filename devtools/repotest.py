@@ -197,7 +197,7 @@ class BaseQuerierTC(TestCase):
 
     def setUp(self):
         self.o = self.repo.querier
-        self.session = self.repo._sessions.values()[0]
+        self.session = next(iter(self.repo._sessions.values()))
         self.ueid = self.session.user.eid
         assert self.ueid != -1
         self.repo._type_source_cache = {} # clear cache
