@@ -115,3 +115,8 @@ class WSGIAppTC(CubicWebTestTC):
         super(WSGIAppTC, cls).init_config(config)
         config.https_uiprops = None
         config.https_datadir_url = None
+
+
+if __name__ == '__main__':
+    import unittest
+    unittest.main()
