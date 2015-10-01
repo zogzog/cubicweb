@@ -15,6 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+from six import PY3
+
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -79,7 +81,9 @@ class RestTC(CubicWebTC):
             context = self.context(req)
             out = rest_publish(context, ':rql:`Any X WHERE X is CWUser:toto`')
             self.assertTrue(out.startswith("<p>an error occurred while interpreting this "
-                                           "rql directive: ObjectNotFound(u'toto',)</p>"))
+                                           "rql directive: ObjectNotFound(%s'toto',)</p>" %
+                                           ('' if PY3 else 'u')),
+                            out)
 
     def test_rql_role_without_vid(self):
         with self.admin_access.web_request() as req:
