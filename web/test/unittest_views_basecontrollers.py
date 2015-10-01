@@ -779,7 +779,7 @@ class AjaxControllerTC(CubicWebTC):
             rset = self.john.as_rset()
             rset.req = req
             source = ctrl.publish()
-            self.assertTrue(source.startswith('<div>'))
+            self.assertTrue(source.startswith(b'<div>'))
 
 #     def test_json_exec(self):
 #         rql = 'Any T,N WHERE T is Tag, T name N'
@@ -820,7 +820,7 @@ class AjaxControllerTC(CubicWebTC):
                 rset.req = req
                 source = ctrl.publish()
                 # maydel jscall
-                self.assertIn('ajaxBoxRemoveLinkedEntity', source)
+                self.assertIn(b'ajaxBoxRemoveLinkedEntity', source)
 
     def test_pending_insertion(self):
         with self.remote_calling('add_pending_inserts', [['12', 'tags', '13']]) as (_, req):
