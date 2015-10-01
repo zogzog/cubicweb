@@ -27,6 +27,8 @@ from warnings import warn
 import functools
 from contextlib import contextmanager
 
+from six import text_type
+
 from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
 from logilab.common.registry import objectify_predicate
@@ -771,7 +773,7 @@ class Connection(RequestSessionBase):
     def transaction_uuid(self, set=True):
         uuid = self.transaction_data.get('tx_uuid')
         if set and uuid is None:
-            self.transaction_data['tx_uuid'] = uuid = unicode(uuid4().hex)
+            self.transaction_data['tx_uuid'] = uuid = text_type(uuid4().hex)
             self.repo.system_source.start_undoable_transaction(self, uuid)
         return uuid
 
