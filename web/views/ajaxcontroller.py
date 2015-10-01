@@ -66,7 +66,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from functools import partial
 
-from six import text_type
+from six import PY2, text_type
 
 from logilab.common.date import strptime
 from logilab.common.registry import yes
@@ -119,7 +119,9 @@ class AjaxController(Controller):
             raise RemoteCallFailed('no method specified')
         # 1/ check first for old-style (JSonController) ajax func for bw compat
         try:
-            func = getattr(basecontrollers.JSonController, 'js_%s' % fname).im_func
+            func = getattr(basecontrollers.JSonController, 'js_%s' % fname)
+            if PY2:
+                func = func.__func__
             func = partial(func, self)
         except AttributeError:
             # 2/ check for new-style (AjaxController) ajax func
