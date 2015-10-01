@@ -45,7 +45,7 @@ try:
 except ImportError: # pragma: no cover (fallback for Python 2.5)
     from StringIO import StringIO as BytesIO
 
-from six import text_type
+from six import PY3, text_type
 from six.moves.urllib.parse import parse_qs
 
 ##############################################################################
@@ -396,14 +396,19 @@ def parse_form_data(environ, charset='utf8', strict=False, **kw):
                               'application/x-url-encoded'):
             mem_limit = kw.get('mem_limit', 2**20)
             if content_length > mem_limit:
-                raise MultipartError("Request to big. Increase MAXMEM.")
+                raise MultipartError("Request too big. Increase MAXMEM.")
             data = stream.read(mem_limit)
             if stream.read(1): # These is more that does not fit mem_limit
-                raise MultipartError("Request to big. Increase MAXMEM.")
+                raise MultipartError("Request too big. Increase MAXMEM.")
+            if PY3:
+                data = data.decode('ascii')
             data = parse_qs(data, keep_blank_values=True)
             for key, values in data.items():
                 for value in values:
-                    forms[key.decode(charset)] = value.decode(charset)
+                    if PY3:
+                        forms[key] = value
+                    else:
+                        forms[key.decode(charset)] = value.decode(charset)
         else:
             raise MultipartError("Unsupported content type.")
     except MultipartError:
