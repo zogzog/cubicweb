@@ -19,7 +19,7 @@
 database
 """
 
-import StringIO
+from io import BytesIO
 from os.path import exists
 from datetime import datetime, timedelta
 
@@ -346,7 +346,7 @@ class DataFeedParser(AppObject):
             self.source.info('Using cwclientlib for %s' % url)
             resp = cnx.get(url)
             resp.raise_for_status()
-            return URLLibResponseAdapter(StringIO.StringIO(resp.text), url)
+            return URLLibResponseAdapter(BytesIO(resp.text), url)
         except (ImportError, ValueError, EnvironmentError) as exc:
             # ImportError: not available
             # ValueError: no config entry found
@@ -360,7 +360,7 @@ class DataFeedParser(AppObject):
             return _OPENER.open(req, timeout=self.source.http_timeout)
 
         # url is probably plain content
-        return URLLibResponseAdapter(StringIO.StringIO(url), url)
+        return URLLibResponseAdapter(BytesIO(url.encode('ascii')), url)
 
     def add_schema_config(self, schemacfg, checkonly=False):
         """added CWSourceSchemaConfig, modify mapping accordingly"""
@@ -559,7 +559,7 @@ class URLLibResponseAdapter(object):
 
     def info(self):
         from mimetools import Message
-        return Message(StringIO.StringIO())
+        return Message(BytesIO())
 
 # use a cookie enabled opener to use session cookie if any
 _OPENER = build_opener()
