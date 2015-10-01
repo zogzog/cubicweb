@@ -981,6 +981,9 @@ class CubicWebTC(TestCase):
     def _check_html(self, output, view, template='main-template'):
         """raises an exception if the HTML is invalid"""
         output = output.strip()
+        if isinstance(output, text_type):
+            # XXX
+            output = output.encode('utf-8')
         validator = self.get_validator(view, output=output)
         if validator is None:
             return output # return raw output if no validator is defined
