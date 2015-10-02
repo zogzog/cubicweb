@@ -646,7 +646,7 @@ class QuerierHelper(object):
                 # so compute description manually even if there is only
                 # one solution
                 basedescr = [None] * len(plan.selected)
-                todetermine = zip(range(len(plan.selected)), repeat(False))
+                todetermine = list(zip(range(len(plan.selected)), repeat(False)))
                 descr = _build_descr(cnx, results, basedescr, todetermine)
             # FIXME: get number of affected entities / relations on non
             # selection queries ?
