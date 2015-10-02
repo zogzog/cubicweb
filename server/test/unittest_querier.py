@@ -884,18 +884,18 @@ class QuerierTC(BaseQuerierTC):
     def test_select_constant(self):
         rset = self.qexecute('Any X, "toto" ORDERBY X WHERE X is CWGroup')
         self.assertEqual(rset.rows,
-                          map(list, zip((2,3,4,5), ('toto','toto','toto','toto',))))
+                         [list(x) for x in zip((2,3,4,5), ('toto','toto','toto','toto',))])
         self.assertIsInstance(rset[0][1], text_type)
         self.assertEqual(rset.description,
-                          zip(('CWGroup', 'CWGroup', 'CWGroup', 'CWGroup'),
-                              ('String', 'String', 'String', 'String',)))
+                         list(zip(('CWGroup', 'CWGroup', 'CWGroup', 'CWGroup'),
+                                  ('String', 'String', 'String', 'String',))))
         rset = self.qexecute('Any X, %(value)s ORDERBY X WHERE X is CWGroup', {'value': 'toto'})
         self.assertEqual(rset.rows,
-                          map(list, zip((2,3,4,5), ('toto','toto','toto','toto',))))
+                         list(map(list, zip((2,3,4,5), ('toto','toto','toto','toto',)))))
         self.assertIsInstance(rset[0][1], text_type)
         self.assertEqual(rset.description,
-                          zip(('CWGroup', 'CWGroup', 'CWGroup', 'CWGroup'),
-                              ('String', 'String', 'String', 'String',)))
+                         list(zip(('CWGroup', 'CWGroup', 'CWGroup', 'CWGroup'),
+                                  ('String', 'String', 'String', 'String',))))
         rset = self.qexecute('Any X,GN WHERE X is CWUser, G is CWGroup, X login "syt", '
                              'X in_group G, G name GN')
 
