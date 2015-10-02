@@ -21,7 +21,7 @@
 
 from datetime import date, datetime, timedelta, tzinfo
 
-from six import PY2, integer_types
+from six import PY2, integer_types, binary_type, text_type
 from logilab.common.testlib import TestCase, unittest_main
 from rql import BadRQLQuery, RQLSyntaxError
 
@@ -130,8 +130,8 @@ class UtilsTC(BaseQuerierTC):
 
     def assertRQLEqual(self, expected, got):
         from rql import parse
-        self.assertMultiLineEqual(unicode(parse(expected)),
-                                  unicode(parse(got)))
+        self.assertMultiLineEqual(text_type(parse(expected)),
+                                  text_type(parse(got)))
 
     def test_preprocess_security(self):
         s = self.user_groups_session('users')
@@ -896,7 +896,7 @@ class QuerierTC(BaseQuerierTC):
         rset = self.qexecute('Any X, %(value)s ORDERBY X WHERE X is CWGroup', {'value': 'toto'})
         self.assertEqual(rset.rows,
                           map(list, zip((2,3,4,5), ('toto','toto','toto','toto',))))
-        self.assertIsInstance(rset[0][1], unicode)
+        self.assertIsInstance(rset[0][1], text_type)
         self.assertEqual(rset.description,
                           zip(('CWGroup', 'CWGroup', 'CWGroup', 'CWGroup'),
                               ('String', 'String', 'String', 'String',)))
@@ -1059,10 +1059,10 @@ Any P1,B,E WHERE P1 identity P2 WITH
     def test_insert_4ter(self):
         peid = self.qexecute("INSERT Personne X: X nom 'bidule'")[0][0]
         seid = self.qexecute("INSERT Societe Y: Y nom 'toto', X travaille Y WHERE X eid %(x)s",
-                             {'x': unicode(peid)})[0][0]
+                             {'x': text_type(peid)})[0][0]
         self.assertEqual(len(self.qexecute('Any X, Y WHERE X travaille Y')), 1)
         self.qexecute("INSERT Personne X: X nom 'chouette', X travaille Y WHERE Y eid %(x)s",
-                      {'x': unicode(seid)})
+                      {'x': text_type(seid)})
         self.assertEqual(len(self.qexecute('Any X, Y WHERE X travaille Y')), 2)
 
     def test_insert_5(self):
@@ -1269,7 +1269,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         rset = self.qexecute("INSERT Personne X, Societe Y: X nom 'bidule', Y nom 'toto'")
         eid1, eid2 = rset[0][0], rset[0][1]
         self.qexecute("SET X travaille Y WHERE X eid %(x)s, Y eid %(y)s",
-                      {'x': unicode(eid1), 'y': unicode(eid2)})
+                      {'x': text_type(eid1), 'y': text_type(eid2)})
         rset = self.qexecute('Any X, Y WHERE X travaille Y')
         self.assertEqual(len(rset.rows), 1)
 
@@ -1319,7 +1319,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         eid1, eid2 = rset[0][0], rset[0][1]
         rset = self.qexecute("SET X travaille Y WHERE X eid %(x)s, Y eid %(y)s, "
                             "NOT EXISTS(Z ecrit_par X)",
-                            {'x': unicode(eid1), 'y': unicode(eid2)})
+                            {'x': text_type(eid1), 'y': text_type(eid2)})
         self.assertEqual(tuplify(rset.rows), [(eid1, eid2)])
 
     def test_update_query_error(self):
