@@ -309,10 +309,6 @@ class QuerierTC(BaseQuerierTC):
     setUpClass = classmethod(setUpClass)
     tearDownClass = classmethod(tearDownClass)
 
-    def test_encoding_pb(self):
-        self.assertRaises(RQLSyntaxError, self.qexecute,
-                          'Any X WHERE X is CWRType, X name "öwned_by"')
-
     def test_unknown_eid(self):
         # should return an empty result set
         self.assertFalse(self.qexecute('Any X WHERE X eid 99999999'))
