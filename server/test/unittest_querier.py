@@ -321,10 +321,10 @@ class QuerierTC(BaseQuerierTC):
     def test_bytes_storage(self):
         feid = self.qexecute('INSERT File X: X data_name "foo.pdf", '
                              'X data_format "text/plain", X data %(data)s',
-                            {'data': Binary("xxx")})[0][0]
+                            {'data': Binary(b"xxx")})[0][0]
         fdata = self.qexecute('Any D WHERE X data D, X eid %(x)s', {'x': feid})[0][0]
         self.assertIsInstance(fdata, Binary)
-        self.assertEqual(fdata.getvalue(), 'xxx')
+        self.assertEqual(fdata.getvalue(), b'xxx')
 
     # selection queries tests #################################################
 
@@ -1362,7 +1362,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
             cursor = cnx.cnxset.cu
             cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                            % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
-            passwd = str(cursor.fetchone()[0])
+            passwd = binary_type(cursor.fetchone()[0])
             self.assertEqual(passwd, crypt_password('toto', passwd))
         rset = self.qexecute("Any X WHERE X is CWUser, X login 'bob', X upassword %(pwd)s",
                             {'pwd': Binary(passwd)})
@@ -1375,11 +1375,11 @@ Any P1,B,E WHERE P1 identity P2 WITH
                                {'pwd': 'toto'})
             self.assertEqual(rset.description[0][0], 'CWUser')
             rset = cnx.execute("SET X upassword %(pwd)s WHERE X is CWUser, X login 'bob'",
-                               {'pwd': 'tutu'})
+                               {'pwd': b'tutu'})
             cursor = cnx.cnxset.cu
             cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                            % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
-            passwd = str(cursor.fetchone()[0])
+            passwd = binary_type(cursor.fetchone()[0])
             self.assertEqual(passwd, crypt_password('tutu', passwd))
             rset = cnx.execute("Any X WHERE X is CWUser, X login 'bob', X upassword %(pwd)s",
                                {'pwd': Binary(passwd)})
