@@ -885,7 +885,7 @@ class QuerierTC(BaseQuerierTC):
         rset = self.qexecute('Any X, "toto" ORDERBY X WHERE X is CWGroup')
         self.assertEqual(rset.rows,
                           map(list, zip((2,3,4,5), ('toto','toto','toto','toto',))))
-        self.assertIsInstance(rset[0][1], unicode)
+        self.assertIsInstance(rset[0][1], text_type)
         self.assertEqual(rset.description,
                           zip(('CWGroup', 'CWGroup', 'CWGroup', 'CWGroup'),
                               ('String', 'String', 'String', 'String',)))
