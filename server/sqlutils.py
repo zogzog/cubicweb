@@ -27,7 +27,7 @@ from os.path import abspath
 from logging import getLogger
 from datetime import time, datetime
 
-from six import string_types
+from six import string_types, text_type
 from six.moves import filter
 
 from logilab import database as db, common as lgc
@@ -484,7 +484,7 @@ def init_sqlite_connexion(cnx):
             if value is not None:
                 self.values.add(value)
         def finalize(self):
-            return ', '.join(unicode(v) for v in self.values)
+            return ', '.join(text_type(v) for v in self.values)
 
     cnx.create_aggregate("GROUP_CONCAT", 1, group_concat)
 
