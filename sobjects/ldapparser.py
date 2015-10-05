@@ -20,6 +20,8 @@
 unlike ldapuser source, this source is copy based and will import ldap content
 (beside passwords for authentication) into the system source.
 """
+from six.moves import map, filter
+
 from logilab.common.decorators import cached, cachedproperty
 from logilab.common.shellutils import generate_password
 
@@ -48,8 +50,8 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     def user_source_entities_by_extid(self):
         source = self.source
         if source.user_base_dn.strip():
-            attrs = map(str, source.user_attrs.keys())
-            return dict((userdict['dn'], userdict)
+            attrs = list(map(str, source.user_attrs.keys()))
+            return dict((userdict['dn'].encode('ascii'), userdict)
                         for userdict in source._search(self._cw,
                                                        source.user_base_dn,
                                                        source.user_base_scope,
@@ -61,7 +63,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     def group_source_entities_by_extid(self):
         source = self.source
         if source.group_base_dn.strip():
-            attrs = map(str, ['modifyTimestamp'] + source.group_attrs.keys())
+            attrs = list(map(str, ['modifyTimestamp'] + list(source.group_attrs.keys())))
             return dict((groupdict['dn'], groupdict)
                         for groupdict in source._search(self._cw,
                                                         source.group_base_dn,
@@ -174,8 +176,8 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         # all CWUsers must be treated before CWGroups to have the in_group relation
         # set correctly in _associate_ldapusers
         elif etype == 'CWUser':
-            groups = filter(None, [self._get_group(name)
-                                   for name in self.source.user_default_groups])
+            groups = list(filter(None, [self._get_group(name)
+                                        for name in self.source.user_default_groups]))
             if groups:
                 entity.cw_set(in_group=groups)
             self._process_email(entity, sourceparams)
@@ -184,7 +186,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
 
     def is_deleted(self, extidplus, etype, eid):
         try:
-            extid, _ = extidplus.rsplit('@@', 1)
+            extid, _ = extidplus.rsplit(b'@@', 1)
         except ValueError:
             # for some reason extids here tend to come in both forms, e.g:
             # dn, dn@@Babar
@@ -204,14 +206,14 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                                    {'addr': emailaddr})
             if not rset:
                 # not found, create it. first forge an external id
-                emailextid = userdict['dn'] + '@@' + emailaddr.encode('utf-8')
+                emailextid = userdict['dn'] + '@@' + emailaddr
                 email = self.extid2entity(emailextid, 'EmailAddress',
                                           address=emailaddr)
                 entity.cw_set(use_email=email)
             elif self.sourceuris:
                 # pop from sourceuris anyway, else email may be removed by the
                 # source once import is finished
-                uri = userdict['dn'] + '@@' + emailaddr.encode('utf-8')
+                uri = userdict['dn'] + '@@' + emailaddr
                 self.sourceuris.pop(uri, None)
             # XXX else check use_email relation?
 

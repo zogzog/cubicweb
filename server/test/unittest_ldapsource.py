@@ -187,7 +187,7 @@ class LDAPFeedTestBase(CubicWebTC):
                      'cn=admin,dc=cubicweb,dc=test', '-w', 'cw']
         PIPE = subprocess.PIPE
         p = subprocess.Popen(updatecmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        p.stdin.write('\n'.join(modcmd))
+        p.stdin.write('\n'.join(modcmd).encode('ascii'))
         p.stdin.close()
         if p.wait():
             raise RuntimeError("ldap update failed: %s"%('\n'.join(p.stderr.readlines())))

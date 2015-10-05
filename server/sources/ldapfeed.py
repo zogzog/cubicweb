@@ -21,7 +21,7 @@ from __future__ import division  # XXX why?
 
 from datetime import datetime
 
-from six import string_types
+from six import PY2, string_types
 
 import ldap3
 
@@ -262,7 +262,7 @@ You can set multiple groups by separating them by a comma.',
         except Exception:
             self.error('while trying to authenticate %s', user, exc_info=True)
             raise AuthenticationError()
-        eid = self.repo.extid2eid(self, user['dn'], 'CWUser', cnx, insert=False)
+        eid = self.repo.extid2eid(self, user['dn'].encode('ascii'), 'CWUser', cnx, insert=False)
         if eid < 0:
             # user has been moved away from this source
             raise AuthenticationError()
@@ -332,13 +332,14 @@ You can set multiple groups by separating them by a comma.',
             if self.user_attrs.get(key) == 'upassword': # XXx better password detection
                 value = value[0].encode('utf-8')
                 # we only support ldap_salted_sha1 for ldap sources, see: server/utils.py
-                if not value.startswith('{SSHA}'):
+                if not value.startswith(b'{SSHA}'):
                     value = utils.crypt_password(value)
                 itemdict[key] = Binary(value)
             elif self.user_attrs.get(key) == 'modification_date':
                 itemdict[key] = datetime.strptime(value[0], '%Y%m%d%H%M%SZ')
             else:
-                value = [unicode(val, 'utf-8', 'replace') for val in value]
+                if PY2:
+                    value = [unicode(val, 'utf-8', 'replace') for val in value]
                 if len(value) == 1:
                     itemdict[key] = value = value[0]
                 else:
