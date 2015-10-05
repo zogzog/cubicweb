@@ -21,6 +21,7 @@ from logilab.common.testlib import TestCase, unittest_main, mock_object as mock
 
 from yams.constraints import StaticVocabularyConstraint, SizeConstraint
 
+import cubicweb
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.formwidgets import PasswordInput, TextArea, Select, Radio
@@ -127,7 +128,7 @@ class GuessFieldTC(CubicWebTC):
             self.assertIsInstance(field, BooleanField)
             self.assertEqual(field.required, False)
             self.assertIsInstance(field.widget, Radio)
-            self.assertEqual(field.vocabulary(mock(_cw=mock(_=unicode))),
+            self.assertEqual(field.vocabulary(mock(_cw=mock(_=cubicweb._))),
                               [(u'yes', '1'), (u'no', '')])
 
     def test_bool_field_explicit_choices(self):
@@ -135,7 +136,7 @@ class GuessFieldTC(CubicWebTC):
             field = guess_field(schema['CWAttribute'], schema['indexed'],
                                 choices=[(u'maybe', '1'), (u'no', '')], req=req)
             self.assertIsInstance(field.widget, Radio)
-            self.assertEqual(field.vocabulary(mock(req=mock(_=unicode))),
+            self.assertEqual(field.vocabulary(mock(req=mock(_=cubicweb._))),
                               [(u'maybe', '1'), (u'no', '')])
 
 
