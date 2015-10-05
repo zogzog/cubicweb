@@ -165,7 +165,7 @@ class TableLayout(component.Component):
 
     def __init__(self, req, view, **kwargs):
         super(TableLayout, self).__init__(req, **kwargs)
-        for key, val in self.cw_extra_kwargs.items():
+        for key, val in list(self.cw_extra_kwargs.items()):
             if hasattr(self.__class__, key) and not key[0] == '_':
                 setattr(self, key, val)
                 self.cw_extra_kwargs.pop(key)

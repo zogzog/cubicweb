@@ -84,7 +84,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
 
 def cleanup_sys_modules(config):
     # cleanup sys.modules, required when we're updating multiple cubes
-    for name, mod in sys.modules.items():
+    for name, mod in list(sys.modules.items()):
         if mod is None:
             # duh ? logilab.common.os for instance
             del sys.modules[name]

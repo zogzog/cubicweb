@@ -69,7 +69,7 @@ class PropertySheet(dict):
         self._ordered_propfiles.append(fpath)
 
     def need_reload(self):
-        for rid, (adirectory, rdirectory, mtime) in self._cache.items():
+        for rid, (adirectory, rdirectory, mtime) in list(self._cache.items()):
             if os.stat(osp.join(rdirectory, rid)).st_mtime > mtime:
                 del self._cache[rid]
         for fpath, mtime in self._propfile_mtime.items():

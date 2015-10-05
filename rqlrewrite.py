@@ -702,7 +702,7 @@ class RQLRewriter(object):
                 # no more references, undefine the variable
                 del self.select.defined_vars[vref.name]
                 removed.add(vref.name)
-        for key, newvar in self.rewritten.items(): # I mean items we alter it
+        for key, newvar in list(self.rewritten.items()):
             if newvar in removed:
                 del self.rewritten[key]
 

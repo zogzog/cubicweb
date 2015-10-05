@@ -97,7 +97,7 @@ class RelationTags(RegistrableRtags):
     def init(self, schema, check=True):
         # XXX check existing keys against schema
         if check:
-            for (stype, rtype, otype, tagged), value in self._tagdefs.items():
+            for (stype, rtype, otype, tagged), value in list(self._tagdefs.items()):
                 for ertype in (stype, rtype, otype):
                     if ertype != '*' and not ertype in schema:
                         self.warning('removing rtag %s: %s, %s undefined in schema',
