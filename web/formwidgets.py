@@ -1011,7 +1011,7 @@ class EditableURLWidget(FieldWidget):
                         except ValueError:
                             raise ProcessFormError(req._("wrong query parameter line %s") % (i+1))
                         # value will be url quoted by build_url_params
-                        values.setdefault(key.encode(req.encoding), []).append(val)
+                        values.setdefault(key, []).append(val)
         if not values:
             return path
         return u'%s?%s' % (path, req.build_url_params(**values))
