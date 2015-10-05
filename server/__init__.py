@@ -30,6 +30,7 @@ from glob import glob
 from contextlib import contextmanager
 
 from six import text_type, string_types
+from six.moves import filter
 
 from logilab.common.modutils import LazyObject
 from logilab.common.textutils import splitstrip
@@ -245,7 +246,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
         if failed:
             failed = sqlexec(failed, execute, cnx=sqlcnx,
                              pbtitle='-> dropping tables (second pass)')
-            remainings = filter(drop_filter, helper.list_tables(sqlcursor))
+            remainings = list(filter(drop_filter, helper.list_tables(sqlcursor)))
             assert not remainings, 'Remaining tables: %s' % ', '.join(remainings)
     _title = '-> creating tables '
     print(_title, end=' ')
