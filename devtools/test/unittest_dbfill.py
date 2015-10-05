@@ -21,6 +21,7 @@
 import os.path as osp
 import re
 import datetime
+import io
 
 from six.moves import range
 
@@ -52,7 +53,7 @@ class ValueGeneratorTC(TestCase):
             return None
 
     def _available_Person_firstname(self, etype, attrname):
-        return [f.strip() for f in open(osp.join(DATADIR, 'firstnames.txt'))]
+        return [f.strip() for f in io.open(osp.join(DATADIR, 'firstnames.txt'), encoding='latin1')]
 
     def setUp(self):
         config = ApptestConfiguration('data', apphome=DATADIR)
