@@ -19,6 +19,8 @@
 
 import threading
 
+from six import text_type
+
 from yams.schema import role_name
 from cubicweb import ValidationError
 from cubicweb.server import Service
@@ -129,7 +131,7 @@ class RegisterUserService(Service):
             qname = role_name('login', 'subject')
             raise ValidationError(None, {qname: errmsg % login})
 
-        if isinstance(password, unicode):
+        if isinstance(password, text_type):
             # password should *always* be utf8 encoded
             password = password.encode('UTF8')
         cwuserkwargs['login'] = login
