@@ -82,13 +82,13 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(entity.cw_metainformation(),
                                  {'type': 'Card',
                                   'source': {'uri': 'myfeed', 'type': 'datafeed', 'use-cwuri-as-url': True},
-                                  'extid': 'http://www.cubicweb.org/'}
+                                  'extid': b'http://www.cubicweb.org/'}
                                  )
                 self.assertEqual(entity.absolute_url(), 'http://www.cubicweb.org/')
                 # test repo cache keys
                 self.assertEqual(self.repo._type_source_cache[entity.eid],
-                                 ('Card', 'http://www.cubicweb.org/', 'myfeed'))
-                self.assertEqual(self.repo._extid_cache['http://www.cubicweb.org/'],
+                                 ('Card', b'http://www.cubicweb.org/', 'myfeed'))
+                self.assertEqual(self.repo._extid_cache[b'http://www.cubicweb.org/'],
                                  entity.eid)
                 # test repull
                 stats = dfsource.pull_data(cnx, force=True)
@@ -101,12 +101,12 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(stats['created'], set())
                 self.assertEqual(stats['updated'], set((entity.eid,)))
                 self.assertEqual(self.repo._type_source_cache[entity.eid],
-                                 ('Card', 'http://www.cubicweb.org/', 'myfeed'))
-                self.assertEqual(self.repo._extid_cache['http://www.cubicweb.org/'],
+                                 ('Card', b'http://www.cubicweb.org/', 'myfeed'))
+                self.assertEqual(self.repo._extid_cache[b'http://www.cubicweb.org/'],
                                  entity.eid)
 
                 self.assertEqual(dfsource.source_cwuris(cnx),
-                                 {'http://www.cubicweb.org/': (entity.eid, 'Card')}
+                                 {b'http://www.cubicweb.org/': (entity.eid, 'Card')}
                              )
                 self.assertTrue(dfsource.latest_retrieval)
                 self.assertTrue(dfsource.fresh())
@@ -121,11 +121,11 @@ class DataFeedTC(CubicWebTC):
             self.assertEqual(entity.cw_metainformation(),
                              {'type': 'Card',
                               'source': {'uri': 'myrenamedfeed', 'type': 'datafeed', 'use-cwuri-as-url': True},
-                              'extid': 'http://www.cubicweb.org/'}
+                              'extid': b'http://www.cubicweb.org/'}
                              )
             self.assertEqual(self.repo._type_source_cache[entity.eid],
-                             ('Card', 'http://www.cubicweb.org/', 'myrenamedfeed'))
-            self.assertEqual(self.repo._extid_cache['http://www.cubicweb.org/'],
+                             ('Card', b'http://www.cubicweb.org/', 'myrenamedfeed'))
+            self.assertEqual(self.repo._extid_cache[b'http://www.cubicweb.org/'],
                              entity.eid)
 
             # test_delete_source
