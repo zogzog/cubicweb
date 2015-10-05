@@ -1690,7 +1690,7 @@ class DatabaseIndependentBackupRestore(object):
             self.logger.info('restoring sequence %s', seq)
             self.read_sequence(archive, seq)
         for numrange in numranges:
-            self.logger.info('restoring numrange %s', seq)
+            self.logger.info('restoring numrange %s', numrange)
             self.read_numrange(archive, numrange)
         for table in tables:
             self.logger.info('restoring table %s', table)
