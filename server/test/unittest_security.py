@@ -35,7 +35,7 @@ class BaseSecurityTC(CubicWebTC):
         with self.admin_access.client_cnx() as cnx:
             self.create_user(cnx, u'iaminusersgrouponly')
             hash = _CRYPTO_CTX.encrypt('oldpassword', scheme='des_crypt')
-            self.create_user(cnx, u'oldpassword', password=Binary(hash))
+            self.create_user(cnx, u'oldpassword', password=Binary(hash.encode('ascii')))
 
 class LowLevelSecurityFunctionTC(BaseSecurityTC):
 
@@ -81,17 +81,20 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
         it will be updated on next login
         """
         with self.repo.internal_cnx() as cnx:
-            oldhash = str(cnx.system_sql("SELECT cw_upassword FROM cw_CWUser "
-                                         "WHERE cw_login = 'oldpassword'").fetchone()[0])
+            oldhash = cnx.system_sql("SELECT cw_upassword FROM cw_CWUser "
+                                         "WHERE cw_login = 'oldpassword'").fetchone()[0]
+            oldhash = self.repo.system_source.binary_to_str(oldhash)
             self.repo.close(self.repo.connect('oldpassword', password='oldpassword'))
-            newhash = str(cnx.system_sql("SELECT cw_upassword FROM cw_CWUser "
-                                         "WHERE cw_login = 'oldpassword'").fetchone()[0])
+            newhash = cnx.system_sql("SELECT cw_upassword FROM cw_CWUser "
+                                     "WHERE cw_login = 'oldpassword'").fetchone()[0]
+            newhash = self.repo.system_source.binary_to_str(newhash)
             self.assertNotEqual(oldhash, newhash)
-            self.assertTrue(newhash.startswith('$6$'))
+            self.assertTrue(newhash.startswith(b'$6$'))
             self.repo.close(self.repo.connect('oldpassword', password='oldpassword'))
-            self.assertEqual(newhash,
-                             str(cnx.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE "
-                                                "cw_login = 'oldpassword'").fetchone()[0]))
+            newnewhash = cnx.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE "
+                                        "cw_login = 'oldpassword'").fetchone()[0]
+            newnewhash = self.repo.system_source.binary_to_str(newnewhash)
+            self.assertEqual(newhash, newnewhash)
 
 
 class SecurityRewritingTC(BaseSecurityTC):
@@ -295,7 +298,7 @@ class SecurityTC(BaseSecurityTC):
             ueid = self.create_user(cnx, u'user').eid
         with self.new_access(u'user').repo_cnx() as cnx:
             cnx.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
-                       {'x': ueid, 'passwd': 'newpwd'})
+                       {'x': ueid, 'passwd': b'newpwd'})
             cnx.commit()
         self.repo.close(self.repo.connect('user', password='newpwd'))
 
@@ -304,7 +307,7 @@ class SecurityTC(BaseSecurityTC):
             ueid = self.create_user(cnx, u'otheruser').eid
         with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
             cnx.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
-                       {'x': ueid, 'passwd': 'newpwd'})
+                       {'x': ueid, 'passwd': b'newpwd'})
             self.assertRaises(Unauthorized, cnx.commit)
 
     # read security test

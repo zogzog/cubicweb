@@ -1545,7 +1545,7 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
                                         SQL_PREFIX + 'CWUser',
                                         SQL_PREFIX + 'upassword',
                                         SQL_PREFIX + 'login'),
-                                       {'newhash': self.source._binary(newhash),
+                                       {'newhash': self.source._binary(newhash.encode('ascii')),
                                         'login': login})
                     cnx.commit()
             return user
