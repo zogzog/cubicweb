@@ -21,7 +21,7 @@ have the following API::
 
     >>> user_eid = store.prepare_insert_entity('CWUser', login=u'johndoe')
     >>> group_eid = store.prepare_insert_entity('CWUser', name=u'unknown')
-    >>> store.relate(user_eid, 'in_group', group_eid)
+    >>> store.prepare_insert_relation(user_eid, 'in_group', group_eid)
     >>> store.flush()
     >>> store.commit()
     >>> store.finish()
