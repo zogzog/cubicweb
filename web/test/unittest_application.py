@@ -331,8 +331,8 @@ class ApplicationTC(CubicWebTC):
         except Redirect as redir:
             self.fail('anonymous user should get login form')
         clear_cache(req, 'get_authorization')
-        self.assertIn('__login', form)
-        self.assertIn('__password', form)
+        self.assertIn(b'__login', form)
+        self.assertIn(b'__password', form)
         self.assertFalse(req.cnx) # Mock cnx are False
         req.form['__login'] = self.admlogin
         req.form['__password'] = self.admpassword
