@@ -38,30 +38,33 @@ contains the following license in it:
  this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
 """
 
-MAGIC = '$1$'                        # Magic string
-ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+MAGIC = b'$1$'                        # Magic string
+ITOA64 = b"./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 from hashlib import md5 # pylint: disable=E0611
 
+from six import text_type, indexbytes
 from six.moves import range
 
 
 def to64 (v, n):
-    ret = ''
+    ret = bytearray()
     while (n - 1 >= 0):
         n = n - 1
-        ret = ret + ITOA64[v & 0x3f]
+        ret.append(ITOA64[v & 0x3f])
         v = v >> 6
     return ret
 
 def crypt(pw, salt):
-    if isinstance(pw, unicode):
+    if isinstance(pw, text_type):
         pw = pw.encode('utf-8')
+    if isinstance(salt, text_type):
+        salt = salt.encode('ascii')
     # Take care of the magic string if present
     if salt.startswith(MAGIC):
         salt = salt[len(MAGIC):]
     # salt can have up to 8 characters:
-    salt = salt.split('$', 1)[0]
+    salt = salt.split(b'$', 1)[0]
     salt = salt[:8]
     ctx = pw + MAGIC + salt
     final = md5(pw + salt + pw).digest()
@@ -74,7 +77,7 @@ def crypt(pw, salt):
     i = len(pw)
     while i:
         if i & 1:
-            ctx = ctx + chr(0)  #if ($i & 1) { $ctx->add(pack("C", 0)); }
+            ctx = ctx + b'\0'  #if ($i & 1) { $ctx->add(pack("C", 0)); }
         else:
             ctx = ctx + pw[0]
         i = i >> 1
@@ -83,7 +86,7 @@ def crypt(pw, salt):
     # things run slower.
     # my question: WTF???
     for i in range(1000):
-        ctx1 = ''
+        ctx1 = b''
         if i & 1:
             ctx1 = ctx1 + pw
         else:
@@ -98,21 +101,21 @@ def crypt(pw, salt):
             ctx1 = ctx1 + pw
         final = md5(ctx1).digest()
     # Final xform
-    passwd = ''
-    passwd = passwd + to64((int(ord(final[0])) << 16)
-                           |(int(ord(final[6])) << 8)
-                           |(int(ord(final[12]))),4)
-    passwd = passwd + to64((int(ord(final[1])) << 16)
-                           |(int(ord(final[7])) << 8)
-                           |(int(ord(final[13]))), 4)
-    passwd = passwd + to64((int(ord(final[2])) << 16)
-                           |(int(ord(final[8])) << 8)
-                           |(int(ord(final[14]))), 4)
-    passwd = passwd + to64((int(ord(final[3])) << 16)
-                           |(int(ord(final[9])) << 8)
-                           |(int(ord(final[15]))), 4)
-    passwd = passwd + to64((int(ord(final[4])) << 16)
-                           |(int(ord(final[10])) << 8)
-                           |(int(ord(final[5]))), 4)
-    passwd = passwd + to64((int(ord(final[11]))), 2)
+    passwd = b''
+    passwd += to64((indexbytes(final, 0) << 16)
+                   |(indexbytes(final, 6) << 8)
+                   |(indexbytes(final, 12)),4)
+    passwd += to64((indexbytes(final, 1) << 16)
+                   |(indexbytes(final, 7) << 8)
+                   |(indexbytes(final, 13)), 4)
+    passwd += to64((indexbytes(final, 2) << 16)
+                   |(indexbytes(final, 8) << 8)
+                   |(indexbytes(final, 14)), 4)
+    passwd += to64((indexbytes(final, 3) << 16)
+                   |(indexbytes(final, 9) << 8)
+                   |(indexbytes(final, 15)), 4)
+    passwd += to64((indexbytes(final, 4) << 16)
+                   |(indexbytes(final, 10) << 8)
+                   |(indexbytes(final, 5)), 4)
+    passwd += to64((indexbytes(final, 11)), 2)
     return passwd

@@ -26,13 +26,13 @@ class UtilsTC(TestCase):
     def test_crypt(self):
         for hash in (
             utils.crypt_password('xxx'), # default sha512
-            'ab$5UsKFxRKKN.d8iBIFBnQ80', # custom md5
-            'ab4Vlm81ZUHlg', # DES
+            b'ab$5UsKFxRKKN.d8iBIFBnQ80', # custom md5
+            b'ab4Vlm81ZUHlg', # DES
             ):
             self.assertEqual(utils.crypt_password('xxx', hash), hash)
             self.assertEqual(utils.crypt_password(u'xxx', hash), hash)
-            self.assertEqual(utils.crypt_password(u'xxx', unicode(hash)), hash)
-            self.assertEqual(utils.crypt_password('yyy', hash), '')
+            self.assertEqual(utils.crypt_password(u'xxx', hash.decode('ascii')), hash.decode('ascii'))
+            self.assertEqual(utils.crypt_password('yyy', hash), b'')
 
         # accept any password for empty hashes (is it a good idea?)
         self.assertEqual(utils.crypt_password('xxx', ''), '')
