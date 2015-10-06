@@ -846,7 +846,7 @@ class _CubicWebRequestBase(RequestSessionBase):
             scheme = scheme.lower()
             try:
                 assert scheme == "basic"
-                user, passwd = base64.decodestring(rest).split(":", 1)
+                user, passwd = base64.decodestring(rest.encode('ascii')).split(b":", 1)
                 # XXX HTTP header encoding: use email.Header?
                 return user.decode('UTF8'), passwd
             except Exception as ex:
