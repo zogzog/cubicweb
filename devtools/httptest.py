@@ -29,9 +29,7 @@ import socket
 from six.moves import range, http_client
 from six.moves.urllib.parse import urlparse
 
-from twisted.internet import reactor, error
 
-from cubicweb.etwist.server import run
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools import ApptestConfiguration
 
@@ -92,6 +90,8 @@ class CubicWebServerTC(CubicWebTC):
     configcls = CubicWebServerConfig
 
     def start_server(self):
+        from twisted.internet import reactor
+        from cubicweb.etwist.server import run
         # use a semaphore to avoid starting test while the http server isn't
         # fully initilialized
         semaphore = threading.Semaphore(0)
@@ -119,6 +119,7 @@ class CubicWebServerTC(CubicWebTC):
 
     def stop_server(self, timeout=15):
         """Stop the webserver, waiting for the thread to return"""
+        from twisted.internet import reactor
         if self._web_test_cnx is None:
             self.web_logout()
             self._web_test_cnx.close()
@@ -177,6 +178,7 @@ class CubicWebServerTC(CubicWebTC):
         self.start_server()
 
     def tearDown(self):
+        from twisted.internet import error
         try:
             self.stop_server()
         except error.ReactorNotRunning as err:
