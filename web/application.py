@@ -500,7 +500,7 @@ class CubicWebPublisher(object):
             # don't overwrite it if it's already set
             req.status_out = status
         json_dumper = getattr(ex, 'dumps', lambda : json.dumps({'reason': text_type(ex)}))
-        return json_dumper()
+        return json_dumper().encode('utf-8')
 
     # special case handling
 
