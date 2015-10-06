@@ -868,7 +868,7 @@ def generateWWWAuthenticate(headers):
     return _generated
 
 def generateAuthorization(seq):
-    return [' '.join(seq)]
+    return [' '.join(str(v) for v in seq)]
 
 
 ####
