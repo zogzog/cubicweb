@@ -703,8 +703,7 @@ class MigrationCommandsComputedTC(MigrationTC):
         self.assertNotIn('works_for', self.schema)
         with self.mh() as (cnx, mh):
             with self.assertRaises(ExecutionError) as exc:
-                mh.cmd_add_relation_definition('Employee', 'works_for',
-                                                    'Company')
+                mh.cmd_add_relation_definition('Employee', 'works_for', 'Company')
         self.assertEqual(str(exc.exception),
                          'Cannot add a relation definition for a computed '
                          'relation (works_for)')
@@ -776,9 +775,9 @@ class MigrationCommandsComputedTC(MigrationTC):
             assert not cnx.execute('Company X')
             c = cnx.create_entity('Company')
             e1 = cnx.create_entity('Employee', reverse_employees=c)
-            n1 = cnx.create_entity('Note', note=2, concerns=e1)
+            cnx.create_entity('Note', note=2, concerns=e1)
             e2 = cnx.create_entity('Employee', reverse_employees=c)
-            n2 = cnx.create_entity('Note', note=4, concerns=e2)
+            cnx.create_entity('Note', note=4, concerns=e2)
             cnx.commit()
 
     def assert_score_initialized(self, mh):
