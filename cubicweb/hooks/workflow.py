@@ -41,11 +41,11 @@ def _change_state(cnx, x, oldstate, newstate):
 
 class _SetInitialStateOp(hook.Operation):
     """make initial state be a default state"""
-    entity = None # make pylint happy
+    eid = None # make pylint happy
 
     def precommit_event(self):
         cnx = self.cnx
-        entity = self.entity
+        entity = cnx.entity_from_eid(self.eid)
         iworkflowable = entity.cw_adapt_to('IWorkflowable')
         # if there is an initial state and the entity's state is not set,
         # use the initial state as a default state
@@ -53,15 +53,15 @@ class _SetInitialStateOp(hook.Operation):
                and iworkflowable.current_workflow:
             state = iworkflowable.current_workflow.initial
             if state:
-                cnx.add_relation(entity.eid, 'in_state', state.eid)
-                _FireAutotransitionOp(cnx, entity=entity)
+                cnx.add_relation(self.eid, 'in_state', state.eid)
+                _FireAutotransitionOp(cnx, eid=self.eid)
 
 class _FireAutotransitionOp(hook.Operation):
     """try to fire auto transition after state changes"""
-    entity = None # make pylint happy
+    eid = None # make pylint happy
 
     def precommit_event(self):
-        entity = self.entity
+        entity = self.cnx.entity_from_eid(self.eid)
         iworkflowable = entity.cw_adapt_to('IWorkflowable')
         autotrs = list(iworkflowable.possible_transitions('auto'))
         if autotrs:
@@ -98,7 +98,7 @@ class _WorkflowChangedOp(hook.Operation):
                 if iworkflowable.current_state.eid != deststate.eid:
                     _change_state(cnx, entity.eid,
                                   iworkflowable.current_state.eid, deststate.eid)
-                    _FireAutotransitionOp(cnx, entity=entity)
+                    _FireAutotransitionOp(cnx, eid=entity.eid)
                 return
             msg = cnx._('workflow changed to "%s"')
             msg %= cnx._(mainwf.name)
@@ -120,11 +120,11 @@ class _CheckTrExitPoint(hook.Operation):
 
 
 class _SubWorkflowExitOp(hook.Operation):
-    forentity = trinfo = None # make pylint happy
+    foreid = trinfo = None # make pylint happy
 
     def precommit_event(self):
         cnx = self.cnx
-        forentity = self.forentity
+        forentity = cnx.entity_from_eid(self.foreid)
         iworkflowable = forentity.cw_adapt_to('IWorkflowable')
         trinfo = self.trinfo
         # we're in a subworkflow, check if we've reached an exit point
@@ -155,7 +155,7 @@ class SetInitialStateHook(WorkflowHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        _SetInitialStateOp(self._cw, entity=self.entity)
+        _SetInitialStateOp(self._cw, eid=self.entity.eid)
 
 
 class FireTransitionHook(WorkflowHook):
@@ -255,7 +255,7 @@ class FireTransitionHook(WorkflowHook):
         nocheck = cnx.transaction_data.setdefault('skip-security', set())
         nocheck.add((entity.eid, 'from_state', fromstate.eid))
         nocheck.add((entity.eid, 'to_state', deststateeid))
-        _FireAutotransitionOp(cnx, entity=forentity)
+        _FireAutotransitionOp(cnx, eid=forentity.eid)
 
 
 class FiredTransitionHook(WorkflowHook):
@@ -273,7 +273,7 @@ class FiredTransitionHook(WorkflowHook):
         iworkflowable = forentity.cw_adapt_to('IWorkflowable')
         assert iworkflowable.current_state.eid == rcache['to_state']
         if iworkflowable.main_workflow.eid != iworkflowable.current_workflow.eid:
-            _SubWorkflowExitOp(self._cw, forentity=forentity, trinfo=trinfo)
+            _SubWorkflowExitOp(self._cw, foreid=forentity.eid, trinfo=trinfo)
 
 
 class CheckInStateChangeAllowed(WorkflowHook):
