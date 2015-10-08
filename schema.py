@@ -1207,11 +1207,11 @@ class RepoEnforcedRQLConstraintMixIn(object):
         return ';%s;%s\n%s' % (','.join(sorted(self.mainvars)), self.expression,
                                self.msg or '')
 
+    @classmethod
     def deserialize(cls, value):
         value, msg = value.split('\n', 1)
         _, mainvars, expression = value.split(';', 2)
         return cls(expression, mainvars, msg)
-    deserialize = classmethod(deserialize)
 
     def repo_check(self, session, eidfrom, rtype, eidto=None):
         """raise ValidationError if the relation doesn't satisfy the constraint
