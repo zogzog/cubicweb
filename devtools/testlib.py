@@ -728,7 +728,7 @@ class CubicWebTC(TestCase):
 
     def assertModificationDateGreater(self, entity, olddate):
         entity.cw_attr_cache.pop('modification_date', None)
-        self.assertTrue(entity.modification_date > olddate)
+        self.assertGreater(entity.modification_date, olddate)
 
     def assertMessageEqual(self, req, params, expected_msg):
         msg = req.session.data[params['_cwmsgid']]
