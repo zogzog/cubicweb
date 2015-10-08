@@ -1506,7 +1506,7 @@ class specified_etype_implements(is_instance):
         score = self.score_class(req.vreg['etypes'].etype_class(etype), req)
         if score:
             eschema = req.vreg.schema.eschema(etype)
-            if eschema.has_local_role('add') or eschema.has_perm(req, 'add'):
+            if eschema.may_have_permission('add', req):
                 return score
         return 0
 
