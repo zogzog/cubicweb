@@ -458,7 +458,8 @@ class ServerMigrationHelper(MigrationHelper):
         rtype = str(rtype)
         if rtype in self._synchronized:
             return
-        self._synchronized.add(rtype)
+        if syncrdefs and syncperms and syncprops:
+            self._synchronized.add(rtype)
         rschema = self.fs_schema.rschema(rtype)
         reporschema = self.repo.schema.rschema(rtype)
         if syncprops:
@@ -489,7 +490,8 @@ class ServerMigrationHelper(MigrationHelper):
         etype = str(etype)
         if etype in self._synchronized:
             return
-        self._synchronized.add(etype)
+        if syncrdefs and syncperms and syncprops:
+            self._synchronized.add(etype)
         repoeschema = self.repo.schema.eschema(etype)
         try:
             eschema = self.fs_schema.eschema(etype)
@@ -587,9 +589,10 @@ class ServerMigrationHelper(MigrationHelper):
         reporschema = self.repo.schema.rschema(rschema)
         if (subjtype, rschema, objtype) in self._synchronized:
             return
-        self._synchronized.add((subjtype, rschema, objtype))
-        if rschema.symmetric:
-            self._synchronized.add((objtype, rschema, subjtype))
+        if syncperms and syncprops:
+            self._synchronized.add((subjtype, rschema, objtype))
+            if rschema.symmetric:
+                self._synchronized.add((objtype, rschema, subjtype))
         rdef = rschema.rdef(subjtype, objtype)
         if rdef.infered:
             return # don't try to synchronize infered relation defs
