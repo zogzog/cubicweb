@@ -196,6 +196,18 @@ class CWUtilitiesTC(CubicWebTC):
             self.assertTrue(rdef.permissions['add'])
         self.assertTrue(rdef.permissions['read'], ())
 
+    def test_temporary_permissions_rdef_with_exception(self):
+        rdef = self.schema['CWUser'].rdef('in_group')
+        try:
+            with self.temporary_permissions((rdef, {'read': ()})):
+                self.assertEqual(rdef.permissions['read'], ())
+                self.assertTrue(rdef.permissions['add'])
+                raise ValueError('goto')
+        except ValueError:
+            self.assertTrue(rdef.permissions['read'], ())
+        else:
+            self.fail('exception was caught unexpectedly')
+
     def test_temporary_appobjects_registered(self):
 
         class AnAppobject(object):

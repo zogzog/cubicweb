@@ -719,12 +719,14 @@ class CubicWebTC(TestCase):
                 origperms = erschema.permissions[action]
                 erschema.set_action_permissions(action, actionperms)
                 torestore.append([erschema, action, origperms])
-        yield
-        for erschema, action, permissions in torestore:
-            if action is None:
-                erschema.permissions = permissions
-            else:
-                erschema.set_action_permissions(action, permissions)
+        try:
+            yield
+        finally:
+            for erschema, action, permissions in torestore:
+                if action is None:
+                    erschema.permissions = permissions
+                else:
+                    erschema.set_action_permissions(action, permissions)
 
     def assertModificationDateGreater(self, entity, olddate):
         entity.cw_attr_cache.pop('modification_date', None)
