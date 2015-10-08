@@ -463,6 +463,7 @@ def generateTrueFalse(value):
     raise ValueError("Invalid true/false header value: %s" % value)
 
 class MimeType(object):
+    @classmethod
     def fromString(klass, mimeTypeString):
         """Generate a MimeType object from the given string.
 
@@ -471,8 +472,6 @@ class MimeType(object):
         @return: L{MimeType}
         """
         return DefaultHTTPHandler.parse('content-type', [mimeTypeString])
-
-    fromString = classmethod(fromString)
 
     def __init__(self, mediaType, mediaSubtype, params={}, **kwargs):
         """
