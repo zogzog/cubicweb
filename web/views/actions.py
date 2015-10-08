@@ -50,7 +50,7 @@ class has_editable_relation(EntityPredicate):
                                                entity=entity, mainform=False)
         for dummy in form.editable_relations():
             return 1
-        for dummy in form.inlined_relations():
+        for dummy in form.inlined_form_views():
             return 1
         for dummy in form.editable_attributes(strict=True):
             return 1
