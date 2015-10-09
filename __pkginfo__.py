@@ -55,7 +55,6 @@ __depends__ = {
 
 __recommends__ = {
     'docutils': '>= 0.6',
-    'Pyro': '>= 3.9.1, < 4.0.0',
     'Pillow': '',               # for captcha
     'pycrypto': '',             # for crypto extensions
     'fyzz': '>= 0.1.0',         # for sparql
