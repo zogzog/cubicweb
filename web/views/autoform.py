@@ -126,6 +126,7 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.deprecation import deprecated
+from logilab.common.registry import NoSelectableObject
 
 from cubicweb import neg_role, uilib
 from cubicweb.schema import display_name
@@ -942,6 +943,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     def check_inlined_rdef_permissions(self, rschema, role, tschema, ttype):
         """return true if permissions are granted on the inlined object and
         relation"""
+        if not tschema.has_perm(self._cw, 'add'):
+            return False
         entity = self.edited_entity
         rdef = entity.e_schema.rdef(rschema, role, ttype)
         if entity.has_eid():
@@ -949,10 +952,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 rdefkwargs = {'fromeid': entity.eid}
             else:
                 rdefkwargs = {'toeid': entity.eid}
-        else:
-            rdefkwargs = {}
-        return (tschema.has_perm(self._cw, 'add')
-                and rdef.has_perm(self._cw, 'add', **rdefkwargs))
+            return rdef.has_perm(self._cw, 'add', **rdefkwargs)
+        return rdef.may_have_permission('add', self._cw)
 
 
     def should_hide_add_new_relation_link(self, rschema, card):
@@ -983,11 +984,16 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """yield inline form views to a newly related (hence created) entity
         through the given relation
         """
-        yield self._cw.vreg['views'].select('inline-creation', self._cw,
-                                            etype=ttype, rtype=rschema, role=role,
-                                            peid=self.edited_entity.eid,
-                                            petype=self.edited_entity.e_schema,
-                                            pform=self)
+        try:
+            yield self._cw.vreg['views'].select('inline-creation', self._cw,
+                                                etype=ttype, rtype=rschema, role=role,
+                                                peid=self.edited_entity.eid,
+                                                petype=self.edited_entity.e_schema,
+                                                pform=self)
+        except NoSelectableObject:
+            # may be raised if user doesn't have the permission to add ttype entities (no checked
+            # earlier) or if there is some custom selector on the view
+            pass
 
 
 ## default form ui configuration ##############################################

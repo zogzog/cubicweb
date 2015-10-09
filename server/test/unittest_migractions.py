@@ -452,6 +452,9 @@ class MigrationCommandsTC(MigrationTC):
             delete_concerne_rqlexpr = self._rrqlexpr_rset(cnx, 'delete', 'concerne')
             add_concerne_rqlexpr = self._rrqlexpr_rset(cnx, 'add', 'concerne')
 
+            # make sure properties (e.g. etype descriptions) are synced by the
+            # second call to sync_schema
+            mh.cmd_sync_schema_props_perms(syncprops=False, commit=False)
             mh.cmd_sync_schema_props_perms(commit=False)
 
             self.assertEqual(cnx.execute('Any D WHERE X name "Personne", X description D')[0][0],
@@ -732,8 +735,7 @@ class MigrationCommandsComputedTC(MigrationTC):
         self.assertNotIn('works_for', self.schema)
         with self.mh() as (cnx, mh):
             with self.assertRaises(ExecutionError) as exc:
-                mh.cmd_add_relation_definition('Employee', 'works_for',
-                                                    'Company')
+                mh.cmd_add_relation_definition('Employee', 'works_for', 'Company')
         self.assertEqual(str(exc.exception),
                          'Cannot add a relation definition for a computed '
                          'relation (works_for)')
@@ -792,6 +794,12 @@ class MigrationCommandsComputedTC(MigrationTC):
                          'Cannot synchronize a relation definition for a computed '
                          'relation (whatever)')
 
+    def test_computed_relation_rename_relation_type(self):
+        with self.mh() as (cnx, mh):
+            mh.cmd_rename_relation_type('to_be_renamed', 'renamed')
+        self.assertIn('renamed', self.schema)
+        self.assertNotIn('to_be_renamed', self.schema)
+
     # computed attributes migration ############################################
 
     def setup_add_score(self):
@@ -799,9 +807,9 @@ class MigrationCommandsComputedTC(MigrationTC):
             assert not cnx.execute('Company X')
             c = cnx.create_entity('Company')
             e1 = cnx.create_entity('Employee', reverse_employees=c)
-            n1 = cnx.create_entity('Note', note=2, concerns=e1)
+            cnx.create_entity('Note', note=2, concerns=e1)
             e2 = cnx.create_entity('Employee', reverse_employees=c)
-            n2 = cnx.create_entity('Note', note=4, concerns=e2)
+            cnx.create_entity('Note', note=4, concerns=e2)
             cnx.commit()
 
     def assert_score_initialized(self, mh):

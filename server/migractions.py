@@ -452,7 +452,8 @@ class ServerMigrationHelper(MigrationHelper):
         rtype = str(rtype)
         if rtype in self._synchronized:
             return
-        self._synchronized.add(rtype)
+        if syncrdefs and syncperms and syncprops:
+            self._synchronized.add(rtype)
         rschema = self.fs_schema.rschema(rtype)
         reporschema = self.repo.schema.rschema(rtype)
         if syncprops:
@@ -483,7 +484,8 @@ class ServerMigrationHelper(MigrationHelper):
         etype = str(etype)
         if etype in self._synchronized:
             return
-        self._synchronized.add(etype)
+        if syncrdefs and syncperms and syncprops:
+            self._synchronized.add(etype)
         repoeschema = self.repo.schema.eschema(etype)
         try:
             eschema = self.fs_schema.eschema(etype)
@@ -581,9 +583,10 @@ class ServerMigrationHelper(MigrationHelper):
         reporschema = self.repo.schema.rschema(rschema)
         if (subjtype, rschema, objtype) in self._synchronized:
             return
-        self._synchronized.add((subjtype, rschema, objtype))
-        if rschema.symmetric:
-            self._synchronized.add((objtype, rschema, subjtype))
+        if syncperms and syncprops:
+            self._synchronized.add((subjtype, rschema, objtype))
+            if rschema.symmetric:
+                self._synchronized.add((objtype, rschema, subjtype))
         rdef = rschema.rdef(subjtype, objtype)
         if rdef.infered:
             return # don't try to synchronize infered relation defs
@@ -1079,8 +1082,9 @@ class ServerMigrationHelper(MigrationHelper):
                                 default='n'):
                 return
         self.cmd_add_relation_type(newname, commit=True)
-        self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
-                     ask_confirm=self.verbosity>=2)
+        if not self.repo.schema[oldname].rule:
+            self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
+                         ask_confirm=self.verbosity>=2)
         self.cmd_drop_relation_type(oldname, commit=commit)
 
     def cmd_add_relation_definition(self, subjtype, rtype, objtype, commit=True):
