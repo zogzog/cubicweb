@@ -36,10 +36,12 @@ class associates(RelationDefinition):
 class Company(EntityType):
     score100 = Float(formula='Any AVG(NN) WHERE X employees E, N concerns E, N note100 NN')
 
+
 class Note(EntityType):
     note = Int()
     note20 = Int(formula='Any N*20 WHERE X note N')
     note100 = Int(formula='Any N*20 WHERE X note N')
+
 
 class concerns(RelationDefinition):
     subject = 'Note'
@@ -51,4 +53,8 @@ class notes(ComputedRelation):
 
 
 class whatever(ComputedRelation):
+    rule = 'S employees E, O concerns E'
+
+
+class to_be_renamed(ComputedRelation):
     rule = 'S employees E, O concerns E'

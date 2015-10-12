@@ -21,7 +21,7 @@ import time
 from xml.etree.ElementTree import fromstring
 from lxml import html
 
-from logilab.common.testlib import unittest_main, mock_object
+from logilab.common.testlib import unittest_main
 
 from cubicweb import Binary, ValidationError
 from cubicweb.devtools.testlib import CubicWebTC

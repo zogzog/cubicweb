@@ -132,8 +132,8 @@ class ProcessInformationView(StartupView):
         w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
             _('data directory url'), req.datadir_url))
         w(u'</table>')
-        if req.user.is_in_group('managers'):
-            from cubicweb.web.application import SESSION_MANAGER
+        from cubicweb.web.application import SESSION_MANAGER
+        if SESSION_MANAGER is not None and req.user.is_in_group('managers'):
             sessions = SESSION_MANAGER.current_sessions()
             w(u'<h3>%s</h3>' % _('opened web sessions'))
             if sessions:

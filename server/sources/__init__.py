@@ -132,6 +132,9 @@ class AbstractSource(object):
     def __eq__(self, other):
         return self.uri == other.uri
 
+    def __ne__(self, other):
+        return not (self == other)
+
     def backup(self, backupfile, confirm, format='native'):
         """method called to create a backup of source's data"""
         pass
@@ -405,7 +408,7 @@ class AbstractSource(object):
     # system source interface #################################################
 
     def eid_type_source(self, cnx, eid):
-        """return a tuple (type, source, extid) for the entity with id <eid>"""
+        """return a tuple (type, extid, source) for the entity with id <eid>"""
         raise NotImplementedError(self)
 
     def create_eid(self, cnx):

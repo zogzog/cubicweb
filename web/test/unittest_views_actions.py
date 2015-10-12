@@ -21,6 +21,7 @@ from logilab.common.testlib import unittest_main
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.views import actions, uicfg
 
+
 class ActionsTC(CubicWebTC):
     def test_view_action(self):
         with self.admin_access.web_request(vid='rss', rql='CWUser X') as req:
@@ -33,12 +34,31 @@ class ActionsTC(CubicWebTC):
         """ensure has_editable_relation predicate used by ModifyAction
         return positive score if there is only some inlined forms
         """
+        # The schema only allows the anonymous user to modify his/her own
+        # EmailAddress if it is set, not to create one. Since the 'anon' CWUser
+        # entity is created without any associated EmailAddress entities, there
+        # are no attributes nor relations that can be edited: the "modify"
+        # action should not appear.
+        with self.new_access('anon').web_request() as req:
+            predicate = actions.has_editable_relation()
+            self.assertEqual(predicate(None, req, rset=req.user.as_rset()),
+                             0)
+        # being allowed to 'add' the relation is not enough
         use_email = self.schema['use_email'].rdefs['CWUser', 'EmailAddress']
         with self.temporary_permissions((use_email, {'add': ('guests',)})):
             with self.new_access('anon').web_request() as req:
                 predicate = actions.has_editable_relation()
                 self.assertEqual(predicate(None, req, rset=req.user.as_rset()),
+                                 0)
+        # if we also allow creating the target etype, then the "modify" action
+        # should appear
+        with self.temporary_permissions((use_email, {'add': ('guests',)}),
+                                        EmailAddress={'add': ('guests',)}):
+            with self.new_access('anon').web_request() as req:
+                predicate = actions.has_editable_relation()
+                self.assertEqual(predicate(None, req, rset=req.user.as_rset()),
                                  1)
+
 
 if __name__ == '__main__':
     unittest_main()

@@ -62,9 +62,6 @@ from cubicweb.server.utils import manager_userpasswd
 from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 
 
-def mock_object(**params):
-    return type('Mock', (), params)()
-
 class ClearGroupMap(hook.Hook):
     __regid__ = 'cw.migration.clear_group_mapping'
     __select__ = hook.Hook.__select__ & is_instance('CWGroup')
@@ -451,7 +448,8 @@ class ServerMigrationHelper(MigrationHelper):
         rtype = str(rtype)
         if rtype in self._synchronized:
             return
-        self._synchronized.add(rtype)
+        if syncrdefs and syncperms and syncprops:
+            self._synchronized.add(rtype)
         rschema = self.fs_schema.rschema(rtype)
         reporschema = self.repo.schema.rschema(rtype)
         if syncprops:
@@ -482,7 +480,8 @@ class ServerMigrationHelper(MigrationHelper):
         etype = str(etype)
         if etype in self._synchronized:
             return
-        self._synchronized.add(etype)
+        if syncrdefs and syncperms and syncprops:
+            self._synchronized.add(etype)
         repoeschema = self.repo.schema.eschema(etype)
         try:
             eschema = self.fs_schema.eschema(etype)
@@ -580,9 +579,10 @@ class ServerMigrationHelper(MigrationHelper):
         reporschema = self.repo.schema.rschema(rschema)
         if (subjtype, rschema, objtype) in self._synchronized:
             return
-        self._synchronized.add((subjtype, rschema, objtype))
-        if rschema.symmetric:
-            self._synchronized.add((objtype, rschema, subjtype))
+        if syncperms and syncprops:
+            self._synchronized.add((subjtype, rschema, objtype))
+            if rschema.symmetric:
+                self._synchronized.add((objtype, rschema, subjtype))
         rdef = rschema.rdef(subjtype, objtype)
         if rdef.infered:
             return # don't try to synchronize infered relation defs
@@ -1076,10 +1076,11 @@ class ServerMigrationHelper(MigrationHelper):
             if not self.confirm('Relation %s is still present in the filesystem schema,'
                                 ' do you really want to drop it?' % oldname,
                                 default='n'):
-                raise SystemExit(1)
+                return
         self.cmd_add_relation_type(newname, commit=True)
-        self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
-                     ask_confirm=self.verbosity>=2)
+        if not self.repo.schema[oldname].rule:
+            self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
+                         ask_confirm=self.verbosity>=2)
         self.cmd_drop_relation_type(oldname, commit=commit)
 
     def cmd_add_relation_definition(self, subjtype, rtype, objtype, commit=True):
@@ -1476,19 +1477,28 @@ class ServerMigrationHelper(MigrationHelper):
         * the actual schema won't be updated until next startup
         """
         rschema = self.repo.schema.rschema(attr)
-        oldtype = rschema.objects(etype)[0]
-        rdefeid = rschema.rdef(etype, oldtype).eid
-        allownull = rschema.rdef(etype, oldtype).cardinality[0] != '1'
+        oldschema = rschema.objects(etype)[0]
+        rdef = rschema.rdef(etype, oldschema)
         sql = ("UPDATE cw_CWAttribute "
                "SET cw_to_entity=(SELECT cw_eid FROM cw_CWEType WHERE cw_name='%s')"
-               "WHERE cw_eid=%s") % (newtype, rdefeid)
+               "WHERE cw_eid=%s") % (newtype, rdef.eid)
         self.sqlexec(sql, ask_confirm=False)
         dbhelper = self.repo.system_source.dbhelper
         sqltype = dbhelper.TYPE_MAPPING[newtype]
         cursor = self.cnx.cnxset.cu
-        dbhelper.change_col_type(cursor, 'cw_%s'  % etype, 'cw_%s' % attr, sqltype, allownull)
+        allownull = rdef.cardinality[0] != '1'
+        dbhelper.change_col_type(cursor, 'cw_%s' % etype, 'cw_%s' % attr, sqltype, allownull)
         if commit:
             self.commit()
+            # manually update live schema
+            eschema = self.repo.schema[etype]
+            rschema._subj_schemas[eschema].remove(oldschema)
+            rschema._obj_schemas[oldschema].remove(eschema)
+            newschema = self.repo.schema[newtype]
+            rschema._update(eschema, newschema)
+            rdef.object = newschema
+            del rschema.rdefs[(eschema, oldschema)]
+            rschema.rdefs[(eschema, newschema)] = rdef
 
     def cmd_add_entity_type_table(self, etype, commit=True):
         """low level method to create the sql table for an existing entity.

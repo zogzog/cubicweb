@@ -852,7 +852,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         raise UnknownEid(eid)
 
     def eid_type_source(self, cnx, eid): # pylint: disable=E0202
-        """return a tuple (type, source, extid) for the entity with id <eid>"""
+        """return a tuple (type, extid, source) for the entity with id <eid>"""
         sql = 'SELECT type, extid, asource FROM entities WHERE eid=%s' % eid
         res = self._eid_type_source(cnx, eid, sql)
         if not isinstance(res, list):
@@ -861,7 +861,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return res
 
     def eid_type_source_pre_131(self, cnx, eid):
-        """return a tuple (type, source, extid) for the entity with id <eid>"""
+        """return a tuple (type, extid, source) for the entity with id <eid>"""
         sql = 'SELECT type, extid FROM entities WHERE eid=%s' % eid
         res = self._eid_type_source(cnx, eid, sql)
         if not isinstance(res, list):
@@ -933,12 +933,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self._handle_is_relation_sql(cnx, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
                                          (entity.eid, source.eid))
         # now we can update the full text index
-        if self.do_fti and self.need_fti_indexation(entity.cw_etype):
+        if self.need_fti_indexation(entity.cw_etype):
             self.index_entity(cnx, entity=entity)
 
     def update_info(self, cnx, entity, need_fti_update):
         """mark entity as being modified, fulltext reindex if needed"""
-        if self.do_fti and need_fti_update:
+        if need_fti_update:
             # reindex the entity only if this query is updating at least
             # one indexable attribute
             self.index_entity(cnx, entity=entity)
@@ -1334,7 +1334,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """create an operation to [re]index textual content of the given entity
         on commit
         """
-        FTIndexEntityOp.get_instance(cnx).add_data(entity.eid)
+        if self.do_fti:
+            FTIndexEntityOp.get_instance(cnx).add_data(entity.eid)
 
     def fti_unindex_entities(self, cnx, entities):
         """remove text content for entities from the full text index
@@ -1401,12 +1402,12 @@ CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
   asource VARCHAR(128) NOT NULL,
-  extid VARCHAR(256) UNIQUE
+  extid VARCHAR(256)
 );;
 CREATE INDEX entities_type_idx ON entities(type);;
 CREATE TABLE moved_entities (
   eid INTEGER PRIMARY KEY NOT NULL,
-  extid VARCHAR(256) UNIQUE
+  extid VARCHAR(256) UNIQUE NOT NULL
 );;
 
 CREATE TABLE transactions (
@@ -1459,18 +1460,22 @@ FOR EACH ROW BEGIN
     DELETE FROM tx_relation_actions WHERE tx_uuid=OLD.tx_uuid;
 END;;
 '''
+    schema += ';;'.join(helper.sqls_create_multicol_unique_index('entities', ['extid']))
+    schema += ';;\n'
     return schema
 
 
 def sql_drop_schema(driver):
     helper = get_db_helper(driver)
     return """
+%s;
 %s
 DROP TABLE entities;
 DROP TABLE tx_entity_actions;
 DROP TABLE tx_relation_actions;
 DROP TABLE transactions;
-""" % helper.sql_drop_numrange('entities_id_seq')
+""" % (';'.join(helper.sqls_drop_multicol_unique_index('entities', ['extid'])),
+       helper.sql_drop_numrange('entities_id_seq'))
 
 
 def grant_schema(user, set_owner=True):
@@ -1720,7 +1725,7 @@ class DatabaseIndependentBackupRestore(object):
             self.logger.info('restoring sequence %s', seq)
             self.read_sequence(archive, seq)
         for numrange in numranges:
-            self.logger.info('restoring numrange %s', seq)
+            self.logger.info('restoring numrange %s', numrange)
             self.read_numrange(archive, numrange)
         for table in tables:
             self.logger.info('restoring table %s', table)
