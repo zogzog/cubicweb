@@ -66,7 +66,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from datetime import datetime, timedelta
 
-from six import text_type, string_types
+from six import PY2, text_type, string_types
 
 from logilab.mtconverter import xml_escape
 from logilab.common import nullobject
@@ -233,11 +233,14 @@ class Field(object):
     def __unicode__(self):
         return self.as_string(False)
 
-    def __str__(self):
-        return self.as_string(False).encode('UTF8')
+    if PY2:
+        def __str__(self):
+            return self.as_string(False).encode('UTF8')
+    else:
+        __str__ = __unicode__
 
     def __repr__(self):
-        return self.as_string(True).encode('UTF8')
+        return self.as_string(True)
 
     def init_widget(self, widget):
         if widget is not None:
