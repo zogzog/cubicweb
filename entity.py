@@ -147,6 +147,7 @@ def pruned_lt_info(eschema, lt_infos):
         pruned[(lt_rtype, lt_role)] = eids
     return pruned
 
+
 class Entity(AppObject):
     """an entity instance has e_schema automagically set on
     the class and instances has access to their issuing cursor.
@@ -533,6 +534,7 @@ class Entity(AppObject):
     def __init__(self, req, rset=None, row=None, col=0):
         AppObject.__init__(self, req, rset=rset, row=row, col=col)
         self._cw_related_cache = {}
+        self._cw_adapters_cache = {}
         if rset is not None:
             self.eid = rset[row][col]
         else:
@@ -570,10 +572,7 @@ class Entity(AppObject):
 
         return None if it can not be adapted.
         """
-        try:
-            cache = self._cw_adapters_cache
-        except AttributeError:
-            self._cw_adapters_cache = cache = {}
+        cache = self._cw_adapters_cache
         try:
             return cache[interface]
         except KeyError:
@@ -1239,8 +1238,8 @@ class Entity(AppObject):
         no relation is given
         """
         if rtype is None:
-            self._cw_related_cache = {}
-            self._cw_adapters_cache = {}
+            self._cw_related_cache.clear()
+            self._cw_adapters_cache.clear()
         else:
             assert role
             self._cw_related_cache.pop('%s_%s' % (rtype, role), None)
