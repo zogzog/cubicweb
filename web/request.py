@@ -28,7 +28,7 @@ from datetime import date, datetime
 from warnings import warn
 from io import BytesIO
 
-from six import PY2, text_type, string_types
+from six import PY2, binary_type, text_type, string_types
 from six.moves import http_client
 from six.moves.urllib.parse import urlsplit, quote as urlquote
 from six.moves.http_cookies import SimpleCookie
@@ -571,11 +571,11 @@ class _CubicWebRequestBase(RequestSessionBase):
             header = [disposition]
             unicode_filename = None
             try:
-                ascii_filename = filename.encode('ascii')
+                ascii_filename = filename.encode('ascii').decode('ascii')
             except UnicodeEncodeError:
                 # fallback filename for very old browser
                 unicode_filename = filename
-                ascii_filename = filename.encode('ascii', 'ignore')
+                ascii_filename = filename.encode('ascii', 'ignore').decode('ascii')
             # escape " and \
             # see http://greenbytes.de/tech/tc2231/#attwithfilenameandextparamescaped
             ascii_filename = ascii_filename.replace('\x5c', r'\\').replace('"', r'\"')
