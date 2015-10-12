@@ -50,6 +50,8 @@ from warnings import warn
 import time
 import inspect
 
+from six import text_type
+
 from logilab.common import dictattr, tempattr
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.textutils import splitstrip
@@ -287,7 +289,7 @@ class FieldsForm(form.Form):
                 except ProcessFormError as exc:
                     errors.append((field, exc))
             if errors:
-                errors = dict((f.role_name(), unicode(ex)) for f, ex in errors)
+                errors = dict((f.role_name(), text_type(ex)) for f, ex in errors)
                 raise ValidationError(None, errors)
             return processed
 
