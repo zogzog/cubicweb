@@ -28,7 +28,7 @@ import csv
 import re
 from io import StringIO
 
-from six import PY3, text_type, binary_type, string_types, integer_types
+from six import PY2, PY3, text_type, binary_type, string_types, integer_types
 
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
@@ -467,7 +467,10 @@ def rest_traceback(info, exception):
     for stackentry in traceback.extract_tb(info[2]):
         res.append(u'\tFile %s, line %s, function %s' % tuple(stackentry[:3]))
         if stackentry[3]:
-            res.append(u'\t  %s' % stackentry[3].decode('utf-8', 'replace'))
+            data = xml_escape(stackentry[3])
+            if PY2:
+                data = data.decode('utf-8', 'replace')
+            res.append(u'\t  %s' % data)
     res.append(u'\n')
     try:
         res.append(u'\t Error: %s\n' % exception)
@@ -501,7 +504,9 @@ def html_traceback(info, exception, title='',
                        u'<b class="function">%s</b>:<br/>'%(
             xml_escape(stackentry[0]), stackentry[1], xml_escape(stackentry[2])))
         if stackentry[3]:
-            string = xml_escape(stackentry[3]).decode('utf-8', 'replace')
+            string = xml_escape(stackentry[3])
+            if PY2:
+                string = string.decode('utf-8', 'replace')
             strings.append(u'&#160;&#160;%s<br/>\n' % (string))
         # add locals info for each entry
         try:
