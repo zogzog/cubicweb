@@ -418,7 +418,7 @@ class TextArea(FieldWidget):
         lines = value.splitlines()
         linecount = len(lines)
         for line in lines:
-            linecount += len(line) / self._columns
+            linecount += len(line) // self._columns
         attrs.setdefault('cols', self._columns)
         attrs.setdefault('rows', min(self._maxrows, linecount + self._minrows))
         return tags.textarea(value, name=field.input_name(form, self.suffix),
