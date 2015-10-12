@@ -217,7 +217,7 @@ class EntityFieldsFormTC(CubicWebTC):
                 eidparam=True, role='subject')
         with self.admin_access.web_request() as req:
             file = req.create_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
-                                     data=Binary('new widgets system'))
+                                     data=Binary(b'new widgets system'))
             form = FFForm(req, redirect_path='perdu.com', entity=file)
             self.assertMultiLineEqual(self._render_entity_field(req, 'data', form),
                               '''<input id="data-subject:%(eid)s" name="data-subject:%(eid)s" tabindex="1" type="file" value="" />
@@ -241,7 +241,7 @@ detach attached file''' % {'eid': file.eid})
                 eidparam=True, role='subject')
         with self.admin_access.web_request() as req:
             file = req.create_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
-                                     data=Binary('new widgets system'))
+                                     data=Binary(b'new widgets system'))
             form = EFFForm(req, redirect_path='perdu.com', entity=file)
             self.assertMultiLineEqual(self._render_entity_field(req, 'data', form),
                               '''<input id="data-subject:%(eid)s" name="data-subject:%(eid)s" tabindex="1" type="file" value="" />
