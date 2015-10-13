@@ -19,7 +19,7 @@ from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation, Int, String,  Boolean)
 from yams.constraints import SizeConstraint, UniqueConstraint
 
-from __init__ import RESTRICTED_RTYPE_PERMS
+from . import RESTRICTED_RTYPE_PERMS
 
 class State(EntityType):
     """used to associate simple states to an entity
