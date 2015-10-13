@@ -67,7 +67,7 @@ from warnings import warn
 from copy import copy
 from types import MethodType
 
-from six import string_types, add_metaclass
+from six import string_types, add_metaclass, create_bound_method
 from six.moves import range
 
 from logilab.mtconverter import xml_escape
@@ -726,7 +726,7 @@ class EntityTableColRenderer(AbstractColumnRenderer):
             for aname, member in[('renderfunc', renderfunc),
                                  ('sortfunc', sortfunc)]:
                 if isinstance(member, MethodType):
-                    member = MethodType(member.im_func, acopy, acopy.__class__)
+                    member = create_bound_method(member.__func__, acopy)
                 setattr(acopy, aname, member)
             return acopy
         finally:
