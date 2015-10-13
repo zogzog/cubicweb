@@ -769,8 +769,8 @@ class CWConstraintAddOp(CWConstraintDelOp):
             self.unique_changed = True
         if cstrtype in ('BoundaryConstraint', 'IntervalBoundConstraint', 'StaticVocabularyConstraint'):
             if oldcstr is not None:
-                oldcstrname = 'cstr' + md5(rdef.subject.type + rdef.rtype.type + cstrtype +
-                                           (self.oldcstr.serialize() or '')).hexdigest()
+                oldcstrname = 'cstr' + md5((rdef.subject.type + rdef.rtype.type + cstrtype +
+                                            (self.oldcstr.serialize() or '')).encode('ascii')).hexdigest()
                 cnx.system_sql('ALTER TABLE %s%s DROP CONSTRAINT %s' %
                                (SQL_PREFIX, rdef.subject.type, oldcstrname))
             cstrname, check = y2sql.check_constraint(rdef.subject, rdef.object, rdef.rtype.type,

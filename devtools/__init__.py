@@ -679,7 +679,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
 
     @property
     def _config_id(self):
-        return sha1(self.config.apphome).hexdigest()[:10]
+        return sha1(self.config.apphome.encode('utf-8')).hexdigest()[:10]
 
     def _backup_name(self, db_id): # merge me with parent
         backup_name = '_'.join(('cache', self._config_id, self.dbname, db_id))

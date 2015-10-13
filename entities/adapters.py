@@ -386,7 +386,7 @@ class IUserFriendlyCheckConstraint(IUserFriendlyError):
         for rschema, attrschema in eschema.attribute_definitions():
             rdef = rschema.rdef(eschema, attrschema)
             for constraint in rdef.constraints:
-                if cstrname == 'cstr' + md5(eschema.type + rschema.type + constraint.type() + (constraint.serialize() or '')).hexdigest():
+                if cstrname == 'cstr' + md5((eschema.type + rschema.type + constraint.type() + (constraint.serialize() or '')).encode('ascii')).hexdigest():
                     break
             else:
                 continue

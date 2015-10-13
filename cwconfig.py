@@ -1110,7 +1110,7 @@ the repository',
             version = self.cube_version(pkg)
             infos.append('%s-%s' % (pkg, version))
         infos.append('cubicweb-%s' % str(self.cubicweb_version()))
-        return md5(';'.join(infos)).hexdigest()
+        return md5((';'.join(infos)).encode('ascii')).hexdigest()
 
     def load_configuration(self, **kw):
         """load instance's configuration files"""

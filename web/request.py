@@ -52,7 +52,7 @@ from cubicweb.web.http_headers import Headers, Cookie, parseDateTime
 _MARKER = object()
 
 def build_cb_uid(seed):
-    sha = sha1('%s%s%s' % (time.time(), seed, random.random()))
+    sha = sha1(('%s%s%s' % (time.time(), seed, random.random())).encode('ascii'))
     return 'cb_%s' % (sha.hexdigest())
 
 

@@ -140,7 +140,7 @@ class ConcatFilesHandler(object):
         """return the filepath that will be used to cache concatenation of `paths`
         """
         _, ext = osp.splitext(paths[0])
-        fname = 'cache_concat_' + hashlib.md5(';'.join(paths)).hexdigest() + ext
+        fname = 'cache_concat_' + hashlib.md5((';'.join(paths)).encode('ascii')).hexdigest() + ext
         return osp.join(self.config.appdatahome, 'uicache', fname)
 
     def concat_cached_filepath(self, paths):

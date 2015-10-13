@@ -162,8 +162,8 @@ def as_sql(value, dbhelper, prefix):
 
 def check_constraint(eschema, aschema, attr, constraint, dbhelper, prefix=''):
     # XXX should find a better name
-    cstrname = 'cstr' + md5(eschema.type + attr + constraint.type() +
-                            (constraint.serialize() or '')).hexdigest()
+    cstrname = 'cstr' + md5((eschema.type + attr + constraint.type() +
+                             (constraint.serialize() or '')).encode('ascii')).hexdigest()
     if constraint.type() == 'BoundaryConstraint':
         value = as_sql(constraint.boundary, dbhelper, prefix)
         return cstrname, '%s%s %s %s' % (prefix, attr, constraint.operator, value)
