@@ -171,19 +171,21 @@ class IDownloadableAdapter(view.EntityAdapter):
     __abstract__ = True
 
     def download_url(self, **kwargs): # XXX not really part of this interface
-        """return a URL to download entity's content"""
+        """return a URL to download entity's content
+
+        It should be a unicode object containing url-encoded ASCII."""
         raise NotImplementedError
 
     def download_content_type(self):
-        """return MIME type of the downloadable content"""
+        """return MIME type (unicode) of the downloadable content"""
         raise NotImplementedError
 
     def download_encoding(self):
-        """return encoding of the downloadable content"""
+        """return encoding (unicode) of the downloadable content"""
         raise NotImplementedError
 
     def download_file_name(self):
-        """return file name of the downloadable content"""
+        """return file name (unicode) of the downloadable content"""
         raise NotImplementedError
 
     def download_data(self):
