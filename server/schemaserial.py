@@ -243,7 +243,7 @@ def deserialize_schema(schema, cnx):
              'order', 'description', 'indexed', 'fulltextindexed',
              'internationalizable', 'default', 'formula'), values))
         typeparams = extra_props.get(attrs['rdefeid'])
-        attrs.update(json.load(typeparams) if typeparams else {})
+        attrs.update(json.loads(typeparams.getvalue().decode('ascii')) if typeparams else {})
         default = attrs['default']
         if default is not None:
             if isinstance(default, Binary):
@@ -590,7 +590,7 @@ def _rdef_values(rdef):
             value = Binary.zpickle(value)
         values[amap.get(prop, prop)] = value
     if extra:
-        values['extra_props'] = Binary(json.dumps(extra))
+        values['extra_props'] = Binary(json.dumps(extra).encode('ascii'))
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 
