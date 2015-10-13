@@ -492,7 +492,7 @@ class CWRegistryStore(RegistryStore):
         """
         self.schema = schema
         for registry, regcontent in self.items():
-            for objects in regcontent.itervalues():
+            for objects in regcontent.values():
                 for obj in objects:
                     obj.schema = schema
 
@@ -543,7 +543,7 @@ class CWRegistryStore(RegistryStore):
                     self.unregister(obj)
         super(CWRegistryStore, self).initialization_completed()
         if 'uicfg' in self: # 'uicfg' is not loaded in a pure repository mode
-            for rtags in self['uicfg'].itervalues():
+            for rtags in self['uicfg'].values():
                 for rtag in rtags:
                     # don't check rtags if we don't want to cleanup_unused_appobjects
                     rtag.init(self.schema, check=self.config.cleanup_unused_appobjects)

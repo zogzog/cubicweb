@@ -284,7 +284,7 @@ def deserialize_schema(schema, cnx):
         else:
             rtype = str(rel)
         relations[1].append(rtype)
-    for eschema, unique_together in unique_togethers.itervalues():
+    for eschema, unique_together in unique_togethers.values():
         eschema._unique_together.append(tuple(sorted(unique_together)))
     schema.infer_specialization_rules()
     cnx.commit()
@@ -387,7 +387,7 @@ def serialize_schema(cnx, schema):
             rdefs = [rdef for k, rdef in rschema.rdefs.items()
                      if (rdef.subject, rdef.object) == k]
         else:
-            rdefs = rschema.rdefs.itervalues()
+            rdefs = rschema.rdefs.values()
         for rdef in rdefs:
             execschemarql(execute, rdef,
                           rdef2rql(rdef, cstrtypemap, groupmap))
@@ -512,7 +512,7 @@ def rschema2rql(rschema, cstrtypemap=None, addrdef=True, groupmap=None):
     if addrdef:
         assert cstrtypemap
         # sort for testing purpose
-        for rdef in sorted(rschema.rdefs.itervalues(),
+        for rdef in sorted(rschema.rdefs.values(),
                            key=lambda x: (x.subject, x.object)):
             for rql, values in rdef2rql(rdef, cstrtypemap, groupmap):
                 yield rql, values

@@ -558,7 +558,7 @@ class Connection(RequestSessionBase):
                 else:
                     relations_dict[rtype] = eids
             self.repo.glob_add_relations(self, relations_dict)
-            for edited in edited_entities.itervalues():
+            for edited in edited_entities.values():
                 self.repo.glob_update_entity(self, edited)
 
 

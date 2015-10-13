@@ -270,7 +270,7 @@ class ExecutionPlan(object):
         # which have a known eid
         varkwargs = {}
         if not cnx.transaction_data.get('security-rqlst-cache'):
-            for var in rqlst.defined_vars.itervalues():
+            for var in rqlst.defined_vars.values():
                 if var.stinfo['constnode'] is not None:
                     eid = var.stinfo['constnode'].eval(self.args)
                     varkwargs[var.name] = int(eid)
@@ -419,7 +419,7 @@ class InsertPlan(ExecutionPlan):
 
     def relation_defs(self):
         """return the list for relation definitions to insert"""
-        for rdefs in self._expanded_r_defs.itervalues():
+        for rdefs in self._expanded_r_defs.values():
             for rdef in rdefs:
                 yield rdef
         for rdef in self.r_defs:
@@ -473,7 +473,7 @@ class InsertPlan(ExecutionPlan):
                 else:
                     relations[rtype] = [(subj, obj)]
         repo.glob_add_relations(cnx, relations)
-        for edited in edited_entities.itervalues():
+        for edited in edited_entities.values():
             repo.glob_update_entity(cnx, edited)
 
 

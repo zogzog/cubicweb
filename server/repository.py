@@ -193,7 +193,7 @@ class Repository(object):
             # changed.  So any existing user object have a different class than
             # the new loaded one. We are hot fixing this.
             usercls = self.vreg['etypes'].etype_class('CWUser')
-            for session in self._sessions.itervalues():
+            for session in self._sessions.values():
                 if not isinstance(session.user, InternalManager):
                     session.user.__class__ = usercls
 
@@ -311,7 +311,7 @@ class Repository(object):
         else:
             self.vreg._set_schema(schema)
         self.querier.set_schema(schema)
-        for source in self.sources_by_uri.itervalues():
+        for source in self.sources_by_uri.values():
             source.set_schema(schema)
         self.schema = schema
 
@@ -437,7 +437,7 @@ class Repository(object):
         """
         # iter on sources_by_uri then check enabled source since sources doesn't
         # contain copy based sources
-        for source in self.sources_by_uri.itervalues():
+        for source in self.sources_by_uri.values():
             if self.config.source_enabled(source) and source.support_entity('CWUser'):
                 try:
                     return source.authenticate(cnx, login, **authinfo)

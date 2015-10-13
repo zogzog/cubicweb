@@ -299,7 +299,7 @@ elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
     with hooks_control(session, session.HOOKS_ALLOW_ALL, 'integrity'):
         for rschema in repo.schema.relations():
             rpermsdict = permsdict.get(rschema.eid, {})
-            for rdef in rschema.rdefs.itervalues():
+            for rdef in rschema.rdefs.values():
                 for action in rdef.ACTIONS:
                     actperms = []
                     for something in rpermsdict.get(action == 'update' and 'add' or action, ()):

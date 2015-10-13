@@ -26,7 +26,7 @@ from cubicweb.server import hook
 
 
 def get_user_sessions(repo, ueid):
-    for session in repo._sessions.itervalues():
+    for session in repo._sessions.values():
         if ueid == session.user.eid:
             yield session
 

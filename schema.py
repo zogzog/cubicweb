@@ -281,7 +281,7 @@ class RQLExpression(object):
     def transform_has_permission(self):
         found = None
         rqlst = self.rqlst
-        for var in rqlst.defined_vars.itervalues():
+        for var in rqlst.defined_vars.values():
             for varref in var.references():
                 rel = varref.relation()
                 if rel is None:
@@ -532,7 +532,7 @@ def order_eschemas(eschemas):
             if not deps:
                 eschemas.append(eschema)
                 del graph[eschema]
-                for deps in graph.itervalues():
+                for deps in graph.values():
                     try:
                         deps.remove(eschema)
                     except KeyError:
@@ -773,7 +773,7 @@ class CubicWebEntitySchema(EntitySchema):
 
     def check_permission_definitions(self):
         super(CubicWebEntitySchema, self).check_permission_definitions()
-        for groups in self.permissions.itervalues():
+        for groups in self.permissions.values():
             for group_or_rqlexpr in groups:
                 if isinstance(group_or_rqlexpr, RRQLExpression):
                     msg = "can't use RRQLExpression on %s, use an ERQLExpression"
@@ -916,7 +916,7 @@ class CubicWebRelationSchema(PermissionMixIn, RelationSchema):
                 if rdef.may_have_permission(action, req):
                     return True
         else:
-            for rdef in self.rdefs.itervalues():
+            for rdef in self.rdefs.values():
                 if rdef.may_have_permission(action, req):
                     return True
         return False
@@ -958,7 +958,7 @@ class CubicWebRelationSchema(PermissionMixIn, RelationSchema):
                 if not rdef.has_perm(_cw, action, **kwargs):
                     return False
         else:
-            for rdef in self.rdefs.itervalues():
+            for rdef in self.rdefs.values():
                 if not rdef.has_perm(_cw, action, **kwargs):
                     return False
         return True
@@ -1081,7 +1081,7 @@ class CubicWebSchema(Schema):
 
     def iter_computed_attributes(self):
         for relation in self.relations():
-            for rdef in relation.rdefs.itervalues():
+            for rdef in relation.rdefs.values():
                 if rdef.final and rdef.formula is not None:
                     yield rdef
 

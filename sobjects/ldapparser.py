@@ -87,10 +87,10 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     def process(self, url, raise_on_error=False):
         """IDataFeedParser main entry point"""
         self.debug('processing ldapfeed source %s %s', self.source, self.searchfilterstr)
-        for userdict in self.user_source_entities_by_extid.itervalues():
+        for userdict in self.user_source_entities_by_extid.values():
             self._process('CWUser', userdict)
         self.debug('processing ldapfeed source %s %s', self.source, self.searchgroupfilterstr)
-        for groupdict in self.group_source_entities_by_extid.itervalues():
+        for groupdict in self.group_source_entities_by_extid.values():
             self._process('CWGroup', groupdict, raise_on_error=raise_on_error)
 
     def handle_deletion(self, config, cnx, myuris):

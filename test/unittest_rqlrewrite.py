@@ -92,7 +92,7 @@ def test_vrefs(node):
             selects.append(stmt)
     assert node in selects, (node, selects)
     for stmt in selects:
-        for var in stmt.defined_vars.itervalues():
+        for var in stmt.defined_vars.values():
             assert var.stinfo['references']
             vrefmap = vrefmaps[stmt]
             assert not (var.stinfo['references'] ^ vrefmap[var.name]), (node.as_string(), var, var.stinfo['references'], vrefmap[var.name])

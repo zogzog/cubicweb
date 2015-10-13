@@ -142,4 +142,4 @@ class SparqlResultXmlView(AnyRsetView):
 
 def registration_callback(vreg):
     if Sparql2rqlTranslator is not None:
-        vreg.register_all(globals().itervalues(), __name__)
+        vreg.register_all(globals().values(), __name__)

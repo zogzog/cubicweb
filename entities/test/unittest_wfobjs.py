@@ -107,7 +107,7 @@ class WorkflowTC(CubicWebTC):
 
     def setup_database(self):
         rschema = self.schema['in_state']
-        for rdef in rschema.rdefs.itervalues():
+        for rdef in rschema.rdefs.values():
             self.assertEqual(rdef.cardinality, '1*')
         with self.admin_access.client_cnx() as cnx:
             self.member_eid = self.create_user(cnx, 'member').eid

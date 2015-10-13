@@ -158,7 +158,7 @@ def prepare_select(select, filtered_variable):
     for term in select.selection[:]:
         select.remove_selected(term)
     # remove unbound variables which only have some type restriction
-    for dvar in list(select.defined_vars.itervalues()):
+    for dvar in list(select.defined_vars.values()):
         if not (dvar is filtered_variable or dvar.stinfo['relations']):
             select.undefine_variable(dvar)
     # global tree config: DISTINCT, LIMIT, OFFSET
@@ -307,7 +307,7 @@ def _may_be_removed(rel, schema, variable):
         # optional relation
         return ovar
     if all(rdef.cardinality[cardidx] in '1+'
-           for rdef in rschema.rdefs.itervalues()):
+           for rdef in rschema.rdefs.values()):
         # mandatory relation without any restriction on the other variable
         for orel in ovar.stinfo['relations']:
             if rel is orel:
@@ -810,7 +810,7 @@ class RelationFacet(VocabularyFacet):
         rschema = self._cw.vreg.schema.rschema(self.rtype)
         # XXX when called via ajax, no rset to compute possible types
         possibletypes = self.cw_rset and self.cw_rset.column_types(0)
-        for rdef in rschema.rdefs.itervalues():
+        for rdef in rschema.rdefs.values():
             if possibletypes is not None:
                 if self.role == 'subject':
                     if rdef.subject not in possibletypes:

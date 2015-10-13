@@ -97,4 +97,4 @@ def entities_from_rdf(filename, etypes):
             entities[subj]['relations'].setdefault(MAPPING_RELS[rel], set())
             entities[subj]['relations'][MAPPING_RELS[rel]].add(unicode(obj))
     return ((ent.get('attributes'), ent.get('relations')) 
-            for ent in entities.itervalues())
+            for ent in entities.values())

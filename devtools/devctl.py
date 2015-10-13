@@ -251,7 +251,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
                 # bw compat, necessary until all translation of relation are
                 # done properly...
                 add_msg(w, '%s_object' % rtype)
-        for rdef in rschema.rdefs.itervalues():
+        for rdef in rschema.rdefs.values():
             if not rdef.description or rdef.description in done:
                 continue
             if (librschema is None or
@@ -268,7 +268,7 @@ def _iter_vreg_objids(vreg, done):
     for reg, objdict in vreg.items():
         if reg in ('boxes', 'contentnavigation'):
             continue
-        for objects in objdict.itervalues():
+        for objects in objdict.values():
             for obj in objects:
                 objid = '%s_%s' % (reg, obj.__regid__)
                 if objid in done:

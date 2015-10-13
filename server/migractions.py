@@ -420,7 +420,7 @@ class ServerMigrationHelper(MigrationHelper):
                                      {'x': expreid}, ask_confirm=False)
                 else:
                     newexprs.pop(expression)
-            for expression in newexprs.itervalues():
+            for expression in newexprs.values():
                 expr = expression.expression
                 if not confirm or self.confirm('Add %s expression for %s permission of %s?'
                                                % (expr, action, erschema)):

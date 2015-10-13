@@ -391,7 +391,7 @@ class HooksRegistry(CWRegistry):
 
 
     def filtered_possible_objects(self, pruned, *args, **kwargs):
-        for appobjects in self.itervalues():
+        for appobjects in self.values():
             if pruned:
                 filtered_objects = [obj for obj in appobjects if obj not in pruned]
                 if not filtered_objects:

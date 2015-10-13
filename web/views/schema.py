@@ -114,7 +114,7 @@ class SecurityViewMixIn(object):
     def grouped_permissions_table(self, rschema):
         # group relation definitions with identical permissions
         perms = {}
-        for rdef in rschema.rdefs.itervalues():
+        for rdef in rschema.rdefs.values():
             rdef_perms = []
             for action in rdef.ACTIONS:
                 groups = sorted(rdef.get_groups(action))

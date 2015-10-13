@@ -366,7 +366,7 @@ class StateInfo(object):
         self.done = set()
         self.tables = self.subtables.copy()
         self.actual_tables = [[]]
-        for _, tsql in self.tables.itervalues():
+        for _, tsql in self.tables.values():
             self.actual_tables[-1].append(tsql)
         self.outer_chains = []
         self.outer_tables = {}
@@ -400,7 +400,7 @@ class StateInfo(object):
         notdone_outside_vars = set()
         # when iterating other solutions inner to an EXISTS subquery, we should
         # reset variables which have this exists node as scope at each iteration
-        for var in exists.stmt.defined_vars.itervalues():
+        for var in exists.stmt.defined_vars.values():
             if var.scope is exists:
                 thisexistsvars.add(var.name)
             elif var.name not in self.done:

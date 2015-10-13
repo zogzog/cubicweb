@@ -689,5 +689,5 @@ actionbox_appearsin_addmenu = ActionBoxUicfg()
 
 
 def registration_callback(vreg):
-    vreg.register_all(globals().itervalues(), __name__)
+    vreg.register_all(globals().values(), __name__)
     indexview_etype_section.init(vreg.schema)

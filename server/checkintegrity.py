@@ -319,7 +319,7 @@ def check_mandatory_relations(schema, cnx, eids, fix=1):
             continue
         smandatory = set()
         omandatory = set()
-        for rdef in rschema.rdefs.itervalues():
+        for rdef in rschema.rdefs.values():
             if rdef.cardinality[0] in '1+':
                 smandatory.add(rdef.subject)
             if rdef.cardinality[1] in '1+':
@@ -347,7 +347,7 @@ def check_mandatory_attributes(schema, cnx, eids, fix=1):
     for rschema in schema.relations():
         if not rschema.final or rschema in VIRTUAL_RTYPES:
             continue
-        for rdef in rschema.rdefs.itervalues():
+        for rdef in rschema.rdefs.values():
             if rdef.cardinality[0] in '1+':
                 rql = 'Any X WHERE X %s NULL, X is %s, X cw_source S, S name "system"' % (
                     rschema, rdef.subject)

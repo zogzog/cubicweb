@@ -116,7 +116,7 @@ def schema_eids_idx(schema):
         schema_eids[x] = x.eid
     for x in schema.relations():
         schema_eids[x] = x.eid
-        for rdef in x.rdefs.itervalues():
+        for rdef in x.rdefs.values():
             schema_eids[(rdef.subject, rdef.rtype, rdef.object)] = rdef.eid
     return schema_eids
 
@@ -128,7 +128,7 @@ def restore_schema_eids_idx(schema, schema_eids):
     for x in schema.relations():
         x.eid = schema_eids[x]
         schema._eid_index[x.eid] = x
-        for rdef in x.rdefs.itervalues():
+        for rdef in x.rdefs.values():
             rdef.eid = schema_eids[(rdef.subject, rdef.rtype, rdef.object)]
             schema._eid_index[rdef.eid] = rdef
 

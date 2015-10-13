@@ -100,7 +100,7 @@ class CSVEntityView(CSVMixIn, EntityView):
             rows = rows_by_type[entity.e_schema]
             rows.append([entity.printable_value(rs.type, format='text/plain')
                          for rs in rowdef_by_type[entity.e_schema]])
-        for rows in rows_by_type.itervalues():
+        for rows in rows_by_type.values():
             writer.writerows(rows)
             # use two empty lines as separator
             writer.writerows([[], []])

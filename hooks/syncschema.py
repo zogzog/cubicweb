@@ -208,7 +208,7 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
             repo.set_schema(repo.schema)
             # CWUser class might have changed, update current session users
             cwuser_cls = self.cnx.vreg['etypes'].etype_class('CWUser')
-            for session in repo._sessions.itervalues():
+            for session in repo._sessions.values():
                 session.user.__class__ = cwuser_cls
         except Exception:
             self.critical('error while setting schema', exc_info=True)

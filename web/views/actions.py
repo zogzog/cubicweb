@@ -76,7 +76,7 @@ def addable_etype_empty_rset(cls, req, rset=None, **kwargs):
             return 0
         select = rqlst.children[0]
         if len(select.defined_vars) == 1 and len(select.solutions) == 1:
-            rset._searched_etype = select.solutions[0].itervalues().next()
+            rset._searched_etype = next(iter(select.solutions[0].values()))
             eschema = req.vreg.schema.eschema(rset._searched_etype)
             if not (eschema.final or eschema.is_subobject(strict=True)) \
                    and eschema.has_perm(req, 'add'):
