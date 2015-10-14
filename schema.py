@@ -25,7 +25,7 @@ from os.path import join, basename
 from logging import getLogger
 from warnings import warn
 
-from six import text_type, string_types, add_metaclass
+from six import PY2, text_type, string_types, add_metaclass
 from six.moves import range
 
 from logilab.common import tempattr
@@ -146,7 +146,7 @@ def normalize_expression(rqlstring):
     added/removed for instance)
     """
     union = parse(u'Any 1 WHERE %s' % rqlstring).as_string()
-    if isinstance(union, str):
+    if PY2 and isinstance(union, str):
         union = union.decode('utf-8')
     return union.split(' WHERE ', 1)[1]
 
