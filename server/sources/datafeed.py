@@ -558,9 +558,6 @@ class URLLibResponseAdapter(object):
     def getcode(self):
         return self.code
 
-    def info(self):
-        from mimetools import Message
-        return Message(BytesIO())
 
 # use a cookie enabled opener to use session cookie if any
 _OPENER = build_opener()

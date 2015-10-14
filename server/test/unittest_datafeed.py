@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-import mimetools
 from datetime import timedelta
 from contextlib import contextmanager
 
@@ -140,7 +139,6 @@ class DataFeedTC(CubicWebTC):
                 value = parser.retrieve_url('a string')
                 self.assertEqual(200, value.getcode())
                 self.assertEqual('a string', value.geturl())
-                self.assertIsInstance(value.info(), mimetools.Message)
 
 
 class DataFeedConfigTC(CubicWebTC):
