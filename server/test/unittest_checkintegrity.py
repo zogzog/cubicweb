@@ -17,7 +17,13 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from StringIO import StringIO
+
+from six import PY2
+if PY2:
+    from StringIO import StringIO
+else:
+    from io import StringIO
+
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
 
