@@ -564,6 +564,10 @@ def startpgcluster(pyfile):
                                '-o', options],
                               env=env)
     except OSError as err:
+        try:
+            os.rmdir(sockdir)
+        except OSError:
+            pass
         if err.errno == errno.ENOENT:
             raise OSError('"pg_ctl" could not be found. '
                           'You should add the postgresql bin folder to your PATH '
@@ -576,6 +580,10 @@ def stoppgcluster(pyfile):
     datadir = join(os.path.dirname(pyfile), 'data',
                    'pgdb-%s' % os.path.splitext(os.path.basename(pyfile))[0])
     subprocess.call(['pg_ctl', 'stop', '-D', datadir, '-m', 'fast'])
+    try:
+        os.rmdir(DEFAULT_PSQL_SOURCES['system']['db-host'])
+    except OSError:
+        pass
 
 
 class PostgresTestDataBaseHandler(TestDataBaseHandler):
