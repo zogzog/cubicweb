@@ -167,7 +167,7 @@ class UseExtidAsCwuriTC(TestCase):
 
 def extentities_from_csv(fpath):
     """Yield ExtEntity read from `fpath` CSV file."""
-    with open(fpath) as f:
+    with open(fpath, 'rb') as f:
         for uri, name, knows in ucsvreader(f, skipfirst=True, skip_empty=False):
             yield ExtEntity('Personne', uri,
                             {'nom': set([name]), 'connait': set([knows])})

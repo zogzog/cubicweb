@@ -18,11 +18,12 @@
 """Functions to help importing CSV data"""
 from __future__ import absolute_import, print_function
 
+import codecs
 import csv as csvmod
 import warnings
 import os.path as osp
 
-from six import string_types
+from six import PY2, PY3, string_types
 
 from logilab.common import shellutils
 
@@ -50,9 +51,7 @@ def ucsvreader_pb(stream_or_path, encoding='utf-8', delimiter=',', quotechar='"'
         quotechar = quote
         warnings.warn("[3.20] 'quote' kwarg is deprecated, use 'quotechar' instead")
     if isinstance(stream_or_path, string_types):
-        if not osp.exists(stream_or_path):
-            raise Exception("file doesn't exists: %s" % stream_or_path)
-        stream = open(stream_or_path)
+        stream = open(stream_or_path, 'rb')
     else:
         stream = stream_or_path
     rowcount = count_lines(stream)
@@ -78,6 +77,8 @@ def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
     separators) will be skipped. This is useful for Excel exports which may be
     full of such lines.
     """
+    if PY3:
+        stream = codecs.getreader(encoding)(stream)
     if separator is not None:
         delimiter = separator
         warnings.warn("[3.20] 'separator' kwarg is deprecated, use 'delimiter' instead")
@@ -89,7 +90,10 @@ def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
         if skipfirst:
             next(it)
         for row in it:
-            decoded = [item.decode(encoding) for item in row]
+            if PY2:
+                decoded = [item.decode(encoding) for item in row]
+            else:
+                decoded = row
             if not skip_empty or any(decoded):
                 yield decoded
     else:
@@ -108,7 +112,10 @@ def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
             # Error in CSV, ignore line and continue
             except csvmod.Error:
                 continue
-            decoded = [item.decode(encoding) for item in row]
+            if PY2:
+                decoded = [item.decode(encoding) for item in row]
+            else:
+                decoded = row
             if not skip_empty or any(decoded):
                 yield decoded
 
