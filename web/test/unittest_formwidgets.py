@@ -62,9 +62,9 @@ class WidgetsTC(CubicWebTC):
             field = form.field_by_name('bool')
             widget = field.widget
             self.assertMultiLineEqual(widget._render(form, field, None),
-                '<input id="bool" name="bool" tabindex="1" '
+                '<label><input id="bool" name="bool" tabindex="1" '
                 'type="checkbox" value="1" />&#160;'
-                'python &gt;&gt; others')
+                'python &gt;&gt; others</label>')
 
 
 if __name__ == '__main__':
