@@ -17,27 +17,15 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unittests for cw.web.formwidgets"""
 
-from logilab.common.testlib import TestCase, unittest_main, mock_object as mock
+from logilab.common.testlib import unittest_main, mock_object as mock
 
-from cubicweb.devtools import TestServerConfiguration, fake
+from cubicweb.devtools import fake
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web import formwidgets, formfields
+from cubicweb.web.views.forms import FieldsForm
 
-from cubes.file.entities import File
 
-
-class WidgetsTC(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(WidgetsTC, cls).setUpClass()
-        config = TestServerConfiguration('data', apphome=cls.datadir)
-        config.bootstrap_cubes()
-        cls.schema = config.load_schema()
-
-    @classmethod
-    def tearDownClass(cls):
-        del cls.schema
-        super(WidgetsTC, cls).tearDownClass()
+class WidgetsTC(CubicWebTC):
 
     def test_editableurl_widget(self):
         field = formfields.guess_field(self.schema['Bookmark'], self.schema['path'])
@@ -62,6 +50,22 @@ class WidgetsTC(TestCase):
 </select>''')
         self.assertEqual(widget.process_field_data(form, field),
                          3)
+
+    def test_xml_escape_checkbox(self):
+        class TestForm(FieldsForm):
+            bool = formfields.BooleanField(ignore_req_params=True,
+                choices=[('python >> others', '1')],
+                widget=formwidgets.CheckBox())
+        with self.admin_access.web_request() as req:
+            form = TestForm(req, None)
+            form.build_context()
+            field = form.field_by_name('bool')
+            widget = field.widget
+            self.assertMultiLineEqual(widget._render(form, field, None),
+                '<input id="bool" name="bool" tabindex="1" '
+                'type="checkbox" value="1" />&#160;'
+                'python &gt;&gt; others')
+
 
 if __name__ == '__main__':
     unittest_main()
