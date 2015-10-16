@@ -62,7 +62,7 @@ from __future__ import print_function
 
 import sys
 import traceback
-from StringIO import StringIO
+from io import StringIO
 
 from six import add_metaclass
 
