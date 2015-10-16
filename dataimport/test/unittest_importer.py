@@ -152,14 +152,14 @@ class ExtEntitiesImporterTC(CubicWebTC):
 class UseExtidAsCwuriTC(TestCase):
 
     def test(self):
-        personne = ExtEntity('Personne', 1, {'nom': set([u'de la lune']),
-                                             'prenom': set([u'Jean'])})
+        personne = ExtEntity('Personne', b'1', {'nom': set([u'de la lune']),
+                                                'prenom': set([u'Jean'])})
         mapping = {}
         set_cwuri = use_extid_as_cwuri(mapping)
         list(set_cwuri((personne,)))
         self.assertIn('cwuri', personne.values)
-        self.assertEqual(personne.values['cwuri'], set(['1']))
-        mapping[1] = 'whatever'
+        self.assertEqual(personne.values['cwuri'], set([u'1']))
+        mapping[b'1'] = 'whatever'
         personne.values.pop('cwuri')
         list(set_cwuri((personne,)))
         self.assertNotIn('cwuri', personne.values)

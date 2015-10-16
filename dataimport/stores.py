@@ -61,6 +61,8 @@ import warnings
 from datetime import datetime
 from copy import copy
 
+from six import text_type
+
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached
 
@@ -298,7 +300,7 @@ class MetaGenerator(object):
             genfunc = self.generate(attr)
             if genfunc:
                 entity.cw_edited.edited_attribute(attr, genfunc(entity))
-        if isinstance(extid, unicode):
+        if isinstance(extid, text_type):
             extid = extid.encode('utf-8')
         return self.source, extid
 
