@@ -292,7 +292,7 @@ class Schema2RQLTC(TestCase):
                       {'cardinality': u'?1',
                        'defaultval': None,
                        'description': u'',
-                       'extra_props': '{"jungle_speed": 42}',
+                       'extra_props': b'{"jungle_speed": 42}',
                        'formula': None,
                        'indexed': False,
                        'oe': None,
