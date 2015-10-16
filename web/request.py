@@ -243,7 +243,7 @@ class _CubicWebRequestBase(RequestSessionBase):
                                  '__redirectvid', '__redirectrql'))
 
     def setup_params(self, params):
-        """WARNING: we're intentionaly leaving INTERNAL_FIELD_VALUE here
+        """WARNING: we're intentionally leaving INTERNAL_FIELD_VALUE here
 
         subclasses should overrides to
         """

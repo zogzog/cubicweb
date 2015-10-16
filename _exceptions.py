@@ -188,7 +188,7 @@ class UndoTransactionException(QueryError):
          commit time.
 
     :type txuuix: int
-    :param txuuid: Unique identifier of the partialy undone transaction
+    :param txuuid: Unique identifier of the partially undone transaction
 
     :type errors: list
     :param errors: List of errors occurred during undoing

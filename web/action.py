@@ -91,7 +91,7 @@ class LinkToEntityAction(Action):
     """base class for actions consisting to create a new object with an initial
     relation set to an entity.
 
-    Additionaly to EntityAction behaviour, this class is parametrized using
+    Additionally to EntityAction behaviour, this class is parametrized using
     .rtype, .role and .target_etype attributes to check if the action apply and
     if the logged user has access to it (see
     :class:`~cubicweb.selectors.partial_relation_possible` selector

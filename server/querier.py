@@ -339,7 +339,7 @@ class InsertPlan(ExecutionPlan):
 
     def __init__(self, querier, rqlst, args, cnx):
         ExecutionPlan.__init__(self, querier, rqlst, args, cnx)
-        # save originaly selected variable, we may modify this
+        # save originally selected variable, we may modify this
         # dictionary for substitution (query parameters)
         self.selected = rqlst.selection
         # list of rows of entities definition (ssplanner.EditedEntity)

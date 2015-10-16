@@ -576,7 +576,7 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
 
     # to be defined in concrete classes
     rtype = role = target_etype = None
-    # class attributes below *must* be set in concrete classes (additionaly to
+    # class attributes below *must* be set in concrete classes (additionally to
     # rtype / role [/ target_etype]. They should correspond to js_* methods on
     # the json controller
 

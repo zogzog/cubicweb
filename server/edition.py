@@ -61,7 +61,7 @@ class EditedEntity(dict):
     def __setitem__(self, attr, value):
         assert attr != 'eid'
         # don't add attribute into skip_security if already in edited
-        # attributes, else we may accidentaly skip a desired security check
+        # attributes, else we may accidentally skip a desired security check
         if attr not in self:
             self.skip_security.add(attr)
         self.edited_attribute(attr, value)
@@ -86,7 +86,7 @@ class EditedEntity(dict):
     def setdefault(self, attr, default):
         assert attr != 'eid'
         # don't add attribute into skip_security if already in edited
-        # attributes, else we may accidentaly skip a desired security check
+        # attributes, else we may accidentally skip a desired security check
         if attr not in self:
             self[attr] = default
         return self[attr]

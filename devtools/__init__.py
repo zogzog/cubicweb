@@ -892,7 +892,7 @@ class HCache(object):
     We only keep one repo in cache to prevent too much objects to stay alive
     (database handler holds a reference to a repository). As at the moment a new
     handler is created for each TestCase class and all test methods are executed
-    sequentialy whithin this class, there should not have more cache miss that
+    sequentially whithin this class, there should not have more cache miss that
     if we had a wider cache as once a Handler stop being used it won't be used
     again.
     """

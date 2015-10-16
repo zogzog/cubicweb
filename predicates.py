@@ -834,7 +834,7 @@ class partial_relation_possible(PartialPredicateMixIn, relation_possible):
 
 class has_related_entities(EntityPredicate):
     """Return 1 if entity support the specified relation and has some linked
-    entities by this relation , optionaly filtered according to the specified
+    entities by this relation , optionally filtered according to the specified
     target type.
 
     The relation is specified by the following initializer arguments:

@@ -322,7 +322,7 @@ class ResultSet(object):
         return rql
 
     def limit(self, limit, offset=0, inplace=False):
-        """limit the result set to the given number of rows optionaly starting
+        """limit the result set to the given number of rows optionally starting
         from an index different than 0
 
         :type limit: int

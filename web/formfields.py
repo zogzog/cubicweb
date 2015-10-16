@@ -161,7 +161,7 @@ class Field(object):
     :attr:`order`
        key used by automatic forms to sort fields
     :attr:`ignore_req_params`
-       when true, this field won't consider value potentialy specified using
+       when true, this field won't consider value potentially specified using
        request's form parameters (eg you won't be able to specify a value using for
        instance url like http://mywebsite.com/form?field=value)
 
@@ -513,7 +513,7 @@ class Field(object):
 
 class StringField(Field):
     """Use this field to edit unicode string (`String` yams type). This field
-    additionaly support a `max_length` attribute that specify a maximum size for
+    additionally support a `max_length` attribute that specify a maximum size for
     the string (`None` meaning no limit).
 
     Unless explicitly specified, the widget for this field will be:
@@ -785,7 +785,7 @@ class EditableFileField(FileField):
 
     If the stream format is one of text/plain, text/html, text/rest,
     text/markdown
-    then a :class:`~cubicweb.web.formwidgets.TextArea` will be additionaly
+    then a :class:`~cubicweb.web.formwidgets.TextArea` will be additionally
     displayed, allowing to directly the file's content when desired, instead
     of choosing a file from user's file system.
     """
@@ -828,7 +828,7 @@ class EditableFileField(FileField):
 
 class BigIntField(Field):
     """Use this field to edit big integers (`BigInt` yams type). This field
-    additionaly support `min` and `max` attributes that specify a minimum and/or
+    additionally support `min` and `max` attributes that specify a minimum and/or
     maximum value for the integer (`None` meaning no boundary).
 
     Unless explicitly specified, the widget for this field will be a
@@ -912,7 +912,7 @@ class BooleanField(Field):
 
 
 class FloatField(IntField):
-    """Use this field to edit floats (`Float` yams type). This field additionaly
+    """Use this field to edit floats (`Float` yams type). This field additionally
     support `min` and `max` attributes as the
     :class:`~cubicweb.web.formfields.IntField`.
 

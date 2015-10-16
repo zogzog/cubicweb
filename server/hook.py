@@ -638,7 +638,7 @@ class PropagateRelationAddHook(Hook):
     # to set in concrete class (mandatory)
     subject_relations = None
     object_relations = None
-    # to set in concrete class (optionaly)
+    # to set in concrete class (optionally)
     skip_subject_relations = ()
     skip_object_relations = ()
 
@@ -715,7 +715,7 @@ class Operation(object):
 
       the transaction has been either rolled back either:
 
-       * intentionaly
+       * intentionally
        * a 'precommit' event failed, in which case all operations are rolled back
          once 'revertprecommit'' has been called
 
