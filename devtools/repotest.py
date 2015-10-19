@@ -57,7 +57,7 @@ def compare_steps(self, step, expected):
                               'expected %s queries, got %s' % (len(equeries), len(queries)))
             for i, (rql, sol) in enumerate(queries):
                 self.assertEqual(rql, equeries[i][0])
-                self.assertEqual(sorted(sol), sorted(equeries[i][1]))
+                self.assertEqual(sorted(sorted(x.items()) for x in sol), sorted(sorted(x.items()) for x in equeries[i][1]))
             idx = 2
         else:
             idx = 1
@@ -317,7 +317,7 @@ _orig_check_permissions = ExecutionPlan._check_permissions
 
 def _check_permissions(*args, **kwargs):
     res, restricted = _orig_check_permissions(*args, **kwargs)
-    res = DumbOrderedDict(sorted(res.items(), key=lambda x: x[1]))
+    res = DumbOrderedDict(sorted(res.items(), key=lambda x: [y.items() for y in x[1]]))
     return res, restricted
 
 def _dummy_check_permissions(self, rqlst):
