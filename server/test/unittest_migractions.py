@@ -580,7 +580,7 @@ class MigrationCommandsTC(MigrationTC):
     def test_add_drop_cube_and_deps(self):
         with self.mh() as (cnx, mh):
             schema = self.repo.schema
-            self.assertEqual(sorted((str(s), str(o)) for s, o in schema['see_also'].rdefs.iterkeys()),
+            self.assertEqual(sorted((str(s), str(o)) for s, o in schema['see_also'].rdefs),
                              sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                      ('Bookmark', 'Bookmark'), ('Bookmark', 'Note'),
                                      ('Note', 'Note'), ('Note', 'Bookmark')]))
@@ -594,7 +594,7 @@ class MigrationCommandsTC(MigrationTC):
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
                     self.assertNotIn(ertype, schema)
-                self.assertEqual(sorted(schema['see_also'].rdefs.iterkeys()),
+                self.assertEqual(sorted(schema['see_also'].rdefs),
                                   sorted([('Folder', 'Folder'),
                                           ('Bookmark', 'Bookmark'),
                                           ('Bookmark', 'Note'),
@@ -613,12 +613,12 @@ class MigrationCommandsTC(MigrationTC):
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
                     self.assertIn(ertype, schema)
-                self.assertEqual(sorted(schema['see_also'].rdefs.iterkeys()),
-                                  sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
-                                          ('Bookmark', 'Bookmark'),
-                                          ('Bookmark', 'Note'),
-                                          ('Note', 'Note'),
-                                          ('Note', 'Bookmark')]))
+                self.assertEqual(sorted(schema['see_also'].rdefs),
+                                 sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
+                                         ('Bookmark', 'Bookmark'),
+                                         ('Bookmark', 'Note'),
+                                         ('Note', 'Note'),
+                                         ('Note', 'Bookmark')]))
                 self.assertEqual(sorted(schema['see_also'].subjects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
                 self.assertEqual(sorted(schema['see_also'].objects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
                 from cubes.fakeemail.__pkginfo__ import version as email_version
