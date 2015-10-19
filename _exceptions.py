@@ -46,10 +46,10 @@ class ConfigurationError(CubicWebException):
     """a misconfiguration error"""
 
 class InternalError(CubicWebException):
-    """base class for exceptions which should not occurs"""
+    """base class for exceptions which should not occur"""
 
 class SecurityError(CubicWebException):
-    """base class for cubicweb server security exception"""
+    """base class for cubicweb server security exceptions"""
 
 class RepositoryError(CubicWebException):
     """base class for repository exceptions"""

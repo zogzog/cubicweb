@@ -324,9 +324,9 @@ the `_config` class attribute on the class as in:
 
         def test_blog_rss(self):
             with self.admin_access.web_request() as req:
-            rset = req.execute('Any B ORDERBY D DESC WHERE B is BlogEntry, '
-                               'B created_by U, U login "logilab", B creation_date D')
-            self.view('rss', rset, req=req)
+                rset = req.execute('Any B ORDERBY D DESC WHERE B is BlogEntry, '
+                                   'B created_by U, U login "logilab", B creation_date D')
+                self.view('rss', rset, req=req)
 
 
 Testing with other cubes

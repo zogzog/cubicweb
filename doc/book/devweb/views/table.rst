@@ -96,8 +96,8 @@ So another option would be to write this view using
             'resource': MainEntityColRenderer(),
             'workpackage': EntityTableColRenderer(
                header='Workpackage',
-               renderfunc=worpackage_cell,
-               sortfunc=worpackage_sortvalue,),
+               renderfunc=workpackage_cell,
+               sortfunc=workpackage_sortvalue,),
             'in_state': EntityTableColRenderer(
                renderfunc=lambda w,x: w(x.cw_adapt_to('IWorkflowable').printable_state),
                sortfunc=lambda x: x.cw_adapt_to('IWorkflowable').printable_state),

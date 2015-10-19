@@ -42,7 +42,7 @@ All those classes are rendered using a *layout*:
 .. autoclass:: cubicweb.web.views.tableview.TableLayout
    :members:
 
-There is by default only on table layout, using the 'table_layout' identifier,
+There is by default only one table layout, using the 'table_layout' identifier,
 that is referenced by table views
 :attr:`cubicweb.web.views.tableview.TableMixIn.layout_id`.  If you want to
 customize the look and feel of your table, you can either replace the default
@@ -52,9 +52,9 @@ one by yours, having multiple variants with proper selectors, or change the
 Notice you can gives options to the layout using a `layout_args` dictionary on
 your class.
 
-If you can still find a view that suit your needs, you should take a look at the
+If you still can't find a view that suit your needs, you should take a look at the
 class below that is the common abstract base class for the three views defined
-above and implements you own class.
+above and implement your own class.
 
 .. autoclass:: cubicweb.web.views.tableview.TableMixIn
    :members:
