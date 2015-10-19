@@ -236,15 +236,16 @@ notified of every changes.',
 
     def bootstrap_cubes(self):
         from logilab.common.textutils import splitstrip
-        for line in open(join(self.apphome, 'bootstrap_cubes')):
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            self.init_cubes(self.expand_cubes(splitstrip(line)))
-            break
-        else:
-            # no cubes
-            self.init_cubes(())
+        with open(join(self.apphome, 'bootstrap_cubes')) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                self.init_cubes(self.expand_cubes(splitstrip(line)))
+                break
+            else:
+                # no cubes
+                self.init_cubes(())
 
     def write_bootstrap_cubes_file(self, cubes):
         stream = open(join(self.apphome, 'bootstrap_cubes'), 'w')
