@@ -370,7 +370,8 @@ class TestDataBaseHandler(object):
         # XXX set a clearer error message ???
         backup_coordinates, config_path = self.db_cache[self.db_cache_key(db_id)]
         # reload the config used to create the database.
-        config = pickle.loads(open(config_path, 'rb').read())
+        with open(config_path, 'rb') as f:
+            config = pickle.load(f)
         # shutdown repo before changing database content
         if self._repo is not None:
             self._repo.turn_repo_off()
