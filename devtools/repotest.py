@@ -187,7 +187,7 @@ class RQLGeneratorTC(TestCase):
         plan = self.qhelper.plan_factory(union, {}, FakeSession(self.repo))
         plan.preprocess(union)
         for select in union.children:
-            select.solutions.sort()
+            select.solutions.sort(key=lambda x: list(x.items()))
         #print '********* ppsolutions', solutions
         return union
 
@@ -238,7 +238,7 @@ class BaseQuerierTC(TestCase):
         if simplify:
             rqlhelper.simplify(rqlst)
         for select in rqlst.children:
-            select.solutions.sort()
+            select.solutions.sort(key=lambda x: list(x.items()))
         return self.o.plan_factory(rqlst, kwargs, cnx)
 
     def _prepare(self, cnx, rql, kwargs=None):
@@ -286,9 +286,9 @@ class BasePlannerTC(BaseQuerierTC):
         if rqlst.TYPE == 'select':
             self.repo.vreg.rqlhelper.annotate(rqlst)
             for select in rqlst.children:
-                select.solutions.sort()
+                select.solutions.sort(key=lambda x: list(x.items()))
         else:
-            rqlst.solutions.sort()
+            rqlst.solutions.sort(key=lambda x: list(x.items()))
         return self.o.plan_factory(rqlst, kwargs, cnx)
 
 
