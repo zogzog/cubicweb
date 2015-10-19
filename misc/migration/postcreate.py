@@ -20,6 +20,9 @@ from __future__ import print_function
 
 from six import text_type
 
+from cubicweb import _
+
+
 # insert versions
 create_entity('CWProperty', pkey=u'system.version.cubicweb',
               value=text_type(config.cubicweb_version()))

@@ -34,6 +34,7 @@ from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
 from logilab.common.deprecation import deprecated
 
+from cubicweb import _
 from cubicweb.utils import js_dumps
 
 

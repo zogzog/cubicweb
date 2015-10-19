@@ -24,6 +24,7 @@ from cubicweb.schema import (WorkflowableEntityType,
                              RQLConstraint, RQLUniqueConstraint,
                              RQLVocabularyConstraint,
                              ERQLExpression, RRQLExpression)
+from cubicweb import _
 
 class Affaire(WorkflowableEntityType):
     __permissions__ = {
