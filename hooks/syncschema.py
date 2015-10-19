@@ -718,8 +718,8 @@ class CWConstraintDelOp(MemSchemaOperation):
             syssource.update_rdef_unique(cnx, rdef)
             self.unique_changed = True
         if cstrtype in ('BoundaryConstraint', 'IntervalBoundConstraint', 'StaticVocabularyConstraint'):
-            cstrname = 'cstr' + md5(rdef.subject.type + rdef.rtype.type + cstrtype +
-                                    (self.oldcstr.serialize() or '')).hexdigest()
+            cstrname = 'cstr' + md5((rdef.subject.type + rdef.rtype.type + cstrtype +
+                                     (self.oldcstr.serialize() or '')).encode('utf-8')).hexdigest()
             cnx.system_sql('ALTER TABLE %s%s DROP CONSTRAINT %s' % (SQL_PREFIX, rdef.subject.type, cstrname))
 
     def revertprecommit_event(self):
