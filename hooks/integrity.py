@@ -47,7 +47,7 @@ def _acquire_unique_cstr_lock(cnx):
 
     This lock used to avoid potential integrity pb when checking
     RQLUniqueConstraint in two different transactions, as explained in
-    http://intranet.logilab.fr/jpl/ticket/36564
+    https://extranet.logilab.fr/3577926
     """
     if 'uniquecstrholder' in cnx.transaction_data:
         return
