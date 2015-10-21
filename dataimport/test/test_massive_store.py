@@ -49,13 +49,13 @@ class MassImportSimpleTC(testlib.CubicWebTC):
     def push_geonames_data(self, dumpname, store):
         # Push timezones
         cnx = store._cnx
-        for code, gmt, dst, raw_offset in ucsvreader(open(osp.join(HERE, 'data/timeZones.txt')),
+        for code, gmt, dst, raw_offset in ucsvreader(open(osp.join(HERE, 'data/timeZones.txt'), 'rb'),
                                                      delimiter='\t'):
             cnx.create_entity('TimeZone', code=code, gmt=float(gmt),
                                     dst=float(dst), raw_offset=float(raw_offset))
         timezone_code = dict(cnx.execute('Any C, X WHERE X is TimeZone, X code C'))
         # Push data
-        for ind, infos in enumerate(ucsvreader(open(dumpname),
+        for ind, infos in enumerate(ucsvreader(open(dumpname, 'rb'),
                                                separator='\t',
                                                ignore_errors=True)):
             latitude = self.cast(float, infos[4])
