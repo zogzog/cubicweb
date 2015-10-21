@@ -172,7 +172,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             cnx.commit()
         with self.admin_access.repo_cnx() as cnx:
             crs = cnx.system_sql("SELECT * FROM entities_id_seq")
-            self.assertTrue(crs.fetchone() > 50000)
+            self.assertTrue(crs.fetchone()[0] > 50000)
 
     def test_eid_entity(self):
         with self.admin_access.repo_cnx() as cnx:
