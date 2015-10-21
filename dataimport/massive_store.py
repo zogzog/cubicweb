@@ -153,7 +153,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self._cnx.system_sql(self._cnx.repo.system_source.dbhelper.sql_restart_numrange(
                 'entities_id_seq', initial_value=self._eids_seq_start + 1))
             cnx.commit()
-        self.get_next_eid = self._get_eid_gen().next
+        self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
         # recreate then when self.cleanup() is called
         if not self.slave_mode and self.drop_index:
             self._drop_metatables_constraints()

@@ -192,20 +192,20 @@ class MassImportSimpleTC(testlib.CubicWebTC):
     def test_on_commit_callback(self):
         counter = itertools.count()
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, on_commit_callback=counter.next)
+            store = MassiveObjectStore(cnx, on_commit_callback=lambda:next(counter))
             store.create_entity('Location', name=u'toto')
             store.flush()
             store.commit()
-        self.assertTrue(counter.next() >= 1)
+        self.assertGreaterEqual(next(counter), 1)
 
     def test_on_rollback_callback(self):
         counter = itertools.count()
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, on_rollback_callback=lambda *_: counter.next())
+            store = MassiveObjectStore(cnx, on_rollback_callback=lambda *_: next(counter))
             store.create_entity('Location', nm='toto')
             store.flush()
             store.commit()
-        self.assertTrue(counter.next() >= 1)
+        self.assertGreaterEqual(next(counter), 1)
 
     def test_slave_mode_indexes(self):
         with self.admin_access.repo_cnx() as cnx:
