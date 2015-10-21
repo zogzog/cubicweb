@@ -226,7 +226,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def flush_relations(self):
         """ Flush the relations data
         """
-        for rtype, data in self._data_uri_relations.iteritems():
+        for rtype, data in self._data_uri_relations.items():
             if not data:
                 self.logger.info('No data for rtype %s', rtype)
             buf = StringIO('\n'.join(['%(uri_from)s\t%(uri_to)s' % d for d in data]))
@@ -317,12 +317,12 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def _drop_table_constraints_indexes(self, tablename):
         """ Drop and store table constraints and indexes """
         indexes, constraints = self._dbh.application_indexes_constraints(tablename)
-        for name, query in constraints.iteritems():
+        for name, query in constraints.items():
             sql = 'INSERT INTO dataio_constraints VALUES (%(e)s, %(c)s, %(t)s)'
             self.sql(sql, {'e': tablename, 'c': query, 't': 'constraint'})
             sql = 'ALTER TABLE %s DROP CONSTRAINT %s CASCADE' % (tablename, name)
             self.sql(sql)
-        for name, query in indexes.iteritems():
+        for name, query in indexes.items():
             sql = 'INSERT INTO dataio_constraints VALUES (%(e)s, %(c)s, %(t)s)'
             self.sql(sql, {'e': tablename, 'c': query, 't': 'index'})
             sql = 'DROP INDEX %s' % name
@@ -504,7 +504,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def flush_internal_relations(self):
         """ Flush the relations data
         """
-        for rtype, data in self._data_relations.iteritems():
+        for rtype, data in self._data_relations.items():
             if not data:
                 # There is no data for these etype for this flush round.
                 continue
@@ -526,7 +526,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def flush_entities(self):
         """ Flush the entities data
         """
-        for etype, data in self._data_entities.iteritems():
+        for etype, data in self._data_entities.items():
             if not data:
                 # There is no data for these etype for this flush round.
                 continue
@@ -736,7 +736,7 @@ class PGHelper(object):
         indexes = self.application_indexes(tablename)
         constraints = self.application_constraints(tablename)
         _indexes = {}
-        for name, query in indexes.iteritems():
+        for name, query in indexes.items():
             # Remove pkey indexes (automatically created by constraints)
             # Specific cases of primary key, see #3224079
             if name not in constraints:
