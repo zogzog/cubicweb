@@ -345,7 +345,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def _drop_metatables_constraints(self):
         """ Drop all the constraints for the meta data"""
         for tablename in ('created_by_relation', 'owned_by_relation',
-                          'is_instance_of_relation', 'identity_relation',
+                          'is_instance_of_relation', 'is_relation',
                           'entities'):
             self.drop_and_store_indexes_constraints(tablename)
 
@@ -353,7 +353,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """ Create all the constraints for the meta data"""
         for tablename in ('entities',
                           'created_by_relation', 'owned_by_relation',
-                          'is_instance_of_relation', 'identity_relation'):
+                          'is_instance_of_relation', 'is_relation'):
             # Indexes and constraints
             if self.drop_index:
                 self.reapply_constraint_index(tablename)
