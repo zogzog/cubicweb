@@ -90,7 +90,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                  iid_maxsize=1024, uri_param_name='rdf:about',
                  eids_seq_range=10000, eids_seq_start=None,
                  on_commit_callback=None, on_rollback_callback=None,
-                 slave_mode=False, build_entities=False,
+                 slave_mode=False,
                  source=None):
         """ Create a MassiveObject store, with the following attributes:
 
@@ -111,8 +111,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                     iid_eid convertion table.
         - uri_param_name: String. If given, will use this parameter to get cw_uri
                           for entities.
-        - build_entities: Boolean. If True, create_entity returns a CW etype object
-          (but WITHOUT eid !).
         """
         super(MassiveObjectStore, self).__init__(cnx)
         self.logger = logging.getLogger('dataio.relationmixin')
@@ -137,7 +135,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.size_constraints = get_size_constraints(cnx.vreg.schema)
         self.default_values = get_default_values(cnx.vreg.schema)
         self._dbh = PGHelper(self._cnx, pg_schema or 'public')
-        self._build_entities = build_entities
         self._data_entities = defaultdict(list)
         self._data_relations = defaultdict(list)
         self._now = datetime.now()
