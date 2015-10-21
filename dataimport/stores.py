@@ -122,6 +122,10 @@ class RQLObjectStore(object):
         """Commit the database transaction."""
         return self._commit()
 
+    def finish(self):
+        """Nothing to do once import is terminated for this store."""
+        pass
+
     @property
     def session(self):
         warnings.warn('[3.19] deprecated property.', DeprecationWarning, stacklevel=2)
