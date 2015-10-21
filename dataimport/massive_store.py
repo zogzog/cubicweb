@@ -419,24 +419,20 @@ class MassiveObjectStore(stores.RQLObjectStore):
             for eid in range(last_eid - self._eids_seq_range + 1, last_eid + 1):
                 yield eid
 
-    def apply_size_constraints(self, etype, kwargs):
-        """ Apply the size constraints for a given etype, attribute and value
-        """
+    def _apply_size_constraints(self, etype, kwargs):
+        """Apply the size constraints for a given etype, attribute and value."""
         size_constraints = self.size_constraints[etype]
         for attr, value in kwargs.items():
             if value:
                 maxsize = size_constraints.get(attr)
                 if maxsize is not None and len(value) > maxsize:
                     kwargs[attr] = value[:maxsize-4] + '...'
-        return kwargs
 
-    def apply_default_values(self, etype, kwargs):
-        """ Apply the default values for a given etype, attribute and value
-        """
+    def _apply_default_values(self, etype, kwargs):
+        """Apply the default values for a given etype, attribute and value."""
         default_values = self.default_values[etype]
         missing_keys = set(default_values) - set(kwargs)
         kwargs.update((key, default_values[key]) for key in missing_keys)
-        return kwargs
 
     # store api ################################################################
 
@@ -461,13 +457,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
             # If eid is not given and the eids sequence is set,
             # use the value from the sequence
             kwargs['eid'] = self.get_next_eid()
-        # Check size constraints
-        kwargs = self.apply_size_constraints(etype, kwargs)
-        # Apply default values
-        kwargs = self.apply_default_values(etype, kwargs)
-        # Push data
+        self._apply_size_constraints(etype, kwargs)
+        self._apply_default_values(etype, kwargs)
         self._data_entities[etype].append(kwargs)
-        # Return eid
         return kwargs.get('eid')
 
     def prepare_insert_relation(self, eid_from, rtype, eid_to, **kwargs):
