@@ -22,6 +22,8 @@ from datetime import datetime
 from collections import defaultdict
 from io import StringIO
 
+from six.moves import range
+
 from yams.constraints import SizeConstraint
 
 from psycopg2 import ProgrammingError
@@ -413,7 +415,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         storing them"""
         while True:
             last_eid = self._cnx.repo.system_source.create_eid(self._cnx, self._eids_seq_range)
-            for eid in xrange(last_eid - self._eids_seq_range + 1, last_eid + 1):
+            for eid in range(last_eid - self._eids_seq_range + 1, last_eid + 1):
                 yield eid
 
     def apply_size_constraints(self, etype, kwargs):
