@@ -24,6 +24,7 @@ from io import StringIO
 
 from six.moves import range
 
+from logilab.common.deprecation import deprecated
 from yams.constraints import SizeConstraint
 
 from psycopg2 import ProgrammingError
@@ -156,7 +157,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 'entities_id_seq', initial_value=self._eids_seq_start + 1))
             cnx.commit()
         self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
-        # recreate then when self.cleanup() is called
+        # recreate then when self.finish() is called
         if not self.slave_mode and self.drop_index:
             self._drop_metatables_constraints()
         if source is None:
@@ -437,8 +438,11 @@ class MassiveObjectStore(stores.RQLObjectStore):
         kwargs.update((key, default_values[key]) for key in missing_keys)
         return kwargs
 
-    def create_entity(self, etype, **kwargs):
-        """ Create an entity
+    # store api ################################################################
+
+    def prepare_insert_entity(self, etype, **kwargs):
+        """Given an entity type, attributes and inlined relations, returns the inserted entity's
+        eid.
         """
         # Init the table if necessary
         self.init_etype_table(etype)
@@ -461,22 +465,85 @@ class MassiveObjectStore(stores.RQLObjectStore):
         kwargs = self.apply_size_constraints(etype, kwargs)
         # Apply default values
         kwargs = self.apply_default_values(etype, kwargs)
-        # Push data / Return entity
+        # Push data
         self._data_entities[etype].append(kwargs)
-        entity = self._cnx.vreg['etypes'].etype_class(etype)(self._cnx)
-        entity.cw_attr_cache.update(kwargs)
-        if 'eid' in kwargs:
-            entity.eid = kwargs['eid']
-        return entity
+        # Return eid
+        return kwargs.get('eid')
 
-    ### RELATIONS CREATION ####################################################
-
-    def relate(self, subj_eid, rtype, obj_eid, *args, **kwargs):
-        """ Compatibility with other stores
+    def prepare_insert_relation(self, eid_from, rtype, eid_to, **kwargs):
+        """Insert into the database a  relation ``rtype`` between entities with eids ``eid_from``
+        and ``eid_to``.
         """
         # Init the table if necessary
         self.init_relation_table(rtype)
-        self._data_relations[rtype].append({'eid_from': subj_eid, 'eid_to': obj_eid})
+        self._data_relations[rtype].append({'eid_from': eid_from, 'eid_to': eid_to})
+
+    def flush(self):
+        """Flush the data"""
+        self.flush_entities()
+        self.flush_internal_relations()
+        self.flush_relations()
+
+    def commit(self):
+        """Commit the database transaction."""
+        self.on_commit()
+        super(MassiveObjectStore, self).commit()
+
+    def finish(self):
+        """Remove temporary tables and columns."""
+        self.logger.info("Start cleaning")
+        if self.slave_mode:
+            raise RuntimeError('Store cleanup is not allowed in slave mode')
+        self.logger.info("Start cleaning")
+        # Cleanup relations tables
+        for etype in self._initialized['init_uri_eid']:
+            self.sql('DROP TABLE uri_eid_%s' % etype.lower())
+        # Remove relations tables
+        for rtype in self._initialized['uri_rtypes']:
+            if not self._cnx.repo.schema.rschema(rtype).inlined:
+                self.sql('DROP TABLE %(r)s_relation_iid_tmp' % {'r': rtype})
+            else:
+                self.logger.warning("inlined relation %s: no cleanup to be done for it" % rtype)
+        self.commit()
+        # Get all the initialized etypes/rtypes
+        if self._dbh.table_exists('dataio_initialized'):
+            crs = self.sql('SELECT retype, type FROM dataio_initialized')
+            for retype, _type in crs.fetchall():
+                self.logger.info('Cleanup for %s' % retype)
+                if _type == 'etype':
+                    # Cleanup entities tables - Recreate indexes
+                    self._cleanup_entities(retype)
+                elif _type == 'rtype':
+                    # Cleanup relations tables
+                    self._cleanup_relations(retype)
+                self.sql('DELETE FROM dataio_initialized WHERE retype = %(e)s',
+                         {'e': retype})
+        # Create meta constraints (entities, is_instance_of, ...)
+        self._create_metatables_constraints()
+        self.commit()
+        # Delete the meta data table
+        for table_name in ('dataio_initialized', 'dataio_constraints', 'dataio_metadata'):
+            if self._dbh.table_exists(table_name):
+                self.sql('DROP TABLE %s' % table_name)
+        self.commit()
+
+    @deprecated('[3.22] use prepare_insert_entity instead')
+    def create_entity(self, etype, **kwargs):
+        """ Create an entity
+        """
+        eid = self.prepare_insert_entity(etype, **kwargs)
+        entity = self._cnx.vreg['etypes'].etype_class(etype)(self._cnx)
+        entity.cw_attr_cache.update(kwargs)
+        entity.eid = eid
+        return entity
+
+    @deprecated('[3.22] use prepare_insert_relation instead')
+    def relate(self, subj_eid, rtype, obj_eid, *args, **kwargs):
+        self.prepare_insert_relation(subj_eid, rtype, obj_eid, *args, **kwargs)
+
+    @deprecated('[3.22] use finish instead')
+    def cleanup(self):
+        self.finish()
 
 
     ### FLUSH #################################################################
@@ -491,17 +558,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self._cnx.rollback()
         else:
             raise exc
-
-    def commit(self):
-        self.on_commit()
-        super(MassiveObjectStore, self).commit()
-
-    def flush(self):
-        """ Flush the data
-        """
-        self.flush_entities()
-        self.flush_internal_relations()
-        self.flush_relations()
 
     def flush_internal_relations(self):
         """ Flush the relations data
@@ -620,45 +676,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if self.drop_index:
             tablename = '%s_relation' % rtype.lower()
             self.reapply_constraint_index(tablename)
-
-    def cleanup(self):
-        """ Remove temporary tables and columns
-        """
-        self.logger.info("Start cleaning")
-        if self.slave_mode:
-            raise RuntimeError('Store cleanup is not allowed in slave mode')
-        self.logger.info("Start cleaning")
-        # Cleanup relations tables
-        for etype in self._initialized['init_uri_eid']:
-            self.sql('DROP TABLE uri_eid_%s' % etype.lower())
-        # Remove relations tables
-        for rtype in self._initialized['uri_rtypes']:
-            if not self._cnx.repo.schema.rschema(rtype).inlined:
-                self.sql('DROP TABLE %(r)s_relation_iid_tmp' % {'r': rtype})
-            else:
-                self.logger.warning("inlined relation %s: no cleanup to be done for it" % rtype)
-        self.commit()
-        # Get all the initialized etypes/rtypes
-        if self._dbh.table_exists('dataio_initialized'):
-            crs = self.sql('SELECT retype, type FROM dataio_initialized')
-            for retype, _type in crs.fetchall():
-                self.logger.info('Cleanup for %s' % retype)
-                if _type == 'etype':
-                    # Cleanup entities tables - Recreate indexes
-                    self._cleanup_entities(retype)
-                elif _type == 'rtype':
-                    # Cleanup relations tables
-                    self._cleanup_relations(retype)
-                self.sql('DELETE FROM dataio_initialized WHERE retype = %(e)s',
-                         {'e': retype})
-        # Create meta constraints (entities, is_instance_of, ...)
-        self._create_metatables_constraints()
-        self.commit()
-        # Delete the meta data table
-        for table_name in ('dataio_initialized', 'dataio_constraints', 'dataio_metadata'):
-            if self._dbh.table_exists(table_name):
-                self.sql('DROP TABLE %s' % table_name)
-        self.commit()
 
     def insert_massive_meta_data(self, etype):
         """ Massive insertion of meta data for a given etype, based on SQL statements.

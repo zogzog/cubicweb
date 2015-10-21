@@ -79,7 +79,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
                       'cwuri':  u'http://sws.geonames.org/%s/' % int(infos[0]),
                       'geonameid': int(infos[0]),
                       }
-            store.create_entity('Location', **entity)
+            store.prepare_insert_entity('Location', **entity)
 
     def test_autoflush_metadata(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -87,7 +87,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
                                  {'t': 'Location'})
             self.assertEqual(len(crs.fetchall()), 0)
             store = MassiveObjectStore(cnx, autoflush_metadata=True)
-            store.create_entity('Location', name=u'toto')
+            store.prepare_insert_entity('Location', name=u'toto')
             store.flush()
             store.commit()
             store.cleanup()
@@ -104,7 +104,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
 #            self.assertEqual(len(crs.fetchall()), 0)
 #        with self.admin_access.repo_cnx() as cnx:
 #            store = MassiveObjectStore(cnx, autoflush_metadata=False)
-#            store.create_entity('Location', name=u'toto')
+#            store.prepare_insert_entity('Location', name=u'toto')
 #            store.flush()
 #            store.commit()
 #            crs = cnx.system_sql('SELECT * FROM entities WHERE type=%(t)s',
@@ -119,8 +119,8 @@ class MassImportSimpleTC(testlib.CubicWebTC):
     def test_massimport_etype_metadata(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
-            timezone = store.create_entity('TimeZone')
-            store.create_entity('Location', timezone=timezone.eid)
+            timezone_eid = store.prepare_insert_entity('TimeZone')
+            store.prepare_insert_entity('Location', timezone=timezone_eid)
             store.flush()
             store.commit()
             eid, etname = cnx.execute('Any X, TN WHERE X timezone TZ, X is T, '
@@ -167,7 +167,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
     def test_eids_seq_range(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, eids_seq_range=1000, eids_seq_start=50000)
-            store.create_entity('Location', name=u'toto')
+            store.prepare_insert_entity('Location', name=u'toto')
             store.flush()
             cnx.commit()
         with self.admin_access.repo_cnx() as cnx:
@@ -177,23 +177,22 @@ class MassImportSimpleTC(testlib.CubicWebTC):
     def test_eid_entity(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, eids_seq_range=1000, eids_seq_start=50000)
-            entity = store.create_entity('Location', name=u'toto')
+            eid = store.prepare_insert_entity('Location', name=u'toto')
             store.flush()
-            self.assertGreater(entity.eid, 50000)
+            self.assertGreater(eid, 50000)
 
     def test_eid_entity_2(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, eids_seq_range=1000, eids_seq_start=50000)
-            entity = store.create_entity('Location', name=u'toto', eid=10000)
+            eid = store.prepare_insert_entity('Location', name=u'toto', eid=10000)
             store.flush()
-        with self.admin_access.repo_cnx() as cnx:
-            self.assertEqual(entity.eid, 10000)
+        self.assertEqual(eid, 10000)
 
     def test_on_commit_callback(self):
         counter = itertools.count()
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, on_commit_callback=lambda:next(counter))
-            store.create_entity('Location', name=u'toto')
+            store.prepare_insert_entity('Location', name=u'toto')
             store.flush()
             store.commit()
         self.assertGreaterEqual(next(counter), 1)
@@ -202,7 +201,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
         counter = itertools.count()
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, on_rollback_callback=lambda *_: next(counter))
-            store.create_entity('Location', nm='toto')
+            store.prepare_insert_entity('Location', nm='toto')
             store.flush()
             store.commit()
         self.assertGreaterEqual(next(counter), 1)
