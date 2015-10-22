@@ -41,6 +41,7 @@ from six.moves.urllib.parse import urlparse
 from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
 from logilab.common.configuration import merge_options
+from logilab.common.decorators import clear_cache
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
@@ -749,6 +750,7 @@ given, appropriate sources for migration will be automatically selected \
             with mih.cnx:
                 with mih.cnx.security_enabled(False, False):
                     mih.migrate(vcconf, reversed(toupgrade), self.config)
+            clear_cache(config, 'instance_md5_version')
         else:
             print('-> no data migration needed for instance %s.' % appid)
         # rewrite main configuration file
