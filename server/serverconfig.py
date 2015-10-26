@@ -22,7 +22,8 @@ __docformat__ = "restructuredtext en"
 
 import sys
 from os.path import join, exists
-from io import StringIO
+
+from six.moves import StringIO
 
 import logilab.common.configuration as lgconfig
 from logilab.common.decorators import cached
