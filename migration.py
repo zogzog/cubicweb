@@ -26,6 +26,7 @@ import logging
 import tempfile
 from os.path import exists, join, basename, splitext
 from itertools import chain
+from warnings import warn
 
 from six import string_types
 
@@ -350,7 +351,14 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                 pyname = splitext(basename(migrscript))[0]
             scriptlocals['__name__'] = pyname
             with open(migrscript, 'rb') as fobj:
-                code = compile(fobj.read(), migrscript, 'exec')
+                fcontent = fobj.read()
+            try:
+                code = compile(fcontent, migrscript, 'exec')
+            except SyntaxError:
+                # try without print_function
+                code = compile(fcontent, migrscript, 'exec', 0, True)
+                warn('[3.22] script %r should be updated to work with print_function'
+                     % migrscript, DeprecationWarning)
             exec(code, scriptlocals)
             if funcname is not None:
                 try:
