@@ -23,6 +23,7 @@ from six.moves import range
 
 from logilab.common.testlib import SkipTest
 
+import logilab.database as lgdb
 from cubicweb import ValidationError
 from cubicweb.devtools import PostgresApptestConfiguration, startpgcluster, stoppgcluster
 from cubicweb.devtools.testlib import CubicWebTC
@@ -50,6 +51,14 @@ class PostgresTimeoutConfiguration(PostgresApptestConfiguration):
 
 class PostgresFTITC(CubicWebTC):
     configcls = PostgresTimeoutConfiguration
+
+    @classmethod
+    def setUpClass(cls):
+        cls.orig_connect_hooks = lgdb.SQL_CONNECT_HOOKS['postgres'][:]
+
+    @classmethod
+    def tearDownClass(cls):
+        lgdb.SQL_CONNECT_HOOKS['postgres'] = cls.orig_connect_hooks
 
     def test_eid_range(self):
         # concurrent allocation of eid ranges
