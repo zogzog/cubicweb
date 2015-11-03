@@ -172,14 +172,14 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             cnx.commit()
         with self.admin_access.repo_cnx() as cnx:
             crs = cnx.system_sql("SELECT * FROM entities_id_seq")
-            self.assertTrue(crs.fetchone()[0] > 50000)
+            self.assertGreater(crs.fetchone()[0], 50000)
 
     def test_eid_entity(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, eids_seq_range=1000, eids_seq_start=50000)
             entity = store.create_entity('Location', name=u'toto')
             store.flush()
-            self.assertTrue(entity.eid > 50000)
+            self.assertGreater(entity.eid, 50000)
 
     def test_eid_entity_2(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -187,7 +187,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             entity = store.create_entity('Location', name=u'toto', eid=10000)
             store.flush()
         with self.admin_access.repo_cnx() as cnx:
-            self.assertTrue(entity.eid==10000)
+            self.assertEqual(entity.eid, 10000)
 
     def test_on_commit_callback(self):
         counter = itertools.count()
