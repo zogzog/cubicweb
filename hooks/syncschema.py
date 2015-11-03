@@ -37,7 +37,8 @@ from logilab.common.decorators import clear_cache
 from cubicweb import validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
-                             CONSTRAINTS, ETYPE_NAME_MAP, display_name)
+                             CONSTRAINTS, UNIQUE_CONSTRAINTS, ETYPE_NAME_MAP,
+                             display_name)
 from cubicweb.server import hook, schemaserial as ss, schema2sql as y2sql
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.hooks.synccomputed import RecomputeAttributeOperation
@@ -749,7 +750,10 @@ class CWConstraintAddOp(CWConstraintDelOp):
             return
         rdef = self.rdef = cnx.vreg.schema.schema_by_eid(rdefentity.eid)
         cstrtype = self.entity.type
-        oldcstr = self.oldcstr = rdef.constraint_by_type(cstrtype)
+        if cstrtype in UNIQUE_CONSTRAINTS:
+            oldcstr = self.oldcstr = rdef.constraint_by_type(cstrtype)
+        else:
+            oldcstr = None
         newcstr = self.newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
         # in-place modification of in-memory schema first
         _set_modifiable_constraints(rdef)

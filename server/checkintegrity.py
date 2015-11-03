@@ -29,7 +29,7 @@ from datetime import datetime
 
 from logilab.common.shellutils import ProgressBar
 
-from cubicweb.schema import PURE_VIRTUAL_RTYPES, VIRTUAL_RTYPES
+from cubicweb.schema import PURE_VIRTUAL_RTYPES, VIRTUAL_RTYPES, UNIQUE_CONSTRAINTS
 from cubicweb.server.sqlutils import SQL_PREFIX
 
 def notify_fixed(fix):
@@ -138,9 +138,6 @@ def reindex_entities(schema, cnx, withpb=True, etypes=None):
 def check_schema(schema, cnx, eids, fix=1):
     """check serialized schema"""
     print('Checking serialized schema')
-    unique_constraints = ('SizeConstraint', 'FormatConstraint',
-                          'VocabularyConstraint',
-                          'RQLVocabularyConstraint')
     rql = ('Any COUNT(X),RN,SN,ON,CTN GROUPBY RN,SN,ON,CTN ORDERBY 1 '
            'WHERE X is CWConstraint, R constrained_by X, '
            'R relation_type RT, RT name RN, R from_entity ST, ST name SN, '
@@ -148,7 +145,7 @@ def check_schema(schema, cnx, eids, fix=1):
     for count, rn, sn, on, cstrname in cnx.execute(rql):
         if count == 1:
             continue
-        if cstrname in unique_constraints:
+        if cstrname in UNIQUE_CONSTRAINTS:
             print("ERROR: got %s %r constraints on relation %s.%s.%s" % (
                 count, cstrname, sn, rn, on))
             if fix:

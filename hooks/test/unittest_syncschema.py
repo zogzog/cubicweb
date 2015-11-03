@@ -19,6 +19,7 @@
 
 from logilab.common.testlib import unittest_main
 
+from yams.constraints import BoundaryConstraint
 from cubicweb import ValidationError, Binary
 from cubicweb.schema import META_RTYPES
 from cubicweb.devtools import startpgcluster, stoppgcluster, PostgresApptestConfiguration
@@ -381,6 +382,24 @@ class SchemaModificationHooksTC(CubicWebTC):
             cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
             self.assertEqual(cstr.values, (u'normal', u'auto', u'new'))
             cnx.execute('INSERT Transition T: T name "hop", T type "new"')
+
+    def test_add_constraint(self):
+        with self.admin_access.repo_cnx() as cnx:
+            rdef = self.schema['EmailPart'].rdef('ordernum')
+            cstr = BoundaryConstraint('>=', 0)
+            cnx.execute('INSERT CWConstraint X: X value %(v)s, X cstrtype CT, '
+                        'EDEF constrained_by X WHERE CT name %(ct)s, EDEF eid %(x)s',
+                        {'ct': cstr.__class__.__name__, 'v': cstr.serialize(), 'x': rdef.eid})
+            cnx.commit()
+            cstr2 = rdef.constraint_by_type('BoundaryConstraint')
+            self.assertEqual(cstr, cstr2)
+            cstr3 = BoundaryConstraint('<=', 1000)
+            cnx.execute('INSERT CWConstraint X: X value %(v)s, X cstrtype CT, '
+                        'EDEF constrained_by X WHERE CT name %(ct)s, EDEF eid %(x)s',
+                        {'ct': cstr3.__class__.__name__, 'v': cstr3.serialize(), 'x': rdef.eid})
+            cnx.commit()
+            self.assertCountEqual(rdef.constraints, [cstr, cstr3])
+
 
 if __name__ == '__main__':
     unittest_main()

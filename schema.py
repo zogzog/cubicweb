@@ -105,6 +105,9 @@ WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
 INTERNAL_TYPES = set(('CWProperty', 'CWCache', 'ExternalUri', 'CWDataImport',
                       'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig'))
 
+UNIQUE_CONSTRAINTS = ('SizeConstraint', 'FormatConstraint',
+                      'StaticVocabularyConstraint',
+                      'RQLVocabularyConstraint')
 
 _LOGGER = getLogger('cubicweb.schemaloader')
 
