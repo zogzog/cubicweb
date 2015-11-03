@@ -439,7 +439,7 @@ class CubicWebPublisher(object):
         req.headers_out.setHeader('location', str(ex.location))
         assert 300 <= ex.status < 400
         req.status_out = ex.status
-        return ''
+        return b''
 
     def validation_error_handler(self, req, ex):
         ex.translate(req._) # translate messages using ui language
@@ -456,7 +456,7 @@ class CubicWebPublisher(object):
             location = req.form['__errorurl'].rsplit('#', 1)[0]
             req.headers_out.setHeader('location', str(location))
             req.status_out = http_client.SEE_OTHER
-            return ''
+            return b''
         req.status_out = http_client.CONFLICT
         return self.error_handler(req, ex, tb=False)
 
