@@ -47,8 +47,12 @@ lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
 def _run_command(cmd):
-    print(' '.join(cmd))
-    return subprocess.call(cmd)
+    if isinstance(cmd, string_types):
+        print(cmd)
+        return subprocess.call(cmd, shell=True)
+    else:
+        print(' '.join(cmd))
+        return subprocess.call(cmd)
 
 
 def sqlexec(sqlstmts, cursor_or_execute, withpb=True,
