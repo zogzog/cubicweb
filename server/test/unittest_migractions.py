@@ -786,14 +786,14 @@ class MigrationCommandsComputedTC(MigrationTC):
 
     def test_computed_relation_sync_schema_props_perms_security(self):
         with self.mh() as (cnx, mh):
-            rdef = next(self.schema['perm_changes'].rdefs.itervalues())
+            rdef = next(iter(self.schema['perm_changes'].rdefs.values()))
             self.assertEqual(rdef.permissions,
                              {'add': (), 'delete': (),
                               'read': ('managers', 'users')})
             mh.cmd_sync_schema_props_perms('perm_changes')
             self.assertEqual(self.schema['perm_changes'].permissions,
                              {'read': ('managers',)})
-            rdef = next(self.schema['perm_changes'].rdefs.itervalues())
+            rdef = next(iter(self.schema['perm_changes'].rdefs.values()))
             self.assertEqual(rdef.permissions,
                              {'add': (), 'delete': (),
                               'read': ('managers',)})
