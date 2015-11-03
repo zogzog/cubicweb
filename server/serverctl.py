@@ -690,7 +690,7 @@ def _remote_dump(host, appid, output, sudo=False):
 def _local_dump(appid, output, format='native'):
     config = ServerConfiguration.config_for(appid)
     config.quick_start = True
-    mih = config.migration_handler(connect=False, verbosity=1)
+    mih = config.migration_handler(verbosity=1)
     mih.backup_database(output, askconfirm=False, format=format)
     mih.shutdown()
 
