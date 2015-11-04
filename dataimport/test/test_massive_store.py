@@ -90,7 +90,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             store.prepare_insert_entity('Location', name=u'toto')
             store.flush()
             store.commit()
-            store.cleanup()
+            store.finish()
             cnx.commit()
         with self.admin_access.repo_cnx() as cnx:
             crs = cnx.system_sql('SELECT * FROM entities WHERE type=%(t)s',
@@ -114,7 +114,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
 #            crs = cnx.system_sql('SELECT * FROM entities WHERE type=%(t)s',
 #                                 {'t': 'Location'})
 #            self.assertEqual(len(crs.fetchall()), 1)
-#            store.cleanup()
+#            store.finish()
 
     def test_massimport_etype_metadata(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -154,7 +154,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
     def test_drop_index_recreation(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, drop_index=True)
-            store.cleanup()
+            store.finish()
             cnx.commit()
         with self.admin_access.repo_cnx() as cnx:
             crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
@@ -222,7 +222,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             master_store = MassiveObjectStore(cnx, slave_mode=False)
             slave_store = MassiveObjectStore(cnx, slave_mode=True)
             self.assertRaises(RuntimeError, slave_store.flush_meta_data)
-            self.assertRaises(RuntimeError, slave_store.cleanup)
+            self.assertRaises(RuntimeError, slave_store.finish)
 
     def test_simple_insert(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -250,7 +250,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             self.assertNotIn('owned_by_relation_to_idx', indexes)
 
             # Cleanup -> index
-            store.cleanup()
+            store.finish()
 
             # Check index again
             crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
@@ -278,52 +278,52 @@ class MassImportSimpleTC(testlib.CubicWebTC):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
             store.init_etype_table('TestLocation')
-            store.cleanup()
+            store.finish()
             store = MassiveObjectStore(cnx)
             store.init_etype_table('TestLocation')
-            store.cleanup()
+            store.finish()
 
     def test_multiple_insert_relation(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
             store.init_relation_table('used_language')
-            store.cleanup()
+            store.finish()
             store = MassiveObjectStore(cnx)
             store.init_relation_table('used_language')
-            store.cleanup()
+            store.finish()
 
     def test_multiple_insert_drop_index(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, drop_index=False)
             store.init_relation_table('used_language')
             store.init_etype_table('TestLocation')
-            store.cleanup()
+            store.finish()
             store = MassiveObjectStore(cnx)
             store.init_relation_table('used_language')
             store.init_etype_table('TestLocation')
-            store.cleanup()
+            store.finish()
 
     def test_multiple_insert_drop_index_2(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
             store.init_relation_table('used_language')
             store.init_etype_table('TestLocation')
-            store.cleanup()
+            store.finish()
             store = MassiveObjectStore(cnx, drop_index=False)
             store.init_relation_table('used_language')
             store.init_etype_table('TestLocation')
-            store.cleanup()
+            store.finish()
 
     def test_multiple_insert_drop_index_3(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, drop_index=False)
             store.init_relation_table('used_language')
             store.init_etype_table('TestLocation')
-            store.cleanup()
+            store.finish()
             store = MassiveObjectStore(cnx, drop_index=False)
             store.init_relation_table('used_language')
             store.init_etype_table('TestLocation')
-            store.cleanup()
+            store.finish()
 
 
 if __name__ == '__main__':
