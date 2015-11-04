@@ -4,6 +4,8 @@ Provides a 'pyramid' command as a replacement to the 'start' command.
 The reloading strategy is heavily inspired by (and partially copied from)
 the pyramid script 'pserve'.
 """
+from __future__ import print_function
+
 import atexit
 import errno
 import os
@@ -223,7 +225,7 @@ class PyramidStartHandler(InstanceCommand):
                     proc = subprocess.Popen(args, env=new_environ)
                     exit_code = proc.wait()
                     proc = None
-                    print "Process exited with ", exit_code
+                    print("Process exited with", exit_code)
                 except KeyboardInterrupt:
                     self.info('^C caught in monitor process')
                     return 1
