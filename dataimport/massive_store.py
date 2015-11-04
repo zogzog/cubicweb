@@ -24,7 +24,6 @@ from io import StringIO
 
 from six.moves import range
 
-from logilab.common.deprecation import deprecated
 from yams.constraints import SizeConstraint
 
 from psycopg2 import ProgrammingError
@@ -515,25 +514,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
             if self._dbh.table_exists(table_name):
                 self.sql('DROP TABLE %s' % table_name)
         self.commit()
-
-    @deprecated('[3.22] use prepare_insert_entity instead')
-    def create_entity(self, etype, **kwargs):
-        """ Create an entity
-        """
-        eid = self.prepare_insert_entity(etype, **kwargs)
-        entity = self._cnx.vreg['etypes'].etype_class(etype)(self._cnx)
-        entity.cw_attr_cache.update(kwargs)
-        entity.eid = eid
-        return entity
-
-    @deprecated('[3.22] use prepare_insert_relation instead')
-    def relate(self, subj_eid, rtype, obj_eid, *args, **kwargs):
-        self.prepare_insert_relation(subj_eid, rtype, obj_eid, *args, **kwargs)
-
-    @deprecated('[3.22] use finish instead')
-    def cleanup(self):
-        self.finish()
-
 
     ### FLUSH #################################################################
 
