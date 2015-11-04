@@ -56,7 +56,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
         timezone_code = dict(cnx.execute('Any C, X WHERE X is TimeZone, X code C'))
         # Push data
         for ind, infos in enumerate(ucsvreader(open(dumpname, 'rb'),
-                                               separator='\t',
+                                               delimiter='\t',
                                                ignore_errors=True)):
             latitude = self.cast(float, infos[4])
             longitude = self.cast(float, infos[5])
