@@ -85,10 +85,12 @@ class MassiveObjectStore(stores.RQLObjectStore):
     eids_seq_range = 10000
     # initial eid (None means use the value in the db)
     eids_seq_start = None
+    # max size of the iid, used to create the iid_eid conversion table
+    iid_maxsize = 1024
 
     def __init__(self, cnx, autoflush_metadata=True,
                  commit_at_flush=True,
-                 iid_maxsize=1024, uri_param_name='rdf:about',
+                 uri_param_name='rdf:about',
                  on_commit_callback=None, on_rollback_callback=None,
                  slave_mode=False,
                  source=None):
@@ -99,8 +101,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                               Automatically flush the metadata after
                               each flush()
         - commit_at_flush: Boolean. Commit after each flush().
-        - iid_maxsize: Int. Max size of the iid, used to create the
-                    iid_eid convertion table.
         - uri_param_name: String. If given, will use this parameter to get cw_uri
                           for entities.
         """
@@ -108,7 +108,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.logger = logging.getLogger('dataio.relationmixin')
         self._cnx = cnx
         self.sql = cnx.system_sql
-        self.iid_maxsize = iid_maxsize
         self.commit_at_flush = commit_at_flush
         self._data_uri_relations = defaultdict(list)
         self._initialized = {'init_uri_eid': set(),
