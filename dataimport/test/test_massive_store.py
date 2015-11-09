@@ -127,21 +127,9 @@ class MassImportSimpleTC(testlib.CubicWebTC):
                                       'T name TN')[0]
             self.assertEqual(cnx.entity_from_eid(eid).cw_etype, etname)
 
-    def test_do_not_drop_index(self):
-        with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, drop_index=False)
-            cnx.commit()
-        with self.admin_access.repo_cnx() as cnx:
-            crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
-            indexes = [r[0] for r in crs.fetchall()]
-        self.assertIn('entities_pkey', indexes)
-        self.assertIn('unique_entities_extid_idx', indexes)
-        self.assertIn('owned_by_relation_p_key', indexes)
-        self.assertIn('owned_by_relation_to_idx', indexes)
-
     def test_drop_index(self):
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, drop_index=True)
+            store = MassiveObjectStore(cnx)
             cnx.commit()
         with self.admin_access.repo_cnx() as cnx:
             crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
@@ -153,7 +141,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
 
     def test_drop_index_recreation(self):
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, drop_index=True)
+            store = MassiveObjectStore(cnx)
             store.finish()
             cnx.commit()
         with self.admin_access.repo_cnx() as cnx:
@@ -290,39 +278,6 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             store.finish()
             store = MassiveObjectStore(cnx)
             store.init_relation_table('used_language')
-            store.finish()
-
-    def test_multiple_insert_drop_index(self):
-        with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, drop_index=False)
-            store.init_relation_table('used_language')
-            store.init_etype_table('TestLocation')
-            store.finish()
-            store = MassiveObjectStore(cnx)
-            store.init_relation_table('used_language')
-            store.init_etype_table('TestLocation')
-            store.finish()
-
-    def test_multiple_insert_drop_index_2(self):
-        with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx)
-            store.init_relation_table('used_language')
-            store.init_etype_table('TestLocation')
-            store.finish()
-            store = MassiveObjectStore(cnx, drop_index=False)
-            store.init_relation_table('used_language')
-            store.init_etype_table('TestLocation')
-            store.finish()
-
-    def test_multiple_insert_drop_index_3(self):
-        with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, drop_index=False)
-            store.init_relation_table('used_language')
-            store.init_etype_table('TestLocation')
-            store.finish()
-            store = MassiveObjectStore(cnx, drop_index=False)
-            store.init_relation_table('used_language')
-            store.init_etype_table('TestLocation')
             store.finish()
 
 

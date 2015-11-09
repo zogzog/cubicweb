@@ -84,7 +84,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def __init__(self, cnx, autoflush_metadata=True,
                  replace_sep='', commit_at_flush=True,
-                 drop_index=True,
                  pg_schema='public',
                  iid_maxsize=1024, uri_param_name='rdf:about',
                  eids_seq_range=10000, eids_seq_start=None,
@@ -100,7 +99,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         - replace_sep: String. Replace separator used for
                        (COPY FROM) buffer creation.
         - commit_at_flush: Boolean. Commit after each flush().
-        - drop_index: Boolean. Drop SQL index before COPY FROM
         - eids_seq_range: Int. Range of the eids_seq_range to be fetched each time
                                by the store (default is 10000).
                                If None, the sequence eids is attached to each entity tables
@@ -129,7 +127,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.logger = logging.getLogger('dataio.massiveimport')
         self.autoflush_metadata = autoflush_metadata
         self.replace_sep = replace_sep
-        self.drop_index = drop_index
         self.slave_mode = slave_mode
         self.size_constraints = get_size_constraints(cnx.vreg.schema)
         self.default_values = get_default_values(cnx.vreg.schema)
@@ -154,7 +151,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             cnx.commit()
         self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
         # recreate then when self.finish() is called
-        if not self.slave_mode and self.drop_index:
+        if not self.slave_mode:
             self._drop_metatables_constraints()
         if source is None:
             source = cnx.repo.system_source
@@ -352,8 +349,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                           'created_by_relation', 'owned_by_relation',
                           'is_instance_of_relation', 'is_relation'):
             # Indexes and constraints
-            if self.drop_index:
-                self.reapply_constraint_index(tablename)
+            self.reapply_constraint_index(tablename)
 
     def init_relation_table(self, rtype):
         """ Get and remove all indexes for performance sake """
@@ -361,10 +357,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if not self.slave_mode and rtype not in self._initialized['rtypes']:
             sql = "CREATE TABLE %s_relation_tmp (eid_from integer, eid_to integer)" % rtype.lower()
             self.sql(sql)
-            if self.drop_index:
-                # Drop indexes and constraints
-                tablename = '%s_relation' % rtype.lower()
-                self.drop_and_store_indexes_constraints(tablename)
+            # Drop indexes and constraints
+            tablename = '%s_relation' % rtype.lower()
+            self.drop_and_store_indexes_constraints(tablename)
             # Push the etype in the initialized table for easier restart
             self.init_create_initialized_table()
             sql = 'INSERT INTO dataio_initialized VALUES (%(e)s, %(t)s)'
@@ -392,10 +387,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
                     sql = ("ALTER TABLE cw_%s ALTER COLUMN cw_eid "
                            "SET DEFAULT nextval('entities_id_seq')" % etype.lower())
                     self.sql(sql)
-                if self.drop_index:
-                    # Drop indexes and constraints
-                    tablename = 'cw_%s' % etype.lower()
-                    self.drop_and_store_indexes_constraints(tablename)
+                # Drop indexes and constraints
+                tablename = 'cw_%s' % etype.lower()
+                self.drop_and_store_indexes_constraints(tablename)
                 # Push the etype in the initialized table for easier restart
                 self.init_create_initialized_table()
                 sql = 'INSERT INTO dataio_initialized VALUES (%(e)s, %(t)s)'
@@ -626,9 +620,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
             sql = 'ALTER TABLE cw_%s ALTER COLUMN cw_eid DROP DEFAULT;' % etype.lower()
             self.sql(sql)
         # Create indexes and constraints
-        if self.drop_index:
-            tablename = SQL_PREFIX + etype.lower()
-            self.reapply_constraint_index(tablename)
+        tablename = SQL_PREFIX + etype.lower()
+        self.reapply_constraint_index(tablename)
 
     def _cleanup_relations(self, rtype):
         """ Cleanup rtype table """
@@ -642,9 +635,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
         sql = ('DROP TABLE %(r)s_relation_tmp' % {'r': rtype.lower()})
         self.sql(sql)
         # Create indexes and constraints
-        if self.drop_index:
-            tablename = '%s_relation' % rtype.lower()
-            self.reapply_constraint_index(tablename)
+        tablename = '%s_relation' % rtype.lower()
+        self.reapply_constraint_index(tablename)
 
     def insert_massive_meta_data(self, etype):
         """ Massive insertion of meta data for a given etype, based on SQL statements.
