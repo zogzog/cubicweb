@@ -113,7 +113,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # set of rtypes for which we have a %(rtype)s_relation_tmp table
         self._rtypes = set()
 
-        self.sql = self._cnx.system_sql
         self.slave_mode = slave_mode
         self.size_constraints = get_size_constraints(cnx.vreg.schema)
         self.default_values = get_default_values(cnx.vreg.schema)
