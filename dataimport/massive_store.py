@@ -84,7 +84,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def __init__(self, cnx, autoflush_metadata=True,
                  replace_sep='', commit_at_flush=True,
-                 pg_schema='public',
                  iid_maxsize=1024, uri_param_name='rdf:about',
                  eids_seq_range=10000, eids_seq_start=None,
                  on_commit_callback=None, on_rollback_callback=None,
@@ -130,7 +129,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.slave_mode = slave_mode
         self.size_constraints = get_size_constraints(cnx.vreg.schema)
         self.default_values = get_default_values(cnx.vreg.schema)
-        self._dbh = PGHelper(self._cnx, pg_schema or 'public')
+        pg_schema = cnx.repo.config.system_source_config.get('db-namespace', 'public')
+        self._dbh = PGHelper(self._cnx, pg_schema)
         self._data_entities = defaultdict(list)
         self._data_relations = defaultdict(list)
         self._now = datetime.now()
