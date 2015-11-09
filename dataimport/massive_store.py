@@ -101,12 +101,18 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._cnx = cnx
         self.sql = cnx.system_sql
         self._data_uri_relations = defaultdict(list)
-        self._initialized = {'init_uri_eid': set(),
-                             'uri_eid_inserted': set(),
-                             'uri_rtypes': set(),
-                             'entities': set(),
-                             'rtypes': set(),
-                            }
+
+        # etypes for which we have a uri_eid_%(etype)s table
+        self._init_uri_eid = set()
+        # etypes for which we have a uri_eid_%(e)s_idx index
+        self._uri_eid_inserted = set()
+        # set of rtypes for which we have a %(rtype)s_relation_iid_tmp table
+        self._uri_rtypes = set()
+        # set of etypes whose tables are created
+        self._entities = set()
+        # set of rtypes for which we have a %(rtype)s_relation_tmp table
+        self._rtypes = set()
+
         self.sql = self._cnx.system_sql
         self.slave_mode = slave_mode
         self.size_constraints = get_size_constraints(cnx.vreg.schema)
@@ -141,15 +147,15 @@ class MassiveObjectStore(stores.RQLObjectStore):
     ### INIT FUNCTIONS ########################################################
 
     def init_rtype_table(self, etype_from, rtype, etype_to):
-        """ Build temporary table a for standard rtype """
+        """ Build temporary table for standard rtype """
         # Create an uri_eid table for each etype for a better
-        # control of which etype is concerns for a particular
+        # control of which etype is concerned by a particular
         # possibly multivalued relation.
         for etype in (etype_from, etype_to):
-            if etype and etype not in self._initialized['init_uri_eid']:
+            if etype and etype not in self._init_uri_eid:
                 self._init_uri_eid_table(etype)
-        if rtype not in self._initialized['uri_rtypes']:
-            # Create the temporary tables
+        if rtype not in self._uri_rtypes:
+            # Create the temporary table
             if not self._cnx.repo.schema.rschema(rtype).inlined:
                 try:
                     sql = 'CREATE TABLE %(r)s_relation_iid_tmp (uri_from character ' \
@@ -160,8 +166,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
                     pass
             else:
                 self.logger.warning("inlined relation %s: cannot insert it", rtype)
-            #Add it to the initialized set
-            self._initialized['uri_rtypes'].add(rtype)
+            # Add it to the initialized set
+            self._uri_rtypes.add(rtype)
 
     def _init_uri_eid_table(self, etype):
         """ Build a temporary table for id/eid convertion
@@ -173,7 +179,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             # XXX Already exist (probably due to multiple import)
             pass
         # Add it to the initialized set
-        self._initialized['init_uri_eid'].add(etype)
+        self._init_uri_eid.add(etype)
 
     def _init_massive_metatables(self):
         # Check if our tables are not already created (i.e. a restart)
@@ -224,7 +230,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # Add indexes
         self.sql('CREATE INDEX uri_eid_%(e)s_idx ON uri_eid_%(e)s' '(uri)' % {'e': etype.lower()})
         # Set the etype as converted
-        self._initialized['uri_eid_inserted'].add(etype)
+        self._uri_eid_inserted.add(etype)
         self.commit()
 
     def convert_relations(self, etype_from, rtype, etype_to,
@@ -234,9 +240,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # Always flush relations to be sure
         self.logger.info('Convert relations %s %s %s', etype_from, rtype, etype_to)
         self.flush_relations()
-        if uri_label_from and etype_from not in self._initialized['uri_eid_inserted']:
+        if uri_label_from and etype_from not in self._uri_eid_inserted:
             self.fill_uri_eid_table(etype_from, uri_label_from)
-        if uri_label_to and etype_to not in self._initialized['uri_eid_inserted']:
+        if uri_label_to and etype_to not in self._uri_eid_inserted:
             self.fill_uri_eid_table(etype_to, uri_label_to)
         if self._cnx.repo.schema.rschema(rtype).inlined:
             self.logger.warning("Can't insert inlined relation %s", rtype)
@@ -326,7 +332,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def init_relation_table(self, rtype):
         """ Get and remove all indexes for performance sake """
         # Create temporary table
-        if not self.slave_mode and rtype not in self._initialized['rtypes']:
+        if not self.slave_mode and rtype not in self._rtypes:
             sql = "CREATE TABLE %s_relation_tmp (eid_from integer, eid_to integer)" % rtype.lower()
             self.sql(sql)
             # Drop indexes and constraints
@@ -337,7 +343,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             sql = 'INSERT INTO cwmassive_initialized VALUES (%(e)s, %(t)s)'
             self.sql(sql, {'e': rtype, 't': 'rtype'})
             # Mark rtype as "initialized" for faster check
-            self._initialized['rtypes'].add(rtype)
+            self._rtypes.add(rtype)
 
     def init_create_initialized_table(self):
         """ Create the cwmassive initialized table
@@ -350,7 +356,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def init_etype_table(self, etype):
         """ Add eid sequence to a particular etype table and
         remove all indexes for performance sake """
-        if etype not in self._initialized['entities']:
+        if etype not in self._entities:
             # Only for non-initialized etype and not slave mode store
             if not self.slave_mode:
                 if self.eids_seq_range is None:
@@ -367,7 +373,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 sql = 'INSERT INTO cwmassive_initialized VALUES (%(e)s, %(t)s)'
                 self.sql(sql, {'e': etype, 't': 'etype'})
             # Mark etype as "initialized" for faster check
-            self._initialized['entities'].add(etype)
+            self._entities.add(etype)
 
 
     ### ENTITIES CREATION #####################################################
@@ -447,10 +453,10 @@ class MassiveObjectStore(stores.RQLObjectStore):
             raise RuntimeError('Store cleanup is not allowed in slave mode')
         self.logger.info("Start cleaning")
         # Cleanup relations tables
-        for etype in self._initialized['init_uri_eid']:
+        for etype in self._init_uri_eid:
             self.sql('DROP TABLE uri_eid_%s' % etype.lower())
         # Remove relations tables
-        for rtype in self._initialized['uri_rtypes']:
+        for rtype in self._uri_rtypes:
             if not self._cnx.repo.schema.rschema(rtype).inlined:
                 self.sql('DROP TABLE %(r)s_relation_iid_tmp' % {'r': rtype})
             else:
