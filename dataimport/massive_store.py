@@ -90,7 +90,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def __init__(self, cnx, autoflush_metadata=True,
                  commit_at_flush=True,
-                 uri_param_name='rdf:about',
                  on_commit_callback=None, on_rollback_callback=None,
                  slave_mode=False,
                  source=None):
@@ -101,8 +100,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                               Automatically flush the metadata after
                               each flush()
         - commit_at_flush: Boolean. Commit after each flush().
-        - uri_param_name: String. If given, will use this parameter to get cw_uri
-                          for entities.
         """
         super(MassiveObjectStore, self).__init__(cnx)
         self.logger = logging.getLogger('dataio.relationmixin')
@@ -128,7 +125,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._data_relations = defaultdict(list)
         self._now = datetime.now()
         self._default_cwuri = make_uid('_auto_generated')
-        self.uri_param_name = uri_param_name
         self._count_cwuri = 0
         self.commit_at_flush = commit_at_flush
         self.on_commit_callback = on_commit_callback
@@ -429,11 +425,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if 'creation_date' not in kwargs:
             kwargs['creation_date'] = self._now
         if 'cwuri' not in kwargs:
-            if self.uri_param_name and self.uri_param_name in kwargs:
-                kwargs['cwuri'] = kwargs[self.uri_param_name]
-            else:
-                kwargs['cwuri'] = self._default_cwuri + str(self._count_cwuri)
-                self._count_cwuri += 1
+            kwargs['cwuri'] = self._default_cwuri + str(self._count_cwuri)
+            self._count_cwuri += 1
         if 'eid' not in kwargs and self.eids_seq_range is not None:
             # If eid is not given and the eids sequence is set,
             # use the value from the sequence
