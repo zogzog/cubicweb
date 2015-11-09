@@ -210,6 +210,8 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             store = MassiveObjectStore(cnx)
             self.push_geonames_data(osp.join(HERE, 'data/geonames.csv'), store)
             store.flush()
+            store.commit()
+            store.finish()
         with self.admin_access.repo_cnx() as cnx:
             rset = cnx.execute('Any X WHERE X is Location')
             self.assertEqual(len(rset), 4000)

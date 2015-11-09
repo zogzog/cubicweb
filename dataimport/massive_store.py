@@ -231,7 +231,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.sql('CREATE INDEX uri_eid_%(e)s_idx ON uri_eid_%(e)s' '(uri)' % {'e': etype.lower()})
         # Set the etype as converted
         self._uri_eid_inserted.add(etype)
-        self.commit()
 
     def convert_relations(self, etype_from, rtype, etype_to,
                           uri_label_from='cwuri', uri_label_to='cwuri'):
@@ -275,7 +274,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                             'ef': etype_from.lower() if etype_from else u''})
         except Exception as ex:
             self.logger.error("Can't insert relation %s: %s", rtype, ex)
-        self.commit()
 
     ### SQL UTILITIES #########################################################
 
@@ -461,7 +459,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.sql('DROP TABLE %(r)s_relation_iid_tmp' % {'r': rtype})
             else:
                 self.logger.warning("inlined relation %s: no cleanup to be done for it" % rtype)
-        self.commit()
         # Get all the initialized etypes/rtypes
         if self._dbh.table_exists('cwmassive_initialized'):
             crs = self.sql('SELECT retype, type FROM cwmassive_initialized')
@@ -477,7 +474,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                          {'e': retype})
         # Create meta constraints (entities, is_instance_of, ...)
         self._create_metatables_constraints()
-        self.commit()
         # Delete the meta data table
         for table_name in ('cwmassive_initialized', 'cwmassive_constraints', 'cwmassive_metadata'):
             if self._dbh.table_exists(table_name):
@@ -576,8 +572,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.insert_massive_meta_data(etype)
                 sql = 'INSERT INTO cwmassive_metadata VALUES (%(e)s)'
                 self.sql(sql, {'e': etype})
-        # Final commit
-        self.commit()
 
     def _cleanup_entities(self, etype):
         """ Cleanup etype table """
