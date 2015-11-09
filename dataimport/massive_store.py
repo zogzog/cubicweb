@@ -44,15 +44,14 @@ class MassiveObjectStore(stores.RQLObjectStore):
    - This store can only insert relations that are not inlined (i.e.,
      which do *not* have inlined=True in their definition in the schema).
 
-
    It should be used as follows:
 
        store = MassiveObjectStore(cnx)
        store.init_rtype_table('Person', 'lives_in', 'Location')
        ...
 
-       store.create_entity('Person', subj_iid_attribute=person_iid, ...)
-       store.create_entity('Location', obj_iid_attribute=location_iid, ...)
+       store.prepare_insert_entity('Person', subj_iid_attribute=person_iid, ...)
+       store.prepare_insert_entity('Location', obj_iid_attribute=location_iid, ...)
        ...
 
        # subj_iid_attribute and obj_iid_attribute are argument names
@@ -62,24 +61,24 @@ class MassiveObjectStore(stores.RQLObjectStore):
        store.flush()
        store.relate_by_iid(person_iid, 'lives_in', location_iid)
        # For example:
-       store.create_entity('Person',
-                           cwuri='http://dbpedia.org/toto',
-                           name='Toto')
-       store.create_entity('Location',
-                           uri='http://geonames.org/11111',
-                           name='Somewhere')
+       store.prepare_insert_entity('Person',
+                                   cwuri='http://dbpedia.org/toto',
+                                   name='Toto')
+       store.prepare_insert_entity('Location',
+                                   uri='http://geonames.org/11111',
+                                   name='Somewhere')
        store.flush()
        store.relate_by_iid('http://dbpedia.org/toto',
-                       'lives_in',
-                       'http://geonames.org/11111')
+                           'lives_in',
+                           'http://geonames.org/11111')
        # Finally
-       store.flush_meta_data()
        store.convert_relations('Person', 'lives_in', 'Location',
                                'subj_iid_attribute', 'obj_iid_attribute')
        # For the previous example:
        store.convert_relations('Person', 'lives_in', 'Location', 'cwuri', 'uri')
        ...
-       store.cleanup()
+       store.commit()
+       store.finish()
     """
     # size of eid range reserved by the store for each batch
     eids_seq_range = 10000
