@@ -97,7 +97,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         - cnx: CubicWeb cnx
         """
         super(MassiveObjectStore, self).__init__(cnx)
-        self.logger = logging.getLogger('dataio.relationmixin')
+        self.logger = logging.getLogger('dataimport.massive_store')
         self._cnx = cnx
         self.sql = cnx.system_sql
         self._data_uri_relations = defaultdict(list)
@@ -108,7 +108,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                              'rtypes': set(),
                             }
         self.sql = self._cnx.system_sql
-        self.logger = logging.getLogger('dataio.massiveimport')
         self.slave_mode = slave_mode
         self.size_constraints = get_size_constraints(cnx.vreg.schema)
         self.default_values = get_default_values(cnx.vreg.schema)
