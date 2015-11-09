@@ -113,7 +113,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._rtypes = set()
 
         self.slave_mode = slave_mode
-        self.size_constraints = get_size_constraints(cnx.vreg.schema)
         self.default_values = get_default_values(cnx.vreg.schema)
         pg_schema = cnx.repo.config.system_source_config.get('db-namespace', 'public')
         self._dbh = PGHelper(self._cnx, pg_schema)
@@ -383,15 +382,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
             for eid in range(last_eid - self.eids_seq_range + 1, last_eid + 1):
                 yield eid
 
-    def _apply_size_constraints(self, etype, kwargs):
-        """Apply the size constraints for a given etype, attribute and value."""
-        size_constraints = self.size_constraints[etype]
-        for attr, value in kwargs.items():
-            if value:
-                maxsize = size_constraints.get(attr)
-                if maxsize is not None and len(value) > maxsize:
-                    kwargs[attr] = value[:maxsize-4] + '...'
-
     def _apply_default_values(self, etype, kwargs):
         """Apply the default values for a given etype, attribute and value."""
         default_values = self.default_values[etype]
@@ -418,7 +408,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
             # If eid is not given and the eids sequence is set,
             # use the value from the sequence
             kwargs['eid'] = self.get_next_eid()
-        self._apply_size_constraints(etype, kwargs)
         self._apply_default_values(etype, kwargs)
         self._data_entities[etype].append(kwargs)
         return kwargs.get('eid')
