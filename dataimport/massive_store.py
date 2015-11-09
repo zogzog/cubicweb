@@ -89,20 +89,17 @@ class MassiveObjectStore(stores.RQLObjectStore):
     iid_maxsize = 1024
 
     def __init__(self, cnx,
-                 commit_at_flush=True,
                  on_commit_callback=None, on_rollback_callback=None,
                  slave_mode=False,
                  source=None):
         """ Create a MassiveObject store, with the following attributes:
 
         - cnx: CubicWeb cnx
-        - commit_at_flush: Boolean. Commit after each flush().
         """
         super(MassiveObjectStore, self).__init__(cnx)
         self.logger = logging.getLogger('dataio.relationmixin')
         self._cnx = cnx
         self.sql = cnx.system_sql
-        self.commit_at_flush = commit_at_flush
         self._data_uri_relations = defaultdict(list)
         self._initialized = {'init_uri_eid': set(),
                              'uri_eid_inserted': set(),
@@ -122,7 +119,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._now = datetime.now()
         self._default_cwuri = make_uid('_auto_generated')
         self._count_cwuri = 0
-        self.commit_at_flush = commit_at_flush
         self.on_commit_callback = on_commit_callback
         self.on_rollback_callback = on_rollback_callback
         # Initialized the meta tables of dataio for warm restart
@@ -221,9 +217,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
             buf.close()
             # Clear data cache
             self._data_uri_relations[rtype] = []
-            # Commit if asked
-            if self.commit_at_flush:
-                self.commit()
 
     def fill_uri_eid_table(self, etype, uri_label):
         """ Fill the uri_eid table
@@ -519,9 +512,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                              null='NULL', columns=('eid_from', 'eid_to'))
             # Clear data cache
             self._data_relations[rtype] = []
-            # Commit if asked
-            if self.commit_at_flush:
-                self.commit()
 
     def flush_entities(self):
         """ Flush the entities data
@@ -558,9 +548,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
             # Clear data cache
             self._data_entities[etype] = []
         self.flush_meta_data()
-        # Commit if asked
-        if self.commit_at_flush:
-            self.commit()
 
     def flush_meta_data(self):
         """ Flush the meta data (entities table, is_instance table, ...)
