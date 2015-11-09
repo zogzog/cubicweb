@@ -83,7 +83,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
     """
 
     def __init__(self, cnx, autoflush_metadata=True,
-                 replace_sep='', commit_at_flush=True,
+                 commit_at_flush=True,
                  iid_maxsize=1024, uri_param_name='rdf:about',
                  eids_seq_range=10000, eids_seq_start=None,
                  on_commit_callback=None, on_rollback_callback=None,
@@ -95,8 +95,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         - autoflush_metadata: Boolean.
                               Automatically flush the metadata after
                               each flush()
-        - replace_sep: String. Replace separator used for
-                       (COPY FROM) buffer creation.
         - commit_at_flush: Boolean. Commit after each flush().
         - eids_seq_range: Int. Range of the eids_seq_range to be fetched each time
                                by the store (default is 10000).
@@ -113,7 +111,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._cnx = cnx
         self.sql = cnx.system_sql
         self.iid_maxsize = iid_maxsize
-        self.replace_sep = replace_sep
         self.commit_at_flush = commit_at_flush
         self._data_uri_relations = defaultdict(list)
         self._initialized = {'init_uri_eid': set(),
@@ -125,7 +122,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.sql = self._cnx.system_sql
         self.logger = logging.getLogger('dataio.massiveimport')
         self.autoflush_metadata = autoflush_metadata
-        self.replace_sep = replace_sep
         self.slave_mode = slave_mode
         self.size_constraints = get_size_constraints(cnx.vreg.schema)
         self.default_values = get_default_values(cnx.vreg.schema)
@@ -529,8 +525,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             if not data:
                 # There is no data for these etype for this flush round.
                 continue
-            buf = pgstore._create_copyfrom_buffer(data, ('eid_from', 'eid_to'),
-                                                  replace_sep=self.replace_sep)
+            buf = pgstore._create_copyfrom_buffer(data, ('eid_from', 'eid_to'))
             if not buf:
                 # The buffer is empty. This is probably due to error in _create_copyfrom_buffer
                 raise ValueError
@@ -566,8 +561,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 _d = _base_data.copy()
                 _d.update(d)
                 _data.append(_d)
-            buf = pgstore._create_copyfrom_buffer(_data, columns,
-                                                  replace_sep=self.replace_sep)
+            buf = pgstore._create_copyfrom_buffer(_data, columns)
             if not buf:
                 # The buffer is empty. This is probably due to error in _create_copyfrom_buffer
                 raise ValueError('Error in buffer creation for etype %s' % etype)
