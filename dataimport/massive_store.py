@@ -88,7 +88,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
     # max size of the iid, used to create the iid_eid conversion table
     iid_maxsize = 1024
 
-    def __init__(self, cnx, autoflush_metadata=True,
+    def __init__(self, cnx,
                  commit_at_flush=True,
                  on_commit_callback=None, on_rollback_callback=None,
                  slave_mode=False,
@@ -96,9 +96,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """ Create a MassiveObject store, with the following attributes:
 
         - cnx: CubicWeb cnx
-        - autoflush_metadata: Boolean.
-                              Automatically flush the metadata after
-                              each flush()
         - commit_at_flush: Boolean. Commit after each flush().
         """
         super(MassiveObjectStore, self).__init__(cnx)
@@ -115,7 +112,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                             }
         self.sql = self._cnx.system_sql
         self.logger = logging.getLogger('dataio.massiveimport')
-        self.autoflush_metadata = autoflush_metadata
         self.slave_mode = slave_mode
         self.size_constraints = get_size_constraints(cnx.vreg.schema)
         self.default_values = get_default_values(cnx.vreg.schema)
@@ -561,8 +557,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.on_rollback(exc, etype, data)
             # Clear data cache
             self._data_entities[etype] = []
-        if self.autoflush_metadata:
-            self.flush_meta_data()
+        self.flush_meta_data()
         # Commit if asked
         if self.commit_at_flush:
             self.commit()

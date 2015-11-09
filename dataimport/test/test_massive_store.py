@@ -86,7 +86,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             crs = cnx.system_sql('SELECT * FROM entities WHERE type=%(t)s',
                                  {'t': 'Location'})
             self.assertEqual(len(crs.fetchall()), 0)
-            store = MassiveObjectStore(cnx, autoflush_metadata=True)
+            store = MassiveObjectStore(cnx)
             store.prepare_insert_entity('Location', name=u'toto')
             store.flush()
             store.commit()
@@ -96,25 +96,6 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             crs = cnx.system_sql('SELECT * FROM entities WHERE type=%(t)s',
                                  {'t': 'Location'})
             self.assertEqual(len(crs.fetchall()), 1)
-
-#    def test_no_autoflush_metadata(self):
-#        with self.admin_access.repo_cnx() as cnx:
-#            crs = cnx.system_sql('SELECT * FROM entities WHERE type=%(t)s',
-#                                      {'t': 'Location'})
-#            self.assertEqual(len(crs.fetchall()), 0)
-#        with self.admin_access.repo_cnx() as cnx:
-#            store = MassiveObjectStore(cnx, autoflush_metadata=False)
-#            store.prepare_insert_entity('Location', name=u'toto')
-#            store.flush()
-#            store.commit()
-#            crs = cnx.system_sql('SELECT * FROM entities WHERE type=%(t)s',
-#                                 {'t': 'Location'})
-#            self.assertEqual(len(crs.fetchall()), 0)
-#            store.flush_meta_data()
-#            crs = cnx.system_sql('SELECT * FROM entities WHERE type=%(t)s',
-#                                 {'t': 'Location'})
-#            self.assertEqual(len(crs.fetchall()), 1)
-#            store.finish()
 
     def test_massimport_etype_metadata(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -226,7 +207,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
 
     def test_simple_insert(self):
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, autoflush_metadata=True)
+            store = MassiveObjectStore(cnx)
             self.push_geonames_data(osp.join(HERE, 'data/geonames.csv'), store)
             store.flush()
         with self.admin_access.repo_cnx() as cnx:
@@ -237,7 +218,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
 
     def test_index_building(self):
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, autoflush_metadata=True)
+            store = MassiveObjectStore(cnx)
             self.push_geonames_data(osp.join(HERE, 'data/geonames.csv'), store)
             store.flush()
 
@@ -259,20 +240,6 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             self.assertIn('unique_entities_extid_idx', indexes)
             self.assertIn('owned_by_relation_p_key', indexes)
             self.assertIn('owned_by_relation_to_idx', indexes)
-
-    def test_flush_meta_data(self):
-        with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, autoflush_metadata=False)
-            self.push_geonames_data(osp.join(HERE, 'data/geonames.csv'), store)
-            store.flush()
-            curs = cnx.system_sql('SELECT * FROM entities WHERE type=%(t)s',
-                                  {'t': 'Location'})
-            self.assertEqual(len(curs.fetchall()), 0)
-            # Flush metadata -> entities table is updated
-            store.flush_meta_data()
-            curs = cnx.system_sql('SELECT * FROM entities WHERE type=%(t)s',
-                                  {'t': 'Location'})
-            self.assertEqual(len(curs.fetchall()), 4000)
 
     def test_multiple_insert(self):
         with self.admin_access.repo_cnx() as cnx:
