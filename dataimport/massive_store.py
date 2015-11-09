@@ -81,11 +81,14 @@ class MassiveObjectStore(stores.RQLObjectStore):
        ...
        store.cleanup()
     """
+    # size of eid range reserved by the store for each batch
+    eids_seq_range = 10000
+    # initial eid (None means use the value in the db)
+    eids_seq_start = None
 
     def __init__(self, cnx, autoflush_metadata=True,
                  commit_at_flush=True,
                  iid_maxsize=1024, uri_param_name='rdf:about',
-                 eids_seq_range=10000, eids_seq_start=None,
                  on_commit_callback=None, on_rollback_callback=None,
                  slave_mode=False,
                  source=None):
@@ -96,11 +99,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                               Automatically flush the metadata after
                               each flush()
         - commit_at_flush: Boolean. Commit after each flush().
-        - eids_seq_range: Int. Range of the eids_seq_range to be fetched each time
-                               by the store (default is 10000).
-                               If None, the sequence eids is attached to each entity tables
-                               (backward compatibility with the 0.2.0).
-        - eids_seq_start: Int. Set the eids sequence value (if None, nothing is done).
         - iid_maxsize: Int. Max size of the iid, used to create the
                     iid_eid convertion table.
         - uri_param_name: String. If given, will use this parameter to get cw_uri
@@ -139,11 +137,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # Initialized the meta tables of dataio for warm restart
         self._init_dataio_metatables()
         # Internal markers of initialization
-        self._eids_seq_range = eids_seq_range
-        self._eids_seq_start = eids_seq_start
-        if self._eids_seq_start is not None:
+        if self.eids_seq_start is not None and not self.slave_mode:
             self._cnx.system_sql(self._cnx.repo.system_source.dbhelper.sql_restart_numrange(
-                'entities_id_seq', initial_value=self._eids_seq_start + 1))
+                'entities_id_seq', initial_value=self.eids_seq_start + 1))
             cnx.commit()
         self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
         # recreate then when self.finish() is called
@@ -377,7 +373,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if etype not in self._initialized['entities']:
             # Only for non-initialized etype and not slave mode store
             if not self.slave_mode:
-                if self._eids_seq_range is None:
+                if self.eids_seq_range is None:
                     # Eids are directly set by the entities_id_seq.
                     # We attach this sequence to all the created etypes.
                     sql = ("ALTER TABLE cw_%s ALTER COLUMN cw_eid "
@@ -401,8 +397,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
         a given number of eids from the 'entities_id_seq', and then
         storing them"""
         while True:
-            last_eid = self._cnx.repo.system_source.create_eid(self._cnx, self._eids_seq_range)
-            for eid in range(last_eid - self._eids_seq_range + 1, last_eid + 1):
+            last_eid = self._cnx.repo.system_source.create_eid(self._cnx, self.eids_seq_range)
+            for eid in range(last_eid - self.eids_seq_range + 1, last_eid + 1):
                 yield eid
 
     def _apply_size_constraints(self, etype, kwargs):
@@ -439,7 +435,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             else:
                 kwargs['cwuri'] = self._default_cwuri + str(self._count_cwuri)
                 self._count_cwuri += 1
-        if 'eid' not in kwargs and self._eids_seq_range is not None:
+        if 'eid' not in kwargs and self.eids_seq_range is not None:
             # If eid is not given and the eids sequence is set,
             # use the value from the sequence
             kwargs['eid'] = self.get_next_eid()
@@ -609,7 +605,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def _cleanup_entities(self, etype):
         """ Cleanup etype table """
-        if self._eids_seq_range is None:
+        if self.eids_seq_range is None:
             # Remove DEFAULT eids sequence if added
             sql = 'ALTER TABLE cw_%s ALTER COLUMN cw_eid DROP DEFAULT;' % etype.lower()
             self.sql(sql)

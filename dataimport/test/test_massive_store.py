@@ -153,8 +153,12 @@ class MassImportSimpleTC(testlib.CubicWebTC):
         self.assertIn('owned_by_relation_to_idx', indexes)
 
     def test_eids_seq_range(self):
+        class MyMassiveObjectStore(MassiveObjectStore):
+            eids_seq_range = 1000
+            eids_seq_start = 50000
+
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, eids_seq_range=1000, eids_seq_start=50000)
+            store = MyMassiveObjectStore(cnx)
             store.prepare_insert_entity('Location', name=u'toto')
             store.flush()
             cnx.commit()
@@ -163,15 +167,23 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             self.assertGreater(crs.fetchone()[0], 50000)
 
     def test_eid_entity(self):
+        class MyMassiveObjectStore(MassiveObjectStore):
+            eids_seq_range = 1000
+            eids_seq_start = 50000
+
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, eids_seq_range=1000, eids_seq_start=50000)
+            store = MyMassiveObjectStore(cnx)
             eid = store.prepare_insert_entity('Location', name=u'toto')
             store.flush()
             self.assertGreater(eid, 50000)
 
     def test_eid_entity_2(self):
+        class MyMassiveObjectStore(MassiveObjectStore):
+            eids_seq_range = 1000
+            eids_seq_start = 50000
+
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, eids_seq_range=1000, eids_seq_start=50000)
+            store = MyMassiveObjectStore(cnx)
             eid = store.prepare_insert_entity('Location', name=u'toto', eid=10000)
             store.flush()
         self.assertEqual(eid, 10000)
