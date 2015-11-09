@@ -120,8 +120,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._count_cwuri = 0
         self.on_commit_callback = on_commit_callback
         self.on_rollback_callback = on_rollback_callback
-        # Initialized the meta tables of dataio for warm restart
-        self._init_dataio_metatables()
+        # Do our meta tables already exist?
+        self._init_massive_metatables()
         # Internal markers of initialization
         if self.eids_seq_start is not None and not self.slave_mode:
             self._cnx.system_sql(self._cnx.repo.system_source.dbhelper.sql_restart_numrange(
@@ -175,13 +175,11 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # Add it to the initialized set
         self._initialized['init_uri_eid'].add(etype)
 
-    def _init_dataio_metatables(self):
-        """ Initialized the meta tables of dataio for warm restart
-        """
-        # Check if dataio tables are not already created (i.e. a restart)
-        self._initialized_table_created = self._dbh.table_exists('dataio_initialized')
-        self._constraint_table_created = self._dbh.table_exists('dataio_constraints')
-        self._metadata_table_created = self._dbh.table_exists('dataio_metadata')
+    def _init_massive_metatables(self):
+        # Check if our tables are not already created (i.e. a restart)
+        self._initialized_table_created = self._dbh.table_exists('cwmassive_initialized')
+        self._constraint_table_created = self._dbh.table_exists('cwmassive_constraints')
+        self._metadata_table_created = self._dbh.table_exists('cwmassive_metadata')
 
     ### RELATE FUNCTION #######################################################
 
@@ -280,7 +278,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if not self._constraint_table_created:
             # Create a table to save the constraints
             # Allow reload even after crash
-            sql = "CREATE TABLE dataio_constraints (origtable text, query text, type varchar(256))"
+            sql = "CREATE TABLE cwmassive_constraints (origtable text, query text, type varchar(256))"
             self.sql(sql)
             self._constraint_table_created = True
         self._drop_table_constraints_indexes(tablename)
@@ -289,26 +287,25 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """ Drop and store table constraints and indexes """
         indexes, constraints = self._dbh.application_indexes_constraints(tablename)
         for name, query in constraints.items():
-            sql = 'INSERT INTO dataio_constraints VALUES (%(e)s, %(c)s, %(t)s)'
+            sql = 'INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)'
             self.sql(sql, {'e': tablename, 'c': query, 't': 'constraint'})
             sql = 'ALTER TABLE %s DROP CONSTRAINT %s CASCADE' % (tablename, name)
             self.sql(sql)
         for name, query in indexes.items():
-            sql = 'INSERT INTO dataio_constraints VALUES (%(e)s, %(c)s, %(t)s)'
+            sql = 'INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)'
             self.sql(sql, {'e': tablename, 'c': query, 't': 'index'})
             sql = 'DROP INDEX %s' % name
             self.sql(sql)
 
     def reapply_constraint_index(self, tablename):
-        if not self._dbh.table_exists('dataio_constraints'):
-            self.logger.info('The table dataio_constraints does not exist '
-                             '(keep_index option should be True)')
+        if not self._dbh.table_exists('cwmassive_constraints'):
+            self.logger.info('The table cwmassive_constraints does not exist')
             return
-        sql = 'SELECT query FROM dataio_constraints WHERE origtable = %(e)s'
+        sql = 'SELECT query FROM cwmassive_constraints WHERE origtable = %(e)s'
         crs = self.sql(sql, {'e': tablename})
         for query, in crs.fetchall():
             self.sql(query)
-            self.sql('DELETE FROM dataio_constraints WHERE origtable = %(e)s '
+            self.sql('DELETE FROM cwmassive_constraints WHERE origtable = %(e)s '
                      'AND query = %(q)s', {'e': tablename, 'q': query})
 
     def _drop_metatables_constraints(self):
@@ -337,16 +334,16 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self.drop_and_store_indexes_constraints(tablename)
             # Push the etype in the initialized table for easier restart
             self.init_create_initialized_table()
-            sql = 'INSERT INTO dataio_initialized VALUES (%(e)s, %(t)s)'
+            sql = 'INSERT INTO cwmassive_initialized VALUES (%(e)s, %(t)s)'
             self.sql(sql, {'e': rtype, 't': 'rtype'})
             # Mark rtype as "initialized" for faster check
             self._initialized['rtypes'].add(rtype)
 
     def init_create_initialized_table(self):
-        """ Create the dataio initialized table
+        """ Create the cwmassive initialized table
         """
         if not self._initialized_table_created:
-            sql = "CREATE TABLE dataio_initialized (retype text, type varchar(128))"
+            sql = "CREATE TABLE cwmassive_initialized (retype text, type varchar(128))"
             self.sql(sql)
             self._initialized_table_created = True
 
@@ -367,7 +364,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.drop_and_store_indexes_constraints(tablename)
                 # Push the etype in the initialized table for easier restart
                 self.init_create_initialized_table()
-                sql = 'INSERT INTO dataio_initialized VALUES (%(e)s, %(t)s)'
+                sql = 'INSERT INTO cwmassive_initialized VALUES (%(e)s, %(t)s)'
                 self.sql(sql, {'e': etype, 't': 'etype'})
             # Mark etype as "initialized" for faster check
             self._initialized['entities'].add(etype)
@@ -460,8 +457,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.logger.warning("inlined relation %s: no cleanup to be done for it" % rtype)
         self.commit()
         # Get all the initialized etypes/rtypes
-        if self._dbh.table_exists('dataio_initialized'):
-            crs = self.sql('SELECT retype, type FROM dataio_initialized')
+        if self._dbh.table_exists('cwmassive_initialized'):
+            crs = self.sql('SELECT retype, type FROM cwmassive_initialized')
             for retype, _type in crs.fetchall():
                 self.logger.info('Cleanup for %s' % retype)
                 if _type == 'etype':
@@ -470,13 +467,13 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 elif _type == 'rtype':
                     # Cleanup relations tables
                     self._cleanup_relations(retype)
-                self.sql('DELETE FROM dataio_initialized WHERE retype = %(e)s',
+                self.sql('DELETE FROM cwmassive_initialized WHERE retype = %(e)s',
                          {'e': retype})
         # Create meta constraints (entities, is_instance_of, ...)
         self._create_metatables_constraints()
         self.commit()
         # Delete the meta data table
-        for table_name in ('dataio_initialized', 'dataio_constraints', 'dataio_metadata'):
+        for table_name in ('cwmassive_initialized', 'cwmassive_constraints', 'cwmassive_metadata'):
             if self._dbh.table_exists(table_name):
                 self.sql('DROP TABLE %s' % table_name)
         self.commit()
@@ -553,17 +550,17 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """
         if self.slave_mode:
             raise RuntimeError('Flushing meta data is not allow in slave mode')
-        if not self._dbh.table_exists('dataio_initialized'):
+        if not self._dbh.table_exists('cwmassive_initialized'):
             self.logger.info('No information available for initialized etypes/rtypes')
             return
         if not self._metadata_table_created:
             # Keep the correctly flush meta data in database
-            sql = "CREATE TABLE dataio_metadata (etype text)"
+            sql = "CREATE TABLE cwmassive_metadata (etype text)"
             self.sql(sql)
             self._metadata_table_created = True
-        crs = self.sql('SELECT etype FROM dataio_metadata')
+        crs = self.sql('SELECT etype FROM cwmassive_metadata')
         already_flushed = set(e for e, in crs.fetchall())
-        crs = self.sql('SELECT retype FROM dataio_initialized WHERE type = %(t)s',
+        crs = self.sql('SELECT retype FROM cwmassive_initialized WHERE type = %(t)s',
                        {'t': 'etype'})
         all_etypes = set(e for e, in crs.fetchall())
         for etype in all_etypes:
@@ -571,7 +568,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 # Deals with meta data
                 self.logger.info('Flushing meta data for %s' % etype)
                 self.insert_massive_meta_data(etype)
-                sql = 'INSERT INTO dataio_metadata VALUES (%(e)s)'
+                sql = 'INSERT INTO cwmassive_metadata VALUES (%(e)s)'
                 self.sql(sql, {'e': etype})
         # Final commit
         self.commit()
