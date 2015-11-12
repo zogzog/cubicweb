@@ -20,6 +20,7 @@
 __docformat__ = "restructuredtext en"
 
 from six import text_type, string_types
+from six.moves import range
 
 from logilab.common.decorators import classproperty
 
@@ -30,7 +31,7 @@ from cubicweb.entity import Entity
 def chunks(seq, step):
     """See http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks-in-python)"""
     return (seq[i:i+step]
-            for i in xrange(0, len(seq), step))
+            for i in range(0, len(seq), step))
 
 
 class AnyEntity(Entity):
