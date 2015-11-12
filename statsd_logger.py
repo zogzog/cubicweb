@@ -78,7 +78,7 @@ def setup(bucket, address):
     packed = None
     for family in (socket.AF_INET6, socket.AF_INET):
         try:
-            packed = socket.inet_pton(family, address)
+            packed = socket.inet_pton(family, address[0])
             break
         except socket.error:
             continue
