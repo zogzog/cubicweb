@@ -111,7 +111,7 @@ class AbstractSource(object):
         self.uri = source_config.pop('uri')
         # unormalize to avoid non-ascii characters in logger's name, this will cause decoding error
         # on logging
-        set_log_methods(self, getLogger('cubicweb.sources.' + unormalize(unicode(self.uri))))
+        set_log_methods(self, getLogger('cubicweb.sources.' + unormalize(text_type(self.uri))))
         source_config.pop('type')
         self.update_config(None, self.check_conf_dict(eid, source_config,
                                                       fail_if_unknown=False))
