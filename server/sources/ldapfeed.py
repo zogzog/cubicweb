@@ -338,7 +338,7 @@ You can set multiple groups by separating them by a comma.',
             elif self.user_attrs.get(key) == 'modification_date':
                 itemdict[key] = datetime.strptime(value[0], '%Y%m%d%H%M%SZ')
             else:
-                if PY2:
+                if PY2 and value and isinstance(value[0], str):
                     value = [unicode(val, 'utf-8', 'replace') for val in value]
                 if len(value) == 1:
                     itemdict[key] = value = value[0]
