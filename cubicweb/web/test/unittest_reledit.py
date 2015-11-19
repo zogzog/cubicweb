@@ -73,13 +73,13 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <table class="">
 <tr class="title_subject_row">
 <td>
-<input id="title-subject:%(eid)s" maxlength="32" name="title-subject:%(eid)s" size="32" tabindex="1" type="text" value="cubicweb-world-domination" />
+<input id="title-subject:%(eid)s" maxlength="32" name="title-subject:%(eid)s" size="32" type="text" value="cubicweb-world-domination" />
 </td></tr>
 </table></fieldset>
 <table class="buttonbar">
 <tr>
-<td><button class="validateButton" tabindex="2" type="submit" value="button_ok"><img alt="OK_ICON" src="http://testing.fr/cubicweb/data/ok.png" />button_ok</button></td>
-<td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;title-subject-%(eid)s&#39;)" tabindex="3" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
+<td><button class="validateButton" type="submit" value="button_ok"><img alt="OK_ICON" src="http://testing.fr/cubicweb/data/ok.png" />button_ok</button></td>
+<td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;title-subject-%(eid)s&#39;)" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
 </tr></table>
 </fieldset>
 <iframe width="0px" height="0px" src="javascript: void(0);" name="eformframe" id="eformframe"></iframe>
@@ -108,23 +108,23 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <tr class="title_subject_row">
 <th class="labelCol"><label class="required" for="title-subject:A">title</label></th>
 <td>
-<input id="title-subject:A" maxlength="50" name="title-subject:A" size="45" tabindex="4" type="text" value="" />
+<input id="title-subject:A" maxlength="50" name="title-subject:A" size="45" type="text" value="" />
 </td></tr>
 <tr class="description_subject_row">
 <th class="labelCol"><label for="description-subject:A">description</label></th>
 <td>
-<input name="description_format-subject:A" type="hidden" value="text/html" /><textarea cols="80" cubicweb:type="wysiwyg" id="description-subject:A" name="description-subject:A" onkeyup="autogrow(this)" rows="2" tabindex="5"></textarea>
+<input name="description_format-subject:A" type="hidden" value="text/html" /><textarea cols="80" cubicweb:type="wysiwyg" id="description-subject:A" name="description-subject:A" onkeyup="autogrow(this)" rows="2"></textarea>
 </td></tr>
 <tr class="rss_url_subject_row">
 <th class="labelCol"><label for="rss_url-subject:A">rss_url</label></th>
 <td>
-<input id="rss_url-subject:A" maxlength="128" name="rss_url-subject:A" size="45" tabindex="6" type="text" value="" />
+<input id="rss_url-subject:A" maxlength="128" name="rss_url-subject:A" size="45" type="text" value="" />
 </td></tr>
 </table></fieldset>
 <table class="buttonbar">
 <tr>
-<td><button class="validateButton" tabindex="7" type="submit" value="button_ok"><img alt="OK_ICON" src="http://testing.fr/cubicweb/data/ok.png" />button_ok</button></td>
-<td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;long_desc-subject-%(eid)s&#39;)" tabindex="8" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
+<td><button class="validateButton" type="submit" value="button_ok"><img alt="OK_ICON" src="http://testing.fr/cubicweb/data/ok.png" />button_ok</button></td>
+<td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;long_desc-subject-%(eid)s&#39;)" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
 </tr></table>
 </fieldset>
 <iframe width="0px" height="0px" src="javascript: void(0);" name="eformframe" id="eformframe"></iframe>
@@ -152,7 +152,7 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <table class="">
 <tr class="manager_subject_row">
 <td>
-<select id="manager-subject:%(eid)s" name="manager-subject:%(eid)s" size="1" tabindex="9">
+<select id="manager-subject:%(eid)s" name="manager-subject:%(eid)s" size="1">
 <option value="__cubicweb_internal_field__"></option>
 <option value="%(toto)s">Toto</option>
 </select>
@@ -160,8 +160,8 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 </table></fieldset>
 <table class="buttonbar">
 <tr>
-<td><button class="validateButton" tabindex="10" type="submit" value="button_ok"><img alt="OK_ICON" src="http://testing.fr/cubicweb/data/ok.png" />button_ok</button></td>
-<td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;manager-subject-%(eid)s&#39;)" tabindex="11" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
+<td><button class="validateButton" type="submit" value="button_ok"><img alt="OK_ICON" src="http://testing.fr/cubicweb/data/ok.png" />button_ok</button></td>
+<td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;manager-subject-%(eid)s&#39;)" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
 </tr></table>
 </fieldset>
 <iframe width="0px" height="0px" src="javascript: void(0);" name="eformframe" id="eformframe"></iframe>

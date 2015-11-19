@@ -9,7 +9,7 @@
 
 //============= Eproperty form functions =====================================//
 /**
- * .. function:: setPropValueWidget(varname, tabindex)
+ * .. function:: setPropValueWidget(varname)
  *
  * called on CWProperty key selection:
  * - get the selected value
@@ -17,16 +17,15 @@
  * - fill associated div with the returned html
  *
  * * `varname`, the name of the variable as used in the original creation form
- * * `tabindex`, the tabindex that should be set on the widget
  */
 
-function setPropValueWidget(varname, tabindex) {
+function setPropValueWidget(varname) {
     var key = firstSelected(document.getElementById('pkey-subject:' + varname));
     if (key) {
         var args = {
             fname: 'prop_widget',
             pageid: pageid,
-            arg: $.map([key.value, varname, tabindex], JSON.stringify)
+            arg: $.map([key.value, varname], JSON.stringify)
         };
         cw.jqNode('div:value-subject:' + varname).loadxhtml(AJAX_BASE_URL, args, 'post');
     }

@@ -315,9 +315,8 @@ class PropertyKeyField(StringField):
     def render(self, form, renderer):
         wdg = self.get_widget(form)
         # pylint: disable=E1101
-        wdg.attrs['tabindex'] = form._cw.next_tabindex()
-        wdg.attrs['onchange'] = "javascript:setPropValueWidget('%s', %s)" % (
-            form.edited_entity.eid, form._cw.next_tabindex())
+        wdg.attrs['onchange'] = "javascript:setPropValueWidget('%s')" % (
+            form.edited_entity.eid)
         return wdg.render(form, self, renderer)
 
     def vocabulary(self, form):
@@ -335,10 +334,8 @@ class PropertyValueField(StringField):
     """
     widget = PlaceHolderWidget
 
-    def render(self, form, renderer=None, tabindex=None):
+    def render(self, form, renderer=None):
         wdg = self.get_widget(form)
-        if tabindex is not None:
-            wdg.attrs['tabindex'] = tabindex
         return wdg.render(form, self, renderer)
 
     def form_init(self, form):
@@ -422,7 +419,7 @@ class CWPropertyIEditControlAdapter(editcontroller.IEditControlAdapter):
 
 
 @ajaxfunc(output_type='xhtml')
-def prop_widget(self, propkey, varname, tabindex=None):
+def prop_widget(self, propkey, varname):
     """specific method for CWProperty handling"""
     entity = self._cw.vreg['etypes'].etype_class('CWProperty')(self._cw)
     entity.eid = varname
@@ -431,7 +428,7 @@ def prop_widget(self, propkey, varname, tabindex=None):
     form.build_context()
     vfield = form.field_by_name('value', 'subject')
     renderer = formrenderers.FormRenderer(self._cw)
-    return vfield.render(form, renderer, tabindex=tabindex) \
+    return vfield.render(form, renderer) \
            + renderer.render_help(form, vfield)
 
 _afs = uicfg.autoform_section

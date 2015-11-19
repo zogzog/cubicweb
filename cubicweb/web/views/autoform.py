@@ -565,9 +565,9 @@ class GenericRelationsWidget(fw.FieldWidget):
                 w(u'</tr>')
         w(u'<tr id="relationSelectorRow_%s" class="separator">' % eid)
         w(u'<th class="labelCol">')
-        w(u'<select id="relationSelector_%s" tabindex="%s" '
+        w(u'<select id="relationSelector_%s" '
           'onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
-          % (eid, req.next_tabindex(), xml_escape(json_dumps(eid))))
+          % (eid, xml_escape(json_dumps(eid))))
         w(u'<option value="">%s</option>' % _('select a relation'))
         for i18nrtype, rschema, role in field.relations:
             # more entities to link to

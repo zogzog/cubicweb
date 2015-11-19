@@ -107,14 +107,14 @@ are omitted as they are redundant for our purposes.
             <th class="labelCol"><label class="required" for="title-subject:763">title</label></th>
             <td>
               <input id="title-subject:763" maxlength="128" name="title-subject:763" size="45"
-                     tabindex="1" type="text" value="let us write more doc" />
+                     type="text" value="let us write more doc" />
             </td>
           </tr>
           ... (description field omitted) ...
           <tr class="priority_subject_row">
             <th class="labelCol"><label class="required" for="priority-subject:763">priority</label></th>
             <td>
-              <select id="priority-subject:763" name="priority-subject:763" size="1" tabindex="4">
+              <select id="priority-subject:763" name="priority-subject:763" size="1">
                 <option value="important">important</option>
                 <option selected="selected" value="normal">normal</option>
                 <option value="minor">minor</option>
@@ -126,7 +126,7 @@ are omitted as they are redundant for our purposes.
           <tr class="concerns_subject_row">
             <th class="labelCol"><label class="required" for="concerns-subject:763">concerns</label></th>
             <td>
-              <select id="concerns-subject:763" name="concerns-subject:763" size="1" tabindex="6">
+              <select id="concerns-subject:763" name="concerns-subject:763" size="1">
                 <option selected="selected" value="760">Foo</option>
               </select>
             </td>
@@ -134,7 +134,7 @@ are omitted as they are redundant for our purposes.
           <tr class="done_in_subject_row">
             <th class="labelCol"><label for="done_in-subject:763">done in</label></th>
             <td>
-              <select id="done_in-subject:763" name="done_in-subject:763" size="1" tabindex="7">
+              <select id="done_in-subject:763" name="done_in-subject:763" size="1">
                 <option value="__cubicweb_internal_field__"></option>
                 <option selected="selected" value="761">Foo 0.1.0</option>
                 <option value="762">Foo 0.2.0</option>
@@ -180,7 +180,7 @@ The relations section
                 <tr><th>&#160;</th><td>&#160;</td></tr>
                 <tr id="relationSelectorRow_763" class="separator">
                   <th class="labelCol">
-                    <select id="relationSelector_763" tabindex="8"
+                    <select id="relationSelector_763"
                             onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,763);">
                       <option value="">select a relation</option>
                       <option value="appeared_in_subject">appeared in</option>
@@ -228,7 +228,7 @@ Finally comes the buttons zone.
         <tbody>
           <tr>
             <td align="center">
-              <button class="validateButton" tabindex="9" type="submit" value="validate">
+              <button class="validateButton" type="submit" value="validate">
                 <img alt="OK_ICON" src="http://myapp/datafd8b5d92771209ede1018a8d5da46a37/ok.png" />
                 validate
               </button>
@@ -236,13 +236,13 @@ Finally comes the buttons zone.
             <td style="align: right; width: 50%;">
               <button class="validateButton"
                       onclick="postForm(&#39;__action_apply&#39;, &#39;button_apply&#39;, &#39;entityForm&#39;)"
-                      tabindex="10" type="button" value="apply">
+                      type="button" value="apply">
                 <img alt="APPLY_ICON" src="http://myapp/datafd8b5d92771209ede1018a8d5da46a37/plus.png" />
                 apply
               </button>
               <button class="validateButton"
                       onclick="postForm(&#39;__action_cancel&#39;, &#39;button_cancel&#39;, &#39;entityForm&#39;)"
-                      tabindex="11" type="button" value="cancel">
+                      type="button" value="cancel">
                 <img alt="CANCEL_ICON" src="http://myapp/datafd8b5d92771209ede1018a8d5da46a37/cancel.png" />
                 cancel
               </button>

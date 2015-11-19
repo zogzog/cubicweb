@@ -38,7 +38,7 @@ class WidgetsTC(CubicWebTC):
     def test_bitselect_widget(self):
         field = formfields.guess_field(self.schema['CWAttribute'], self.schema['ordernum'])
         field.choices = [('un', '1',), ('deux', '2',)]
-        widget = formwidgets.BitSelect(settabindex=False)
+        widget = formwidgets.BitSelect()
         req = fake.FakeRequest(form={'ordernum-subject:A': ['1', '2']})
         form = mock(_cw=req, formvalues={}, edited_entity=mock(eid='A'),
                     form_previous_values=())
@@ -62,7 +62,7 @@ class WidgetsTC(CubicWebTC):
             field = form.field_by_name('bool')
             widget = field.widget
             self.assertMultiLineEqual(widget._render(form, field, None),
-                '<label><input id="bool" name="bool" tabindex="1" '
+                '<label><input id="bool" name="bool" '
                 'type="checkbox" value="1" />&#160;'
                 'python &gt;&gt; others</label>')
 

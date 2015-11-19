@@ -48,8 +48,6 @@ request objects (grouped by category):
   * etype_rset
   * `form`, dictionary containing the values of a web form
   * `encoding`, character encoding to use in the response
-  * `next_tabindex()`: returns a monotonically growing integer used to
-    build the html tab index of forms
 
 * `HTTP`
 

@@ -215,13 +215,6 @@ class _CubicWebRequestBase(RequestSessionBase):
         """
         return self.set_varmaker()
 
-    def next_tabindex(self):
-        nextfunc = self.get_page_data('nexttabfunc')
-        if nextfunc is None:
-            nextfunc = Counter(1)
-            self.set_page_data('nexttabfunc', nextfunc)
-        return nextfunc()
-
     def set_varmaker(self):
         varmaker = self.get_page_data('rql_varmaker')
         if varmaker is None:

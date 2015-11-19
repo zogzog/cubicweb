@@ -125,9 +125,6 @@ class FieldWidget(object):
     :attr:`setdomid`
        flag telling if HTML DOM identifier should be set on input.
 
-    :attr:`settabindex`
-       flag telling if HTML tabindex attribute of inputs should be set.
-
     :attr:`suffix`
        string to use a suffix when generating input, to ease usage as a
        sub-widgets (eg widget used by another widget)
@@ -157,21 +154,17 @@ class FieldWidget(object):
     needs_js = ()
     needs_css = ()
     setdomid = True
-    settabindex = True
     suffix = None
     # does this widget expect a vocabulary
     vocabulary_widget = False
 
-    def __init__(self, attrs=None, setdomid=None, settabindex=None, suffix=None):
+    def __init__(self, attrs=None, setdomid=None, suffix=None):
         if attrs is None:
             attrs = {}
         self.attrs = attrs
         if setdomid is not None:
             # override class's default value
             self.setdomid = setdomid
-        if settabindex is not None:
-            # override class's default value
-            self.settabindex = settabindex
         if suffix is not None:
             self.suffix = suffix
 
@@ -202,14 +195,11 @@ class FieldWidget(object):
 
     def attributes(self, form, field):
         """Return HTML attributes for the widget, automatically setting DOM
-        identifier and tabindex when desired (see :attr:`setdomid` and
-        :attr:`settabindex` attributes)
+        identifier when desired (see :attr:`setdomid` attribute)
         """
         attrs = dict(self.attrs)
         if self.setdomid:
             attrs['id'] = field.dom_id(form, self.suffix)
-        if self.settabindex and 'tabindex' not in attrs:
-            attrs['tabindex'] = form._cw.next_tabindex()
         if 'placeholder' in attrs:
             attrs['placeholder'] = form._cw._(attrs['placeholder'])
         return attrs
@@ -386,7 +376,6 @@ class HiddenInput(Input):
     """
     type = 'hidden'
     setdomid = False  # by default, don't set id attribute on hidden input
-    settabindex = False
 
 
 class ButtonInput(Input):
@@ -996,8 +985,6 @@ class EditableURLWidget(FieldWidget):
         attrs = dict(self.attrs)
         if self.setdomid:
             attrs['id'] = field.dom_id(form)
-        if self.settabindex and 'tabindex' not in attrs:
-            attrs['tabindex'] = req.next_tabindex()
         # ensure something is rendered
         inputs = [u'<table><tr><th>',
                   req._('i18n_bookmark_url_path'),
@@ -1008,8 +995,6 @@ class EditableURLWidget(FieldWidget):
                   u'</th><td>']
         if self.setdomid:
             attrs['id'] = field.dom_id(form, 'fqs')
-        if self.settabindex:
-            attrs['tabindex'] = req.next_tabindex()
         attrs.setdefault('cols', 60)
         attrs.setdefault('onkeyup', 'autogrow(this)')
         inputs += [tags.textarea(fqs, name=fqsqname, **attrs),
@@ -1057,9 +1042,9 @@ class Button(Input):
     css_class = 'validateButton'
 
     def __init__(self, label=stdmsgs.BUTTON_OK, attrs=None,
-                 setdomid=None, settabindex=None,
+                 setdomid=None,
                  name='', value='', onclick=None, cwaction=None):
-        super(Button, self).__init__(attrs, setdomid, settabindex)
+        super(Button, self).__init__(attrs, setdomid)
         if isinstance(label, tuple):
             self.label = label[0]
             self.icon = label[1]
@@ -1085,8 +1070,6 @@ class Button(Input):
             attrs['name'] = self.name
             if self.setdomid:
                 attrs['id'] = self.name
-        if self.settabindex and 'tabindex' not in attrs:
-            attrs['tabindex'] = form._cw.next_tabindex()
         if self.icon:
             img = tags.img(src=form._cw.uiprops[self.icon], alt=self.icon)
         else:
