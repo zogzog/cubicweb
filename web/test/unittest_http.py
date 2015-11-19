@@ -253,46 +253,6 @@ class HTTPCache(TestCase):
         req = _test_cache(hin, hout, method='POST')
         self.assertCache(412, req.status_out, 'not modifier HEAD verb')
 
-    @tag('expires')
-    def test_expires_added(self):
-        #: Check that Expires header is added:
-        #: - when the page is modified
-        #: - when none was already present
-        hin  = [('if-none-match', 'babar'),
-               ]
-        hout = [('etag', 'rhino/really-not-babar'),
-               ]
-        req = _test_cache(hin, hout)
-        self.assertCache(None, req.status_out, 'modifier HEAD verb')
-        value = req.headers_out.getHeader('expires')
-        self.assertIsNotNone(value)
-
-    @tag('expires')
-    def test_expires_not_added(self):
-        #: Check that Expires header is not added if NOT-MODIFIED
-        hin  = [('if-none-match', 'babar'),
-               ]
-        hout = [('etag', 'babar'),
-               ]
-        req = _test_cache(hin, hout)
-        self.assertCache(304, req.status_out, 'not modifier HEAD verb')
-        value = req.headers_out.getHeader('expires')
-        self.assertIsNone(value)
-
-    @tag('expires')
-    def test_expires_no_overwrite(self):
-        #: Check that cache does not overwrite existing Expires header
-        hin  = [('if-none-match', 'babar'),
-               ]
-        DATE = 'Sat, 13 Apr 2012 14:39:32 GM'
-        hout = [('etag', 'rhino/really-not-babar'),
-                ('expires', DATE),
-               ]
-        req = _test_cache(hin, hout)
-        self.assertCache(None, req.status_out, 'not modifier HEAD verb')
-        value = req.headers_out.getRawHeaders('expires')
-        self.assertEqual(value, [DATE])
-
 
 alloworig = 'access-control-allow-origin'
 allowmethods = 'access-control-allow-methods'

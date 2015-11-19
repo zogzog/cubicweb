@@ -31,6 +31,7 @@ class NoHTTPCacheManager(object):
 
     def set_headers(self):
         self.req.set_header('Cache-control', 'no-cache')
+        self.req.set_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
 
 
 class MaxAgeHTTPCacheManager(NoHTTPCacheManager):
@@ -68,7 +69,7 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
         try:
             req.set_header('Etag', '"%s"' % self.etag())
         except NoEtag:
-            self.req.set_header('Cache-control', 'no-cache')
+            super(EtagHTTPCacheManager, self).set_headers()
             return
         req.set_header('Cache-control',
                        'must-revalidate,max-age=%s' % self.max_age())

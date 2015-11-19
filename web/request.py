@@ -730,12 +730,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         if validators: # if we have no
             modified = any(func(val, self.headers_out) for func, val in validators)
         # Forge expected response
-        if modified:
-            if 'Expires' not in self.headers_out:
-                # Expires header seems to be required by IE7 -- Are you sure ?
-                self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
-            # /!\ no raise, the function returns and we keep processing the request
-        else:
+        if not modified:
             # overwrite headers_out to forge a brand new not-modified response
             self.headers_out = self._forge_cached_headers()
             if self.http_method() in ('HEAD', 'GET'):
