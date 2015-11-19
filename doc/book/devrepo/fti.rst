@@ -94,37 +94,10 @@ Customizing how entities are fetched during ``db-rebuild-fti``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``db-rebuild-fti`` will call the
-:meth:`~cubicweb.entities.AnyEntity.cw_fti_index_rql_queries` class
+:meth:`~cubicweb.entities.AnyEntity.cw_fti_index_rql_limit` class
 method on your entity type.
 
-.. automethod:: cubicweb.entities.AnyEntity.cw_fti_index_rql_queries
-
-Now, suppose you've got a _huge_ table to index, you probably don't want to
-get all entities at once. So here's a simple customized example that will
-process block of 10000 entities:
-
-.. sourcecode:: python
-
-
-    class MyEntityClass(AnyEntity):
-        __regid__ = 'MyEntityClass'
-
-    @classmethod
-    def cw_fti_index_rql_queries(cls, req):
-        # get the default RQL method and insert LIMIT / OFFSET instructions
-        base_rql = super(SearchIndex, cls).cw_fti_index_rql_queries(req)[0]
-        selected, restrictions = base_rql.split(' WHERE ')
-        rql_template = '%s ORDERBY X LIMIT %%(limit)s OFFSET %%(offset)s WHERE %s' % (
-            selected, restrictions)
-        # count how many entities you'll have to index
-        count = req.execute('Any COUNT(X) WHERE X is MyEntityClass')[0][0]
-        # iterate by blocks of 10000 entities
-        chunksize = 10000
-        for offset in xrange(0, count, chunksize):
-            print 'SENDING', rql_template % {'limit': chunksize, 'offset': offset}
-            yield rql_template % {'limit': chunksize, 'offset': offset}
-
-Since you have access to ``req``, you can more or less fetch whatever you want.
+.. automethod:: cubicweb.entities.AnyEntity.cw_fti_index_rql_limit
 
 
 Customizing :meth:`~cubicweb.entities.adapters.IFTIndexableAdapter.get_words`

@@ -19,9 +19,12 @@
 
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+
 from six import text_type, string_types
 
 from logilab.common.decorators import classproperty
+from logilab.common.deprecation import deprecated
 
 from cubicweb import Unauthorized
 from cubicweb.entity import Entity
@@ -44,6 +47,7 @@ class AnyEntity(Entity):
         return req.build_url('add/%s' % cls.__regid__, **kwargs)
 
     @classmethod
+    @deprecated('[3.22] use cw_fti_index_rql_limit instead')
     def cw_fti_index_rql_queries(cls, req):
         """return the list of rql queries to fetch entities to FT-index
 
@@ -60,6 +64,37 @@ class AnyEntity(Entity):
             selected.append(varname)
         return ['Any %s WHERE %s' % (', '.join(selected),
                                      ', '.join(restrictions))]
+
+    @classmethod
+    def cw_fti_index_rql_limit(cls, req, limit=1000):
+        """generate rsets of entities to FT-index
+
+        By default, each successive result set is limited to 1000 entities
+        """
+        if cls.cw_fti_index_rql_queries.__func__ != AnyEntity.cw_fti_index_rql_queries.__func__:
+            warn("[3.22] cw_fti_index_rql_queries is replaced by cw_fti_index_rql_limit",
+                 DeprecationWarning)
+            for rql in cls.cw_fti_index_rql_queries(req):
+                yield req.execute(rql)
+            return
+        restrictions = ['X is %s' % cls.__regid__]
+        selected = ['X']
+        start = 0
+        for attrschema in sorted(cls.e_schema.indexable_attributes()):
+            varname = attrschema.type.upper()
+            restrictions.append('X %s %s' % (attrschema, varname))
+            selected.append(varname)
+        while True:
+            q_restrictions = restrictions + ['X eid > %s' % start]
+            rset = req.execute('Any %s ORDERBY X LIMIT %s WHERE %s' %
+                               (', '.join(selected),
+                                limit,
+                                ', '.join(q_restrictions)))
+            if rset:
+                start = rset[-1][0]
+                yield rset
+            else:
+                break
 
     # meta data api ###########################################################
 
