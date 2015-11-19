@@ -20,18 +20,11 @@
 __docformat__ = "restructuredtext en"
 
 from six import text_type, string_types
-from six.moves import range
 
 from logilab.common.decorators import classproperty
 
 from cubicweb import Unauthorized
 from cubicweb.entity import Entity
-
-
-def chunks(seq, step):
-    """See http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks-in-python)"""
-    return (seq[i:i+step]
-            for i in range(0, len(seq), step))
 
 
 class AnyEntity(Entity):
@@ -52,25 +45,21 @@ class AnyEntity(Entity):
 
     @classmethod
     def cw_fti_index_rql_queries(cls, req):
-        """return an iterator on rql queries to fetch entities to FT-index
+        """return the list of rql queries to fetch entities to FT-index
 
-        The default is to fetch entities 1000 per 1000 and to prefetch
-        indexable attributes, but one could imagine iterating over
+        The default is to fetch all entities at once and to prefetch
+        indexable attributes but one could imagine iterating over
         "smaller" resultsets if the table is very big or returning
         a subset of entities that match some business-logic condition.
         """
-        restrictions = []
+        restrictions = ['X is %s' % cls.__regid__]
         selected = ['X']
         for attrschema in sorted(cls.e_schema.indexable_attributes()):
             varname = attrschema.type.upper()
             restrictions.append('X %s %s' % (attrschema, varname))
             selected.append(varname)
-        rset = req.execute('Any EID WHERE X eid EID, X is %s' % cls.__regid__)
-        for rows in chunks(rset.rows, 1000):
-            q_restrictions = restrictions + [
-                'X eid IN (%s)' % ', '.join(str(r[0]) for r in rows)]
-            yield 'Any %s WHERE %s' % (', '.join(selected),
-                                       ', '.join(q_restrictions))
+        return ['Any %s WHERE %s' % (', '.join(selected),
+                                     ', '.join(restrictions))]
 
     # meta data api ###########################################################
 
