@@ -724,12 +724,11 @@ class _CubicWebRequestBase(RequestSessionBase):
         Some response cache headers may be set by this method.
         """
         modified = True
-        if self.get_header('Cache-Control') not in ('max-age=0', 'no-cache'):
-            # Here, we search for any invalid 'not modified' condition
-            # see http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3
-            validators = get_validators(self._headers_in)
-            if validators: # if we have no
-                modified = any(func(val, self.headers_out) for func, val in validators)
+        # Here, we search for any invalid 'not modified' condition
+        # see http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3
+        validators = get_validators(self._headers_in)
+        if validators: # if we have no
+            modified = any(func(val, self.headers_out) for func, val in validators)
         # Forge expected response
         if modified:
             if 'Expires' not in self.headers_out:
