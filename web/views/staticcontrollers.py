@@ -66,9 +66,10 @@ class StaticFileController(Controller):
         if not debugmode:
             # XXX: Don't provide additional resource information to error responses
             #
-            # the HTTP RFC recommands not going further than 1 year ahead
-            expires = datetime.now() + timedelta(days=6*30)
+            # the HTTP RFC recommends not going further than 1 year ahead
+            expires = datetime.now() + timedelta(seconds=self.max_age(path))
             self._cw.set_header('Expires', generateDateTime(mktime(expires.timetuple())))
+            self._cw.set_header('Cache-Control', 'max-age=%s' % self.max_age(path))
 
         # XXX system call to os.stats could be cached once and for all in
         # production mode (where static files are not expected to change)

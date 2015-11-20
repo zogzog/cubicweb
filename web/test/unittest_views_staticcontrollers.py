@@ -70,6 +70,9 @@ class DataControllerTC(staticfilespublishermixin, CubicWebTC):
         with self._publish_static_files(fname) as req:
             self.assertEqual(200, req.status_out)
             self.assertIn('last-modified', req.headers_out)
+            self.assertIn('expires', req.headers_out)
+            self.assertEqual(req.get_response_header('cache-control'),
+                             {'max-age': 604800})
         next_headers = {
             'if-modified-since': req.get_response_header('last-modified', raw=True),
         }
