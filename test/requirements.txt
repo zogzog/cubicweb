@@ -4,4 +4,3 @@ cubicweb-card
 cubicweb-file
 cubicweb-localperms
 cubicweb-tag
-git+git://github.com/logilab/yapps@master#egg=yapps
