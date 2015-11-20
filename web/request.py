@@ -704,7 +704,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         return urlsplit(self.base_url())[2]
 
     def data_url(self, relpath):
-        """returns the absolute path for a data resouce"""
+        """returns the absolute path for a data resource"""
         return self.datadir_url + relpath
 
     @cached
