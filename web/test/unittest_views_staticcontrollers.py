@@ -76,6 +76,12 @@ class DataControllerTC(staticfilespublishermixin, CubicWebTC):
         with self._publish_static_files(fname, next_headers) as req:
             self.assertEqual(304, req.status_out)
 
+    def _check_datafile_redirect(self, fname, expected):
+        with self._publish_static_files(fname) as req:
+            self.assertEqual(302, req.status_out)
+            self.assertEqual(req.get_response_header('location'),
+                             req.base_url() + expected)
+
     def _check_no_datafile(self, fname):
         with self._publish_static_files(fname) as req:
             self.assertEqual(404, req.status_out)
@@ -90,10 +96,12 @@ class DataControllerTC(staticfilespublishermixin, CubicWebTC):
             self._check_no_datafile('data/%s/cubicweb.css' % ('0'*len(hash)))
 
         with tempattr(self.vreg.config, 'mode', 'notest'):
-            self._check_datafile_ok('data/cubicweb.css')
+            self.config._init_base_url()  # reset config.datadir_url
+            self._check_datafile_redirect('data/cubicweb.css', 'data/%s/cubicweb.css' % hash)
             self._check_datafile_ok('data/%s/cubicweb.css' % hash)
-            self._check_no_datafile('data/does/not/exist')
-            self._check_no_datafile('data/%s/cubicweb.css' % ('0'*len(hash)))
+            self._check_no_datafile('data/%s/does/not/exist' % hash)
+            self._check_datafile_redirect('data/%s/does/not/exist' % ('0'*len(hash)),
+                                          'data/%s/%s/does/not/exist' % (hash, '0'*len(hash)))
 
 
 class ConcatFilesTC(CubicWebTC):

@@ -33,7 +33,7 @@ from datetime import datetime, timedelta
 from logging import getLogger
 
 from cubicweb import Forbidden
-from cubicweb.web import NotFound
+from cubicweb.web import NotFound, Redirect
 from cubicweb.web.http_headers import generateDateTime
 from cubicweb.web.controller import Controller
 from cubicweb.web.views.urlrewrite import URLRewriter
@@ -200,11 +200,13 @@ class DataController(StaticFileController):
             paths = relpath[len(self.data_modconcat_basepath):].split(',')
             filepath = self.concat_files_registry.concat_cached_filepath(paths)
         else:
-            # skip leading '/data/' and url params
-            if relpath.startswith(self.base_datapath):
-                prefix = self.base_datapath
-            else:
+            if not relpath.startswith(self.base_datapath):
+                # /data/foo, redirect to /data/{hash}/foo
                 prefix = 'data/'
+                relpath = relpath[len(prefix):]
+                raise Redirect(self._cw.data_url(relpath), 302)
+            # skip leading '/data/{hash}/' and url params
+            prefix = self.base_datapath
             relpath = relpath[len(prefix):]
             relpath = relpath.split('?', 1)[0]
             dirpath, rid = config.locate_resource(relpath)
