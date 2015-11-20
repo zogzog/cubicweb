@@ -280,7 +280,8 @@ class EditController(basecontrollers.ViewController):
         return eid
 
     def handle_formfield(self, form, field, rqlquery=None):
-        eschema = form.edited_entity.e_schema
+        entity = form.edited_entity
+        eschema = entity.e_schema
         try:
             for field, value in field.process_posted(form):
                 if not (
@@ -288,22 +289,27 @@ class EditController(basecontrollers.ViewController):
                     or
                     (field.role == 'object' and field.name in eschema.objrels)):
                     continue
+
                 rschema = self._cw.vreg.schema.rschema(field.name)
                 if rschema.final:
                     rqlquery.set_attribute(field.name, value)
+                    continue
+
+                if entity.has_eid():
+                    origvalues = set(data[0] for data in entity.related(field.name, field.role).rows)
                 else:
-                    if form.edited_entity.has_eid():
-                        origvalues = set(entity.eid for entity in form.edited_entity.related(field.name, field.role, entities=True))
-                    else:
-                        origvalues = set()
-                    if value is None or value == origvalues:
-                        continue # not edited / not modified / to do later
-                    if rschema.inlined and rqlquery is not None and field.role == 'subject':
-                        self.handle_inlined_relation(form, field, value, origvalues, rqlquery)
-                    elif form.edited_entity.has_eid():
-                        self.handle_relation(form, field, value, origvalues)
-                    else:
-                        form._cw.data['pending_others'].add( (form, field) )
+                    origvalues = set()
+
+                if value is None or value == origvalues:
+                    continue # not edited / not modified / to do later
+
+                if rschema.inlined and rqlquery is not None and field.role == 'subject':
+                    self.handle_inlined_relation(form, field, value, origvalues, rqlquery)
+                elif form.edited_entity.has_eid():
+                    self.handle_relation(form, field, value, origvalues)
+                else:
+                    form._cw.data['pending_others'].add( (form, field) )
+
         except ProcessFormError as exc:
             self.errors.append((field, exc))
 
