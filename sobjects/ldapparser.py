@@ -1,4 +1,4 @@
-# copyright 2011-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2011-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -100,18 +100,12 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             super(DataFeedLDAPAdapter, self).handle_deletion(config, cnx, myuris)
             return
         if myuris:
-            byetype = {}
             for extid, (eid, etype) in myuris.items():
-                if self.is_deleted(extid, etype, eid):
-                    byetype.setdefault(etype, []).append(str(eid))
-
-            for etype, eids in byetype.items():
-                if etype != 'CWUser':
+                if etype != 'CWUser' or not self.is_deleted(extid, etype, eid):
                     continue
-                self.info('deactivate %s %s entities', len(eids), etype)
-                for eid in eids:
-                    wf = cnx.entity_from_eid(eid).cw_adapt_to('IWorkflowable')
-                    wf.fire_transition_if_possible('deactivate')
+                self.info('deactivate user %s', eid)
+                wf = cnx.entity_from_eid(eid).cw_adapt_to('IWorkflowable')
+                wf.fire_transition_if_possible('deactivate')
         cnx.commit()
 
     def update_if_necessary(self, entity, attrs):
