@@ -125,11 +125,13 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 entity.cw_set(**attrs)
                 self.notify_updated(entity)
 
-    def ldap2cwattrs(self, sdict, etype, tdict=None):
-        """ Transform dictionary of LDAP attributes to CW
-        etype must be CWUser or CWGroup """
-        if tdict is None:
-            tdict = {}
+    def ldap2cwattrs(self, sdict, etype):
+        """Transform dictionary of LDAP attributes to CW.
+
+        etype must be CWUser or CWGroup
+        """
+        assert etype in ('CWUser', 'CWGroup'), etype
+        tdict = {}
         if etype == 'CWUser':
             items = self.source.user_attrs.items()
         elif etype == 'CWGroup':
@@ -137,14 +139,13 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         for sattr, tattr in items:
             if tattr not in self.non_attribute_keys:
                 try:
-                    tdict[tattr] = sdict[sattr]
+                    value = sdict[sattr]
                 except KeyError:
-                    raise ConfigurationError('source attribute %s has not '
-                                             'been found in the source, '
-                                             'please check the %s-attrs-map '
-                                             'field and the permissions of '
-                                             'the LDAP binding user' %
-                                             (sattr, etype[2:].lower()))
+                    raise ConfigurationError(
+                        'source attribute %s has not been found in the source, '
+                        'please check the %s-attrs-map field and the permissions of '
+                        'the LDAP binding user' % (sattr, etype[2:].lower()))
+                tdict[tattr] = value
         return tdict
 
     def before_entity_copy(self, entity, sourceparams):
