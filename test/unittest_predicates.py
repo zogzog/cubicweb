@@ -497,7 +497,7 @@ class PaginatedTC(CubicWebTC):
     def setup_database(self):
         with self.admin_access.repo_cnx() as cnx:
             for i in range(30):
-                cnx.create_entity('CWGroup', name="group%d" % i)
+                cnx.create_entity('CWGroup', name=u"group%d" % i)
             cnx.commit()
 
     def test_paginated_rset(self):
