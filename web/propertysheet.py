@@ -22,6 +22,8 @@ __docformat__ = "restructuredtext en"
 import re
 import os
 import os.path as osp
+import tempfile
+
 
 TYPE_CHECKS = [('STYLESHEETS', list), ('JAVASCRIPTS', list),
                ('STYLESHEETS_IE', list), ('STYLESHEETS_PRINT', list),
@@ -52,7 +54,6 @@ class PropertySheet(dict):
         self._ordered_propfiles = []
         self._propfile_mtime = {}
         self._sourcefile_mtime = {}
-        self._cache = {}
 
     def load(self, fpath):
         scriptglobals = self.context.copy()
@@ -69,9 +70,6 @@ class PropertySheet(dict):
         self._ordered_propfiles.append(fpath)
 
     def need_reload(self):
-        for rid, (adirectory, rdirectory, mtime) in list(self._cache.items()):
-            if os.stat(osp.join(rdirectory, rid)).st_mtime > mtime:
-                del self._cache[rid]
         for fpath, mtime in self._propfile_mtime.items():
             if os.stat(fpath).st_mtime > mtime:
                 return True
@@ -88,31 +86,29 @@ class PropertySheet(dict):
             self.reload()
 
     def process_resource(self, rdirectory, rid):
+        cachefile = osp.join(self._cache_directory, rid)
+        self.debug('processing %s/%s into %s',
+                   rdirectory, rid, cachefile)
+        rcachedir = osp.dirname(cachefile)
+        if not osp.exists(rcachedir):
+            os.makedirs(rcachedir)
+        sourcefile = osp.join(rdirectory, rid)
+        with open(sourcefile) as f:
+            content = f.read()
+        # XXX replace % not followed by a paren by %% to avoid having to do
+        # this in the source css file ?
         try:
-            return self._cache[rid][0]
-        except KeyError:
-            cachefile = osp.join(self._cache_directory, rid)
-            self.debug('caching processed %s/%s into %s',
-                       rdirectory, rid, cachefile)
-            rcachedir = osp.dirname(cachefile)
-            if not osp.exists(rcachedir):
-                os.makedirs(rcachedir)
-            sourcefile = osp.join(rdirectory, rid)
-            content = open(sourcefile).read()
-            # XXX replace % not followed by a paren by %% to avoid having to do
-            # this in the source css file ?
-            try:
-                content = self.compile(content)
-            except ValueError as ex:
-                self.error("can't process %s/%s: %s", rdirectory, rid, ex)
-                adirectory = rdirectory
-            else:
-                stream = open(cachefile, 'w')
+            content = self.compile(content)
+        except ValueError as ex:
+            self.error("can't process %s/%s: %s", rdirectory, rid, ex)
+            adirectory = rdirectory
+        else:
+            tmpfd, tmpfile = tempfile.mkstemp(dir=rcachedir, prefix=osp.basename(cachefile))
+            with os.fdopen(tmpfd, 'w') as stream:
                 stream.write(content)
-                stream.close()
-                adirectory = self._cache_directory
-            self._cache[rid] = (adirectory, rdirectory, os.stat(sourcefile).st_mtime)
-            return adirectory
+            os.rename(tmpfile, cachefile)
+            adirectory = self._cache_directory
+        return adirectory
 
     def compile(self, content):
         return self._percent_rgx.sub('%%', content) % self

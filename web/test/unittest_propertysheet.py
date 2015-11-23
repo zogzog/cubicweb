@@ -49,19 +49,14 @@ class PropertySheetTC(TestCase):
                           'a {bgcolor: #FFFFFF; size: 1%;}')
         self.assertEqual(ps.process_resource(DATADIR, 'pouet.css'),
                          self.cachedir)
-        self.assertIn('pouet.css', ps._cache)
         self.assertFalse(ps.need_reload())
         os.utime(self.data('sheet1.py'), None)
-        self.assertIn('pouet.css', ps._cache)
         self.assertTrue(ps.need_reload())
-        self.assertIn('pouet.css', ps._cache)
         ps.reload()
-        self.assertNotIn('pouet.css', ps._cache)
         self.assertFalse(ps.need_reload())
         ps.process_resource(DATADIR, 'pouet.css') # put in cache
         os.utime(self.data('pouet.css'), None)
         self.assertFalse(ps.need_reload())
-        self.assertNotIn('pouet.css', ps._cache)
 
 
 if __name__ == '__main__':
