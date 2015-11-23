@@ -15,7 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb.server.sources.ldapusers unit and functional tests"""
+"""cubicweb.server.sources.ldapfeed unit and functional tests
+
+Those tests expect to have slapd, python-ldap3 and ldapscripts packages installed.
+"""
 from __future__ import print_function
 
 import os
