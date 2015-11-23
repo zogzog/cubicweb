@@ -20,6 +20,8 @@
 from operator import eq, lt, le, gt
 from contextlib import contextmanager
 
+from six.moves import range
+
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache
 
@@ -488,13 +490,14 @@ class MatchFormParamsTC(CubicWebTC):
         self.assertEqual(str(cm.exception),
                          "match_form_params() positional arguments must be strings")
 
+
 class PaginatedTC(CubicWebTC):
     """tests for paginated_rset predicate"""
 
     def setup_database(self):
         with self.admin_access.repo_cnx() as cnx:
-            for i in xrange(30):
-                cnx.execute('INSERT CWGroup G: G name "group{}"'.format(i))
+            for i in range(30):
+                cnx.create_entity('CWGroup', name="group%d" % i)
             cnx.commit()
 
     def test_paginated_rset(self):
@@ -515,6 +518,7 @@ class PaginatedTC(CubicWebTC):
             self.assertEqual(paginated_rset()(None, req, rset), 0)
         with web_request(vid='list', page_size='not_an_int') as req:
             self.assertEqual(paginated_rset()(None, req, rset), 0)
+
 
 if __name__ == '__main__':
     unittest_main()
