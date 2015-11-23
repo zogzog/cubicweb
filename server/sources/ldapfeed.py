@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -262,9 +262,9 @@ You can set multiple groups by separating them by a comma.',
         except Exception:
             self.error('while trying to authenticate %s', user, exc_info=True)
             raise AuthenticationError()
-        eid = self.repo.extid2eid(self, user['dn'].encode('ascii'), 'CWUser', cnx, insert=False)
-        if eid < 0:
-            # user has been moved away from this source
+        eid = self.repo.system_source.extid2eid(cnx, user['dn'].encode('ascii'))
+        if eid is None or eid < 0:
+            # user is not known or has been moved away from this source
             raise AuthenticationError()
         return eid
 
