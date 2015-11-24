@@ -866,7 +866,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         res = self._eid_type_source(cnx, eid, sql)
         if not isinstance(res, list):
             res = list(res)
-        res[-1] = self.decode_extid(extid)
+        res[-1] = self.decode_extid(res[-1])
         res.append("system")
         return res
 
