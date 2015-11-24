@@ -186,7 +186,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
 
     def is_deleted(self, extidplus, etype, eid):
         try:
-            extid, _ = extidplus.rsplit(b'@@', 1)
+            extid = extidplus.rsplit(b'@@', 1)[0]
         except ValueError:
             # for some reason extids here tend to come in both forms, e.g:
             # dn, dn@@Babar
