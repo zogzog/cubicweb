@@ -475,7 +475,7 @@ class LDAPFeedGroupTC(LDAPFeedTestBase):
             with self.admin_access.repo_cnx() as cnx:
                 rset = cnx.execute('Any L WHERE U in_group G, G name %(name)s, U login L',
                                    {'name': 'logilab'})
-                self.assertEqual(len(rset), 0)
+                self.assertEqual(len(rset), 0, rset.rows)
         finally:
             # back to normal ldap setup
             self.tearDownClass()
