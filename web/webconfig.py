@@ -282,6 +282,7 @@ have the python imaging library installed to use captcha)',
                 continue
             yield key, pdef
 
+    @deprecated('[3.22] call req.cnx.repo.get_versions() directly')
     def vc_config(self):
         return self.repository().get_versions()
 

@@ -137,7 +137,7 @@ class ErrorView(AnyRsetView):
         # if excinfo is not None, it's probably not a bug
         if excinfo is None:
             return
-        vcconf = self._cw.vreg.config.vc_config()
+        vcconf = self._cw.cnx.repo.get_versions()
         w(u"<div>")
         eversion = vcconf.get('cubicweb', self._cw._('no version information'))
         # NOTE: tuple wrapping needed since eversion is itself a tuple

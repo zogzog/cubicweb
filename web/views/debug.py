@@ -83,7 +83,7 @@ class ProcessInformationView(StartupView):
         w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
             _('instance home'), self._cw.vreg.config.apphome))
         w(u'</table>')
-        vcconf = req.vreg.config.vc_config()
+        vcconf = req.cnx.repo.get_versions()
         w(u'<h3>%s</h3>' % _('versions configuration'))
         w(u'<table>')
         w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (

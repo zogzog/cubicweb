@@ -86,15 +86,6 @@ class CubicWebConfigurationTC(TestCase):
         finally:
             comment_pkginfo.__recommends_cubes__ = {}
 
-
-#     def test_vc_config(self):
-#         vcconf = self.config.vc_config()
-#         self.assertIsInstance(vcconf['EEMAIL'], Version)
-#         self.assertEqual(vcconf['EEMAIL'], (0, 3, 1))
-#         self.assertEqual(vcconf['CW'], (2, 31, 2))
-#         self.assertRaises(KeyError, vcconf.__getitem__, 'CW_VERSION')
-#         self.assertRaises(KeyError, vcconf.__getitem__, 'CRM')
-
     def test_expand_cubes(self):
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
         self.config.adjust_sys_path()
