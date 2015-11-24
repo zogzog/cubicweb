@@ -1156,7 +1156,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
             if not (cnx.deleted_in_transaction(subjschema.eid) or
                     cnx.deleted_in_transaction(objschema.eid)):
                 cnx.execute('DELETE X %s Y WHERE X is %s, Y is %s'
-                                % (rschema, subjschema, objschema))
+                            % (rschema, subjschema, objschema))
         RDefDelOp(cnx, rdef=rdef)
 
 
