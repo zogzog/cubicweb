@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """The `ResultSet` class which is returned as result of an rql query"""
-from __future__ import print_function
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -121,7 +120,6 @@ class ResultSet(object):
 
     def __getitem__(self, i):
         """returns the ith element of the result set"""
-        #print('__getitem__', i)
         return self.rows[i] #ResultSetRow(self.rows[i])
 
     def __iter__(self):
