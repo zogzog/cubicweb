@@ -207,4 +207,3 @@ class BeforeDeleteRelationSecurityHook(SecurityHook):
         rdef = rschema.rdef(self._cw.entity_metas(self.eidfrom)['type'],
                             self._cw.entity_metas(self.eidto)['type'])
         rdef.check_perm(self._cw, 'delete', fromeid=self.eidfrom, toeid=self.eidto)
-

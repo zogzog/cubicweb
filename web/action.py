@@ -111,4 +111,3 @@ class LinkToEntityAction(Action):
         return self._cw.vreg["etypes"].etype_class(ttype).cw_create_url(self._cw,
                                   __redirectpath=entity.rest_path(), __linkto=linkto,
                                   __redirectvid=self._cw.form.get('__redirectvid', ''))
-

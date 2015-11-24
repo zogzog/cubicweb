@@ -1336,4 +1336,3 @@ class EntityAttributesTableView(EntityView):
                 colname = self._cw._(column)
             self.w(u'<th>%s</th>' % xml_escape(colname))
         self.w(u'</tr></thead>\n')
-

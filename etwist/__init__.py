@@ -18,4 +18,3 @@
 """ CW - nevow/twisted client
 
 """
-

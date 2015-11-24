@@ -179,4 +179,3 @@ VALIDATORS = [
     ('if-none-match', if_none_match),
     #('if-modified-since', if_modified_since),
 ]
-

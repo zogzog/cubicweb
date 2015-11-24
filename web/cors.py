@@ -111,4 +111,3 @@ def check_origin(req, config):
     # include "Vary: Origin" header (see 6.4)
     req.headers_out.addHeader('Vary', 'Origin')
     return origin
-

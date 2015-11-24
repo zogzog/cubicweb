@@ -544,4 +544,3 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             self._render_fields(fields, w, form)
         self.render_child_forms(w, form, values)
         w(u'</fieldset>')
-

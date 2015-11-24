@@ -26,4 +26,3 @@ class Datetest(EntityType):
     d2  = Date(default=date(2007, 12, 11))
     t1  = Time(default=time(8, 40))
     t2  = Time(default=time(9, 45))
-

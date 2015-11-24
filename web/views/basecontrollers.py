@@ -308,4 +308,3 @@ class UndoController(Controller):
         req = self._cw
         msg = msg or req._("transaction undone")
         self._return_to_lastpage( dict(_cwmsgid= req.set_redirect_message(msg)) )
-

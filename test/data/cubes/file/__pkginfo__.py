@@ -23,4 +23,3 @@ modname = distname.split('-', 1)[1]
 
 numversion = (1, 4, 3)
 version = '.'.join(str(num) for num in numversion)
-

@@ -172,4 +172,3 @@ class RepositoryAuthenticationManager(object):
     def _authenticate(self, login, authinfo):
         sessionid = self.repo.connect(login, **authinfo)
         return self.repo._sessions[sessionid]
-

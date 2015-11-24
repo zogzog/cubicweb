@@ -33,4 +33,3 @@ class Company(EntityType):
 class has_employee(ComputedRelation):
     rule = 'O works_for S'
     __permissions__ = {'read': ('managers',)}
-

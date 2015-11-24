@@ -67,4 +67,3 @@ class XbelItemBookmarkView(XbelItemView):
 
     def url(self, entity):
         return entity.actual_url()
-

@@ -30,4 +30,3 @@ class Bug(EntityType):
     cost = Int()
     description	= String(maxsize=4096, fulltextindexed=True)
     identical_to = SubjectRelation('Bug', symmetric=True)
-

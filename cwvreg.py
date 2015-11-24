@@ -655,4 +655,3 @@ YAMS_TO_PY.update({
     'TZTime':     time,
     'Interval':   timedelta,
     })
-

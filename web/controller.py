@@ -223,4 +223,3 @@ class Controller(AppObject):
 
 from cubicweb import set_log_methods
 set_log_methods(Controller, LOGGER)
-

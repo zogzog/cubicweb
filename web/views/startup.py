@@ -172,4 +172,3 @@ class IndexView(ManageView):
     @deprecated('[3.11] display_folders method is deprecated, backport it if needed')
     def display_folders(self):
         return 'Folder' in self._cw.vreg.schema and self._cw.execute('Any COUNT(X) WHERE X is Folder')[0][0]
-

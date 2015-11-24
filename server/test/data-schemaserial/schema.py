@@ -29,4 +29,3 @@ class Personne(EntityType):
     inline2 = SubjectRelation('Affaire', inlined=True, cardinality='?*')
 
     custom_field_of_jungle = BabarTestType(jungle_speed=42)
-

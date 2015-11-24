@@ -27,4 +27,3 @@ register_function(DUMB_SORT)
 def dumb_sort(something):
     return something
 register_sqlite_pyfunc(dumb_sort)
-

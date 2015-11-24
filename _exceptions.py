@@ -207,4 +207,3 @@ class ExecutionError(Exception):
 
 # pylint: disable=W0611
 from logilab.common.clcommands import BadCommandUsage
-

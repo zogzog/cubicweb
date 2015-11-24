@@ -7,5 +7,3 @@ cw_for_source = CWSourceSchemaConfig.get_relation('cw_for_source')
 cw_for_source.__permissions__ = {'read': ('managers', 'users'),
                                  'add': ('managers',),
                                  'delete': ('managers',)}
-
-

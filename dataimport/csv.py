@@ -118,4 +118,3 @@ def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
                 decoded = row
             if not skip_empty or any(decoded):
                 yield decoded
-

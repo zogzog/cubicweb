@@ -105,4 +105,3 @@ class CSVEntityView(CSVMixIn, EntityView):
             writer.writerows(rows)
             # use two empty lines as separator
             writer.writerows([[], []])
-

@@ -339,4 +339,3 @@ def registration_callback(vreg):
                         if rschema.symmetric]
     EnsureSymmetricRelationsAdd.__select__ = hook.Hook.__select__ & hook.match_rtype(*symmetric_rtypes)
     EnsureSymmetricRelationsDelete.__select__ = hook.Hook.__select__ & hook.match_rtype(*symmetric_rtypes)
-

@@ -1096,4 +1096,3 @@ class ImgButton(object):
                '<img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % {
             'label': label, 'imgsrc': imgsrc,
             'domid': self.domid, 'href': self.href}
-

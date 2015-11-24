@@ -255,4 +255,3 @@ MOCKPFORM = mock_object(form_previous_values={}, form_valerror=None)
 
 if __name__ == '__main__':
     unittest_main()
-

@@ -379,5 +379,3 @@ class see_also(RelationType):
         'add':    ('managers', RRQLExpression('U has_update_permission S'),),
         'delete': ('managers', RRQLExpression('U has_update_permission S'),),
         }
-
-

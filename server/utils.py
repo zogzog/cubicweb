@@ -241,4 +241,3 @@ class TasksManager(object):
 from logging import getLogger
 from cubicweb import set_log_methods
 set_log_methods(TasksManager, getLogger('cubicweb.repository'))
-

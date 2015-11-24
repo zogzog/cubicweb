@@ -84,5 +84,3 @@ if 'Comment' in context.defined:
         subject = 'Comment'
         name = 'generated_by'
         object = 'Email'
-
-

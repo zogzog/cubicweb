@@ -35,4 +35,3 @@ wf.add_transition(u'abort', pitetre, bennon)
 wf.add_transition(u'start', pitetre, encours)
 wf.add_transition(u'end', encours, finie)
 commit()
-

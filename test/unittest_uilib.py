@@ -200,4 +200,3 @@ class DocTest(DocTest):
 
 if __name__ == '__main__':
     unittest_main()
-

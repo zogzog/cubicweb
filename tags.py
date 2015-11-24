@@ -59,4 +59,3 @@ def select(name, id=None, multiple=False, options=[], **attrs):
     html += options
     html.append(u'</select>')
     return u'\n'.join(html)
-

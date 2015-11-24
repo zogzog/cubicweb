@@ -365,5 +365,3 @@ class TableWidget(HTMLWidget):
     def itercols(self, rowindex):
         for column in self.columns:
             yield column, self.model.sortvalue(rowindex, column.rset_sortcol)
-
-

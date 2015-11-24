@@ -173,4 +173,3 @@ class SytPathParser :
 def to_rql(path) :
     p = SytPathParser(SCHEMA,path)
     return p.parse()
-

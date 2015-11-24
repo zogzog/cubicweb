@@ -263,4 +263,3 @@ class ProgrammingError(Exception): #DatabaseError):
     not be processed, a memory allocation error occurred during processing,
     etc.
     """
-

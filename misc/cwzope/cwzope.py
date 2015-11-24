@@ -48,4 +48,3 @@ def get_connection(context, user=None, password=None,
         cnx = connect(user, password, host, database, group)
         CNX_CACHE[key] = cnx
         return cnx
-

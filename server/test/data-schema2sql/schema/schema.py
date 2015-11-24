@@ -110,4 +110,3 @@ class concerne(RelationDefinition):
         'add': ('managers',),
         'delete': ('managers',),
         }
-

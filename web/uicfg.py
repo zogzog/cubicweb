@@ -26,4 +26,3 @@ from cubicweb.web.views.uicfg import *
 
 warn('[3.16] moved to cubicweb.web.views.uicfg',
      DeprecationWarning, stacklevel=2)
-

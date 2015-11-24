@@ -282,4 +282,3 @@ class Form(AppObject):
 
     def remaining_errors(self):
         return sorted(self.form_valerror.errors.items())
-

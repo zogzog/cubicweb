@@ -14,5 +14,3 @@ class relation(RelationDefinition):
 class computed(ComputedRelation):
     rule = 'S relation O'
     __permissions__ = {'read': (RRQLExpression('S is ET'),)}
-
-

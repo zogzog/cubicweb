@@ -201,6 +201,3 @@ class EHTMLView(AbstractEmbeddedView):
 
     title = _('embedded html')
     _embedding_tag = tags.iframe
-
-
-

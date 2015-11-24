@@ -48,5 +48,3 @@ class ZMQStartHook(hook.Hook):
         for address in address_sub:
             self.repo.app_instances_bus.add_subscriber(address)
         self.repo.app_instances_bus.start()
-
-

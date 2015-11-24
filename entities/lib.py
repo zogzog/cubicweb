@@ -147,4 +147,3 @@ class CWCache(AnyEntity):
         if date:
             return date > self.timestamp
         return False
-

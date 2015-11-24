@@ -522,4 +522,3 @@ class PaginatedTC(CubicWebTC):
 
 if __name__ == '__main__':
     unittest_main()
-

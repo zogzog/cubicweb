@@ -21,4 +21,3 @@ from cubicweb.web.views import tableview
 
 class CustomRsetTableView(tableview.RsetTableView):
     __regid__ = 'mytable'
-

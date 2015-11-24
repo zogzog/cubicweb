@@ -402,4 +402,3 @@ def reledit_form(self):
         assert args['reload'].startswith('http')
     view = req.vreg['views'].select('reledit', req, rset=rset, rtype=args['rtype'])
     return self._call_view(view, **args)
-

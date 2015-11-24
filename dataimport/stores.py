@@ -326,4 +326,3 @@ class MetaGenerator(object):
 
     def gen_owned_by(self, entity):
         return self._cnx.user.eid
-

@@ -461,5 +461,3 @@ class CWImportController(object):
             return callfunc_every(self.store.commit,
                                   self.commitevery,
                                   self.get_data(datakey))
-
-

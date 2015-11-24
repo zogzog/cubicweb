@@ -957,5 +957,3 @@ def init_test_database(config=None, configdir='data', apphome=None):
     handler = get_test_db_handler(config)
     handler.build_db_cache()
     return handler.get_repo_and_cnx()
-
-

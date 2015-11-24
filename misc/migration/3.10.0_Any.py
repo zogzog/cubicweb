@@ -35,4 +35,3 @@ for x in rql('Any X,XK WHERE X pkey XK, '
              'X pkey ~= "boxes.%" OR '
              'X pkey ~= "contentnavigation.%"').entities():
     x.cw_set(pkey=u'ctxcomponents.' + x.pkey.split('.', 1)[1])
-

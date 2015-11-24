@@ -239,4 +239,3 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             self.error('group %r referenced by source configuration %r does not exist',
                        name, self.source.uri)
             return None
-

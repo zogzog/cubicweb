@@ -48,4 +48,3 @@ def data(string):
 def register(linter):
     """called when loaded by pylint --load-plugins, nothing to do here"""
     MANAGER.register_transform(nodes.Module, cubicweb_transform)
-

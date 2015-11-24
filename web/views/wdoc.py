@@ -229,4 +229,3 @@ class AboutAction(action.Action):
 
     def url(self):
         return self._cw.build_url('doc/about')
-

@@ -414,4 +414,3 @@ def parse_form_data(environ, charset='utf8', strict=False, **kw):
     except MultipartError:
         if strict: raise
     return forms, files
-
