@@ -22,6 +22,7 @@ import os, os.path as osp
 from contextlib import contextmanager
 
 from logilab.common.testlib import unittest_main, Tags, tag
+from logilab.common import tempattr
 
 from yams.constraints import UniqueConstraint
 
@@ -719,6 +720,18 @@ class MigrationCommandsTC(MigrationTC):
             tel = mh.rqlexec('Any T WHERE X tel T')[0][0]
             self.assertEqual(tel, 1.0)
             self.assertIsInstance(tel, float)
+
+    def test_drop_required_inlined_relation(self):
+        with self.mh() as (cnx, mh):
+            bob = mh.cmd_create_entity('Personne', nom=u'bob')
+            note = mh.cmd_create_entity('Note', ecrit_par=bob)
+            mh.commit()
+            rdef = mh.fs_schema.rschema('ecrit_par').rdefs[('Note', 'Personne')]
+            with tempattr(rdef, 'cardinality', '1*'):
+                mh.sync_schema_props_perms('ecrit_par', syncperms=False)
+            mh.cmd_drop_relation_type('ecrit_par')
+            self.assertNotIn('%secrit_par' % SQL_PREFIX,
+                             self.table_schema(mh, '%sPersonne' % SQL_PREFIX))
 
 
 class MigrationCommandsComputedTC(MigrationTC):

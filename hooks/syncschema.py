@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -648,8 +648,7 @@ class RDefUpdateOp(MemSchemaOperation):
         if 'indexed' in self.values:
             syssource.update_rdef_indexed(cnx, rdef)
             self.indexed_changed = True
-        if 'cardinality' in self.values and (rdef.rtype.final or
-                                             rdef.rtype.inlined) \
+        if 'cardinality' in self.values and rdef.rtype.final \
               and self.values['cardinality'][0] != self.oldvalues['cardinality'][0]:
             syssource.update_rdef_null_allowed(self.cnx, rdef)
             self.null_allowed_changed = True
