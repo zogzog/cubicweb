@@ -73,6 +73,7 @@ class ProcessInformationView(StartupView):
         dtformat = req.property_value('ui.datetime-format')
         _ = req._
         w = self.w
+        repo = req.cnx.repo
         # generic instance information
         w(u'<h2>%s</h2>' % _('Instance'))
         w(u'<table>')
@@ -83,7 +84,7 @@ class ProcessInformationView(StartupView):
         w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
             _('instance home'), self._cw.vreg.config.apphome))
         w(u'</table>')
-        vcconf = req.cnx.repo.get_versions()
+        vcconf = repo.get_versions()
         w(u'<h3>%s</h3>' % _('versions configuration'))
         w(u'<table>')
         w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
@@ -94,7 +95,6 @@ class ProcessInformationView(StartupView):
                 cube, cubeversion))
         w(u'</table>')
         # repository information
-        repo = req.vreg.config.repository(None)
         w(u'<h2>%s</h2>' % _('Repository'))
         w(u'<h3>%s</h3>' % _('resources usage'))
         w(u'<table>')
