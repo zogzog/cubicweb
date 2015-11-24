@@ -37,8 +37,7 @@ from logilab.common.decorators import clear_cache
 from cubicweb import validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
-                             CONSTRAINTS, UNIQUE_CONSTRAINTS, ETYPE_NAME_MAP,
-                             display_name)
+                             CONSTRAINTS, UNIQUE_CONSTRAINTS, ETYPE_NAME_MAP)
 from cubicweb.server import hook, schemaserial as ss, schema2sql as y2sql
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.hooks.synccomputed import RecomputeAttributeOperation
