@@ -443,7 +443,6 @@ class LDAPFeedGroupTC(LDAPFeedTestBase):
         try:
             self.update_ldap_entry('cn=logilab,ou=Group,dc=cubicweb,dc=test',
                                    {('add', 'memberUid'): ['syt']})
-            time.sleep(1.1) # timestamps precision is 1s
             with self.repo.internal_cnx() as cnx:
                 self.pull(cnx)
 
@@ -471,7 +470,6 @@ class LDAPFeedGroupTC(LDAPFeedTestBase):
         try:
             self.update_ldap_entry('cn=logilab,ou=Group,dc=cubicweb,dc=test',
                                    {('delete', 'memberUid'): ['adim']})
-            time.sleep(1.1) # timestamps precision is 1s
             with self.repo.internal_cnx() as cnx:
                 self.pull(cnx)
 
