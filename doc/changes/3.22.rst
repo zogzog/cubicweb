@@ -1,0 +1,69 @@
+3.22
+====
+
+New features
+------------
+
+* a huge amount of changes were done towards python 3.x support (as yet
+  incomplete).  This introduces a new dependency on six, to handle
+  python2/python3 compatibility.
+
+* new cubicweb.dataimport.massive_store module, a postgresql-specific store
+  using the COPY statement to accelerate massive data imports.  This
+  functionality was previously part of cubicweb-dataio (there are some API
+  differences with that previous version, however).
+
+* cubes custom sql scripts are executed before creating tables.  This allows
+  them to create new types or extensions.
+
+User-visible changes
+--------------------
+
+* the ldapfeed source now depends on the `ldap3` module instead of
+  `python-ldap`.
+
+* replies don't get an ``Expires`` header by default.  However when they do,
+  they also get a coherent ``Cache-Control``.
+
+* data files are regenerated at each request, they are no longer cached by
+  ``cubicweb.web.PropertySheet``.  Requests for data files missing the instance
+  hash are handled with a redirection instead of a direct reply, to allow
+  correct cache-related reply headers.
+
+API changes
+-----------
+
+* ``config.repository()`` creates a new Repository object each time, instead of
+  returning a cached object
+
+* migration scripts, as well as other scripts executed by ``cubicweb-ctl
+  shell``, are loaded with the print_function flag enabled (for backwards
+  compatibility, if that fails they are re-loaded without that flag)
+
+* the ``cw_fti_index_rql_queries`` method on entity classes is replaced by
+  ``cw_fti_index_rql_limit``, a generator which yields ``ResultSet`` objects
+  containing entities to be indexed.  By default, entities are returned 1000 at
+  a time.
+
+* ``IDownloadableAdapter`` API is clarified: ``download_url``,
+  ``download_content_type`` and ``download_file_name`` return unicode objects,
+  ``download_data`` returns bytes.
+
+* the ``Repository.extid2eid()`` entry point for external sources is deprecated.
+  Imports should use one of the stores from the ``cubicweb.dataimport`` package
+  instead.
+
+* the ``cubicweb.repoapi.get_repository()`` function's ``uri`` argument should
+  no longer be used.
+
+* the generic datafeed xml parser is deprecated in favor of the "store" API
+  introduced in cubicweb 3.21.
+
+* the session manager lives in the ``sessions`` registry instead of ``components``.
+
+Deprecated code drops
+---------------------
+
+* the ``cubicweb.server.hooksmanager`` module was removed
+
+* the ``Repository.pinfo()`` method was removed
