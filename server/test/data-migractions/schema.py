@@ -225,13 +225,13 @@ class ecrit_par(RelationType):
 class ecrit_par_1(RelationDefinition):
     name = 'ecrit_par'
     subject = 'Note'
-    object ='Personne'
+    object = 'Personne'
     cardinality = '?*'
 
 class ecrit_par_2(RelationDefinition):
     name = 'ecrit_par'
     subject = 'Note'
-    object ='CWUser'
+    object = 'CWUser'
     cardinality='?*'
 
 
