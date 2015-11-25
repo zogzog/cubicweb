@@ -23,7 +23,6 @@ import httplib
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache, classproperty
 
-from cubicweb import AuthenticationError
 from cubicweb import view
 from cubicweb.devtools.testlib import CubicWebTC, real_error_handling
 from cubicweb.devtools.fake import FakeRequest
