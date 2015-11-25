@@ -95,15 +95,17 @@ class CubicWebPyramidHandler(object):
                 # for this exception) should be enough
                 # content = self.appli.ajax_error_handler(req, ex)
                 raise
+            finally:
+                # XXX CubicWebPyramidRequest.headers_out should
+                # access directly the pyramid response headers.
+                request.response.headers.clear()
+                for k, v in req.headers_out.getAllRawHeaders():
+                    for item in v:
+                        request.response.headers.add(k, item)
+
             if content is not None:
                 request.response.body = content
 
-            # XXX CubicWebPyramidRequest.headers_out should
-            # access directly the pyramid response headers.
-            request.response.headers.clear()
-            for k, v in req.headers_out.getAllRawHeaders():
-                for item in v:
-                    request.response.headers.add(k, item)
 
         except LogOut as ex:
             # The actual 'logging out' logic should be in separated function
