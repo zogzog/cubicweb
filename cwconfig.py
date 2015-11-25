@@ -1059,7 +1059,8 @@ the repository',
 
     def save(self):
         """write down current configuration"""
-        self.generate_config(open(self.main_config_file(), 'w'))
+        with open(self.main_config_file(), 'w') as fobj:
+            self.generate_config(fobj)
 
     def check_writeable_uid_directory(self, path):
         """check given directory path exists, belongs to the user running the
