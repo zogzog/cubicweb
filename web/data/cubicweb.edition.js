@@ -537,6 +537,24 @@ function postForm(bname, bvalue, formid) {
 }
 
 /**
+ * Cancel the operations done on the given form.
+ *
+ */
+$(function () {
+    $(document).on('click', '.cwjs-edition-cancel', function (evt) {
+        var $mynode = $(evt.currentTarget),
+            $form = $mynode.closest('form'),
+            $error = $form.find(':input[name="__errorurl"]'),
+            errorurl = $error.attr('value'),
+            args = ajaxFuncArgs('cancel_edition', null, errorurl);
+        loadRemote(AJAX_BASE_URL, args, 'POST', true);
+        history.back();
+        return false;
+    });
+});
+
+
+/**
  * .. function:: validateForm(formid, action, onsuccess, onfailure)
  *
  * called on traditionnal form submission : the idea is to try

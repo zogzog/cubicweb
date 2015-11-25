@@ -126,7 +126,6 @@ class ViewController(Controller):
     def publish(self, rset=None):
         """publish a request, returning an encoded string"""
         view, rset = self._select_view_and_rset(rset)
-        self.add_to_breadcrumbs(view)
         view.set_http_cache_headers()
         if self._cw.is_client_cache_valid():
             return ''
@@ -159,13 +158,6 @@ class ViewController(Controller):
             vid = req.form.get('fallbackvid') or vid_from_rset(req, rset, req.vreg.schema)
             view = req.vreg['views'].select(vid, req, rset=rset)
         return view, rset
-
-    def add_to_breadcrumbs(self, view):
-        # update breadcrumbs **before** validating cache, unless the view
-        # specifies explicitly it should not be added to breadcrumb or the
-        # view is a binary view
-        if view.add_to_breadcrumbs and not view.binary:
-            self._cw.update_breadcrumbs()
 
     def execute_linkto(self, eid=None):
         """XXX __linkto parameter may cause security issue
@@ -307,4 +299,4 @@ class UndoController(Controller):
     def redirect(self, msg=None):
         req = self._cw
         msg = msg or req._("transaction undone")
-        self._return_to_lastpage( dict(_cwmsgid= req.set_redirect_message(msg)) )
+        self._redirect({'_cwmsgid': req.set_redirect_message(msg)})

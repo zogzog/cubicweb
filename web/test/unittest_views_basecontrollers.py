@@ -1054,17 +1054,6 @@ class UndoControllerTC(CubicWebTC):
                 result = controller.publish(rset=None)
             self.assertURLPath(cm.exception.location, rpath)
 
-    def test_redirect_default(self):
-        with self.admin_access.web_request() as req:
-            txuuid = self.txuuid_toto_email
-            req.form['txuuid'] = txuuid
-            req.session.data['breadcrumbs'] = [ urljoin(req.base_url(), path)
-                                                for path in ('tata', 'toto',)]
-            controller = self.vreg['controllers'].select('undo', req)
-            with self.assertRaises(Redirect) as cm:
-                result = controller.publish(rset=None)
-            self.assertURLPath(cm.exception.location, 'toto')
-
 
 class LoginControllerTC(CubicWebTC):
 

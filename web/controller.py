@@ -134,8 +134,6 @@ class Controller(AppObject):
             newparams['_cwmsgid'] = self._cw.set_redirect_message(msg)
         if '__action_apply' in self._cw.form:
             self._return_to_edition_view(newparams)
-        if '__action_cancel' in self._cw.form:
-            self._return_to_lastpage(newparams)
         else:
             self._return_to_original_view(newparams)
 
@@ -203,11 +201,9 @@ class Controller(AppObject):
         raise Redirect(self._cw.build_url(path, **newparams))
 
 
-    def _return_to_lastpage(self, newparams):
-        """cancel-button case: in this case we are always expecting to go back
-        where we came from, and this is not easy. Currently we suppose that
-        __redirectpath is specifying that place if found, else we look in the
-        request breadcrumbs for the last visited page.
+    def _redirect(self, newparams):
+        """Raise a redirect. We use __redirectpath if it specified, else we
+        return to the home page.
         """
         if '__redirectpath' in self._cw.form:
             # if redirect path was explicitly specified in the form, use it
@@ -215,7 +211,7 @@ class Controller(AppObject):
             url = self._cw.build_url(path)
             url = append_url_params(url, self._cw.form.get('__redirectparams'))
         else:
-            url = self._cw.last_visited_page()
+            url = self._cw.base_url()
         # The newparams must update the params in all cases
         url = self._cw.rebuild_url(url, **newparams)
         raise Redirect(url)

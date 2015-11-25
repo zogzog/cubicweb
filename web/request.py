@@ -42,7 +42,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb import AuthenticationError
 from cubicweb.req import RequestSessionBase
 from cubicweb.uilib import remove_html_tags, js
-from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
+from cubicweb.utils import HTMLHead, make_uid
 from cubicweb.view import TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
@@ -397,26 +397,6 @@ class _CubicWebRequestBase(RequestSessionBase):
             if etype != searchedtype:
                 return False
         return True
-
-    def update_breadcrumbs(self):
-        """stores the last visisted page in session data"""
-        searchstate = self.search_state[0]
-        if searchstate == 'normal':
-            breadcrumbs = self.session.data.get('breadcrumbs')
-            if breadcrumbs is None:
-                breadcrumbs = SizeConstrainedList(10)
-                self.session.data['breadcrumbs'] = breadcrumbs
-                breadcrumbs.append(self.url())
-            else:
-                url = self.url()
-                if breadcrumbs and breadcrumbs[-1] != url:
-                    breadcrumbs.append(url)
-
-    def last_visited_page(self):
-        breadcrumbs = self.session.data.get('breadcrumbs')
-        if breadcrumbs:
-            return breadcrumbs.pop()
-        return self.base_url()
 
     # web edition helpers #####################################################
 

@@ -390,13 +390,6 @@ class EditController(basecontrollers.ViewController):
         self._default_publish()
         self.reset()
 
-    def _action_cancel(self):
-        errorurl = self._cw.form.get('__errorurl')
-        if errorurl:
-            self._cw.cancel_edition(errorurl)
-        self._cw.set_message(self._cw._('edit canceled'))
-        return self.reset()
-
     def _action_delete(self):
         self.delete_entities(self._cw.edited_eids(withtype=True))
         return self.reset()

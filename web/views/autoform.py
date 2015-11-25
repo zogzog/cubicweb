@@ -742,7 +742,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     copy_nav_params = True
     form_buttons = [fw.SubmitButton(),
                     fw.Button(stdmsgs.BUTTON_APPLY, cwaction='apply'),
-                    fw.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
+                    fw.Button(stdmsgs.BUTTON_CANCEL,
+                              {'class': fw.Button.css_class + ' cwjs-edition-cancel'})]
     # for attributes selection when searching in uicfg.autoform_section
     formtype = 'main'
     # set this to a list of [(relation, role)] if you want to explictily tell
