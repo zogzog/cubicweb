@@ -114,7 +114,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
         self.slave_mode = slave_mode
         self.default_values = get_default_values(cnx.vreg.schema)
-        pg_schema = cnx.repo.config.system_source_config.get('db-namespace', 'public')
+        pg_schema = cnx.repo.config.system_source_config.get('db-namespace') or 'public'
         self._dbh = PGHelper(self._cnx, pg_schema)
         self._data_entities = defaultdict(list)
         self._data_relations = defaultdict(list)
