@@ -35,7 +35,7 @@ def dict_to_html(w, dict):
     if dict:
         w(u'<ul>')
         for key in sorted(dict):
-            w(u'<li><span class="label">%s</span>: <span>%s</span></li>' % (
+            w(u'<li><span>%s</span>: <span>%s</span></li>' % (
                 xml_escape(str(key)), xml_escape(repr(dict[key]))))
         w(u'</ul>')
 
@@ -76,28 +76,20 @@ class ProcessInformationView(StartupView):
         repo = req.cnx.repo
         # generic instance information
         w(u'<h2>%s</h2>' % _('Instance'))
-        w(u'<table>')
-        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            _('config type'), self._cw.vreg.config.name))
-        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            _('config mode'), self._cw.vreg.config.mode))
-        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            _('instance home'), self._cw.vreg.config.apphome))
-        w(u'</table>')
+        pyvalue = ((_('config type'), self._cw.vreg.config.name),
+                   (_('config mode'), self._cw.vreg.config.mode),
+                   (_('instance home'), self._cw.vreg.config.apphome))
+        self.wview('pyvaltable', pyvalue=pyvalue, header_column_idx=0)
         vcconf = repo.get_versions()
         w(u'<h3>%s</h3>' % _('versions configuration'))
-        w(u'<table>')
-        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            'CubicWeb', vcconf.get('cubicweb', _('no version information'))))
-        for cube in sorted(self._cw.vreg.config.cubes()):
-            cubeversion = vcconf.get(cube, _('no version information'))
-            w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-                cube, cubeversion))
-        w(u'</table>')
+        missing = _('no version information')
+        pyvalue = [('CubicWeb', vcconf.get('cubicweb', missing))]
+        pyvalue += [(cube, vcconf.get(cube, missing))
+                    for cube in sorted(self._cw.vreg.config.cubes())]
+        self.wview('pyvaltable', pyvalue=pyvalue, header_column_idx=0)
         # repository information
         w(u'<h2>%s</h2>' % _('Repository'))
         w(u'<h3>%s</h3>' % _('resources usage'))
-        w(u'<table>')
         stats = self._cw.call_service('repo_stats')
         stats['looping_tasks'] = ', '.join('%s (%s seconds)' % (n, i) for n, i in stats['looping_tasks'])
         stats['threads'] = ', '.join(sorted(stats['threads']))
@@ -106,11 +98,13 @@ class ProcessInformationView(StartupView):
                 continue
             if k.endswith('_cache_size'):
                 stats[k] = '%s / %s' % (stats[k]['size'], stats[k]['maxsize'])
-        for element in sorted(stats):
-            w(u'<tr><th align="left">%s</th><td>%s %s</td></tr>'
-                   % (element, xml_escape(text_type(stats[element])),
-                      element.endswith('percent') and '%' or '' ))
-        w(u'</table>')
+        def format_stat(sname, sval):
+            return '%s %s' % (xml_escape(text_type(sval)),
+                              sname.endswith('percent') and '%' or '')
+        pyvalue = [(sname, format_stat(sname, sval))
+                    for sname, sval in sorted(stats.items())]
+        self.wview('pyvaltable', pyvalue=pyvalue, header_column_idx=0)
+        # open repo sessions
         if req.cnx.is_repo_in_memory and req.user.is_in_group('managers'):
             w(u'<h3>%s</h3>' % _('opened sessions'))
             sessions = repo._sessions.values()
@@ -128,12 +122,9 @@ class ProcessInformationView(StartupView):
                 w(u'<p>%s</p>' % _('no repository sessions found'))
         # web server information
         w(u'<h2>%s</h2>' % _('Web server'))
-        w(u'<table>')
-        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            _('base url'), req.base_url()))
-        w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
-            _('data directory url'), req.datadir_url))
-        w(u'</table>')
+        pyvalue = ((_('base url'), req.base_url()),
+                   (_('data directory url'), req.datadir_url))
+        self.wview('pyvaltable', pyvalue=pyvalue, header_column_idx=0)
         from cubicweb.web.application import SESSION_MANAGER
         if SESSION_MANAGER is not None and req.user.is_in_group('managers'):
             sessions = SESSION_MANAGER.current_sessions()
