@@ -26,7 +26,7 @@ $(document).ready(function() {
         assert.expect(3);
         assert.equal($('#qunit-fixture').children().length, 0);
         var done = assert.async();
-        $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html')
+        $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html', null, 'GET')
         .addCallback(function() {
                 try {
                     assert.equal($('#qunit-fixture').children().length, 1);
@@ -43,7 +43,7 @@ $(document).ready(function() {
         var scriptsIncluded = jsSources();
         assert.equal(jQuery.inArray('http://foo.js', scriptsIncluded), - 1);
         var done = assert.async();
-        $('#qunit-fixture').loadxhtml('static/jstests/ajax_url1.html')
+        $('#qunit-fixture').loadxhtml('static/jstests/ajax_url1.html', null, 'GET')
         .addCallback(function() {
                 try {
                     var origLength = scriptsIncluded.length;
@@ -66,7 +66,7 @@ $(document).ready(function() {
         assert.expect(3);
         assert.equal($('#qunit-fixture').children().length, 0);
         var done = assert.async();
-        var d = $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html');
+        var d = $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html', null, 'GET');
         d.addCallback(function() {
             try {
                 assert.equal($('#qunit-fixture').children().length, 1);
@@ -105,7 +105,7 @@ $(document).ready(function() {
         assert.expect(3);
         assert.equal($('#qunit-fixture').children().length, 0);
         var done = assert.async();
-        var d = $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html');
+        var d = $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html', null, 'GET');
         d.addCallback(function(data, req, arg1, arg2) {
             try {
                 assert.equal(arg1, 'Hello');
@@ -155,7 +155,7 @@ $(document).ready(function() {
   QUnit.test('test addErrback', function (assert) {
         assert.expect(1);
         var done = assert.async();
-        var d = $('#qunit-fixture').loadxhtml('static/jstests/nonexistent.html');
+        var d = $('#qunit-fixture').loadxhtml('static/jstests/nonexistent.html', null, 'GET');
         d.addCallback(function() {
             // should not be executed
             assert.ok(false, "callback is executed");
@@ -173,7 +173,7 @@ $(document).ready(function() {
         assert.expect(3);
         var counter = 0;
         var done = assert.async();
-        var d = $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html');
+        var d = $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html', null, 'GET');
         d.addCallback(function() {
             assert.equal(++counter, 1); // should be executed first
         });
@@ -198,7 +198,7 @@ $(document).ready(function() {
         /* use endswith because in pytest context we have an absolute path */
         assert.ok($('head link').attr('href').endswith('/qunit.css'), 'qunit.css is loaded');
         var done = assert.async();
-        $('#qunit-fixture').loadxhtml('static/jstests/ajax_url1.html')
+        $('#qunit-fixture').loadxhtml('static/jstests/ajax_url1.html', null, 'GET')
         .addCallback(function() {
                 var origLength = scriptsIncluded.length;
                 scriptsIncluded = jsSources();
@@ -235,7 +235,7 @@ $(document).ready(function() {
             // check that server-response event on CubicWeb is triggered
             events = 'CubicWeb';
         });
-        $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html')
+        $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html', null, 'GET')
         .addCallback(function() {
                 try {
                     assert.equal(events, 'CubicWeb');
@@ -256,7 +256,7 @@ $(document).ready(function() {
         $(CubicWeb).bind('server-response', function() {
             nodes.push('CubicWeb');
         });
-        $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html')
+        $('#qunit-fixture').loadxhtml('static/jstests/ajax_url0.html', null, 'GET')
         .addCallback(function() {
                 try {
                     assert.equal(nodes.length, 2);
