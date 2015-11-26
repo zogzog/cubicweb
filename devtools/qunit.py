@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import absolute_import
 
 import os, os.path as osp
 import errno
@@ -25,12 +26,13 @@ from six.moves.queue import Queue, Empty
 
 # imported by default to simplify further import statements
 from logilab.common.testlib import unittest_main, with_tempdir, InnerTest, Tags
+import webtest.http
 
 import cubicweb
 from cubicweb.view import View
 from cubicweb.web.controller import Controller
 from cubicweb.web.views.staticcontrollers import StaticFileController, STATIC_CONTROLLERS
-from cubicweb.devtools.httptest import CubicWebServerTC
+from cubicweb.devtools import webtest as cwwebtest
 
 
 class FirefoxHelper(object):
@@ -72,9 +74,9 @@ class FirefoxHelper(object):
         self.stop()
 
 
-class QUnitTestCase(CubicWebServerTC):
+class QUnitTestCase(cwwebtest.CubicWebTestTC):
 
-    tags = CubicWebServerTC.tags | Tags(('qunit',))
+    tags = cwwebtest.CubicWebTestTC.tags | Tags(('qunit',))
 
     # testfile, (dep_a, dep_b)
     all_js_tests = ()
@@ -86,15 +88,18 @@ class QUnitTestCase(CubicWebServerTC):
             tc = self
             test_queue = self.test_queue
         self._qunit_controller = MyQUnitResultController
-        self.vreg.register(MyQUnitResultController)
-        self.vreg.register(QUnitView)
-        self.vreg.register(CWDevtoolsStaticController)
+        self.webapp.app.appli.vreg.register(MyQUnitResultController)
+        self.webapp.app.appli.vreg.register(QUnitView)
+        self.webapp.app.appli.vreg.register(CWDevtoolsStaticController)
+        self.server = webtest.http.StopableWSGIServer.create(self.webapp.app)
+        self.config.global_set_option('base-url', self.server.application_url)
 
     def tearDown(self):
+        self.server.shutdown()
+        self.webapp.app.appli.vreg.unregister(self._qunit_controller)
+        self.webapp.app.appli.vreg.unregister(QUnitView)
+        self.webapp.app.appli.vreg.unregister(CWDevtoolsStaticController)
         super(QUnitTestCase, self).tearDown()
-        self.vreg.unregister(self._qunit_controller)
-        self.vreg.unregister(QUnitView)
-        self.vreg.unregister(CWDevtoolsStaticController)
 
     def test_javascripts(self):
         for args in self.all_js_tests:
@@ -205,20 +210,15 @@ class QUnitView(View):
     def call(self, **kwargs):
         w = self.w
         req = self._cw
-        data = {
-            'jquery': req.data_url('jquery.js'),
-            'devtools': req.build_url('devtools'),
-        }
         w(u'''<!DOCTYPE html>
         <html>
         <head>
         <meta http-equiv="content-type" content="application/html; charset=UTF-8"/>
         <!-- JS lib used as testing framework -->
-        <link rel="stylesheet" type="text/css" media="all" href="%(devtools)s/qunit.css" />
-        <script src="%(jquery)s" type="text/javascript"></script>
-        <script src="%(devtools)s/cwmock.js" type="text/javascript"></script>
-        <script src="%(devtools)s/qunit.js" type="text/javascript"></script>'''
-        % data)
+        <link rel="stylesheet" type="text/css" media="all" href="/devtools/qunit.css" />
+        <script src="/data/jquery.js" type="text/javascript"></script>
+        <script src="/devtools/cwmock.js" type="text/javascript"></script>
+        <script src="/devtools/qunit.js" type="text/javascript"></script>''')
         w(u'<!-- result report tools -->')
         w(u'<script type="text/javascript">')
         w(u"var BASE_URL = '%s';" % req.base_url())
