@@ -89,27 +89,20 @@ class QUnitTestCase(CubicWebServerTC):
         self._qunit_controller = MyQUnitResultController
         self.vreg.register(MyQUnitResultController)
         self.vreg.register(QUnitView)
-        self.vreg.register(CWSoftwareRootStaticController)
+        self.vreg.register(CWDevtoolsStaticController)
 
     def tearDown(self):
         super(QUnitTestCase, self).tearDown()
         self.vreg.unregister(self._qunit_controller)
         self.vreg.unregister(QUnitView)
-        self.vreg.unregister(CWSoftwareRootStaticController)
-
-    def abspath(self, path):
-        """use self.__module__ to build absolute path if necessary"""
-        if not osp.isabs(path):
-           dirname = osp.dirname(__import__(self.__module__).__file__)
-           return osp.abspath(osp.join(dirname,path))
-        return path
+        self.vreg.unregister(CWDevtoolsStaticController)
 
     def test_javascripts(self):
         for args in self.all_js_tests:
             self.assertIn(len(args), (1, 2))
-            test_file = self.abspath(args[0])
+            test_file = args[0]
             if len(args) > 1:
-                depends   = [self.abspath(dep) for dep in args[1]]
+                depends = args[1]
             else:
                 depends = ()
             for js_test in self._test_qunit(test_file, depends):
@@ -117,10 +110,6 @@ class QUnitTestCase(CubicWebServerTC):
 
     @with_tempdir
     def _test_qunit(self, test_file, depends=(), timeout=10):
-        assert osp.exists(test_file), test_file
-        for dep in depends:
-            assert osp.exists(dep), dep
-
         QUnitView.test_file = test_file
         QUnitView.depends = depends
 
@@ -219,17 +208,17 @@ class QUnitView(View):
         req = self._cw
         data = {
             'jquery': req.data_url('jquery.js'),
-            'web_test': req.build_url('cwsoftwareroot/devtools/data'),
+            'devtools': req.build_url('devtools'),
         }
         w(u'''<!DOCTYPE html>
         <html>
         <head>
         <meta http-equiv="content-type" content="application/html; charset=UTF-8"/>
         <!-- JS lib used as testing framework -->
-        <link rel="stylesheet" type="text/css" media="all" href="%(web_test)s/qunit.css" />
+        <link rel="stylesheet" type="text/css" media="all" href="%(devtools)s/qunit.css" />
         <script src="%(jquery)s" type="text/javascript"></script>
-        <script src="%(web_test)s/cwmock.js" type="text/javascript"></script>
-        <script src="%(web_test)s/qunit.js" type="text/javascript"></script>'''
+        <script src="%(devtools)s/cwmock.js" type="text/javascript"></script>
+        <script src="%(devtools)s/qunit.js" type="text/javascript"></script>'''
         % data)
         w(u'<!-- result report tools -->')
         w(u'<script type="text/javascript">')
@@ -276,14 +265,11 @@ class QUnitView(View):
         w(u'</script>')
         w(u'<!-- Test script dependencies (tested code for example) -->')
 
-        prefix = len(cubicweb.CW_SOFTWARE_ROOT) + 1
         for dep in self.depends:
-            dep = req.build_url('cwsoftwareroot/') + dep[prefix:]
-            w(u'    <script src="%s" type="text/javascript"></script>' % dep)
+            w(u'    <script src="%s" type="text/javascript"></script>\n' % dep)
 
         w(u'    <!-- Test script itself -->')
-        test_url = req.build_url('cwsoftwareroot/') + self.test_file[prefix:]
-        w(u'    <script src="%s" type="text/javascript"></script>' % test_url)
+        w(u'    <script src="%s" type="text/javascript"></script>' % self.test_file)
         w(u'''  </head>
         <body>
         <div id="qunit-fixture"></div>
@@ -292,16 +278,16 @@ class QUnitView(View):
         </html>''')
 
 
-class CWSoftwareRootStaticController(StaticFileController):
-    __regid__ = 'cwsoftwareroot'
+class CWDevtoolsStaticController(StaticFileController):
+    __regid__ = 'devtools'
 
     def publish(self, rset=None):
-        staticdir = cubicweb.CW_SOFTWARE_ROOT
+        staticdir = osp.join(osp.dirname(__file__), 'data')
         relpath = self.relpath[len(self.__regid__) + 1:]
         return self.static_file(osp.join(staticdir, relpath))
 
 
-STATIC_CONTROLLERS.append(CWSoftwareRootStaticController)
+STATIC_CONTROLLERS.append(CWDevtoolsStaticController)
 
 
 if __name__ == '__main__':

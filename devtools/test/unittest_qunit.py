@@ -3,11 +3,8 @@ from os import path as osp
 from cubicweb.devtools import qunit
 
 
-JSTESTDIR = osp.abspath(osp.join(osp.dirname(__file__), 'data', 'js_examples'))
-
-
 def js(name):
-    return osp.join(JSTESTDIR, name)
+    return '/static/js_examples/' + name
 
 class QUnitTestCaseTC(qunit.QUnitTestCase):
 
