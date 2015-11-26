@@ -80,7 +80,6 @@ class QUnitTestCase(CubicWebServerTC):
     all_js_tests = ()
 
     def setUp(self):
-        self.config.global_set_option('access-control-allow-origin', '*')
         super(QUnitTestCase, self).setUp()
         self.test_queue = Queue()
         class MyQUnitResultController(QUnitResultController):
