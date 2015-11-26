@@ -170,6 +170,7 @@ class QUnitResultController(Controller):
     def publish(self, rset=None):
         event = self._cw.form['event']
         getattr(self, 'handle_%s' % event)()
+        return b''
 
     def handle_module_start(self):
         self.__class__._current_module_name = self._cw.form.get('name', '')
