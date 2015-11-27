@@ -372,7 +372,6 @@ class CubicWebTC(TestCase):
             config.global_set_option('embed-allowed', re.compile('.*'))
         except Exception: # not in server only configuration
             pass
-        config.set_anonymous_allowed(cls.anonymous_allowed)
 
     @property
     def vreg(self):
@@ -410,6 +409,7 @@ class CubicWebTC(TestCase):
                 self.__class__._repo_init_failed = ex
                 raise
             self.addCleanup(self._close_access)
+        self.config.set_anonymous_allowed(self.anonymous_allowed)
         self.setup_database()
         MAILBOX[:] = [] # reset mailbox
 
