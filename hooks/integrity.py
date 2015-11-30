@@ -111,9 +111,10 @@ class IntegrityHook(hook.Hook):
     category = 'integrity'
 
 
-class EnsureSymmetricRelationsAdd(hook.Hook):
+class _EnsureSymmetricRelationsAdd(hook.Hook):
     """ ensure X r Y => Y r X iff r is symmetric """
     __regid__ = 'cw.add_ensure_symmetry'
+    __abstract__ = True
     category = 'activeintegrity'
     events = ('after_add_relation',)
     # __select__ is set in the registration callback
@@ -123,9 +124,10 @@ class EnsureSymmetricRelationsAdd(hook.Hook):
                                                  self.rtype, self.eidfrom)
 
 
-class EnsureSymmetricRelationsDelete(hook.Hook):
+class _EnsureSymmetricRelationsDelete(hook.Hook):
     """ ensure X r Y => Y r X iff r is symmetric """
     __regid__ = 'cw.delete_ensure_symmetry'
+    __abstract__ = True
     category = 'activeintegrity'
     events = ('after_delete_relation',)
     # __select__ is set in the registration callback
@@ -337,5 +339,9 @@ def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__)
     symmetric_rtypes = [rschema.type for rschema in vreg.schema.relations()
                         if rschema.symmetric]
-    EnsureSymmetricRelationsAdd.__select__ = hook.Hook.__select__ & hook.match_rtype(*symmetric_rtypes)
-    EnsureSymmetricRelationsDelete.__select__ = hook.Hook.__select__ & hook.match_rtype(*symmetric_rtypes)
+    class EnsureSymmetricRelationsAdd(_EnsureSymmetricRelationsAdd):
+        __select__ = _EnsureSymmetricRelationsAdd.__select__ & hook.match_rtype(*symmetric_rtypes)
+    vreg.register(EnsureSymmetricRelationsAdd)
+    class EnsureSymmetricRelationsDelete(_EnsureSymmetricRelationsDelete):
+        __select__ = _EnsureSymmetricRelationsDelete.__select__ & hook.match_rtype(*symmetric_rtypes)
+    vreg.register(EnsureSymmetricRelationsDelete)
