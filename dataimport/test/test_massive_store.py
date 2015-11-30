@@ -16,16 +16,12 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 """Massive store test case"""
 
-import os.path as osp
 import itertools
 
 from cubicweb.dataimport import ucsvreader
 from cubicweb.devtools import testlib, PostgresApptestConfiguration
 from cubicweb.devtools import startpgcluster, stoppgcluster
 from cubicweb.dataimport.massive_store import MassiveObjectStore
-
-
-HERE = osp.abspath(osp.dirname(__file__))
 
 
 def setUpModule():
@@ -49,7 +45,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
     def push_geonames_data(self, dumpname, store):
         # Push timezones
         cnx = store._cnx
-        for code, gmt, dst, raw_offset in ucsvreader(open(osp.join(HERE, 'data/timeZones.txt'), 'rb'),
+        for code, gmt, dst, raw_offset in ucsvreader(open(self.datapath('timeZones.txt'), 'rb'),
                                                      delimiter='\t'):
             cnx.create_entity('TimeZone', code=code, gmt=float(gmt),
                                     dst=float(dst), raw_offset=float(raw_offset))
@@ -208,7 +204,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
     def test_simple_insert(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
-            self.push_geonames_data(osp.join(HERE, 'data/geonames.csv'), store)
+            self.push_geonames_data(self.datapath('geonames.csv'), store)
             store.flush()
             store.commit()
             store.finish()
@@ -221,7 +217,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
     def test_index_building(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
-            self.push_geonames_data(osp.join(HERE, 'data/geonames.csv'), store)
+            self.push_geonames_data(self.datapath('geonames.csv'), store)
             store.flush()
 
             # Check index
