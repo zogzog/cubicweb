@@ -83,15 +83,15 @@ class RelationMapping(object):
 
     def __init__(self, cnx, source=None):
         self.cnx = cnx
-        self._rql_template = 'Any S,O WHERE S {} O'
+        self._rql_template = 'Any S,O WHERE S %s O'
         self._kwargs = {}
         if source is not None:
-            self._rql_template += ', S cw_source SO, O cw_source SO, SO eid %(s)s'
+            self._rql_template += ', S cw_source SO, O cw_source SO, SO eid %%(s)s'
             self._kwargs['s'] = source.eid
 
     def __getitem__(self, rtype):
         """Return a set of (subject, object) eids already related by `rtype`"""
-        rql = self._rql_template.format(rtype)
+        rql = self._rql_template % rtype
         return set(tuple(x) for x in self.cnx.execute(rql, self._kwargs))
 
 

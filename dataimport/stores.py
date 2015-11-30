@@ -103,7 +103,7 @@ class RQLObjectStore(object):
         and inlined relations.
         """
         entity = self._cnx.entity_from_eid(eid)
-        assert entity.cw_etype == etype, 'Trying to update with wrong type {}'.format(etype)
+        assert entity.cw_etype == etype, 'Trying to update with wrong type %s' % etype
         # XXX some inlined relations may already exists
         entity.cw_set(**kwargs)
 

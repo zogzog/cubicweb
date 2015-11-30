@@ -294,7 +294,7 @@ class ObjectStore(object):
         """Given an entity type and eid, updates the corresponding fake entity with specified
         attributes and inlined relations.
         """
-        assert eid in self.types[etype], 'Trying to update with wrong type {}'.format(etype)
+        assert eid in self.types[etype], 'Trying to update with wrong type %s' % etype
         data = self.eids[eid]
         data.update(kwargs)
 
