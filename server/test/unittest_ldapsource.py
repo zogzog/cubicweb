@@ -27,6 +27,7 @@ import shutil
 import time
 import subprocess
 import tempfile
+import unittest
 from os.path import join
 
 from six import string_types
@@ -115,6 +116,8 @@ class LDAPFeedTestBase(CubicWebTC):
 
     @classmethod
     def setUpClass(cls):
+        if not os.path.exists('/usr/sbin/slapd'):
+            raise unittest.SkipTest('slapd not found')
         from cubicweb.cwctl import init_cmdline_log_threshold
         init_cmdline_log_threshold(cls.config, cls.loglevel)
         cls._tmpdir = create_slapd_configuration(cls)
