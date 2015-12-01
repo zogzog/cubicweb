@@ -1,5 +1,3 @@
-from os import path as osp
-
 from cubicweb.devtools import qunit
 
 
