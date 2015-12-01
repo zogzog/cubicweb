@@ -412,7 +412,7 @@ class SQLGenSourceWrapper(object):
             _sql[statement] = [data]
 
     def add_entity(self, cnx, entity):
-        with self._storage_handler(entity, 'added'):
+        with self._storage_handler(cnx, entity, 'added'):
             attrs = self.preprocess_entity(entity)
             rtypes = self._inlined_rtypes_cache.get(entity.cw_etype, ())
             if isinstance(rtypes, str):
