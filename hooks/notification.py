@@ -167,7 +167,7 @@ class EntityUpdateHook(NotificationHook):
     __abstract__ = True # do not register by default
     __select__ = NotificationHook.__select__ & hook.issued_from_user_query()
     events = ('before_update_entity',)
-    skip_attrs = set()
+    skip_attrs = set(['modification_date'])
 
     def __call__(self):
         cnx = self._cw
