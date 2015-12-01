@@ -28,6 +28,7 @@ from collections import defaultdict
 from base64 import b64encode
 
 from cubicweb.utils import make_uid
+from cubicweb.server.utils import eschema_eid
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.dataimport.stores import NoHookRQLObjectStore
 
