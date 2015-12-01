@@ -31,6 +31,7 @@ from six import string_types, integer_types, text_type
 from six.moves import cPickle as pickle, range
 
 from cubicweb.utils import make_uid
+from cubicweb.server.utils import eschema_eid
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.dataimport.stores import NoHookRQLObjectStore
 
