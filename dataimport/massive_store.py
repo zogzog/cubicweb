@@ -84,8 +84,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
     """
     # size of eid range reserved by the store for each batch
     eids_seq_range = 10000
-    # initial eid (None means use the value in the db)
-    eids_seq_start = None
     # max size of the iid, used to create the iid_eid conversion table
     iid_maxsize = 1024
 
@@ -127,11 +125,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.on_rollback_callback = on_rollback_callback
         # Do our meta tables already exist?
         self._init_massive_metatables()
-        # Internal markers of initialization
-        if self.eids_seq_start is not None and not self.slave_mode:
-            self._cnx.system_sql(self._cnx.repo.system_source.dbhelper.sql_restart_numrange(
-                'entities_id_seq', initial_value=self.eids_seq_start + 1))
-            cnx.commit()
         self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
         # recreate then when self.finish() is called
 
@@ -407,6 +400,10 @@ class MassiveObjectStore(stores.RQLObjectStore):
             # Mark etype as "initialized" for faster check
             self._entities.add(etype)
 
+    def restart_eid_sequence(self, start_eid):
+        self._cnx.system_sql(self._cnx.repo.system_source.dbhelper.sql_restart_numrange(
+            'entities_id_seq', initial_value=start_eid))
+        self._cnx.commit()
 
     ### ENTITIES CREATION #####################################################
 
