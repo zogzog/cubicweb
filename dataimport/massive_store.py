@@ -82,24 +82,25 @@ class MassiveObjectStore(stores.RQLObjectStore):
        store.commit()
        store.finish()
     """
-    # size of eid range reserved by the store for each batch
-    eids_seq_range = 10000
     # max size of the iid, used to create the iid_eid conversion table
     iid_maxsize = 1024
 
     def __init__(self, cnx,
                  on_commit_callback=None, on_rollback_callback=None,
                  slave_mode=False,
-                 source=None):
+                 source=None,
+                 eids_seq_range=10000):
         """ Create a MassiveObject store, with the following attributes:
 
         - cnx: CubicWeb cnx
+        - eids_seq_range: size of eid range reserved by the store for each batch
         """
         super(MassiveObjectStore, self).__init__(cnx)
         self.logger = logging.getLogger('dataimport.massive_store')
         self._cnx = cnx
         self.sql = cnx.system_sql
         self._data_uri_relations = defaultdict(list)
+        self.eids_seq_range = eids_seq_range
 
         # etypes for which we have a uri_eid_%(etype)s table
         self._init_uri_eid = set()
