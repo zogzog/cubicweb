@@ -384,12 +384,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if etype not in self._entities:
             # Only for non-initialized etype and not slave mode store
             if not self.slave_mode:
-                if self.eids_seq_range is None:
-                    # Eids are directly set by the entities_id_seq.
-                    # We attach this sequence to all the created etypes.
-                    sql = ("ALTER TABLE cw_%s ALTER COLUMN cw_eid "
-                           "SET DEFAULT nextval('entities_id_seq')" % etype.lower())
-                    self.sql(sql)
                 # Drop indexes and constraints
                 tablename = 'cw_%s' % etype.lower()
                 self.drop_and_store_indexes(tablename)
@@ -438,7 +432,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if 'cwuri' not in kwargs:
             kwargs['cwuri'] = self._default_cwuri + str(self._count_cwuri)
             self._count_cwuri += 1
-        if 'eid' not in kwargs and self.eids_seq_range is not None:
+        if 'eid' not in kwargs:
             # If eid is not given and the eids sequence is set,
             # use the value from the sequence
             kwargs['eid'] = self.get_next_eid()
@@ -598,10 +592,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def _cleanup_entities(self, etype):
         """ Cleanup etype table """
-        if self.eids_seq_range is None:
-            # Remove DEFAULT eids sequence if added
-            sql = 'ALTER TABLE cw_%s ALTER COLUMN cw_eid DROP DEFAULT;' % etype.lower()
-            self.sql(sql)
         # Create indexes and constraints
         tablename = SQL_PREFIX + etype.lower()
         self.reapply_constraint_index(tablename)
