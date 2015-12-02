@@ -570,7 +570,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.on_rollback(exc, etype, data)
             # Clear data cache
             self._data_entities[etype] = []
-        self.flush_meta_data()
+        if not self.slave_mode:
+            self.flush_meta_data()
 
     def flush_meta_data(self):
         """ Flush the meta data (entities table, is_instance table, ...)
