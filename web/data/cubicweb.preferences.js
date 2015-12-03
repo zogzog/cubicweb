@@ -45,7 +45,7 @@ function _toggleFieldset(fieldsetid, closeaction, linklabel, linkhref) {
 function validatePrefsForm(formid) {
     clearPreviousMessages();
     _clearPreviousErrors(formid);
-    return validateForm(formid, null, submitSucces, submitFailure);
+    return validateForm(formid, null, submitSuccess, submitFailure);
 }
 
 function submitFailure(result, formid, cbargs) {
@@ -59,13 +59,13 @@ function submitFailure(result, formid, cbargs) {
     return false; // so handleFormValidationResponse doesn't try to display error
 }
 
-function submitSucces(result, formid, cbargs) {
+function submitSuccess(result, formid, cbargs) {
     var $form = jQuery('#' + formid);
     setCurrentValues($form);
     var dom = DIV({'class': 'msg'}, _("changes applied"));
     $form.find('div.formsg').empty().append(dom);
     $form.find('input').removeClass('changed');
-    checkValues(form, true);
+    checkValues($form, true);
     return;
 }
 
