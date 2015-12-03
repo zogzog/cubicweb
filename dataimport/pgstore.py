@@ -31,6 +31,7 @@ from six import string_types, integer_types, text_type
 from six.moves import cPickle as pickle, range
 
 from cubicweb.utils import make_uid
+from cubicweb.server.utils import eschema_eid
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.dataimport.stores import NoHookRQLObjectStore
 
@@ -407,7 +408,7 @@ class SQLGenSourceWrapper(object):
             _sql[statement] = [data]
 
     def add_entity(self, cnx, entity):
-        with self._storage_handler(entity, 'added'):
+        with self._storage_handler(cnx, entity, 'added'):
             attrs = self.preprocess_entity(entity)
             rtypes = self._inlined_rtypes_cache.get(entity.cw_etype, ())
             if isinstance(rtypes, str):
