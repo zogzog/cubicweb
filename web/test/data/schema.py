@@ -93,5 +93,22 @@ class Ticket(EntityType):
     title = String(maxsize=32, required=True, fulltextindexed=True)
     concerns = SubjectRelation('Project', composite='object')
 
+class Filesystem(EntityType):
+    name = String()
+
+class parent_fs(RelationDefinition):
+    name = 'parent'
+    subject = 'Directory'
+    object = 'Filesystem'
+
+class Directory(EntityType):
+    name = String()
+
+class parent_directory(RelationDefinition):
+    name = 'parent'
+    subject = 'Directory'
+    object = 'Directory'
+    composite = 'object'
+
 # used by windmill for `test_edit_relation`
 from cubes.folder.schema import Folder

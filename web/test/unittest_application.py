@@ -257,6 +257,147 @@ class ApplicationTC(CubicWebTC):
                               {'login-subject': u'the value "admin" is already used, use another one'})
             self.assertEqual(forminfo['values'], req.form)
 
+    def _edit_parent(self, dir_eid, parent_eid, role='subject',
+                     etype='Directory'):
+        parent_eid = parent_eid or '__cubicweb_internal_field__'
+        with self.admin_access.web_request() as req:
+            req.form = {
+                'eid': unicode(dir_eid),
+                '__maineid': unicode(dir_eid),
+                '__type:%s' % dir_eid: etype,
+                '_cw_entity_fields:%s' % dir_eid: 'parent-%s' % role,
+                'parent-%s:%s' % (role, dir_eid): parent_eid,
+            }
+            self.expect_redirect_handle_request(req)
+
+    def test_subject_subentity_removal(self):
+        """Editcontroller: detaching a composite relation removes the subentity
+        (edit from the subject side)
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            sub1 = cnx.create_entity('Directory', name=u'sub1', parent=topd)
+            sub2 = cnx.create_entity('Directory', name=u'sub2', parent=topd)
+            cnx.commit()
+
+        self._edit_parent(sub1.eid, parent_eid=None)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertFalse(cnx.find('Directory', eid=sub1.eid))
+            self.assertTrue(cnx.find('Directory', eid=sub2.eid))
+
+    def test_object_subentity_removal(self):
+        """Editcontroller: detaching a composite relation removes the subentity
+        (edit from the object side)
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            sub1 = cnx.create_entity('Directory', name=u'sub1', parent=topd)
+            sub2 = cnx.create_entity('Directory', name=u'sub2', parent=topd)
+            cnx.commit()
+
+        self._edit_parent(topd.eid, parent_eid=sub1.eid, role='object')
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertTrue(cnx.find('Directory', eid=sub1.eid))
+            self.assertFalse(cnx.find('Directory', eid=sub2.eid))
+
+    def test_reparent_subentity(self):
+        "Editcontroller: re-parenting a subentity does not remove it"
+        with self.admin_access.repo_cnx() as cnx:
+            top1 = cnx.create_entity('Directory', name=u'top1')
+            top2 = cnx.create_entity('Directory', name=u'top2')
+            subd = cnx.create_entity('Directory', name=u'subd', parent=top1)
+            cnx.commit()
+
+        self._edit_parent(subd.eid, parent_eid=top2.eid)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=top1.eid))
+            self.assertTrue(cnx.find('Directory', eid=top2.eid))
+            self.assertTrue(cnx.find('Directory', eid=subd.eid))
+            self.assertEqual(
+                cnx.find('Directory', eid=subd.eid).one().parent[0], top2)
+
+    def test_subject_mixed_composite_subentity_removal_1(self):
+        """Editcontroller: detaching several subentities respects each rdef's
+        compositeness - Remove non composite
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            fs = cnx.create_entity('Filesystem', name=u'/tmp')
+            subd = cnx.create_entity('Directory', name=u'subd',
+                                     parent=(topd, fs))
+            cnx.commit()
+
+        self._edit_parent(subd.eid, parent_eid=topd.eid)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertTrue(cnx.find('Directory', eid=subd.eid))
+            self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
+            self.assertEqual(cnx.find('Directory', eid=subd.eid).one().parent,
+                             [topd,])
+
+    def test_subject_mixed_composite_subentity_removal_2(self):
+        """Editcontroller: detaching several subentities respects each rdef's
+        compositeness - Remove composite
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            fs = cnx.create_entity('Filesystem', name=u'/tmp')
+            subd = cnx.create_entity('Directory', name=u'subd',
+                                     parent=(topd, fs))
+            cnx.commit()
+
+        self._edit_parent(subd.eid, parent_eid=fs.eid)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertFalse(cnx.find('Directory', eid=subd.eid))
+            self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
+
+    def test_object_mixed_composite_subentity_removal_1(self):
+        """Editcontroller: detaching several subentities respects each rdef's
+        compositeness - Remove non composite
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            fs = cnx.create_entity('Filesystem', name=u'/tmp')
+            subd = cnx.create_entity('Directory', name=u'subd',
+                                     parent=(topd, fs))
+            cnx.commit()
+
+        self._edit_parent(fs.eid, parent_eid=None, role='object',
+                          etype='Filesystem')
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertTrue(cnx.find('Directory', eid=subd.eid))
+            self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
+            self.assertEqual(cnx.find('Directory', eid=subd.eid).one().parent,
+                             [topd,])
+
+    def test_object_mixed_composite_subentity_removal_2(self):
+        """Editcontroller: detaching several subentities respects each rdef's
+        compositeness - Remove composite
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            fs = cnx.create_entity('Filesystem', name=u'/tmp')
+            subd = cnx.create_entity('Directory', name=u'subd',
+                                     parent=(topd, fs))
+            cnx.commit()
+
+        self._edit_parent(topd.eid, parent_eid=None, role='object')
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertFalse(cnx.find('Directory', eid=subd.eid))
+            self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
+
     def test_ajax_view_raise_arbitrary_error(self):
         class ErrorAjaxView(view.View):
             __regid__ = 'test.ajax.error'
