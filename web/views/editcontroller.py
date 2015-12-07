@@ -75,12 +75,14 @@ class RqlQuery(object):
         self.edited = []
         self.restrictions = []
         self.kwargs = {}
+        self.canceled = False
 
     def __repr__(self):
         return ('Query <edited=%r restrictions=%r kwargs=%r>' % (
             self.edited, self.restrictions, self.kwargs))
 
     def insert_query(self, etype):
+        assert not self.canceled
         if self.edited:
             rql = 'INSERT %s X: %s' % (etype, ','.join(self.edited))
         else:
@@ -90,6 +92,7 @@ class RqlQuery(object):
         return rql
 
     def update_query(self, eid):
+        assert not self.canceled
         varmaker = rqlvar_maker()
         var = varmaker.next()
         while var in self.kwargs:
@@ -268,13 +271,16 @@ class EditController(basecontrollers.ViewController):
         # creation, add relevant data to the rqlquery
         for form_, field in req.data['pending_inlined'].pop(entity.eid, ()):
             rqlquery.set_inlined(field.name, form_.edited_entity.eid)
-        if self.errors:
-            errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
-            raise ValidationError(valerror_eid(entity.eid), errors)
-        if eid is None: # creation or copy
-            entity.eid = eid = self._insert_entity(etype, formparams['eid'], rqlquery)
-        elif rqlquery.edited: # edition of an existant entity
-            self._update_entity(eid, rqlquery)
+        if not rqlquery.canceled:
+            if self.errors:
+                errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
+                raise ValidationError(valerror_eid(entity.eid), errors)
+            if eid is None: # creation or copy
+                entity.eid = eid = self._insert_entity(etype, formparams['eid'], rqlquery)
+            elif rqlquery.edited: # edition of an existant entity
+                self._update_entity(eid, rqlquery)
+        else:
+            self.errors = []
         if is_main_entity:
             self.notify_edited(entity)
         if '__delete' in formparams:
@@ -315,7 +321,7 @@ class EditController(basecontrollers.ViewController):
                 if unlinked_eids:
                     # Special handling of composite relation removal
                     self.handle_composite_removal(
-                        form, field, unlinked_eids)
+                        form, field, unlinked_eids, rqlquery)
 
                 if rschema.inlined and rqlquery is not None and field.role == 'subject':
                     self.handle_inlined_relation(form, field, value, origvalues, rqlquery)
@@ -327,7 +333,7 @@ class EditController(basecontrollers.ViewController):
         except ProcessFormError as exc:
             self.errors.append((field, exc))
 
-    def handle_composite_removal(self, form, field, removed_values):
+    def handle_composite_removal(self, form, field, removed_values, rqlquery):
         """
         In EditController-handled forms, when the user removes a composite
         relation, it triggers the removal of the related entity in the
@@ -349,6 +355,9 @@ class EditController(basecontrollers.ViewController):
                 else:
                     targettype = unlinked_entity.e_schema
                     to_be_removed = form.edited_entity
+                    self.info('Edition of %s is cancelled (deletion requested)',
+                              to_be_removed)
+                    rqlquery.canceled = True
                 self.info('Scheduling removal of %s as composite relation '
                           '%s was removed', to_be_removed, rdef)
                 form._cw.data['pending_composite_delete'].add(

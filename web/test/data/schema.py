@@ -102,7 +102,7 @@ class parent_fs(RelationDefinition):
     object = 'Filesystem'
 
 class Directory(EntityType):
-    name = String()
+    name = String(required=True)
 
 class parent_directory(RelationDefinition):
     name = 'parent'

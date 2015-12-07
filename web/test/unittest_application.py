@@ -258,17 +258,69 @@ class ApplicationTC(CubicWebTC):
             self.assertEqual(forminfo['values'], req.form)
 
     def _edit_parent(self, dir_eid, parent_eid, role='subject',
-                     etype='Directory'):
+                     etype='Directory', **kwargs):
         parent_eid = parent_eid or '__cubicweb_internal_field__'
         with self.admin_access.web_request() as req:
             req.form = {
                 'eid': unicode(dir_eid),
                 '__maineid': unicode(dir_eid),
                 '__type:%s' % dir_eid: etype,
-                '_cw_entity_fields:%s' % dir_eid: 'parent-%s' % role,
                 'parent-%s:%s' % (role, dir_eid): parent_eid,
             }
+            req.form.update(kwargs)
+            req.form['_cw_entity_fields:%s' % dir_eid] = ','.join(
+                ['parent-%s' % role] +
+                [key.split(':')[0]
+                 for key in kwargs.keys()
+                 if not key.startswith('_')])
             self.expect_redirect_handle_request(req)
+
+    def test_create_and_link_directories(self):
+        with self.admin_access.web_request() as req:
+            req.form = {
+                'eid': (u'A', u'B'),
+                '__maineid': u'A',
+                '__type:A': 'Directory',
+                '__type:B': 'Directory',
+                'parent-subject:B': u'A',
+                'name-subject:A': u'topd',
+                'name-subject:B': u'subd',
+                '_cw_entity_fields:A': 'name-subject',
+                '_cw_entity_fields:B': 'parent-subject,name-subject',
+            }
+            self.expect_redirect_handle_request(req)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', name=u'topd'))
+            self.assertTrue(cnx.find('Directory', name=u'subd'))
+            self.assertEqual(1, cnx.execute(
+                'Directory SUBD WHERE SUBD parent TOPD,'
+                ' SUBD name "subd", TOPD name "topd"').rowcount)
+
+    def test_create_subentity(self):
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            cnx.commit()
+
+        with self.admin_access.web_request() as req:
+            req.form = {
+                'eid': (unicode(topd.eid), u'B'),
+                '__maineid': unicode(topd.eid),
+                '__type:%s' % topd.eid: 'Directory',
+                '__type:B': 'Directory',
+                'parent-object:%s' % topd.eid: u'B',
+                'name-subject:B': u'subd',
+                '_cw_entity_fields:%s' % topd.eid: 'parent-object',
+                '_cw_entity_fields:B': 'name-subject',
+            }
+            self.expect_redirect_handle_request(req)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', name=u'topd'))
+            self.assertTrue(cnx.find('Directory', name=u'subd'))
+            self.assertEqual(1, cnx.execute(
+                'Directory SUBD WHERE SUBD parent TOPD,'
+                ' SUBD name "subd", TOPD name "topd"').rowcount)
 
     def test_subject_subentity_removal(self):
         """Editcontroller: detaching a composite relation removes the subentity
@@ -280,7 +332,8 @@ class ApplicationTC(CubicWebTC):
             sub2 = cnx.create_entity('Directory', name=u'sub2', parent=topd)
             cnx.commit()
 
-        self._edit_parent(sub1.eid, parent_eid=None)
+        attrs = {'name-subject:%s' % sub1.eid: ''}
+        self._edit_parent(sub1.eid, parent_eid=None, **attrs)
 
         with self.admin_access.repo_cnx() as cnx:
             self.assertTrue(cnx.find('Directory', eid=topd.eid))
