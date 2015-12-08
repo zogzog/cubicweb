@@ -128,7 +128,7 @@ class ViewController(Controller):
         view, rset = self._select_view_and_rset(rset)
         view.set_http_cache_headers()
         if self._cw.is_client_cache_valid():
-            return ''
+            return b''
         template = self.appli.main_template_id(self._cw)
         return self._cw.vreg['views'].main_template(self._cw, template,
                                                     rset=rset, view=view)

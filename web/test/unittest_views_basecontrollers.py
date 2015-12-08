@@ -23,12 +23,12 @@ from six.moves.urllib.parse import urlsplit, urlunsplit, urljoin, parse_qs
 import lxml
 
 from logilab.common.testlib import unittest_main
-
 from logilab.common.decorators import monkeypatch
 
 from cubicweb import Binary, NoSelectableObject, ValidationError
 from cubicweb.schema import RRQLExpression
 from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.devtools.webtest import CubicWebTestTC
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
 from cubicweb.web import Redirect, RemoteCallFailed
@@ -40,6 +40,19 @@ from cubicweb.web.views.ajaxcontroller import ajaxfunc, AjaxFunction
 import cubicweb.transaction as tx
 from cubicweb.server.hook import Hook, Operation
 from cubicweb.predicates import is_instance
+
+
+class ViewControllerTC(CubicWebTestTC):
+    def test_view_ctrl_with_valid_cache_headers(self):
+        resp = self.webapp.get('/manage')
+        self.assertEqual(resp.etag, 'manage/guests')
+        self.assertEqual(resp.status_code, 200)
+        cache_headers = {'if-modified-since': resp.headers['Last-Modified'],
+                         'if-none-match': resp.etag}
+        resp = self.webapp.get('/manage', headers=cache_headers)
+        self.assertEqual(resp.status_code, 304)
+        self.assertEqual(len(resp.body), 0)
+
 
 def req_form(user):
     return {'eid': [str(user.eid)],
