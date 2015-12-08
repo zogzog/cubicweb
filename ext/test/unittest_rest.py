@@ -31,7 +31,7 @@ class RestTC(CubicWebTC):
             self.assertEqual(rest_publish(context, ':eid:`%s`' % context.eid),
                              '<p><a class="reference" href="http://testing.fr/cubicweb/cwuser/admin">'
                              '#%s</a></p>\n' % context.eid)
-            self.assertEqual(rest_publish(context, ':eid:`%s:some text`' %  context.eid),
+            self.assertEqual(rest_publish(context, ':eid:`%s:some text`' % context.eid),
                              '<p><a class="reference" href="http://testing.fr/cubicweb/cwuser/admin">'
                              'some text</a></p>\n')
 
