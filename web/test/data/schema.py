@@ -20,6 +20,9 @@ from yams.buildobjs import (EntityType, RelationDefinition, SubjectRelation,
                             String, Int, Datetime, Boolean, Float)
 from yams.constraints import IntervalBoundConstraint
 
+from cubicweb import _
+
+
 class Salesterm(EntityType):
     described_by_test = SubjectRelation('File', cardinality='1*',
                                         composite='subject', inlined=True)
