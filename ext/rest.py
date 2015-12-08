@@ -34,6 +34,7 @@ following ReST directives:
 """
 __docformat__ = "restructuredtext en"
 
+import sys
 from cStringIO import StringIO
 from itertools import chain
 from logging import getLogger
@@ -415,6 +416,8 @@ def rest_publish(context, data):
                 # (though try/except may be a better option...). May be the
                 # above traceback option will avoid this?
                 'halt_level': 10,
+                # disable stupid switch to colspan=2 if field name is above a size limit
+                'field_name_limit': sys.maxsize,
                 }
     if context:
         if hasattr(req, 'url'):

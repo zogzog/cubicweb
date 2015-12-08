@@ -58,6 +58,14 @@ class RestTC(CubicWebTC):
 
 ''')
 
+    def test_disable_field_name_colspan(self):
+        with self.admin_access.web_request() as req:
+            context = self.context(req)
+            value = rest_publish(context, '''my field list:
+
+:a long dumb param name: value
+''')
+            self.assertNotIn('colspan', value)
 
     def test_rql_role_with_vid(self):
         with self.admin_access.web_request() as req:
