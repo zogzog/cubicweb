@@ -289,6 +289,12 @@ class MigrationCommandsTC(MigrationTC):
             for cstr in eschema.rdef('name').constraints:
                 self.assertTrue(hasattr(cstr, 'eid'))
 
+    def test_add_cube_with_custom_final_type(self):
+        with self.mh() as (cnx, mh):
+            mh.cmd_add_cube('fakegis')
+            self.assertIn('Geometry', self.schema)
+            self.assertTrue(self.schema['Geometry'].final)
+
     def test_add_drop_entity_type(self):
         with self.mh() as (cnx, mh):
             mh.cmd_add_entity_type('Folder2')
