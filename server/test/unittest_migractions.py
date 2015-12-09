@@ -298,6 +298,9 @@ class MigrationCommandsTC(MigrationTC):
             self.assertEqual(rdef.geom_type, 'GEOMETRYCOLLECTION')
             self.assertEqual(rdef.coord_dimension, 2)
             self.assertEqual(rdef.srid, 4326)
+            #self.assertEqual(mh.sqlexec('SELECT pg_typeof("cw_geometry") FROM cw_Location'), '')
+            fields = self.table_schema(mh, '%sLocation' % SQL_PREFIX)
+            self.assertEqual(fields['%sgeometry' % SQL_PREFIX], ('USER-DEFINED', None)) # XXX
 
     def test_add_drop_entity_type(self):
         with self.mh() as (cnx, mh):

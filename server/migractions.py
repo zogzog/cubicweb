@@ -60,7 +60,7 @@ from cubicweb.cwvreg import CW_EVENT_MANAGER
 from cubicweb import repoapi
 from cubicweb.migration import MigrationHelper, yes
 from cubicweb.server import hook, schemaserial as ss
-from cubicweb.server.schema2sql import eschema2sql, rschema2sql, unique_index_name
+from cubicweb.server.schema2sql import eschema2sql, rschema2sql, unique_index_name, sql_type
 from cubicweb.server.utils import manager_userpasswd
 from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 
@@ -1508,8 +1508,10 @@ class ServerMigrationHelper(MigrationHelper):
                "WHERE cw_eid=%s") % (newtype, rdef.eid)
         self.sqlexec(sql, ask_confirm=False)
         dbhelper = self.repo.system_source.dbhelper
-        sqltype = dbhelper.TYPE_MAPPING[newtype]
+        newrdef = self.fs_schema.rschema(attr).rdef(etype, newtype)
+        sqltype = sql_type(dbhelper, newrdef)
         cursor = self.cnx.cnxset.cu
+        # consider former cardinality by design, since cardinality change is not handled here
         allownull = rdef.cardinality[0] != '1'
         dbhelper.change_col_type(cursor, 'cw_%s' % etype, 'cw_%s' % attr, sqltype, allownull)
         if commit:

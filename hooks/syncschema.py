@@ -440,12 +440,15 @@ class CWAttributeAddOp(MemSchemaOperation):
             # probably buggy)
             rdef = self.cnx.vreg.schema.rschema(rdefdef.name).rdefs[rdefdef.subject, rdefdef.object]
             assert rdef.infered
+        else:
+            rdef = self.cnx.vreg.schema.rschema(rdefdef.name).rdefs[rdefdef.subject, rdefdef.object]
+
         self.cnx.execute('SET X ordernum Y+1 '
                          'WHERE X from_entity SE, SE eid %(se)s, X ordernum Y, '
                          'X ordernum >= %(order)s, NOT X eid %(x)s',
                          {'x': entity.eid, 'se': fromentity.eid,
                           'order': entity.ordernum or 0})
-        return rdefdef
+        return rdefdef, rdef
 
     def precommit_event(self):
         cnx = self.cnx
@@ -465,11 +468,10 @@ class CWAttributeAddOp(MemSchemaOperation):
         if hasattr(entity, 'formula'):
             props['formula'] = entity.formula
         # update the in-memory schema first
-        rdefdef = self.init_rdef(**props)
+        rdefdef, rdef = self.init_rdef(**props)
         # then make necessary changes to the system source database
         syssource = cnx.repo.system_source
-        attrtype = y2sql.type_from_constraints(
-            syssource.dbhelper, rdefdef.object, rdefdef.constraints)
+        attrtype = y2sql.type_from_rdef(syssource.dbhelper, rdef)
         # XXX should be moved somehow into lgdb: sqlite doesn't support to
         # add a new column with UNIQUE, it should be added after the ALTER TABLE
         # using ADD INDEX
@@ -549,7 +551,7 @@ class CWRelationAddOp(CWAttributeAddOp):
         cnx = self.cnx
         entity = self.entity
         # update the in-memory schema first
-        rdefdef = self.init_rdef(composite=entity.composite)
+        rdefdef, rdef = self.init_rdef(composite=entity.composite)
         # then make necessary changes to the system source database
         schema = cnx.vreg.schema
         rtype = rdefdef.name

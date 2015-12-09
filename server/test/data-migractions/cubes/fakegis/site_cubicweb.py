@@ -7,7 +7,23 @@ register_base_type('Geometry', _GEOM_PARAMETERS)
 
 # Add the datatype to the helper mapping
 pghelper = get_db_helper('postgres')
-pghelper.TYPE_MAPPING['Geometry'] = 'geometry'
+
+
+def pg_geometry_sqltype(rdef):
+    """Return a PostgreSQL column type corresponding to rdef's geom_type, srid
+    and coord_dimension.
+    """
+    target_geom_type = rdef.geom_type
+    if rdef.coord_dimension >= 3:  # XXX: handle 2D+M
+        target_geom_type += 'Z'
+    if rdef.coord_dimension == 4:
+        target_geom_type += 'M'
+    assert target_geom_type
+    assert rdef.srid
+    return 'geometry(%s, %s)' % (target_geom_type, rdef.srid)
+
+
+pghelper.TYPE_MAPPING['Geometry'] = pg_geometry_sqltype
 
 
 # Add a converter for Geometry
