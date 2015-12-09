@@ -26,7 +26,7 @@ __docformat__ = "restructuredtext en"
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.
 import sys
-from datetime import datetime
+from datetime import datetime, date
 from os import mkdir, chdir, path as osp
 from warnings import warn
 
@@ -128,7 +128,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
     from cubicweb.i18n import add_msg
     from cubicweb.schema import NO_I18NCONTEXT, CONSTRAINTS
     w('# schema pot file, generated on %s\n'
-      % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+      % datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
     w('# singular and plural forms for each entity type\n')
     w('\n')
@@ -660,7 +660,7 @@ layout, and a full featured cube with "full" layout.',
                    'longdesc' : longdesc or shortdesc,
                    'dependencies' : dependencies,
                    'version'  : cubicwebversion,
-                   'year'  : str(datetime.now().year),
+                   'year'  : str(date.today().year),
                    'author': self['author'],
                    'author-email': self['author-email'],
                    'author-web-site': self['author-web-site'],
