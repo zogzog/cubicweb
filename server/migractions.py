@@ -47,6 +47,7 @@ from six import PY2, text_type
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
 
+from yams.buildobjs import EntityType
 from yams.constraints import SizeConstraint
 from yams.schema import RelationDefinitionSchema
 
@@ -790,6 +791,11 @@ class ServerMigrationHelper(MigrationHelper):
         cstrtypemap = self.cstrtype_mapping()
         # register the entity into CWEType
         execute = self.cnx.execute
+        if eschema.final and eschema not in instschema:
+            # final types are expected to be in the living schema by default, but they are not if
+            # the type is defined in a cube that is being added
+            edef = EntityType(eschema.type, __permissions__=eschema.permissions)
+            instschema.add_entity_type(edef)
         ss.execschemarql(execute, eschema, ss.eschema2rql(eschema, groupmap))
         # add specializes relation if needed
         specialized = eschema.specializes()
