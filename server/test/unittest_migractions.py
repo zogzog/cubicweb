@@ -526,12 +526,12 @@ class MigrationCommandsTC(MigrationTC):
             # remaining orphan rql expr which should be deleted at commit (composite relation)
             # unattached expressions -> pending deletion on commit
             self.assertEqual(cnx.execute('Any COUNT(X) WHERE X is RQLExpression, X exprtype "ERQLExpression",'
-                                            'NOT ET1 read_permission X, NOT ET2 add_permission X, '
-                                            'NOT ET3 delete_permission X, NOT ET4 update_permission X')[0][0],
+                                         'NOT ET1 read_permission X, NOT ET2 add_permission X, '
+                                         'NOT ET3 delete_permission X, NOT ET4 update_permission X')[0][0],
                               7)
             self.assertEqual(cnx.execute('Any COUNT(X) WHERE X is RQLExpression, X exprtype "RRQLExpression",'
-                                            'NOT ET1 read_permission X, NOT ET2 add_permission X, '
-                                            'NOT ET3 delete_permission X, NOT ET4 update_permission X')[0][0],
+                                         'NOT ET1 read_permission X, NOT ET2 add_permission X, '
+                                         'NOT ET3 delete_permission X, NOT ET4 update_permission X')[0][0],
                               2)
             # finally
             self.assertEqual(cnx.execute('Any COUNT(X) WHERE X is RQLExpression')[0][0],
