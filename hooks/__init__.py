@@ -77,7 +77,7 @@ class DataImportsCleanupStartupHook(hook.Hook):
                     or not repo.config.source_enabled(source)):
                     continue
                 with repo.internal_cnx() as cnx:
-                    mindate = datetime.now() - timedelta(seconds=source.config['logs-lifetime'])
+                    mindate = datetime.utcnow() - timedelta(seconds=source.config['logs-lifetime'])
                     cnx.execute('DELETE CWDataImport X WHERE X start_timestamp < %(time)s',
                                     {'time': mindate})
                     cnx.commit()
