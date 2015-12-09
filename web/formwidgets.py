@@ -97,12 +97,10 @@ __docformat__ = "restructuredtext en"
 
 from functools import reduce
 from datetime import date
-from warnings import warn
 
 from six import text_type, string_types
 
 from logilab.mtconverter import xml_escape
-from logilab.common.deprecation import deprecated
 from logilab.common.date import todatetime
 
 from cubicweb import tags, uilib
@@ -210,7 +208,7 @@ class FieldWidget(object):
         attrs = dict(self.attrs)
         if self.setdomid:
             attrs['id'] = field.dom_id(form, self.suffix)
-        if self.settabindex and not 'tabindex' in attrs:
+        if self.settabindex and 'tabindex' not in attrs:
             attrs['tabindex'] = form._cw.next_tabindex()
         if 'placeholder' in attrs:
             attrs['placeholder'] = form._cw._(attrs['placeholder'])
@@ -387,7 +385,7 @@ class HiddenInput(Input):
     string.
     """
     type = 'hidden'
-    setdomid = False # by default, don't set id attribute on hidden input
+    setdomid = False  # by default, don't set id attribute on hidden input
     settabindex = False
 
 
@@ -474,7 +472,7 @@ class Select(FieldWidget):
                 options.append(tags.option(label, value=value, **oattrs))
         if optgroup_opened:
             options.append(u'</optgroup>')
-        if not 'size' in attrs:
+        if 'size' not in attrs:
             if self._multiple:
                 size = text_type(min(self.default_size, len(vocab) or 1))
             else:
@@ -532,11 +530,10 @@ class InOutWidget(Select):
                     options.append(tags.option(label, value=value))
         if 'size' not in attrs:
             attrs['size'] = self.default_size
-        if 'id' in attrs :
+        if 'id' in attrs:
             attrs.pop('id')
         return tags.select(name=name, multiple=self._multiple, id=name,
                            options=options, **attrs) + '\n'.join(inputs)
-
 
     def _render(self, form, field, renderer):
         domid = field.dom_id(form)
@@ -549,10 +546,10 @@ class InOutWidget(Select):
         return (self.template %
                 {'widgetid': jsnodes['widgetid'],
                  # helpinfo select tag
-                 'inoutinput' : self.render_select(form, field, jsnodes['from']),
+                 'inoutinput': self.render_select(form, field, jsnodes['from']),
                  # select tag with resultats
-                 'resinput' : self.render_select(form, field, jsnodes['to'], selected=True),
-                 'addinput' : self.add_button % jsnodes,
+                 'resinput': self.render_select(form, field, jsnodes['to'], selected=True),
+                 'addinput': self.add_button % jsnodes,
                  'removeinput': self.remove_button % jsnodes
                  })
 
@@ -673,7 +670,7 @@ class DateTimePicker(TextInput):
 <img src="%s" title="%s" alt="" /></a><div class="calpopup hidden" id="%s"></div>"""
                 % (helperid, inputid, year, month,
                    form._cw.uiprops['CALENDAR_ICON'],
-                   form._cw._('calendar'), helperid) )
+                   form._cw._('calendar'), helperid))
 
 
 class JQueryDatePicker(FieldWidget):
@@ -759,7 +756,7 @@ class JQueryTimePicker(JQueryDatePicker):
     def _render(self, form, field, renderer):
         domid = field.dom_id(form, self.suffix)
         form._cw.add_onload(u'cw.jqNode("%s").timePicker({step: %s, separator: "%s"})' % (
-                domid, self.timesteps, self.separator))
+            domid, self.timesteps, self.separator))
         return self._render_input(form, field)
 
 
@@ -799,8 +796,8 @@ class JQueryDateTimePicker(FieldWidget):
         timepicker = JQueryTimePicker(timestr=timestr, timesteps=self.timesteps,
                                       suffix='time')
         return u'<div id="%s">%s%s</div>' % (field.dom_id(form),
-                                            datepicker.render(form, field, renderer),
-                                            timepicker.render(form, field, renderer))
+                                             datepicker.render(form, field, renderer),
+                                             timepicker.render(form, field, renderer))
 
     def process_field_data(self, form, field):
         req = form._cw
@@ -887,7 +884,6 @@ class AutoCompletionWidget(TextInput):
                                     pageid=entity._cw.pageid)
 
 
-
 class StaticFileAutoCompletionWidget(AutoCompletionWidget):
     """XXX describe me"""
     wdgtype = 'StaticFileSuggestField'
@@ -906,10 +902,11 @@ class LazyRestrictedAutoCompletionWidget(RestrictedAutoCompletionWidget):
 
     def values_and_attributes(self, form, field):
         """override values_and_attributes to handle initial displayed values"""
-        values, attrs = super(LazyRestrictedAutoCompletionWidget, self).values_and_attributes(form, field)
+        values, attrs = super(LazyRestrictedAutoCompletionWidget, self).values_and_attributes(
+            form, field)
         assert len(values) == 1, "multiple selection is not supported yet by LazyWidget"
         if not values[0]:
-            values = form.cw_extra_kwargs.get(field.name,'')
+            values = form.cw_extra_kwargs.get(field.name, '')
             if not isinstance(values, (tuple, list)):
                 values = (values,)
         try:
@@ -949,7 +946,7 @@ class IntervalWidget(FieldWidget):
             actual_fields[0].render(form, renderer),
             form._cw._('to_interval_end'),
             actual_fields[1].render(form, renderer),
-            )
+        )
 
 
 class HorizontalLayoutWidget(FieldWidget):
@@ -960,7 +957,7 @@ class HorizontalLayoutWidget(FieldWidget):
         if self.attrs.get('display_label', True):
             subst = self.attrs.get('label_input_substitution', '%(label)s %(input)s')
             fields = [subst % {'label': renderer.render_label(form, f),
-                              'input': f.render(form, renderer)}
+                               'input': f.render(form, renderer)}
                       for f in field.subfields(form)]
         else:
             fields = [f.render(form, renderer) for f in field.subfields(form)]
@@ -978,7 +975,7 @@ class EditableURLWidget(FieldWidget):
         assert self.suffix is None, 'not supported'
         req = form._cw
         pathqname = field.input_name(form, 'path')
-        fqsqname = field.input_name(form, 'fqs') # formatted query string
+        fqsqname = field.input_name(form, 'fqs')  # formatted query string
         if pathqname in form.form_previous_values:
             path = form.form_previous_values[pathqname]
             fqs = form.form_previous_values[fqsqname]
@@ -999,7 +996,7 @@ class EditableURLWidget(FieldWidget):
         attrs = dict(self.attrs)
         if self.setdomid:
             attrs['id'] = field.dom_id(form)
-        if self.settabindex and not 'tabindex' in attrs:
+        if self.settabindex and 'tabindex' not in attrs:
             attrs['tabindex'] = req.next_tabindex()
         # ensure something is rendered
         inputs = [u'<table><tr><th>',
@@ -1039,7 +1036,8 @@ class EditableURLWidget(FieldWidget):
                         try:
                             key, val = line.split('=', 1)
                         except ValueError:
-                            raise ProcessFormError(req._("wrong query parameter line %s") % (i+1))
+                            msg = req._("wrong query parameter line %s") % (i + 1)
+                            raise ProcessFormError(msg)
                         # value will be url quoted by build_url_params
                         values.setdefault(key, []).append(val)
         if not values:
@@ -1087,7 +1085,7 @@ class Button(Input):
             attrs['name'] = self.name
             if self.setdomid:
                 attrs['id'] = self.name
-        if self.settabindex and not 'tabindex' in attrs:
+        if self.settabindex and 'tabindex' not in attrs:
             attrs['tabindex'] = form._cw.next_tabindex()
         if self.icon:
             img = tags.img(src=form._cw.uiprops[self.icon], alt=self.icon)
@@ -1124,5 +1122,5 @@ class ImgButton(object):
         imgsrc = form._cw.uiprops[self.imgressource]
         return '<a id="%(domid)s" href="%(href)s">'\
                '<img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % {
-            'label': label, 'imgsrc': imgsrc,
-            'domid': self.domid, 'href': self.href}
+                   'label': label, 'imgsrc': imgsrc,
+                   'domid': self.domid, 'href': self.href}
