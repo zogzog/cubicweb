@@ -33,7 +33,7 @@ class TransactionsCleanupStartupHook(hook.Hook):
         # which may cause reloading pb
         lifetime = timedelta(days=self.repo.config['keep-transaction-lifetime'])
         def cleanup_old_transactions(repo=self.repo, lifetime=lifetime):
-            mindate = datetime.now() - lifetime
+            mindate = datetime.utcnow() - lifetime
             with repo.internal_cnx() as cnx:
                 cnx.system_sql(
                     'DELETE FROM transactions WHERE tx_time < %(time)s',
