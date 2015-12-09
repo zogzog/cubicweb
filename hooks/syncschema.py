@@ -26,8 +26,10 @@ checking for schema consistency is done in hooks.py
 __docformat__ = "restructuredtext en"
 from cubicweb import _
 
+import json
 from copy import copy
 from hashlib import md5
+
 from yams.schema import (BASE_TYPES, BadSchemaDefinition,
                          RelationSchema, RelationDefinitionSchema)
 from yams import buildobjs as ybo, convert_default_value
@@ -457,6 +459,8 @@ class CWAttributeAddOp(MemSchemaOperation):
                  'indexed': entity.indexed,
                  'fulltextindexed': entity.fulltextindexed,
                  'internationalizable': entity.internationalizable}
+        if entity.extra_props:
+            props.update(json.load(entity.extra_props))
         # entity.formula may not exist yet if we're migrating to 3.20
         if hasattr(entity, 'formula'):
             props['formula'] = entity.formula

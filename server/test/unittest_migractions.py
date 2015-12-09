@@ -294,6 +294,10 @@ class MigrationCommandsTC(MigrationTC):
             mh.cmd_add_cube('fakegis')
             self.assertIn('Geometry', self.schema)
             self.assertTrue(self.schema['Geometry'].final)
+            rdef = self.schema['geometry'].rdefs[('Location', 'Geometry')]
+            self.assertEqual(rdef.geom_type, 'GEOMETRYCOLLECTION')
+            self.assertEqual(rdef.coord_dimension, 2)
+            self.assertEqual(rdef.srid, 4326)
 
     def test_add_drop_entity_type(self):
         with self.mh() as (cnx, mh):
