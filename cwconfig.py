@@ -1052,6 +1052,7 @@ the repository',
         if not isinstance(cubes, list):
             cubes = list(cubes)
         self._cubes = self.reorder_cubes(list(self._cubes) + cubes)
+        self.load_site_cubicweb([self.cube_dir(cube) for cube in cubes])
 
     def main_config_file(self):
         """return instance's control configuration file"""
