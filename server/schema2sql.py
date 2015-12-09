@@ -219,11 +219,12 @@ def type_from_constraints(dbhelper, etype, constraints, creating=True):
     """return a sql type string corresponding to the constraints"""
     constraints = list(constraints)
     unique, sqltype = False, None
-    size_constrained_string = dbhelper.TYPE_MAPPING.get('SizeConstrainedString', 'varchar(%s)')
     if etype == 'String':
         for constraint in constraints:
             if isinstance(constraint, SizeConstraint):
                 if constraint.max is not None:
+                    size_constrained_string = dbhelper.TYPE_MAPPING.get(
+                        'SizeConstrainedString', 'varchar(%s)')
                     sqltype = size_constrained_string % constraint.max
             elif isinstance(constraint, UniqueConstraint):
                 unique = True
