@@ -291,16 +291,14 @@ class MigrationCommandsTC(MigrationTC):
 
     def test_add_cube_with_custom_final_type(self):
         with self.mh() as (cnx, mh):
-            mh.cmd_add_cube('fakegis')
-            self.assertIn('Geometry', self.schema)
-            self.assertTrue(self.schema['Geometry'].final)
-            rdef = self.schema['geometry'].rdefs[('Location', 'Geometry')]
-            self.assertEqual(rdef.geom_type, 'GEOMETRYCOLLECTION')
-            self.assertEqual(rdef.coord_dimension, 2)
-            self.assertEqual(rdef.srid, 4326)
-            #self.assertEqual(mh.sqlexec('SELECT pg_typeof("cw_geometry") FROM cw_Location'), '')
+            mh.cmd_add_cube('fakecustomtype')
+            self.assertIn('Numeric', self.schema)
+            self.assertTrue(self.schema['Numeric'].final)
+            rdef = self.schema['num'].rdefs[('Location', 'Numeric')]
+            self.assertEqual(rdef.scale, 10)
+            self.assertEqual(rdef.precision, 18)
             fields = self.table_schema(mh, '%sLocation' % SQL_PREFIX)
-            self.assertEqual(fields['%sgeometry' % SQL_PREFIX], ('USER-DEFINED', None)) # XXX
+            self.assertEqual(fields['%snum' % SQL_PREFIX], ('numeric', None)) # XXX
 
     def test_add_drop_entity_type(self):
         with self.mh() as (cnx, mh):

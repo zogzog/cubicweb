@@ -1,7 +1,7 @@
 # pylint: disable-msg=W0622
 """cubicweb-fakeemail packaging information"""
 
-modname = 'fakegis'
+modname = 'fakecustomtype'
 distname = "cubicweb-%s" % modname
 
 numversion = (1, 0, 0)
