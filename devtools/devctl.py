@@ -30,6 +30,8 @@ from datetime import datetime, date
 from os import mkdir, chdir, path as osp
 from warnings import warn
 
+from six.moves import input
+
 from logilab.common import STD_BLACKLIST
 
 from cubicweb.__pkginfo__ import version as cubicwebversion
@@ -633,7 +635,7 @@ layout, and a full featured cube with "full" layout.',
         skeldir = osp.join(BASEDIR, 'skeleton')
         default_name = 'cubicweb-%s' % cubename.lower().replace('_', '-')
         if verbose:
-            distname = raw_input('Debian name for your cube ? [%s]): '
+            distname = input('Debian name for your cube ? [%s]): '
                                  % default_name).strip()
             if not distname:
                 distname = default_name
@@ -645,10 +647,10 @@ layout, and a full featured cube with "full" layout.',
         if not re.match('[a-z][-a-z0-9]*$', distname):
             raise BadCommandUsage(
                 'cube distname should be a valid debian package name')
-        longdesc = shortdesc = raw_input(
+        longdesc = shortdesc = input(
             'Enter a short description for your cube: ')
         if verbose:
-            longdesc = raw_input(
+            longdesc = input(
                 'Enter a long description (leave empty to reuse the short one): ')
         dependencies = {'cubicweb': '>= %s' % cubicwebversion,
                         'six': '>= 1.4.0',}
@@ -683,7 +685,7 @@ layout, and a full featured cube with "full" layout.',
             if answer == 'y':
                 depcubes.append(cube)
             if answer == 'type':
-                depcubes = splitstrip(raw_input('type dependencies: '))
+                depcubes = splitstrip(input('type dependencies: '))
                 break
             elif answer == 'skip':
                 break
