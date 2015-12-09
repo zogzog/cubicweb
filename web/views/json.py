@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -28,6 +28,7 @@ from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.web.application import anonymized_request
 from cubicweb.web.views import basecontrollers, management
 
+
 class JsonpController(basecontrollers.ViewController):
     """The jsonp controller is the same as a ViewController but :
 
@@ -49,7 +50,7 @@ class JsonpController(basecontrollers.ViewController):
                 self.warning("vid %s can't be used with jsonp controller, "
                              "falling back to jsonexport", vid)
                 self._cw.form['vid'] = 'jsonexport'
-        else: # if no vid is specified, use jsonexport
+        else:  # if no vid is specified, use jsonexport
             self._cw.form['vid'] = 'jsonexport'
         if self._cw.vreg.config['anonymize-jsonp-queries']:
             with anonymized_request(self._cw):
@@ -59,7 +60,7 @@ class JsonpController(basecontrollers.ViewController):
 
     def _get_json_data(self, rset):
         json_data = super(JsonpController, self).publish(rset)
-        if 'callback' in self._cw.form: # jsonp
+        if 'callback' in self._cw.form:  # jsonp
             json_padding = self._cw.form['callback'].encode('ascii')
             # use ``application/javascript`` if ``callback`` parameter is
             # provided, keep ``application/json`` otherwise
@@ -92,7 +93,7 @@ class JsonMixIn(object):
 class JsonRsetView(JsonMixIn, AnyRsetView):
     """dumps raw result set in JSON format"""
     __regid__ = 'jsonexport'
-    __select__ = any_rset() # means rset might be empty or have any shape
+    __select__ = any_rset()  # means rset might be empty or have any shape
     title = _('json-export-view')
 
     def call(self):
@@ -146,4 +147,4 @@ class JsonErrorView(JsonMixIn, management.ErrorView):
             'errmsg': errmsg,
             'exclass': exclass,
             'traceback': rest_traceback(excinfo, errmsg),
-            })
+        })

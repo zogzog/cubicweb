@@ -31,7 +31,8 @@ class JsonViewsTC(CubicWebTC):
 
     def test_json_rsetexport(self):
         with self.admin_access.web_request() as req:
-            rset = req.execute('Any GN,COUNT(X) GROUPBY GN ORDERBY GN WHERE X in_group G, G name GN')
+            rset = req.execute(
+                'Any GN,COUNT(X) GROUPBY GN ORDERBY GN WHERE X in_group G, G name GN')
             data = self.view('jsonexport', rset, req=req)
             self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
             self.assertListEqual(data, [["guests", 1], ["managers", 1]])
@@ -50,18 +51,21 @@ class JsonViewsTC(CubicWebTC):
                              'WHERE X in_group G, G name GN'})
             data = self.ctrl_publish(req, ctrl='jsonp')
             self.assertIsInstance(data, binary_type)
-            self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/javascript'])
+            self.assertEqual(req.headers_out.getRawHeaders('content-type'),
+                             ['application/javascript'])
             # because jsonp anonymizes data, only 'guests' group should be found
             self.assertEqual(data, b'foo(' + self.res_jsonp_data + b')')
 
     def test_json_rsetexport_with_jsonp_and_bad_vid(self):
         with self.admin_access.web_request() as req:
             req.form.update({'callback': 'foo',
-                             'vid': 'table', # <-- this parameter should be ignored by jsonp controller
+                             # "vid" parameter should be ignored by jsonp controller
+                             'vid': 'table',
                              'rql': 'Any GN,COUNT(X) GROUPBY GN ORDERBY GN '
                              'WHERE X in_group G, G name GN'})
             data = self.ctrl_publish(req, ctrl='jsonp')
-            self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/javascript'])
+            self.assertEqual(req.headers_out.getRawHeaders('content-type'),
+                             ['application/javascript'])
             # result should be plain json, not the table view
             self.assertEqual(data, b'foo(' + self.res_jsonp_data + b')')
 
@@ -82,6 +86,7 @@ class JsonViewsTC(CubicWebTC):
 class NotAnonymousJsonViewsTC(JsonViewsTC):
     anonymize = False
     res_jsonp_data = b'[["guests", 1], ["managers", 1]]'
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
