@@ -31,7 +31,7 @@ class RestTC(CubicWebTC):
             self.assertEqual(rest_publish(context, ':eid:`%s`' % context.eid),
                              '<p><a class="reference" href="http://testing.fr/cubicweb/cwuser/admin">'
                              '#%s</a></p>\n' % context.eid)
-            self.assertEqual(rest_publish(context, ':eid:`%s:some text`' %  context.eid),
+            self.assertEqual(rest_publish(context, ':eid:`%s:some text`' % context.eid),
                              '<p><a class="reference" href="http://testing.fr/cubicweb/cwuser/admin">'
                              'some text</a></p>\n')
 
@@ -58,6 +58,14 @@ class RestTC(CubicWebTC):
 
 ''')
 
+    def test_disable_field_name_colspan(self):
+        with self.admin_access.web_request() as req:
+            context = self.context(req)
+            value = rest_publish(context, '''my field list:
+
+:a long dumb param name: value
+''')
+            self.assertNotIn('colspan', value)
 
     def test_rql_role_with_vid(self):
         with self.admin_access.web_request() as req:

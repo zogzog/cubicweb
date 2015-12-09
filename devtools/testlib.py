@@ -313,7 +313,6 @@ class CubicWebTC(TestCase):
         login = unicode(db_handler.config.default_admin_config['login'])
         self.admin_access = self.new_access(login)
         self._admin_session = self.admin_access._session
-        self.config.repository = lambda x=None: self.repo
 
 
     # config management ########################################################

@@ -402,6 +402,7 @@ class TestDataBaseHandler(object):
         from cubicweb.repoapi import _get_inmemory_repo
         config._cubes = None
         repo = _get_inmemory_repo(config)
+        config.repository = lambda x=None: repo
         # extending Repository class
         repo._has_started = False
         repo._needs_refresh = False

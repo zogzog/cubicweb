@@ -34,6 +34,7 @@ following ReST directives:
 """
 __docformat__ = "restructuredtext en"
 
+import sys
 from itertools import chain
 from logging import getLogger
 from os.path import join
@@ -49,7 +50,7 @@ from logilab.mtconverter import ESC_UCAR_TABLE, ESC_CAR_TABLE, xml_escape
 from cubicweb import UnknownEid
 from cubicweb.ext.html4zope import Writer
 
-from cubicweb.web.views import vid_from_rset # XXX better not to import c.w.views here...
+from cubicweb.web.views import vid_from_rset  # XXX better not to import c.w.views here...
 
 # We provide our own parser as an attempt to get rid of
 # state machine reinstanciation
@@ -67,6 +68,7 @@ mimetypes.add_type('text/rest', '.rst')
 
 
 LOGGER = getLogger('cubicweb.rest')
+
 
 def eid_reference_role(role, rawtext, text, lineno, inliner,
                        options={}, content=[]):
@@ -96,6 +98,7 @@ def eid_reference_role(role, rawtext, text, lineno, inliner,
     set_classes(options)
     return [nodes.reference(rawtext, utils.unescape(rest), refuri=ref,
                             **options)], []
+
 
 def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
     """``:rql:`<rql-expr>``` or ``:rql:`<rql-expr>:<vid>```
@@ -129,6 +132,7 @@ def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
         content = 'an error occurred while interpreting this rql directive: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []
+
 
 def bookmark_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
     """``:bookmark:`<bookmark-eid>``` or ``:bookmark:`<eid>:<vid>```
@@ -186,6 +190,7 @@ def bookmark_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
         content = 'An error occurred while interpreting directive bookmark: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []
+
 
 def winclude_directive(name, arguments, options, content, lineno,
                        content_offset, block_text, state, state_machine):
@@ -251,6 +256,7 @@ def winclude_directive(name, arguments, options, content, lineno,
 winclude_directive.arguments = (1, 0, 1)
 winclude_directive.options = {'literal': directives.flag,
                               'encoding': directives.encoding}
+
 
 class RQLTableDirective(Directive):
     """rql-table directive
@@ -414,6 +420,8 @@ def rest_publish(context, data):
                 # (though try/except may be a better option...). May be the
                 # above traceback option will avoid this?
                 'halt_level': 10,
+                # disable stupid switch to colspan=2 if field name is above a size limit
+                'field_name_limit': sys.maxsize,
                 }
     if context:
         if hasattr(req, 'url'):
