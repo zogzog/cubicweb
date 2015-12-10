@@ -32,21 +32,22 @@ def load_po(fname):
     """load a po file and  return a set of encountered (msgid, msgctx)"""
     msgs = set()
     msgid = msgctxt = None
-    for line in open(fname):
-        if line.strip() in ('', '#'):
-            continue
-        if line.startswith('msgstr'):
-            assert not (msgid, msgctxt) in msgs
-            msgs.add( (msgid, msgctxt) )
-            msgid = msgctxt = None
-        elif line.startswith('msgid'):
-            msgid = line.split(' ', 1)[1][1:-1]
-        elif line.startswith('msgctx'):
-            msgctxt = line.split(' ', 1)[1][1: -1]
-        elif msgid is not None:
-            msgid += line[1:-1]
-        elif msgctxt is not None:
-            msgctxt += line[1:-1]
+    with open(fname) as fobj:
+        for line in fobj:
+            if line.strip() in ('', '#'):
+                continue
+            if line.startswith('msgstr'):
+                assert not (msgid, msgctxt) in msgs
+                msgs.add( (msgid, msgctxt) )
+                msgid = msgctxt = None
+            elif line.startswith('msgid'):
+                msgid = line.split(' ', 1)[1][1:-1]
+            elif line.startswith('msgctx'):
+                msgctxt = line.split(' ', 1)[1][1: -1]
+            elif msgid is not None:
+                msgid += line[1:-1]
+            elif msgctxt is not None:
+                msgctxt += line[1:-1]
     return msgs
 
 
