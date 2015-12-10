@@ -108,6 +108,7 @@ existing one, so the new cube schema is actually already in there).
 If some of the added cubes are already used by an instance, they'll simply be
 silently skipped.
 
+To remove a cube use `drop_cube(cube, removedeps=False)`. 
 
 Schema migration
 ----------------
