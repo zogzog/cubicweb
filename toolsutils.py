@@ -22,6 +22,7 @@ __docformat__ = "restructuredtext en"
 
 # XXX move most of this in logilab.common (shellutils ?)
 
+import io
 import os, sys
 import subprocess
 from os import listdir, makedirs, environ, chmod, walk, remove
@@ -153,10 +154,10 @@ def copy_skeleton(skeldir, targetdir, context,
                 shutil.copyfile(fpath, tfpath)
 
 def fill_templated_file(fpath, tfpath, context):
-    fobj = open(tfpath, 'w')
-    templated = open(fpath).read()
-    fobj.write(templated % context)
-    fobj.close()
+    with io.open(fpath, encoding='ascii') as fobj:
+        template = fobj.read()
+    with io.open(tfpath, 'w', encoding='ascii') as fobj:
+        fobj.write(template % context)
 
 def restrict_perms_to_user(filepath, log=None):
     """set -rw------- permission on the given file"""
