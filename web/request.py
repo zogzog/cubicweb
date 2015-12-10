@@ -980,8 +980,6 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
         return self.cnx.transaction_data
 
     def set_cnx(self, cnx):
-        if 'ecache' in cnx.transaction_data:
-            del cnx.transaction_data['ecache']
         self.cnx = cnx
         self.session = cnx.session
         self._set_user(cnx.user)
@@ -1021,12 +1019,21 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
 
     # entities cache management ###############################################
 
-    entity_cache = _cnx_func('entity_cache')
-    set_entity_cache = _cnx_func('set_entity_cache')
-    cached_entities = _cnx_func('cached_entities')
-    drop_entity_cache = _cnx_func('drop_entity_cache')
+    def entity_cache(self, eid):
+        return self.transaction_data['req_ecache'][eid]
 
+    def set_entity_cache(self, entity):
+        ecache = self.transaction_data.setdefault('req_ecache', {})
+        ecache.setdefault(entity.eid, entity)
 
+    def cached_entities(self):
+        return self.transaction_data.get('req_ecache', {}).values()
+
+    def drop_entity_cache(self, eid=None):
+        if eid is None:
+            self.transaction_data.pop('req_ecache', None)
+        else:
+            del self.transaction_data['req_ecache'][eid]
 
 
 CubicWebRequestBase = ConnectionCubicWebRequestBase

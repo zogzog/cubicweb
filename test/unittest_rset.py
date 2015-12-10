@@ -285,7 +285,7 @@ class ResultSetTC(CubicWebTC):
         with self.admin_access.web_request() as req:
             req.create_entity('CWUser', login=u'adim', upassword='adim',
                                          surname=u'di mascio', firstname=u'adrien')
-            req.cnx.drop_entity_cache()
+            req.drop_entity_cache()
             e = req.execute('Any X,T WHERE X login "adim", X surname T').get_entity(0, 0)
             self.assertEqual(e.cw_attr_cache['surname'], 'di mascio')
             self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'firstname')
@@ -298,7 +298,7 @@ class ResultSetTC(CubicWebTC):
     def test_get_entity_advanced(self):
         with self.admin_access.web_request() as req:
             req.create_entity('Bookmark', title=u'zou', path=u'/view')
-            req.cnx.drop_entity_cache()
+            req.drop_entity_cache()
             req.execute('SET X bookmarked_by Y WHERE X is Bookmark, Y login "anon"')
             rset = req.execute('Any X,Y,XT,YN WHERE X bookmarked_by Y, X title XT, Y login YN')
 
@@ -345,7 +345,7 @@ class ResultSetTC(CubicWebTC):
             e = rset.get_entity(0, 0)
             self.assertEqual(e.cw_attr_cache['title'], 'zou')
             self.assertEqual(pprelcachedict(e._cw_related_cache),
-                              [('created_by_subject', [req.user.eid])])
+                             [('created_by_subject', [req.user.eid])])
             # first level of recursion
             u = e.created_by[0]
             self.assertEqual(u.cw_attr_cache['login'], 'admin')
@@ -374,7 +374,7 @@ class ResultSetTC(CubicWebTC):
     def test_get_entity_union(self):
         with self.admin_access.web_request() as req:
             e = req.create_entity('Bookmark', title=u'manger', path=u'path')
-            req.cnx.drop_entity_cache()
+            req.drop_entity_cache()
             rset = req.execute('Any X,N ORDERBY N WITH X,N BEING '
                                 '((Any X,N WHERE X is Bookmark, X title N)'
                                 ' UNION '

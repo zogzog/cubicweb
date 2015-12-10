@@ -230,8 +230,6 @@ class RepoAccess(object):
         req = self.requestcls(self._repo.vreg, url=url, headers=headers,
                               method=method, form=kwargs)
         with self._session.new_cnx() as cnx:
-            if 'ecache' in cnx.transaction_data:
-                del cnx.transaction_data['ecache']
             req.set_cnx(cnx)
             yield req
 

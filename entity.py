@@ -518,7 +518,7 @@ class Entity(AppObject):
         prefixing the relation name by 'reverse_'. Also, relation values may be
         an entity or eid, a list of entities or eids.
         """
-        rql, qargs, pendingrels, _attrcache = cls._cw_build_entity_query(kwargs)
+        rql, qargs, pendingrels, attrcache = cls._cw_build_entity_query(kwargs)
         if rql:
             rql = 'INSERT %s X: %s' % (cls.__regid__, rql)
         else:
@@ -528,6 +528,7 @@ class Entity(AppObject):
         except IndexError:
             raise Exception('could not create a %r with %r (%r)' %
                             (cls.__regid__, rql, qargs))
+        created._cw_update_attr_cache(attrcache)
         cls._cw_handle_pending_relations(created.eid, pendingrels, execute)
         return created
 
@@ -562,6 +563,7 @@ class Entity(AppObject):
     def _cw_update_attr_cache(self, attrcache):
         trdata = self._cw.transaction_data
         uncached_attrs = trdata.get('%s.storage-special-process-attrs' % self.eid, set())
+        uncached_attrs.update(trdata.get('%s.dont-cache-attrs' % self.eid, set()))
         for attr in uncached_attrs:
             attrcache.pop(attr, None)
             self.cw_attr_cache.pop(attr, None)
@@ -579,7 +581,9 @@ class Entity(AppObject):
 
         """
         trdata = self._cw.transaction_data
-        trdata.setdefault('%s.storage-special-process-attrs' % self.eid, set()).add(attr)
+        trdata.setdefault('%s.dont-cache-attrs' % self.eid, set()).add(attr)
+        if repo_side:
+            trdata.setdefault('%s.storage-special-process-attrs' % self.eid, set()).add(attr)
 
     def __json_encode__(self):
         """custom json dumps hook to dump the entity's eid
@@ -822,6 +826,7 @@ class Entity(AppObject):
 
     # data fetching methods ###################################################
 
+    @cached
     def as_rset(self): # XXX .cw_as_rset
         """returns a resultset containing `self` information"""
         rset = ResultSet([(self.eid,)], 'Any X WHERE X eid %(x)s',
@@ -1312,6 +1317,10 @@ class Entity(AppObject):
             else:
                 rql += ' WHERE X eid %(x)s'
             self._cw.execute(rql, qargs)
+        # update current local object _after_ the rql query to avoid
+        # interferences between the query execution itself and the cw_edited /
+        # skip_security machinery
+        self._cw_update_attr_cache(attrcache)
         self._cw_handle_pending_relations(self.eid, pendingrels, self._cw.execute)
         # XXX update relation cache
 
