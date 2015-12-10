@@ -1,7 +1,7 @@
 import os.path as osp
 import shutil
 
-from cubicweb.devtools import testlib
+from cubicweb.devtools import testlib, ApptestConfiguration
 from cubicweb.server.serverctl import _local_dump, DBDumpCommand
 from cubicweb.server.serverconfig import ServerConfiguration
 
@@ -9,7 +9,8 @@ class ServerCTLTC(testlib.CubicWebTC):
     def setUp(self):
         super(ServerCTLTC, self).setUp()
         self.orig_config_for = ServerConfiguration.config_for
-        ServerConfiguration.config_for = staticmethod(lambda appid: self.config)
+        config_for = lambda appid: ApptestConfiguration(appid, apphome=self.datadir)
+        ServerConfiguration.config_for = staticmethod(config_for)
 
     def tearDown(self):
         ServerConfiguration.config_for = self.orig_config_for

@@ -39,7 +39,7 @@ function setProgressCursor() {
  */
 function resetCursor(result) {
     var body = document.getElementsByTagName('body')[0];
-    body.style.cursor = 'default';
+    body.style.cursor = '';
     // pass result to next callback in the callback chain
     return result;
 }
