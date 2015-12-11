@@ -7,3 +7,4 @@ syntax: glob
 
 docs/_build
 pyramid_cubicweb/tests/data/database
+.tox

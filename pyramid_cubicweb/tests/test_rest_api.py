@@ -39,7 +39,7 @@ class RestApiTest(PyramidCWTest):
     request_method='GET',
     request_param=('test_rql_execute',)
 )
-def test_rql_execute_view(context, request):
+def rql_execute_view(context, request):
     """Return 500 response if rset.req is not a CubicWeb request.
     """
     if isinstance(context.rset.req, CubicWebPyramidRequest):
