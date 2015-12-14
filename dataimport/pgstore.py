@@ -17,7 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Postgres specific store"""
 
-import threading
 import warnings
 import cPickle
 import os.path as osp
@@ -275,7 +274,6 @@ class SQLGenSourceWrapper(object):
     def __init__(self, system_source, schema,
                  dump_output_dir=None):
         self.system_source = system_source
-        self._sql = threading.local()
         # Explicitely backport attributes from system source
         self._storage_handler = self.system_source._storage_handler
         self.preprocess_entity = self.system_source.preprocess_entity
@@ -290,8 +288,7 @@ class SQLGenSourceWrapper(object):
         spcfrom = system_source.dbhelper.dbapi_module.support_copy_from
         self.support_copy_from = spcfrom
         self.dbencoding = system_source.dbhelper.dbencoding
-        # initialize thread-local data for main thread
-        self.init_thread_locals()
+        self.init_statement_lists()
         self._inlined_rtypes_cache = {}
         self._fill_inlined_rtypes_cache(schema)
         self.schema = schema
@@ -304,20 +301,20 @@ class SQLGenSourceWrapper(object):
                 if rschema.inlined:
                     cache[eschema.type] = SQL_PREFIX + rschema.type
 
-    def init_thread_locals(self):
-        """initializes thread-local data"""
-        self._sql.entities = defaultdict(list)
-        self._sql.relations = {}
-        self._sql.inlined_relations = {}
+    def init_statement_lists(self):
+        self._sql_entities = defaultdict(list)
+        self._sql_relations = {}
+        self._sql_inlined_relations = {}
+        self._sql_eids = defaultdict(list)
         # keep track, for each eid of the corresponding data dict
-        self._sql.eid_insertdicts = {}
+        self._sql_eid_insertdicts = {}
 
     def flush(self):
         print 'starting flush'
-        _entities_sql = self._sql.entities
-        _relations_sql = self._sql.relations
-        _inlined_relations_sql = self._sql.inlined_relations
-        _insertdicts = self._sql.eid_insertdicts
+        _entities_sql = self._sql_entities
+        _relations_sql = self._sql_relations
+        _inlined_relations_sql = self._sql_inlined_relations
+        _insertdicts = self._sql_eid_insertdicts
         try:
             # try, for each inlined_relation, to find if we're also creating
             # the host entity (i.e. the subject of the relation).
@@ -345,7 +342,8 @@ class SQLGenSourceWrapper(object):
                         new_datalist.append(data)
                 _inlined_relations_sql[statement] = new_datalist
             _execmany_thread(self.system_source.get_connection,
-                             _entities_sql.items()
+                             self._sql_eids.items()
+                             + _entities_sql.items()
                              + _relations_sql.items()
                              + _inlined_relations_sql.items(),
                              dump_output_dir=self.dump_output_dir,
@@ -360,7 +358,7 @@ class SQLGenSourceWrapper(object):
     def add_relation(self, cnx, subject, rtype, object,
                      inlined=False, **kwargs):
         if inlined:
-            _sql = self._sql.inlined_relations
+            _sql = self._sql_inlined_relations
             data = {'cw_eid': subject, SQL_PREFIX + rtype: object}
             subjtype = kwargs.get('subjtype')
             if subjtype is None:
@@ -378,7 +376,7 @@ class SQLGenSourceWrapper(object):
             statement = self.sqlgen.update(SQL_PREFIX + subjtype,
                                            data, ['cw_eid'])
         else:
-            _sql = self._sql.relations
+            _sql = self._sql_relations
             data = {'eid_from': subject, 'eid_to': object}
             statement = self.sqlgen.insert('%s_relation' % rtype, data)
         if statement in _sql:
@@ -396,17 +394,17 @@ class SQLGenSourceWrapper(object):
                 if rtype not in attrs:
                     attrs[rtype] = None
             sql = self.sqlgen.insert(SQL_PREFIX + entity.cw_etype, attrs)
-            self._sql.eid_insertdicts[entity.eid] = attrs
+            self._sql_eid_insertdicts[entity.eid] = attrs
             self._append_to_entities(sql, attrs)
 
     def _append_to_entities(self, sql, attrs):
-        self._sql.entities[sql].append(attrs)
+        self._sql_entities[sql].append(attrs)
 
     def _handle_insert_entity_sql(self, cnx, sql, attrs):
         # We have to overwrite the source given in parameters
         # as here, we directly use the system source
         attrs['asource'] = self.system_source.uri
-        self._append_to_entities(sql, attrs)
+        self._sql_eids[sql].append(attrs)
 
     def _handle_is_relation_sql(self, cnx, sql, attrs):
         self._append_to_entities(sql, attrs)
