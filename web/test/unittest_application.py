@@ -451,6 +451,29 @@ class ApplicationTC(CubicWebTC):
             self.assertFalse(cnx.find('Directory', eid=subd.eid))
             self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
 
+    def test_delete_mandatory_composite(self):
+        with self.admin_access.repo_cnx() as cnx:
+            perm = cnx.create_entity('DirectoryPermission')
+            mydir = cnx.create_entity('Directory', name=u'dir',
+                                      has_permission=perm)
+            cnx.commit()
+
+        with self.admin_access.web_request() as req:
+            dir_eid = unicode(mydir.eid)
+            perm_eid = unicode(perm.eid)
+            req.form = {
+                'eid': [dir_eid, perm_eid],
+                '__maineid' : dir_eid,
+                '__type:%s' % dir_eid: 'Directory',
+                '__type:%s' % perm_eid: 'DirectoryPermission',
+                '_cw_entity_fields:%s' % dir_eid: '',
+                '_cw_entity_fields:%s' % perm_eid: 'has_permission-object',
+                'has_permission-object:%s' % perm_eid: '',
+                }
+            path, _params = self.expect_redirect_handle_request(req, 'edit')
+            self.assertTrue(req.find('Directory', eid=mydir.eid))
+            self.assertFalse(req.find('DirectoryPermission', eid=perm.eid))
+
     def test_ajax_view_raise_arbitrary_error(self):
         class ErrorAjaxView(view.View):
             __regid__ = 'test.ajax.error'
