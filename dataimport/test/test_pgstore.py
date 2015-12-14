@@ -23,7 +23,6 @@ import datetime as DT
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.dataimport import pgstore
-from cubicweb.devtools import testlib
 
 
 class CreateCopyFromBufferTC(TestCase):
@@ -88,16 +87,6 @@ class CreateCopyFromBufferTC(TestCase):
         results = pgstore._create_copyfrom_buffer(data, ('integer', 'text'))
         expected = '''42\téléphant\n6\tbabar'''
         self.assertMultiLineEqual(expected, results.getvalue())
-
-
-class SQLGenObjectStoreTC(testlib.CubicWebTC):
-
-    def test_prepare_insert_entity(self):
-        with self.admin_access.repo_cnx() as cnx:
-            store = pgstore.SQLGenObjectStore(cnx)
-            eid = store.prepare_insert_entity('CWUser', login=u'toto',
-                                              upassword=u'pwd')
-            self.assertIsNotNone(eid)
 
 
 if __name__ == '__main__':
