@@ -380,8 +380,9 @@ def _execmany_thread_copy_from(cu, statement, data, table,
                                columns, encoding='utf-8'):
     """ Execute thread with copy from
     """
-    buf = _create_copyfrom_buffer(data, columns, encoding=encoding)
-    if buf is None:
+    try:
+        buf = _create_copyfrom_buffer(data, columns, encoding=encoding)
+    except ValueError:
         _execmany_thread_not_copy_from(cu, statement, data)
     else:
         if columns is None:
