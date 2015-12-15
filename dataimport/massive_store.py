@@ -728,12 +728,16 @@ class PGHelper(object):
     def application_constraints(self, tablename):
         """ Iterate over all the constraints """
         sql = '''SELECT i.conname as "Name"
-                 FROM pg_catalog.pg_class c JOIN pg_catalog.pg_constraint i
-                 ON i.conrelid = c.oid JOIN pg_catalog.pg_class c2 ON i.conrelid=c2.oid
+                 FROM pg_catalog.pg_class c
+                 JOIN pg_catalog.pg_constraint i ON i.conrelid = c.oid
+                 JOIN pg_catalog.pg_class c2 ON i.conrelid=c2.oid
                  LEFT JOIN pg_catalog.pg_user u ON u.usesysid = c.relowner
                  LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-                 WHERE c2.relname = '%s' AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
-                 AND pg_catalog.pg_table_is_visible(c.oid);''' % tablename
+                 WHERE
+                   c2.relname = '%s'
+                   AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                   AND pg_catalog.pg_table_is_visible(c.oid)
+                 ''' % tablename
         indexes_list = self.cnx.system_sql(sql).fetchall()
         constraints = {}
         for name, in indexes_list:
