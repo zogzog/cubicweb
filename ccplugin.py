@@ -20,12 +20,15 @@ from cubicweb import BadCommandUsage, ExecutionError
 from cubicweb.__pkginfo__ import numversion as cwversion
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
+from cubicweb.server import set_debug
 
 from pyramid_cubicweb import wsgi_application_from_cwconfig
 import waitress
 
 MAXFD = 1024
 
+DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE')
+LOG_LEVELS = ('debug', 'info', 'warning', 'error')
 
 class PyramidStartHandler(InstanceCommand):
     """Start an interactive pyramid server.
@@ -57,8 +60,15 @@ class PyramidStartHandler(InstanceCommand):
           'help': 'Interval, in seconds, between file modifications checks'}),
         ('loglevel',
          {'short': 'l', 'type': 'choice', 'metavar': '<log level>',
-          'default': None, 'choices': ('debug', 'info', 'warning', 'error'),
-          'help': 'debug if -D is set, error otherwise',
+          'default': None, 'choices': LOG_LEVELS,
+          'help': 'debug if -D is set, error otherwise; one of %s' % (LOG_LEVELS,),
+          }),
+        ('dbglevel',
+         {'type': 'multiple_choice', 'metavar': '<dbg level>',
+          'default': None,
+          'choices': DBG_FLAGS,
+          'help': ('Set the server debugging flags; you may choose several '
+                   'values in %s; imply "debug" loglevel' % (DBG_FLAGS,)),
           }),
         ('profile',
          {'action': 'store_true',
@@ -306,6 +316,9 @@ class PyramidStartHandler(InstanceCommand):
             self.daemonize(cwconfig['pid-file'])
             self.record_pid(cwconfig['pid-file'])
 
+        if self['dbglevel']:
+            self['loglevel'] = 'debug'
+            set_debug('|'.join('DBG_'+ x.upper() for x in self['dbglevel']))
         init_cmdline_log_threshold(cwconfig, self['loglevel'])
 
         app = wsgi_application_from_cwconfig(
