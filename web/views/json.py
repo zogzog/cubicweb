@@ -106,7 +106,8 @@ class JsonEntityView(JsonMixIn, EntityView):
 
     The following additional metadata is added to each row :
 
-    - ``__cwetype__`` : entity type
+    - ``cw_etype`` : entity type
+    - ``cw_source`` : source url
     """
     __regid__ = 'ejsonexport'
     __select__ = EntityView.__select__ | empty_rset()
@@ -115,12 +116,8 @@ class JsonEntityView(JsonMixIn, EntityView):
     def call(self):
         entities = []
         for entity in self.cw_rset.entities():
-            entity.complete() # fetch all attributes
-            # hack to add extra metadata
-            entity.cw_attr_cache.update({
-                    '__cwetype__': entity.cw_etype,
-                    })
-            entities.append(entity)
+            serializer = entity.cw_adapt_to('ISerializable')
+            entities.append(serializer.serialize())
         self.wdata(entities)
 
 

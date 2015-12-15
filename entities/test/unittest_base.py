@@ -232,5 +232,24 @@ class SpecializedEntityClassesTC(CubicWebTC):
         eclass = self.select_eclass('Division')
         self.assertEqual(eclass.cw_etype, 'Division')
 
+
+class ISerializableTC(CubicWebTC):
+
+    def test_serialization(self):
+        with self.admin_access.repo_cnx() as cnx:
+            entity = cnx.create_entity('CWGroup', name=u'tmp')
+            cnx.commit()
+            serializer = entity.cw_adapt_to('ISerializable')
+            expected = {
+                'cw_etype': u'CWGroup',
+                'cw_source': 'system',
+                'cwuri': u'http://testing.fr/cubicweb/%s' % entity.eid,
+                'creation_date': entity.creation_date,
+                'modification_date': entity.modification_date,
+                'name': u'tmp',
+            }
+            self.assertEqual(serializer.serialize(), expected)
+
+
 if __name__ == '__main__':
     unittest_main()

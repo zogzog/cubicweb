@@ -349,6 +349,32 @@ class ITreeAdapter(view.EntityAdapter):
         return path
 
 
+class ISerializableAdapter(view.EntityAdapter):
+    """Adapter to serialize an entity to a bare python structure that may be
+    directly serialized to e.g. JSON.
+    """
+
+    __regid__ = 'ISerializable'
+    __select__ = is_instance('Any')
+
+    def serialize(self):
+        entity = self.entity
+        entity.complete()
+        data = {
+            'cw_etype': entity.cw_etype,
+            'cw_source': entity.cw_metainformation()['source']['uri'],
+        }
+        for rschema, __ in entity.e_schema.attribute_definitions():
+            attr = rschema.type
+            try:
+                value = entity.cw_attr_cache[attr]
+            except KeyError:
+                # Bytes
+                continue
+            data[attr] = value
+        return data
+
+
 # error handling adapters ######################################################
 
 from cubicweb import UniqueTogetherError
