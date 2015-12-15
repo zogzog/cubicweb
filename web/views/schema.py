@@ -657,10 +657,13 @@ class SchemaGraphView(StartupView):
                                               }))
         # svg image file
         fd, tmpfile = tempfile.mkstemp('.svg')
-        os.close(fd)
-        generator.generate(visitor, prophdlr, tmpfile)
-        with codecs.open(tmpfile, 'rb', encoding='utf-8') as svgfile:
-            self.w(svgfile.read())
+        try:
+            os.close(fd)
+            generator.generate(visitor, prophdlr, tmpfile)
+            with codecs.open(tmpfile, 'rb', encoding='utf-8') as svgfile:
+                self.w(svgfile.read())
+        finally:
+            os.unlink(tmpfile)
 
 # breadcrumbs ##################################################################
 
