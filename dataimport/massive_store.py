@@ -316,7 +316,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     ### SQL UTILITIES #########################################################
 
-    def drop_and_store_indexes_constraints(self, tablename):
+    def drop_and_store_indexes(self, tablename):
         # Drop indexes and constraints
         if not self._constraint_table_created:
             # Create a table to save the constraints
@@ -324,16 +324,11 @@ class MassiveObjectStore(stores.RQLObjectStore):
             sql = "CREATE TABLE cwmassive_constraints (origtable text, query text, type varchar(256))"
             self.sql(sql)
             self._constraint_table_created = True
-        self._drop_table_constraints_indexes(tablename)
+        self._drop_table_indexes(tablename)
 
-    def _drop_table_constraints_indexes(self, tablename):
+    def _drop_table_indexes(self, tablename):
         """ Drop and store table constraints and indexes """
-        indexes, constraints = self._dbh.application_indexes_constraints(tablename)
-        for name, query in constraints.items():
-            sql = 'INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)'
-            self.sql(sql, {'e': tablename, 'c': query, 't': 'constraint'})
-            sql = 'ALTER TABLE %s DROP CONSTRAINT %s' % (tablename, name)
-            self.sql(sql)
+        indexes = self._dbh.application_indexes(tablename)
         for name, query in indexes.items():
             sql = 'INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)'
             self.sql(sql, {'e': tablename, 'c': query, 't': 'index'})
@@ -356,7 +351,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         for tablename in ('created_by_relation', 'owned_by_relation',
                           'is_instance_of_relation', 'is_relation',
                           'entities'):
-            self.drop_and_store_indexes_constraints(tablename)
+            self.drop_and_store_indexes(tablename)
 
     def _create_metatables_constraints(self):
         """ Create all the constraints for the meta data"""
@@ -374,7 +369,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self.sql(sql)
             # Drop indexes and constraints
             tablename = '%s_relation' % rtype.lower()
-            self.drop_and_store_indexes_constraints(tablename)
+            self.drop_and_store_indexes(tablename)
             # Push the etype in the initialized table for easier restart
             self.init_create_initialized_table()
             sql = 'INSERT INTO cwmassive_initialized VALUES (%(e)s, %(t)s)'
@@ -404,7 +399,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                     self.sql(sql)
                 # Drop indexes and constraints
                 tablename = 'cw_%s' % etype.lower()
-                self.drop_and_store_indexes_constraints(tablename)
+                self.drop_and_store_indexes(tablename)
                 # Push the etype in the initialized table for easier restart
                 self.init_create_initialized_table()
                 sql = 'INSERT INTO cwmassive_initialized VALUES (%(e)s, %(t)s)'
