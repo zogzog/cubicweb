@@ -717,6 +717,7 @@ class PGHelper(object):
         LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
         WHERE c.relkind IN ('i','')
         AND c2.relname = '%s'
+        AND i.indisprimary = FALSE
         AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
         AND pg_catalog.pg_table_is_visible(c.oid);''' % tablename
         indexes_list = self.cnx.system_sql(sql).fetchall()
