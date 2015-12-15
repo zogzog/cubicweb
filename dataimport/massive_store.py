@@ -332,7 +332,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         for name, query in constraints.items():
             sql = 'INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)'
             self.sql(sql, {'e': tablename, 'c': query, 't': 'constraint'})
-            sql = 'ALTER TABLE %s DROP CONSTRAINT %s CASCADE' % (tablename, name)
+            sql = 'ALTER TABLE %s DROP CONSTRAINT %s' % (tablename, name)
             self.sql(sql)
         for name, query in indexes.items():
             sql = 'INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)'
