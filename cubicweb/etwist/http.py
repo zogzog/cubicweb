@@ -8,6 +8,7 @@
 
 
 
+
 class HTTPResponse(object):
     """An object representing an HTTP Response to be sent to the client.
     """
@@ -29,9 +30,14 @@ class HTTPResponse(object):
         # add content-length if not present
         if (self._headers_out.getHeader('content-length') is None
             and self._stream is not None):
-           self._twreq.setHeader('content-length', len(self._stream))
+            self._twreq.setHeader('content-length', len(self._stream))
 
     def _finalize(self):
+        # cw_failed is set on errors such as "connection aborted by client". In
+        # such cases, req.finish() was already called and calling it a twice
+        # would crash
+        if getattr(self._twreq, 'cw_failed', False):
+            return
         # we must set code before writing anything, else it's too late
         if self._code is not None:
             self._twreq.setResponseCode(self._code)

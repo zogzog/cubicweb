@@ -21,6 +21,7 @@ import sys
 import traceback
 import threading
 from cgi import FieldStorage, parse_header
+from functools import partial
 
 from cubicweb.statsd_logger import statsd_timeit
 
@@ -89,8 +90,17 @@ class CubicWebRootResource(resource.Resource):
         """Indicate which resource to use to process down the URL's path"""
         return self
 
+    def on_request_finished_ko(self, request, reason):
+        # annotate the twisted request so that we're able later to check for
+        # failure without having to dig into request's internal attributes such
+        # as _disconnected
+        request.cw_failed = True
+        self.warning('request finished abnormally: %s', reason)
+
     def render(self, request):
         """Render a page from the root resource"""
+        finish_deferred = request.notifyFinish()
+        finish_deferred.addErrback(partial(self.on_request_finished_ko, request))
         # reload modified files in debug mode
         if self.config.debugmode:
             self.config.uiprops.reload_if_needed()
