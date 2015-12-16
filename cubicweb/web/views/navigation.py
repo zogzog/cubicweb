@@ -285,28 +285,13 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
         if w is None:
             w = view.w
         if req.form.get('__force_display'):
-            # allow to come back to the paginated view
-            params = dict(req.form)
-            basepath = req.relative_path(includeparams=False)
-            del params['__force_display']
-            url = nav.page_url(basepath, params)
-            w(u'<div class="displayAllLink"><a href="%s">%s</a></div>\n'
-              % (xml_escape(url), req._('back to pagination (%s results)')
-                                  % nav.page_size))
+            nav.render_link_back_to_pagination(w=w)
         else:
             # get boundaries before component rendering
             start, stop = nav.page_boundaries()
             nav.render(w=w)
-            params = dict(req.form)
-            nav.clean_params(params)
-            # make a link to see them all
             if show_all_option:
-                basepath = req.relative_path(includeparams=False)
-                params['__force_display'] = 1
-                params['__fromnavigation'] = 1
-                url = nav.page_url(basepath, params)
-                w(u'<div class="displayAllLink"><a href="%s">%s</a></div>\n'
-                  % (xml_escape(url), req._('show %s results') % len(rset)))
+                nav.render_link_display_all(w=w)
             rset.limit(offset=start, limit=stop-start, inplace=True)
 
 

@@ -183,6 +183,28 @@ class NavigationComponent(Component):
         url = xml_escape(self.page_url(path, params, start, stop))
         return self.next_page_link_templ % (url, self._cw._(title), content)
 
+    def render_link_back_to_pagination(self, w):
+        """allow to come back to the paginated view"""
+        req = self._cw
+        params = dict(req.form)
+        basepath = req.relative_path(includeparams=False)
+        del params['__force_display']
+        url = self.page_url(basepath, params)
+        w(u'<div class="displayAllLink"><a href="%s">%s</a></div>\n'
+          % (xml_escape(url),
+             req._('back to pagination (%s results)') % self.page_size))
+
+    def render_link_display_all(self, w):
+        """make a link to see them all"""
+        req = self._cw
+        params = dict(req.form)
+        self.clean_params(params)
+        basepath = req.relative_path(includeparams=False)
+        params['__force_display'] = 1
+        params['__fromnavigation'] = 1
+        url = self.page_url(basepath, params)
+        w(u'<div class="displayAllLink"><a href="%s">%s</a></div>\n'
+          % (xml_escape(url), req._('show %s results') % len(self.cw_rset)))
 
 # new contextual components system #############################################
 
