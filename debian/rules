@@ -47,6 +47,7 @@ install: build
 	dh_lintian
 
 	# Remove unittests directory (should be available in cubicweb-dev only)
+	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/dataimport/test
 	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/server/test
 	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/hooks/test
 	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/sobjects/test
