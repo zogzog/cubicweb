@@ -540,7 +540,7 @@ class NoCreateDropDatabaseHandler(TestDataBaseHandler):
 
 def startpgcluster(pyfile):
     """Start a postgresql cluster next to pyfile"""
-    datadir = join(os.path.dirname(pyfile), 'data',
+    datadir = join(os.path.dirname(pyfile), 'data', 'database',
                    'pgdb-%s' % os.path.splitext(os.path.basename(pyfile))[0])
     if not exists(datadir):
         try:
@@ -579,7 +579,7 @@ def startpgcluster(pyfile):
 
 def stoppgcluster(pyfile):
     """Kill the postgresql cluster running next to pyfile"""
-    datadir = join(os.path.dirname(pyfile), 'data',
+    datadir = join(os.path.dirname(pyfile), 'data', 'database',
                    'pgdb-%s' % os.path.splitext(os.path.basename(pyfile))[0])
     subprocess.call(['pg_ctl', 'stop', '-D', datadir, '-m', 'fast'])
     try:
