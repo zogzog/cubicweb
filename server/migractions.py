@@ -811,6 +811,8 @@ class ServerMigrationHelper(MigrationHelper):
             # ignore those meta relations, they will be automatically added
             if rschema.type in META_RTYPES:
                 continue
+            if not attrschema.type in instschema:
+                self.cmd_add_entity_type(attrschema.type, False, False)
             if not rschema.type in instschema:
                 # need to add the relation type and to commit to get it
                 # actually in the schema
