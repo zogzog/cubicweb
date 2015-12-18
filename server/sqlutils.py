@@ -522,7 +522,8 @@ def _install_sqlite_querier_patch():
     QuerierHelper._sqlite_patched = True
 
 
-def init_sqlite_connexion(cnx):
+def _init_sqlite_connection(cnx):
+    """Internal function that will be called to init a sqlite connection"""
     _install_sqlite_querier_patch()
 
     class group_concat(object):
@@ -570,14 +571,15 @@ def init_sqlite_connexion(cnx):
     yams.constraints.patch_sqlite_decimal()
 
 sqlite_hooks = SQL_CONNECT_HOOKS.setdefault('sqlite', [])
-sqlite_hooks.append(init_sqlite_connexion)
+sqlite_hooks.append(_init_sqlite_connection)
 
 
-def init_postgres_connexion(cnx):
+def _init_postgres_connection(cnx):
+    """Internal function that will be called to init a postgresql connection"""
     cnx.cursor().execute('SET TIME ZONE UTC')
     # commit is needed, else setting are lost if the connection is first
     # rolled back
     cnx.commit()
 
 postgres_hooks = SQL_CONNECT_HOOKS.setdefault('postgres', [])
-postgres_hooks.append(init_postgres_connexion)
+postgres_hooks.append(_init_postgres_connection)
