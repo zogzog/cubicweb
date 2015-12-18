@@ -378,7 +378,7 @@ class Entity(AppObject):
                 else:
                     fetchattrs = etypecls.fetch_attrs
                 etypecls._fetch_restrictions(var, select, fetchattrs,
-                                             user, ordermethod, visited=visited)
+                                             user, None, visited=visited)
             if ordermethod is not None:
                 try:
                     cmeth = getattr(cls, ordermethod)
