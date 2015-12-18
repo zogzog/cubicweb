@@ -495,7 +495,8 @@ def _install_sqlite_querier_patch():
                 found_date = False
                 for row, rowdesc in zip(rset, rset.description):
                     for cellindex, (value, vtype) in enumerate(zip(row, rowdesc)):
-                        if vtype in ('Date', 'Datetime') and isinstance(value, text_type):
+                        if vtype in ('TZDatetime', 'Date', 'Datetime') \
+                           and isinstance(value, text_type):
                             found_date = True
                             value = value.rsplit('.', 1)[0]
                             try:

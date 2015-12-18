@@ -847,7 +847,13 @@ class QuerierTC(BaseQuerierTC):
         self.assertIsInstance(rset.rows[0][0], datetime)
         rset = self.qexecute('Tag X WHERE X creation_date TODAY')
         self.assertEqual(len(rset.rows), 2)
-        rset = self.qexecute('Any MAX(D) WHERE X is Tag, X creation_date D')
+
+    def test_sqlite_patch(self):
+        """this test monkey patch done by sqlutils._install_sqlite_querier_patch"""
+        self.qexecute("INSERT Personne X: X nom 'bidule', X datenaiss NOW, X tzdatenaiss NOW")
+        rset = self.qexecute('Any MAX(D) WHERE X is Personne, X datenaiss D')
+        self.assertIsInstance(rset[0][0], datetime)
+        rset = self.qexecute('Any MAX(D) WHERE X is Personne, X tzdatenaiss D')
         self.assertIsInstance(rset[0][0], datetime)
 
     def test_today(self):
