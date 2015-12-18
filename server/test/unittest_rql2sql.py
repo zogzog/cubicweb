@@ -1027,10 +1027,10 @@ WHERE _Y.cw_login=SWEB09 AND _X.cw_creation_date>_Y.cw_creation_date'''),
 FROM cw_Societe AS _S, travaille_relation AS rel_travaille0
 WHERE rel_travaille0.eid_to=_S.cw_eid AND _S.cw_tel=_S.cw_fax'''),
 
-    ("Personne P where X eid 0, X creation_date D, P datenaiss < D, X is Affaire",
+    ("Personne P where X eid 0, X creation_date D, P tzdatenaiss < D, X is Affaire",
      '''SELECT _P.cw_eid
 FROM cw_Affaire AS _X, cw_Personne AS _P
-WHERE _X.cw_eid=0 AND _P.cw_datenaiss<_X.cw_creation_date'''),
+WHERE _X.cw_eid=0 AND _P.cw_tzdatenaiss<_X.cw_creation_date'''),
 
     ("Any N,T WHERE N is Note, N type T;",
      '''SELECT _N.cw_eid, _N.cw_type

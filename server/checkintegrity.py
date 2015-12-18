@@ -372,8 +372,8 @@ def check_metadata(schema, cnx, eids, fix=1):
                                    {'type': etype})
             continue
         table = SQL_PREFIX + etype
-        for rel, default in ( ('creation_date', datetime.now()),
-                              ('modification_date', datetime.now()), ):
+        for rel, default in ( ('creation_date', datetime.utcnow()),
+                              ('modification_date', datetime.utcnow()), ):
             column = SQL_PREFIX + rel
             cursor = cnx.system_sql("SELECT %s FROM %s WHERE %s is NULL"
                                         % (eidcolumn, table, column))

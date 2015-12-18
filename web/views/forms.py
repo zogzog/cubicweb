@@ -369,8 +369,8 @@ class EntityFieldsForm(FieldsForm):
             self.add_hidden('_cwmsgid', msgid)
 
     def add_generation_time(self):
-        # NB repr is critical to avoid truncation of the timestamp
-        self.add_hidden('__form_generation_time', repr(time.time()),
+        # use %f to prevent (unlikely) display in exponential format
+        self.add_hidden('__form_generation_time', '%.6f' % time.time(),
                         eidparam=True)
 
     def add_linkto_hidden(self):

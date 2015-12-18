@@ -119,7 +119,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._dbh = PGHelper(self._cnx, pg_schema)
         self._data_entities = defaultdict(list)
         self._data_relations = defaultdict(list)
-        self._now = datetime.now()
+        self._now = datetime.utcnow()
         self._default_cwuri = make_uid('_auto_generated')
         self._count_cwuri = 0
         self.on_commit_callback = on_commit_callback

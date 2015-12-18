@@ -259,7 +259,7 @@ class MetaGenerator(object):
             source = cnx.repo.system_source
         self.source = source
         self.create_eid = cnx.repo.system_source.create_eid
-        self.time = datetime.now()
+        self.time = datetime.utcnow()
         # attributes/relations shared by all entities of the same type
         self.etype_attrs = []
         self.etype_rels = []

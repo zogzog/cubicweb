@@ -150,14 +150,16 @@ class creation_date(RelationType):
     __permissions__ = PUB_SYSTEM_ATTR_PERMS
     cardinality = '11'
     subject = '*'
-    object = 'Datetime'
+    object = 'TZDatetime'
+
 
 class modification_date(RelationType):
     """latest modification time of an entity"""
     __permissions__ = PUB_SYSTEM_ATTR_PERMS
     cardinality = '11'
     subject = '*'
-    object = 'Datetime'
+    object = 'TZDatetime'
+
 
 class cwuri(RelationType):
     """internal entity uri"""

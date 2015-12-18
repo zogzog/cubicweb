@@ -373,7 +373,7 @@ class EditController(basecontrollers.ViewController):
     def check_concurrent_edition(self, formparams, eid):
         req = self._cw
         try:
-            form_ts = datetime.fromtimestamp(float(formparams['__form_generation_time']))
+            form_ts = datetime.utcfromtimestamp(float(formparams['__form_generation_time']))
         except KeyError:
             # Backward and tests compatibility : if no timestamp consider edition OK
             return

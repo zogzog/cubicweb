@@ -115,7 +115,7 @@ class CoreHooksTC(CubicWebTC):
 
     def test_metadata_creation_modification_date(self):
         with self.admin_access.repo_cnx() as cnx:
-            _now = datetime.now()
+            _now = datetime.utcnow()
             entity = cnx.create_entity('Workflow', name=u'wf1')
             self.assertEqual((entity.creation_date - _now).seconds, 0)
             self.assertEqual((entity.modification_date - _now).seconds, 0)

@@ -41,7 +41,7 @@ class InitMetaAttrsHook(MetaDataHook):
     events = ('before_add_entity',)
 
     def __call__(self):
-        timestamp = datetime.now()
+        timestamp = datetime.utcnow()
         edited = self.entity.cw_edited
         if not edited.get('creation_date'):
             edited['creation_date'] = timestamp
@@ -64,7 +64,7 @@ class UpdateMetaAttrsHook(MetaDataHook):
         # XXX to be really clean, we should turn off modification_date update
         # explicitly on each command where we do not want that behaviour.
         if not self._cw.vreg.config.repairing:
-            self.entity.cw_edited.setdefault('modification_date', datetime.now())
+            self.entity.cw_edited.setdefault('modification_date', datetime.utcnow())
 
 
 class SetCreatorOp(hook.DataOperationMixIn, hook.Operation):

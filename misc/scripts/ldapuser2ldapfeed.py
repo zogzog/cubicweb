@@ -54,9 +54,9 @@ for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).e
     print('get back', etype, entity.eid)
     entity.cw_edited = EditedEntity(entity, **entity.cw_attr_cache)
     if not entity.creation_date:
-        entity.cw_edited['creation_date'] = datetime.now()
+        entity.cw_edited['creation_date'] = datetime.utcnow()
     if not entity.modification_date:
-        entity.cw_edited['modification_date'] = datetime.now()
+        entity.cw_edited['modification_date'] = datetime.utcnow()
     if not entity.upassword:
         entity.cw_edited['upassword'] = generate_password()
     extid = entity.cw_metainformation()['extid']
