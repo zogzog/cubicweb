@@ -24,8 +24,9 @@ from datetime import date, datetime, timedelta, tzinfo
 import pytz
 
 from six import PY2, integer_types, binary_type, text_type
+
 from logilab.common.testlib import TestCase, unittest_main
-from rql import BadRQLQuery, RQLSyntaxError
+from rql import BadRQLQuery
 
 from cubicweb import QueryError, Unauthorized, Binary
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -34,6 +35,7 @@ from cubicweb.server.querier import manual_build_descr, _make_description
 from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
+
 
 class FixedOffset(tzinfo):
     def __init__(self, hours=0):

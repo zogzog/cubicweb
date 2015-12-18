@@ -45,8 +45,6 @@ but you'll use this one rarely.
 __docformat__ = "restructuredtext en"
 
 
-from warnings import warn
-
 import time
 import inspect
 
@@ -55,13 +53,11 @@ from six import text_type
 from logilab.common import dictattr, tempattr
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.textutils import splitstrip
-from logilab.common.deprecation import deprecated
 
 from cubicweb import ValidationError, neg_role
-from cubicweb.utils import support_args
 from cubicweb.predicates import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import RequestError, ProcessFormError
-from cubicweb.web import form, formwidgets as fwdgs
+from cubicweb.web import form
 from cubicweb.web.views import uicfg
 from cubicweb.web.formfields import guess_field
 

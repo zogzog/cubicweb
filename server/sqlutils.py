@@ -48,6 +48,7 @@ from cubicweb.server.utils import crypt_password
 lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
+
 def _run_command(cmd):
     if isinstance(cmd, string_types):
         print(cmd)
@@ -96,7 +97,7 @@ def sqlexec(sqlstmts, cursor_or_execute, withpb=True,
         try:
             # some dbapi modules doesn't accept unicode for sql string
             execute(str(sql))
-        except Exception as err:
+        except Exception:
             if cnx:
                 cnx.rollback()
             failed.append(sql)

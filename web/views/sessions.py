@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,10 +21,9 @@ __docformat__ = "restructuredtext en"
 from time import time
 from logging import getLogger
 
-from logilab.common.registry import RegistrableObject
+from logilab.common.registry import RegistrableObject, yes
 
-from cubicweb import RepositoryError, Unauthorized, BadConnectionId, set_log_methods
-from cubicweb.predicates import yes
+from cubicweb import RepositoryError, Unauthorized, set_log_methods
 from cubicweb.web import InvalidSession
 
 from cubicweb.web.views import authentication

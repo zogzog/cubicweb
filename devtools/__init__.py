@@ -30,9 +30,9 @@ import subprocess
 import warnings
 import tempfile
 import getpass
-from hashlib import sha1 # pylint: disable=E0611
+from hashlib import sha1  # pylint: disable=E0611
 from datetime import timedelta
-from os.path import (abspath, realpath, join, exists, split, isabs, isdir)
+from os.path import abspath, join, exists, split, isabs, isdir
 from functools import partial
 
 from six import text_type
