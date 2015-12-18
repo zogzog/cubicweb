@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -25,7 +25,7 @@ import re
 import subprocess
 from os.path import abspath
 from logging import getLogger
-from datetime import time, datetime
+from datetime import time, datetime, timedelta
 
 from six import string_types, text_type
 from six.moves import filter
@@ -34,7 +34,7 @@ from logilab import database as db, common as lgc
 from logilab.common.shellutils import ProgressBar, DummyProgressBar
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
-from logilab.common.date import utctime, utcdatetime
+from logilab.common.date import utctime, utcdatetime, strptime
 from logilab.database.sqlgen import SQLGenerator
 
 from cubicweb import Binary, ConfigurationError
@@ -479,7 +479,51 @@ set_log_methods(SQLAdapterMixIn, getLogger('cubicweb.sqladapter'))
 
 # connection initialization functions ##########################################
 
+def _install_sqlite_querier_patch():
+    """This monkey-patch hotfixes a bug sqlite causing some dates to be returned as strings rather than
+    date objects (http://www.sqlite.org/cvstrac/tktview?tn=1327,33)
+    """
+    from cubicweb.server.querier import QuerierHelper
+
+    if hasattr(QuerierHelper, '_sqlite_patched'):
+        return  # already monkey patched
+
+    def wrap_execute(base_execute):
+        def new_execute(*args, **kwargs):
+            rset = base_execute(*args, **kwargs)
+            if rset.description:
+                found_date = False
+                for row, rowdesc in zip(rset, rset.description):
+                    for cellindex, (value, vtype) in enumerate(zip(row, rowdesc)):
+                        if vtype in ('Date', 'Datetime') and isinstance(value, text_type):
+                            found_date = True
+                            value = value.rsplit('.', 1)[0]
+                            try:
+                                row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
+                            except Exception:
+                                row[cellindex] = strptime(value, '%Y-%m-%d')
+                        if vtype == 'Time' and isinstance(value, text_type):
+                            found_date = True
+                            try:
+                                row[cellindex] = strptime(value, '%H:%M:%S')
+                            except Exception:
+                                # DateTime used as Time?
+                                row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
+                        if vtype == 'Interval' and isinstance(value, int):
+                            found_date = True
+                            # XXX value is in number of seconds?
+                            row[cellindex] = timedelta(0, value, 0)
+                    if not found_date:
+                        break
+            return rset
+        return new_execute
+
+    QuerierHelper.execute = wrap_execute(QuerierHelper.execute)
+    QuerierHelper._sqlite_patched = True
+
+
 def init_sqlite_connexion(cnx):
+    _install_sqlite_querier_patch()
 
     class group_concat(object):
         def __init__(self):

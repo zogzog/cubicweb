@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -807,11 +807,6 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         #    traceback.print_stack(file=backup_stack_file)
         return backup_file
 
-    def _new_repo(self, config):
-        repo = super(SQLiteTestDataBaseHandler, self)._new_repo(config)
-        install_sqlite_patch(repo.querier)
-        return repo
-
     def _restore_database(self, backup_coordinates, _config):
         # remove database file if it exists ?
         dbfile = self.absolute_dbfile()
@@ -829,46 +824,6 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
 
 import atexit
 atexit.register(SQLiteTestDataBaseHandler._cleanup_all_tmpdb)
-
-
-def install_sqlite_patch(querier):
-    """This patch hotfixes the following sqlite bug :
-       - http://www.sqlite.org/cvstrac/tktview?tn=1327,33
-       (some dates are returned as strings rather thant date objects)
-    """
-    if hasattr(querier.__class__, '_devtools_sqlite_patched'):
-        return # already monkey patched
-    def wrap_execute(base_execute):
-        def new_execute(*args, **kwargs):
-            rset = base_execute(*args, **kwargs)
-            if rset.description:
-                found_date = False
-                for row, rowdesc in zip(rset, rset.description):
-                    for cellindex, (value, vtype) in enumerate(zip(row, rowdesc)):
-                        if vtype in ('Date', 'Datetime') and isinstance(value, text_type):
-                            found_date = True
-                            value = value.rsplit('.', 1)[0]
-                            try:
-                                row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
-                            except Exception:
-                                row[cellindex] = strptime(value, '%Y-%m-%d')
-                        if vtype == 'Time' and isinstance(value, text_type):
-                            found_date = True
-                            try:
-                                row[cellindex] = strptime(value, '%H:%M:%S')
-                            except Exception:
-                                # DateTime used as Time?
-                                row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
-                        if vtype == 'Interval' and isinstance(value, int):
-                            found_date = True
-                            row[cellindex] = timedelta(0, value, 0) # XXX value is in number of seconds?
-                    if not found_date:
-                        break
-            return rset
-        return new_execute
-    querier.__class__.execute = wrap_execute(querier.__class__.execute)
-    querier.__class__._devtools_sqlite_patched = True
-
 
 
 HANDLERS = {}
