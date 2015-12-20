@@ -26,6 +26,7 @@ from six import text_type
 from logilab.common.testlib import unittest_main
 
 from cubicweb import Binary, ValidationError
+from cubicweb.mttransforms import HAS_TAL
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      PasswordField, DateTimeField,
@@ -195,8 +196,9 @@ class EntityFieldsFormTC(CubicWebTC):
         with self.admin_access.web_request() as req:
             req.use_fckeditor = lambda: False
             self._test_richtextfield(req, '''<select id="description_format-subject:%(eid)s" name="description_format-subject:%(eid)s" size="1" style="display: block" tabindex="1">
-<option value="text/cubicweb-page-template">text/cubicweb-page-template</option>
-<option selected="selected" value="text/html">text/html</option>
+''' + ('<option value="text/cubicweb-page-template">text/cubicweb-page-template</option>\n'
+if HAS_TAL else '') +
+'''<option selected="selected" value="text/html">text/html</option>
 <option value="text/markdown">text/markdown</option>
 <option value="text/plain">text/plain</option>
 <option value="text/rest">text/rest</option>
