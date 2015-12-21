@@ -69,7 +69,7 @@ def parse_message_id(msgid, appid):
     try:
         values, qualif = msgid.split('@')
         padding = len(values) % 4
-        values = b64decode(str(values + '='*padding), '.-')
+        values = b64decode(str(values + '='*padding), '.-').decode('ascii')
         values = dict(v.split('=') for v in values.split('&'))
         fromappid, host = qualif.split('.', 1)
     except Exception:
