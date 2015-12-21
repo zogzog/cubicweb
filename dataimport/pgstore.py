@@ -26,7 +26,7 @@ from datetime import date, datetime, time
 from collections import defaultdict
 from base64 import b64encode
 
-from six import string_types, integer_types, text_type
+from six import string_types, integer_types, text_type, binary_type
 from six.moves import cPickle as pickle, range
 
 from cubicweb.utils import make_uid
@@ -419,8 +419,8 @@ class SQLGenSourceWrapper(object):
         """add type and source info for an eid into the system table"""
         # begin by inserting eid/type/source/extid into the entities table
         if extid is not None:
-            assert isinstance(extid, str)
-            extid = b64encode(extid)
+            assert isinstance(extid, binary_type)
+            extid = b64encode(extid).decode('ascii')
         attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
                  'asource': source.uri}
         self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
