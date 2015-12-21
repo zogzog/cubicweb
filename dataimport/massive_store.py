@@ -743,8 +743,7 @@ class PGHelper(object):
                                    "WHERE c.conname = %(r)s AND n.nspname=%(n)s",
                                    {'r': name, 'n': self.pg_schema}).fetchone()[0]
 
-    def application_indexes(self, tablename):
-        """ Iterate over all the indexes """
+    def index_list(self, tablename):
         # This SQL query (cf http://www.postgresql.org/message-id/432F450F.4080700@squiz.net)
         # aims at getting all the indexes for each table.
         sql = '''SELECT c.relname as "Name"
@@ -758,14 +757,17 @@ class PGHelper(object):
         AND i.indisprimary = FALSE
         AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
         AND pg_catalog.pg_table_is_visible(c.oid);''' % tablename
-        indexes_list = self.cnx.system_sql(sql).fetchall()
+        return self.cnx.system_sql(sql).fetchall()
+
+    def application_indexes(self, tablename):
+        """ Iterate over all the indexes """
+        indexes_list = self.index_list(tablename)
         indexes = {}
         for name, in indexes_list:
             indexes[name] = self.index_query(name)
         return indexes
 
-    def application_constraints(self, tablename):
-        """ Iterate over all the constraints """
+    def constraint_list(self, tablename):
         sql = '''SELECT i.conname as "Name"
                  FROM pg_catalog.pg_class c
                  JOIN pg_catalog.pg_constraint i ON i.conrelid = c.oid
@@ -777,9 +779,13 @@ class PGHelper(object):
                    AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
                    AND pg_catalog.pg_table_is_visible(c.oid)
                  ''' % tablename
-        indexes_list = self.cnx.system_sql(sql).fetchall()
+        return self.cnx.system_sql(sql).fetchall()
+
+    def application_constraints(self, tablename):
+        """ Iterate over all the constraints """
+        constraint_list = self.constraint_list(tablename)
         constraints = {}
-        for name, in indexes_list:
+        for name, in constraint_list:
             query = self.constraint_query(name)
             constraints[name] = 'ALTER TABLE %s ADD CONSTRAINT %s %s' % (tablename, name, query)
         return constraints
