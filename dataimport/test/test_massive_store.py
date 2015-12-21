@@ -21,7 +21,7 @@ import itertools
 from cubicweb.dataimport import ucsvreader
 from cubicweb.devtools import testlib, PostgresApptestConfiguration
 from cubicweb.devtools import startpgcluster, stoppgcluster
-from cubicweb.dataimport.massive_store import MassiveObjectStore
+from cubicweb.dataimport.massive_store import MassiveObjectStore, PGHelper
 
 
 def setUpModule():
@@ -164,6 +164,33 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             eid = store.prepare_insert_entity('Location', name=u'toto', eid=10000)
             store.flush()
         self.assertEqual(eid, 10000)
+
+    @staticmethod
+    def get_db_descr(cnx):
+        pg_schema = (
+                cnx.repo.config.system_source_config.get('db-namespace')
+                or 'public')
+        pgh = PGHelper(cnx, pg_schema)
+        all_tables = cnx.system_sql('''
+SELECT table_name
+FROM information_schema.tables
+where table_schema = %(s)s''', {'s': pg_schema}).fetchall()
+        all_tables_descr = {}
+        for tablename, in all_tables:
+            all_tables_descr[tablename] = set(pgh.index_list(tablename)).union(
+                set(pgh.constraint_list(tablename)))
+        return all_tables_descr
+
+    def test_identical_schema(self):
+        with self.admin_access.repo_cnx() as cnx:
+            init_descr = self.get_db_descr(cnx)
+        with self.admin_access.repo_cnx() as cnx:
+            store = MassiveObjectStore(cnx)
+            store.init_etype_table('CWUser')
+            store.finish()
+        with self.admin_access.repo_cnx() as cnx:
+            final_descr = self.get_db_descr(cnx)
+        self.assertEqual(init_descr, final_descr)
 
     def test_on_commit_callback(self):
         counter = itertools.count()
