@@ -7,13 +7,11 @@ from cubicweb.devtools.testlib import CubicWebTC
 
 
 class CubicWebTestTC(CubicWebTC):
-    @classmethod
-    def init_config(cls, config):
-        super(CubicWebTestTC, cls).init_config(config)
-        config.global_set_option('base-url', 'http://localhost.local/')
-
     def setUp(self):
         super(CubicWebTestTC, self).setUp()
+        self.config.global_set_option('base-url', 'http://localhost.local/')
+        # call load_configuration again to let the config reset its datadir_url
+        self.config.load_configuration()
         webapp = handler.CubicWebWSGIApplication(self.config)
         self.webapp = webtest.TestApp(webapp)
 
