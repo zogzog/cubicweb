@@ -28,6 +28,8 @@ from yams.constraints import SizeConstraint
 
 from psycopg2 import ProgrammingError
 
+from cubicweb.server.schema2sql import rschema_has_table
+from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.dataimport import stores, pgstore
 from cubicweb.utils import make_uid
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -132,7 +134,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
             cnx.commit()
         self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
         # recreate then when self.finish() is called
+
         if not self.slave_mode:
+            self._drop_all_constraints()
             self._drop_metatables_constraints()
         if source is None:
             source = cnx.repo.system_source
@@ -142,6 +146,44 @@ class MassiveObjectStore(stores.RQLObjectStore):
         cnx.write_security = False
 
     ### INIT FUNCTIONS ########################################################
+
+    def _drop_all_constraints(self):
+        schema = self._cnx.vreg.schema
+        tables = ['cw_%s' % etype.type.lower()
+                  for etype in schema.entities() if not etype.final]
+        for rschema in schema.relations():
+            if rschema.inlined:
+                continue
+            elif rschema_has_table(rschema, skip_relations=PURE_VIRTUAL_RTYPES):
+                tables.append('%s_relation' % rschema.type.lower())
+        tables.append('entities')
+        for tablename in tables:
+            self._store_and_drop_constraints(tablename)
+
+    def _store_and_drop_constraints(self, tablename):
+        if not self._constraint_table_created:
+            # Create a table to save the constraints
+            # Allow reload even after crash
+            sql = "CREATE TABLE cwmassive_constraints (origtable text, query text, type varchar(256))"
+            self.sql(sql)
+            self._constraint_table_created = True
+        constraints = self._dbh.application_constraints(tablename)
+        for name, query in constraints.items():
+            sql = 'INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)'
+            self.sql(sql, {'e': tablename, 'c': query, 't': 'constraint'})
+            sql = 'ALTER TABLE %s DROP CONSTRAINT %s' % (tablename, name)
+            self.sql(sql)
+
+    def reapply_all_constraints(self):
+        if not self._dbh.table_exists('cwmassive_constraints'):
+            self.logger.info('The table cwmassive_constraints does not exist')
+            return
+        sql = 'SELECT query FROM cwmassive_constraints WHERE type = %(t)s'
+        crs = self.sql(sql, {'t': 'constraint'})
+        for query, in crs.fetchall():
+            self.sql(query)
+            self.sql('DELETE FROM cwmassive_constraints WHERE type = %(t)s '
+                     'AND query = %(q)s', {'t': 'constraint', 'q': query})
 
     def init_rtype_table(self, etype_from, rtype, etype_to):
         """ Build temporary table for standard rtype """
@@ -446,6 +488,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.sql('DROP TABLE %(r)s_relation_iid_tmp' % {'r': rtype})
             else:
                 self.logger.warning("inlined relation %s: no cleanup to be done for it" % rtype)
+        # Create meta constraints (entities, is_instance_of, ...)
+        self._create_metatables_constraints()
         # Get all the initialized etypes/rtypes
         if self._dbh.table_exists('cwmassive_initialized'):
             crs = self.sql('SELECT retype, type FROM cwmassive_initialized')
@@ -459,8 +503,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                     self._cleanup_relations(retype)
                 self.sql('DELETE FROM cwmassive_initialized WHERE retype = %(e)s',
                          {'e': retype})
-        # Create meta constraints (entities, is_instance_of, ...)
-        self._create_metatables_constraints()
+        self.reapply_all_constraints()
         # Delete the meta data table
         for table_name in ('cwmassive_initialized', 'cwmassive_constraints', 'cwmassive_metadata'):
             if self._dbh.table_exists(table_name):
