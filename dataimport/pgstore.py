@@ -339,10 +339,10 @@ class SQLGenSourceWrapper(object):
                         new_datalist.append(data)
                 _inlined_relations_sql[statement] = new_datalist
             _execmany_thread(self.system_source.get_connection,
-                             self._sql_eids.items()
-                             + _entities_sql.items()
-                             + _relations_sql.items()
-                             + _inlined_relations_sql.items(),
+                             list(self._sql_eids.items())
+                             + list(_entities_sql.items())
+                             + list(_relations_sql.items())
+                             + list(_inlined_relations_sql.items()),
                              dump_output_dir=self.dump_output_dir,
                              support_copy_from=self.support_copy_from,
                              encoding=self.dbencoding)
