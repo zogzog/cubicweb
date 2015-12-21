@@ -268,6 +268,7 @@ class CubicWebTC(TestCase):
     * `admlogin`, login of the admin user
     * `admpassword`, password of the admin user
     * `shell`, create and use shell environment
+    * `anonymous_allowed`: flag telling if anonymous browsing should be allowed
     """
     appid = 'data'
     configcls = devtools.ApptestConfiguration

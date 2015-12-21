@@ -83,9 +83,6 @@ class CubicWebServerConfig(ApptestConfiguration):
 
 class CubicWebServerTC(CubicWebTC):
     """Class for running test web server. See :class:`CubicWebServerConfig`.
-
-    Class attributes:
-    * `anonymous_allowed`: flag telling if anonymous browsing should be allowed
     """
     configcls = CubicWebServerConfig
 
