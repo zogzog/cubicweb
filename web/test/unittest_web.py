@@ -128,13 +128,16 @@ class LanguageTC(CubicWebServerTC):
 
 class MiscOptionsTC(CubicWebServerTC):
     @classmethod
-    def init_config(cls, config):
-        super(MiscOptionsTC, cls).init_config(config)
+    def setUpClass(cls):
+        super(MiscOptionsTC, cls).setUpClass()
         cls.logfile = tempfile.NamedTemporaryFile()
-        config.global_set_option('query-log-file', cls.logfile.name)
-        config.global_set_option('datadir-url', '//static.testing.fr/')
+
+    def setUp(self):
+        super(MiscOptionsTC, self).setUp()
+        self.config.global_set_option('query-log-file', self.logfile.name)
+        self.config.global_set_option('datadir-url', '//static.testing.fr/')
         # call load_configuration again to let the config reset its datadir_url
-        config.load_configuration()
+        self.config.load_configuration()
 
     def test_log_queries(self):
         self.web_request()
@@ -146,6 +149,7 @@ class MiscOptionsTC(CubicWebServerTC):
 
     @classmethod
     def tearDownClass(cls):
+        super(MiscOptionsTC, cls).tearDownClass()
         cls.logfile.close()
 
 

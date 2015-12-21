@@ -62,29 +62,10 @@ def get_available_port(ports_scan):
     raise RuntimeError('get_available_port([ports_range]) cannot find an available port')
 
 
-class CubicWebServerConfig(ApptestConfiguration):
-    """basic configuration class for configuring test server
-
-    Class attributes:
-
-    * `ports_range`: list giving range of http ports to test (range(7000, 8000)
-      by default). The first port found as available in `ports_range` will be
-      used to launch the test web server.
-
+class CubicWebServerTC(CubicWebTC):
+    """Class for running a Twisted-based test web server.
     """
     ports_range = range(7000, 8000)
-
-    def default_base_url(self):
-        port = self['port'] or get_available_port(self.ports_range)
-        self.global_set_option('port', port) # force rewrite here
-        return 'http://127.0.0.1:%d/' % self['port']
-
-
-
-class CubicWebServerTC(CubicWebTC):
-    """Class for running test web server. See :class:`CubicWebServerConfig`.
-    """
-    configcls = CubicWebServerConfig
 
     def start_server(self):
         from twisted.internet import reactor
@@ -172,6 +153,11 @@ class CubicWebServerTC(CubicWebTC):
 
     def setUp(self):
         super(CubicWebServerTC, self).setUp()
+        port = self.config['port'] or get_available_port(self.ports_range)
+        self.config.global_set_option('port', port) # force rewrite here
+        self.config.global_set_option('base-url', 'http://127.0.0.1:%d/' % port)
+        # call load_configuration again to let the config reset its datadir_url
+        self.config.load_configuration()
         self.start_server()
 
     def tearDown(self):
