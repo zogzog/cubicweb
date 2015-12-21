@@ -76,7 +76,7 @@ class NotificationTC(CubicWebTC):
             self.assertEqual(finder.recipients(), [(u'admin@logilab.fr', 'fr')])
             self.set_option('default-recipients-mode', 'default-dest-addrs')
             self.set_option('default-dest-addrs', 'abcd@logilab.fr, efgh@logilab.fr')
-            self.assertEqual(finder.recipients(), [('abcd@logilab.fr', 'en'), ('efgh@logilab.fr', 'en')])
+            self.assertEqual(list(finder.recipients()), [('abcd@logilab.fr', 'en'), ('efgh@logilab.fr', 'en')])
 
     def test_status_change_view(self):
         with self.admin_access.web_request() as req:
