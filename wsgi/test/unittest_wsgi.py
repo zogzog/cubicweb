@@ -110,12 +110,6 @@ class WSGIAppTC(CubicWebTestTC):
         req = CubicWebWsgiRequest(r.environ, self.vreg)
         self.assertEqual(u"é", req.form['arg'])
 
-    @classmethod
-    def init_config(cls, config):
-        super(WSGIAppTC, cls).init_config(config)
-        config.https_uiprops = None
-        config.https_datadir_url = None
-
 
 if __name__ == '__main__':
     import unittest

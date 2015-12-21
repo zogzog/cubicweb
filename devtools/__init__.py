@@ -151,7 +151,7 @@ class TestServerConfiguration(ServerConfiguration):
             else: # cube test
                 apphome = abspath('..')
         self._apphome = apphome
-        ServerConfiguration.__init__(self, appid)
+        super(TestServerConfiguration, self).__init__(appid)
         self.init_log(log_threshold, force=True)
         # need this, usually triggered by cubicweb-ctl
         self.load_cwctl_plugins()
