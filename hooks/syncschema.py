@@ -463,7 +463,7 @@ class CWAttributeAddOp(MemSchemaOperation):
                  'fulltextindexed': entity.fulltextindexed,
                  'internationalizable': entity.internationalizable}
         if entity.extra_props:
-            props.update(json.load(entity.extra_props))
+            props.update(json.loads(entity.extra_props.getvalue().decode('ascii')))
         # entity.formula may not exist yet if we're migrating to 3.20
         if hasattr(entity, 'formula'):
             props['formula'] = entity.formula
