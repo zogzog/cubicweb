@@ -22,6 +22,8 @@ __docformat__ = "restructuredtext en"
 from datetime import datetime
 from base64 import b64encode
 
+from pytz import utc
+
 from cubicweb.predicates import is_instance
 from cubicweb.server import hook
 from cubicweb.server.edition import EditedEntity
@@ -41,7 +43,7 @@ class InitMetaAttrsHook(MetaDataHook):
     events = ('before_add_entity',)
 
     def __call__(self):
-        timestamp = datetime.utcnow()
+        timestamp = datetime.now(utc)
         edited = self.entity.cw_edited
         if not edited.get('creation_date'):
             edited['creation_date'] = timestamp
@@ -64,7 +66,7 @@ class UpdateMetaAttrsHook(MetaDataHook):
         # XXX to be really clean, we should turn off modification_date update
         # explicitly on each command where we do not want that behaviour.
         if not self._cw.vreg.config.repairing:
-            self.entity.cw_edited.setdefault('modification_date', datetime.utcnow())
+            self.entity.cw_edited.setdefault('modification_date', datetime.now(utc))
 
 
 class SetCreatorOp(hook.DataOperationMixIn, hook.Operation):

@@ -16,6 +16,7 @@ Build-Depends:
  python-unittest2 | python (>= 2.7),
  python-logilab-mtconverter,
  python-markdown,
+ python-tz,
  python-rql,
  python-yams (>= 0.41.1),
  python-lxml,
@@ -53,7 +54,7 @@ Depends:
  ${python:Depends},
  cubicweb-common (= ${source:Version}),
  cubicweb-ctl (= ${source:Version}),
- python-logilab-database (>= 1.13.0),
+ python-logilab-database (>= 1.14.0),
  cubicweb-postgresql-support
  | cubicweb-mysql-support
  | python-pysqlite2,

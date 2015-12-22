@@ -25,11 +25,12 @@ Requires:       %{python}-logilab-common >= 0.63.1
 Requires:       %{python}-logilab-mtconverter >= 0.8.0
 Requires:       %{python}-rql >= 0.31.2
 Requires:       %{python}-yams >= 0.41.1
-Requires:       %{python}-logilab-database >= 1.13.0
+Requires:       %{python}-logilab-database >= 1.14.0
 Requires:       %{python}-passlib
 Requires:       %{python}-lxml
 Requires:       %{python}-twisted-web
 Requires:       %{python}-markdown
+Requires:       %{python}-tz
 # the schema view uses `dot'; at least on el5, png output requires graphviz-gd
 Requires:       graphviz-gd
 Requires:       gettext

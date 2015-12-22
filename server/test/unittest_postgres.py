@@ -127,20 +127,22 @@ class PostgresFTITC(CubicWebTC):
                                              'WHERE X has_text "cubicweb"').rows,
                                   [[c1.eid,], [c3.eid,], [c2.eid,]])
 
-
     def test_tz_datetime(self):
         with self.admin_access.repo_cnx() as cnx:
-            cnx.execute("INSERT Personne X: X nom 'bob', X tzdatenaiss %(date)s",
-                        {'date': datetime(1977, 6, 7, 2, 0, tzinfo=FixedOffset(1))})
+            bob = cnx.create_entity('Personne', nom=u'bob',
+                                   tzdatenaiss=datetime(1977, 6, 7, 2, 0, tzinfo=FixedOffset(1)))
             datenaiss = cnx.execute("Any XD WHERE X nom 'bob', X tzdatenaiss XD")[0][0]
-            self.assertEqual(datenaiss.tzinfo, None)
+            self.assertIsNotNone(datenaiss.tzinfo)
             self.assertEqual(datenaiss.utctimetuple()[:5], (1977, 6, 7, 1, 0))
             cnx.commit()
-            cnx.execute("INSERT Personne X: X nom 'boby', X tzdatenaiss %(date)s",
-                        {'date': datetime(1977, 6, 7, 2, 0)})
+            cnx.create_entity('Personne', nom=u'boby',
+                              tzdatenaiss=datetime(1977, 6, 7, 2, 0))
             datenaiss = cnx.execute("Any XD WHERE X nom 'boby', X tzdatenaiss XD")[0][0]
-            self.assertEqual(datenaiss.tzinfo, None)
+            self.assertIsNotNone(datenaiss.tzinfo)
             self.assertEqual(datenaiss.utctimetuple()[:5], (1977, 6, 7, 2, 0))
+            rset = cnx.execute("Any X WHERE X tzdatenaiss %(d)s",
+                               {'d': datetime(1977, 6, 7, 2, 0, tzinfo=FixedOffset(1))})
+            self.assertEqual(rset.rows, [[bob.eid]])
 
     def test_constraint_validationerror(self):
         with self.admin_access.repo_cnx() as cnx:

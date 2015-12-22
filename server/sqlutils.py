@@ -30,6 +30,8 @@ from datetime import time, datetime, timedelta
 from six import string_types, text_type
 from six.moves import filter
 
+from pytz import utc
+
 from logilab import database as db, common as lgc
 from logilab.common.shellutils import ProgressBar, DummyProgressBar
 from logilab.common.deprecation import deprecated
@@ -503,6 +505,8 @@ def _install_sqlite_querier_patch():
                                 row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
                             except Exception:
                                 row[cellindex] = strptime(value, '%Y-%m-%d')
+                            if vtype == 'TZDatetime':
+                                row[cellindex] = row[cellindex].replace(tzinfo=utc)
                         if vtype == 'Time' and isinstance(value, text_type):
                             found_date = True
                             try:

@@ -21,6 +21,8 @@
 
 from datetime import date, datetime, timedelta, tzinfo
 
+import pytz
+
 from six import PY2, integer_types, binary_type, text_type
 from logilab.common.testlib import TestCase, unittest_main
 from rql import BadRQLQuery, RQLSyntaxError
@@ -855,6 +857,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertIsInstance(rset[0][0], datetime)
         rset = self.qexecute('Any MAX(D) WHERE X is Personne, X tzdatenaiss D')
         self.assertIsInstance(rset[0][0], datetime)
+        self.assertEqual(rset[0][0].tzinfo, pytz.utc)
 
     def test_today(self):
         self.qexecute("INSERT Tag X: X name 'bidule', X creation_date TODAY")
@@ -1398,7 +1401,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.qexecute("INSERT Personne X: X nom 'bob', X tzdatenaiss %(date)s",
                      {'date': datetime(1977, 6, 7, 2, 0, tzinfo=FixedOffset(1))})
         datenaiss = self.qexecute("Any XD WHERE X nom 'bob', X tzdatenaiss XD")[0][0]
-        self.assertEqual(datenaiss.tzinfo, None)
+        self.assertIsNotNone(datenaiss.tzinfo)
         self.assertEqual(datenaiss.utctimetuple()[:5], (1977, 6, 7, 1, 0))
 
     def test_tz_datetime_cache_nonregr(self):

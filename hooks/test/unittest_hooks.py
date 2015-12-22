@@ -26,6 +26,7 @@ from datetime import datetime
 
 from six import text_type
 
+from pytz import utc
 from cubicweb import ValidationError, AuthenticationError, BadConnectionId
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -115,7 +116,7 @@ class CoreHooksTC(CubicWebTC):
 
     def test_metadata_creation_modification_date(self):
         with self.admin_access.repo_cnx() as cnx:
-            _now = datetime.utcnow()
+            _now = datetime.now(utc)
             entity = cnx.create_entity('Workflow', name=u'wf1')
             self.assertEqual((entity.creation_date - _now).seconds, 0)
             self.assertEqual((entity.modification_date - _now).seconds, 0)

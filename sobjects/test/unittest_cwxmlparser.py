@@ -20,6 +20,7 @@ from datetime import datetime
 
 from six.moves.urllib.parse import urlsplit, parse_qsl
 
+import pytz
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.sobjects.cwxmlparser import CWEntityXMLParser
 
@@ -215,8 +216,8 @@ class CWEntityXMLParserTC(CubicWebTC):
 
         with self.admin_access.web_request() as req:
             user = req.execute('CWUser X WHERE X login "sthenault"').get_entity(0, 0)
-            self.assertEqual(user.creation_date, datetime(2010, 1, 22, 10, 27, 59))
-            self.assertEqual(user.modification_date, datetime(2011, 1, 25, 14, 14, 6))
+            self.assertEqual(user.creation_date, datetime(2010, 1, 22, 10, 27, 59, tzinfo=pytz.utc))
+            self.assertEqual(user.modification_date, datetime(2011, 1, 25, 14, 14, 6, tzinfo=pytz.utc))
             self.assertEqual(user.cwuri, 'http://pouet.org/5')
             self.assertEqual(user.cw_source[0].name, 'myfeed')
             self.assertEqual(user.absolute_url(), 'http://pouet.org/5')
@@ -300,8 +301,8 @@ class CWEntityXMLParserTC(CubicWebTC):
         with self.repo.internal_cnx() as cnx:
             stats = dfsource.pull_data(cnx, force=True, raise_on_error=True)
             user = cnx.execute('CWUser X WHERE X login "sthenault"').get_entity(0, 0)
-            self.assertEqual(user.creation_date, datetime(2010, 1, 22, 10, 27, 59))
-            self.assertEqual(user.modification_date, datetime(2011, 1, 25, 14, 14, 6))
+            self.assertEqual(user.creation_date, datetime(2010, 1, 22, 10, 27, 59, tzinfo=pytz.utc))
+            self.assertEqual(user.modification_date, datetime(2011, 1, 25, 14, 14, 6, tzinfo=pytz.utc))
             self.assertEqual(user.cwuri, 'http://pouet.org/5')
             self.assertEqual(user.cw_source[0].name, 'myfeed')
 

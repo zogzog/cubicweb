@@ -37,6 +37,7 @@ import urllib
 from six import text_type
 from six.moves.urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
+import pytz
 from logilab.common.date import todate, totime
 from logilab.common.textutils import splitstrip, text_to_dict
 from logilab.common.decorators import classproperty
@@ -65,7 +66,11 @@ DEFAULT_CONVERTERS['Datetime'] = convert_datetime
 # XXX handle timezone, though this will be enough as TZDatetime are
 # serialized without time zone by default (UTC time). See
 # cw.web.views.xmlrss.SERIALIZERS.
-DEFAULT_CONVERTERS['TZDatetime'] = convert_datetime
+def convert_tzdatetime(ustr):
+    date = convert_datetime(ustr)
+    date = date.replace(tzinfo=pytz.utc)
+    return date
+DEFAULT_CONVERTERS['TZDatetime'] = convert_tzdatetime
 def convert_time(ustr):
     return totime(datetime.strptime(ustr, '%H:%M:%S'))
 DEFAULT_CONVERTERS['Time'] = convert_time
