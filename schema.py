@@ -1134,6 +1134,7 @@ class CubicWebSchema(Schema):
 
     def rebuild_infered_relations(self):
         super(CubicWebSchema, self).rebuild_infered_relations()
+        self.finalize_computed_attributes()
         self.finalize_computed_relations()
 
 
