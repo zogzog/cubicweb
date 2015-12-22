@@ -49,7 +49,7 @@ __depends__ = {
     'lxml': '',
     # XXX graphviz
     # server dependencies
-    'logilab-database': '>= 1.14.0',
+    'logilab-database': '>= 1.15.0',
     'passlib': '',
     'pytz': '',
     'Markdown': ''

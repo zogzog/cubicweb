@@ -54,7 +54,7 @@ Depends:
  ${python:Depends},
  cubicweb-common (= ${source:Version}),
  cubicweb-ctl (= ${source:Version}),
- python-logilab-database (>= 1.14.0),
+ python-logilab-database (>= 1.15.0),
  cubicweb-postgresql-support
  | cubicweb-mysql-support
  | python-pysqlite2,
