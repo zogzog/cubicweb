@@ -29,6 +29,7 @@ from six.moves.urllib.request import Request, build_opener, HTTPCookieProcessor
 from six.moves.urllib.error import HTTPError
 from six.moves.http_cookiejar import CookieJar
 
+from pytz import utc
 from lxml import etree
 
 from logilab.common.deprecation import deprecated
@@ -162,10 +163,10 @@ class DataFeedSource(AbstractSource):
     def fresh(self):
         if self.latest_retrieval is None:
             return False
-        return datetime.utcnow() < (self.latest_retrieval + self.synchro_interval)
+        return datetime.now(tz=utc) < (self.latest_retrieval + self.synchro_interval)
 
     def update_latest_retrieval(self, cnx):
-        self.latest_retrieval = datetime.utcnow()
+        self.latest_retrieval = datetime.now(tz=utc)
         cnx.execute('SET X latest_retrieval %(date)s WHERE X eid %(x)s',
                     {'x': self.eid, 'date': self.latest_retrieval})
         cnx.commit()
@@ -173,7 +174,7 @@ class DataFeedSource(AbstractSource):
     def acquire_synchronization_lock(self, cnx):
         # XXX race condition until WHERE of SET queries is executed using
         # 'SELECT FOR UPDATE'
-        now = datetime.utcnow()
+        now = datetime.now(tz=utc)
         if not cnx.execute(
             'SET X in_synchronization %(now)s WHERE X eid %(x)s, '
             'X in_synchronization NULL OR X in_synchronization < %(maxdt)s',
@@ -294,8 +295,8 @@ class DataFeedSource(AbstractSource):
 
     def init_import_log(self, cnx, **kwargs):
         dataimport = cnx.create_entity('CWDataImport', cw_import_of=self,
-                                           start_timestamp=datetime.utcnow(),
-                                           **kwargs)
+                                       start_timestamp=datetime.now(tz=utc),
+                                       **kwargs)
         dataimport.init()
         return dataimport
 
