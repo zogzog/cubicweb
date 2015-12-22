@@ -316,7 +316,7 @@ class PyramidStartHandler(InstanceCommand):
 
         host = cwconfig['interface']
         port = cwconfig['port'] or 8080
-        repo = cwconfig.repository()
+        repo = app.application.registry['cubicweb.repository']
         try:
             repo.start_looping_tasks()
             waitress.serve(app, host=host, port=port)
