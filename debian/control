@@ -3,9 +3,7 @@ Section: web
 Priority: optional
 Maintainer: Logilab S.A. <contact@logilab.fr>
 Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr>,
-           Julien Jehannet <julien.jehannet@logilab.fr>,
            Adrien Di Mascio <Adrien.DiMascio@logilab.fr>,
-           Aurélien Campéas <aurelien.campeas@logilab.fr>,
            Nicolas Chauvat <nicolas.chauvat@logilab.fr>
 Build-Depends:
  debhelper (>= 7),
