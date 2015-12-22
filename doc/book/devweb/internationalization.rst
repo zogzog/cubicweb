@@ -227,3 +227,29 @@ req, form, context) methods/function calls will use them.
 
 It is also possible to explicitly use the with _cw.pgettext(context,
 msgid).
+
+
+Specialize translation for an application cube
+``````````````````````````````````````````````
+
+Every cube has its own translation files. For a specific application cube
+it can be useful to specialize translations of other cubes. You can either mark
+those strings for translation using `_` in the python code, or add a
+`static-messages.pot` file into the `i18n` directory. This file
+looks like: ::
+
+    msgid ""
+    msgstr ""
+    "PO-Revision-Date: YEAR-MO-DA HO:MI +ZONE\n"
+    "MIME-Version: 1.0\n"
+    "Content-Type: text/plain; charset=UTF-8\n"
+    "Content-Transfer-Encoding: 8bit\n"
+    "Generated-By: pygettext.py 1.5\n"
+    "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+    msgig "expression to be translated"
+    msgstr ""
+
+Doing this, ``expression to be translated`` will be taken into account by
+the ``i18ncube`` command and additional messages will then appear in `.po` files
+of the cube.
