@@ -78,7 +78,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         source = self.source
         if source.group_base_dn.strip():
             attrs = list(map(str, ['modifyTimestamp'] + list(source.group_attrs.keys())))
-            return dict((groupdict['dn'], groupdict)
+            return dict((groupdict['dn'].encode('ascii'), groupdict)
                         for groupdict in source._search(self._cw,
                                                         source.group_base_dn,
                                                         source.group_base_scope,
@@ -120,7 +120,8 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     def build_importer(self, raise_on_error):
         """Instantiate and configure an importer"""
         etypes = ('CWUser', 'EmailAddress', 'CWGroup')
-        extid2eid = importer.cwuri2eid(self._cw, etypes, source_eid=self.source.eid)
+        extid2eid = dict((x.encode('ascii'), y) for x, y in
+                importer.cwuri2eid(self._cw, etypes, source_eid=self.source.eid).items())
         existing_relations = {}
         for rtype in ('in_group', 'use_email', 'owned_by'):
             rql = 'Any S,O WHERE S {} O, S cw_source SO, SO eid %(s)s'.format(rtype)
@@ -149,7 +150,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 # userPassword)
                 pwd = crypt_password(generate_password())
                 attrs['upassword'] = set([Binary(pwd)])
-            extuser = importer.ExtEntity('CWUser', userdict['dn'], attrs)
+            extuser = importer.ExtEntity('CWUser', userdict['dn'].encode('ascii'), attrs)
             extuser.values['owned_by'] = set([extuser.extid])
             for extemail in self._process_email(extuser, userdict):
                 yield extemail
@@ -161,7 +162,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         # generate groups
         for groupdict in self.group_source_entities_by_extid.values():
             attrs = self.ldap2cwattrs(groupdict, 'CWGroup')
-            extgroup = importer.ExtEntity('CWGroup', groupdict['dn'], attrs)
+            extgroup = importer.ExtEntity('CWGroup', groupdict['dn'].encode('ascii'), attrs)
             yield extgroup
             # record group membership for later insertion
             members = groupdict.get(self.source.group_rev_attrs['member'], ())
@@ -178,15 +179,14 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             # search for existing email first, may be coming from another source
             rset = self._cw.execute('EmailAddress X WHERE X address %(addr)s',
                                     {'addr': emailaddr})
+            emailextid = (userdict['dn'] + '@@' + emailaddr).encode('ascii')
             if not rset:
                 # not found, create it. first forge an external id
-                emailextid = userdict['dn'] + '@@' + emailaddr
                 extuser.values.setdefault('use_email', []).append(emailextid)
                 yield importer.ExtEntity('EmailAddress', emailextid, dict(address=[emailaddr]))
             elif self.sourceuris:
                 # pop from sourceuris anyway, else email may be removed by the
                 # source once import is finished
-                emailextid = userdict['dn'] + '@@' + emailaddr
                 self.sourceuris.pop(emailextid, None)
             # XXX else check use_email relation?
 
