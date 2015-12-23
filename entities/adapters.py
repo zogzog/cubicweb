@@ -363,6 +363,7 @@ class ISerializableAdapter(view.EntityAdapter):
         data = {
             'cw_etype': entity.cw_etype,
             'cw_source': entity.cw_metainformation()['source']['uri'],
+            'eid': entity.eid,
         }
         for rschema, __ in entity.e_schema.attribute_definitions():
             attr = rschema.type
