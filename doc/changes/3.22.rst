@@ -16,6 +16,17 @@ New features
 * cubes custom sql scripts are executed before creating tables.  This allows
   them to create new types or extensions.
 
+* the ``ejsonexport`` view can be specialized using the new ``ISerializable``
+  entity adapter.  By default, it will return an entity's (non-Bytes and
+  non-Password) attributes plus the special ``cw_etype`` and ``cw_source``
+  keys.
+
+* cubes that define custom final types are now handled by the ``add_cube``
+  migration command.
+
+* synchronization of external sources can be triggered from the web interface
+  by suitably privileged users with a new ``cw.source-sync`` action.
+
 User-visible changes
 --------------------
 
@@ -34,7 +45,8 @@ API changes
 -----------
 
 * ``config.repository()`` creates a new Repository object each time, instead of
-  returning a cached object
+  returning a cached object.  WARNING: this may cause unexpected issues if
+  several repositories end up being used.
 
 * migration scripts, as well as other scripts executed by ``cubicweb-ctl
   shell``, are loaded with the print_function flag enabled (for backwards
@@ -60,6 +72,14 @@ API changes
   introduced in cubicweb 3.21.
 
 * the session manager lives in the ``sessions`` registry instead of ``components``.
+
+* ``TZDatetime`` attributes are returned as timezone-aware python datetime
+  objects.  WARNING: this will break client applications that compare or use
+  arithmetic involving timezone-naive datetime objects.
+
+* creation_date and modification_date attributes for all entities are now
+  timezone-aware (``TZDatetime``) instead of localtime (``Datetime``).  More
+  generally, the ``Datetime`` type should be considered as deprecated.
 
 Deprecated code drops
 ---------------------
