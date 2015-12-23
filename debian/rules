@@ -5,10 +5,5 @@ export NO_SETUPTOOLS=1
 %:
 	dh $@ --with python2
 
-override_dh_auto_install:
-	dh_auto_install
-	# remove generated .egg-info file
-	rm -rf debian/*/usr/lib/python*
-
 override_dh_python2:
 	dh_python2 -i /usr/share/cubicweb
