@@ -602,7 +602,7 @@ this option is set to yes",
         cls.cls_adjust_sys_path()
         for ctlfile in ('web/webctl.py',  'etwist/twctl.py',
                         'server/serverctl.py',
-                        'devtools/devctl.py', 'goa/goactl.py'):
+                        'devtools/devctl.py',):
             if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
                 try:
                     load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
