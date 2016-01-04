@@ -120,8 +120,8 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     def build_importer(self, raise_on_error):
         """Instantiate and configure an importer"""
         etypes = ('CWUser', 'EmailAddress', 'CWGroup')
-        extid2eid = dict((x.encode('ascii'), y) for x, y in
-                importer.cwuri2eid(self._cw, etypes, source_eid=self.source.eid).items())
+        extid2eid = dict((self.source.decode_extid(x), y) for x, y in
+                self._cw.system_sql('select extid, eid from entities where asource = %(s)s', {'s': self.source.uri}))
         existing_relations = {}
         for rtype in ('in_group', 'use_email', 'owned_by'):
             rql = 'Any S,O WHERE S {} O, S cw_source SO, SO eid %(s)s'.format(rtype)
