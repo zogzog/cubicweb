@@ -25,6 +25,23 @@ function buildWidget(wdgnode) {
     return null;
 }
 
+function renderJQueryDatePicker(subject, button_image, date_format, min_date, max_date){
+    $widget = cw.jqNode(subject);
+    $widget.datepicker({buttonImage: button_image, dateFormat: date_format,
+                        firstDay: 1, showOn: "button", buttonImageOnly: true,
+                        minDate: min_date, maxDate: max_date});
+    $widget.change(function(ev) {
+        maxOfId = $(this).data('max-of');
+        if (maxOfId) {
+            cw.jqNode(maxOfId).datepicker("option", "maxDate", this.value);
+        }
+        minOfId = $(this).data('min-of');
+        if (minOfId) {
+            cw.jqNode(minOfId).datepicker("option", "minDate", this.value);
+        }
+    });
+}
+
 /**
  * .. function:: buildWidgets(root)
  *
