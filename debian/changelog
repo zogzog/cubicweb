@@ -1,3 +1,9 @@
+cubicweb (3.22.0-1) unstable; urgency=medium
+
+  * new upstream release
+
+ -- Julien Cristau <julien.cristau@logilab.fr>  Mon, 04 Jan 2016 17:53:55 +0100
+
 cubicweb (3.21.5-2) unstable; urgency=medium
 
   * Fix conflict between cubicweb-server and cubicweb-dev.

@@ -15,8 +15,8 @@ Build-Depends:
  python-logilab-mtconverter,
  python-markdown,
  python-tz,
- python-rql,
- python-yams (>= 0.41.1),
+ python-rql (>= 0.34.0),
+ python-yams (>= 0.42.0),
  python-lxml,
 Standards-Version: 3.9.1
 Homepage: http://www.cubicweb.org
@@ -159,8 +159,8 @@ Depends:
  python-logilab-mtconverter (>= 0.8.0),
  python-logilab-common (>= 0.63.1),
  python-markdown,
- python-yams (>= 0.41.1),
- python-rql (>= 0.31.2),
+ python-yams (>= 0.42.0),
+ python-rql (>= 0.34.0),
  python-lxml
 Recommends:
  python-simpletal (>= 4.0),
