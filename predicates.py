@@ -498,7 +498,7 @@ class paginated_rset(Predicate):
                 except ValueError:
                     page_size = None
             if page_size is None:
-                page_size = req.property_value('navigation.page-size')
+                page_size = req.property_value(cls.page_size_property)
         if len(rset) <= (page_size*self.nbpages):
             return 0
         return self.nbpages
