@@ -71,10 +71,13 @@ class NavigationComponent(Component):
         except AttributeError:
             page_size = self.cw_extra_kwargs.get('page_size')
             if page_size is None:
-                if 'page_size' in self._cw.form:
-                    page_size = int(self._cw.form['page_size'])
-                else:
-                    page_size = self._cw.property_value(self.page_size_property)
+                try:
+                    page_size = int(self._cw.form.get('page_size'))
+                except (ValueError, TypeError):
+                    # no or invalid value, fall back
+                    pass
+            if page_size is None:
+                page_size = self._cw.property_value(self.page_size_property)
             self._page_size = page_size
             return page_size
 
