@@ -217,8 +217,10 @@ title
         minvalue = maxvalue = None
         for cst in self.eschema.rdef(attrname).constraints:
             if isinstance(cst, IntervalBoundConstraint):
-                minvalue = self._actual_boundary(entity, attrname, cst.minvalue)
-                maxvalue = self._actual_boundary(entity, attrname, cst.maxvalue)
+                if cst.minvalue is not None:
+                    minvalue = self._actual_boundary(entity, attrname, cst.minvalue)
+                if cst.maxvalue is not None:
+                    maxvalue = self._actual_boundary(entity, attrname, cst.maxvalue)
             elif isinstance(cst, BoundaryConstraint):
                 if cst.operator[0] == '<':
                     maxvalue = self._actual_boundary(entity, attrname, cst.boundary)
