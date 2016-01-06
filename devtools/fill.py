@@ -42,6 +42,9 @@ from cubicweb import Binary
 from cubicweb.schema import RQLConstraint
 
 def custom_range(start, stop, step):
+    if start == stop:
+        yield start
+        return
     while start < stop:
         yield start
         start += step
