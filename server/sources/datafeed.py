@@ -352,7 +352,7 @@ class DataFeedParser(AppObject):
             self.source.info('Using cwclientlib for %s' % url)
             resp = cnx.get(url)
             resp.raise_for_status()
-            return URLLibResponseAdapter(BytesIO(resp.text), url)
+            return URLLibResponseAdapter(BytesIO(resp.content), url)
         except (ImportError, ValueError, EnvironmentError) as exc:
             # ImportError: not available
             # ValueError: no config entry found
