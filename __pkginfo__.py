@@ -41,14 +41,14 @@ classifiers = [
 __depends__ = {
     'logilab-common': '>= 0.63.1',
     'logilab-mtconverter': '>= 0.8.0',
-    'rql': '>= 0.31.2',
+    'rql': '>= 0.31.2, < 0.34',
     'yams': '>= 0.40.0',
     #gettext                    # for xgettext, msgcat, etc...
     # web dependencies
     'lxml': '',
     # XXX graphviz
     # server dependencies
-    'logilab-database': '>= 1.13.0',
+    'logilab-database': '>= 1.13.0, < 1.15',
     'passlib': '',
     'Markdown': ''
     }
