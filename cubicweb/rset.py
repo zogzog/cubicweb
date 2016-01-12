@@ -459,6 +459,17 @@ class ResultSet(object):
         else:
             raise MultipleResultsError("Multiple rows were found for one()")
 
+    def _make_entity(self, row, col):
+        """Instantiate an entity, and store it in the entity cache"""
+        # build entity instance
+        etype = self.description[row][col]
+        entity = self.req.vreg['etypes'].etype_class(etype)(self.req, rset=self,
+                                                            row=row, col=col)
+        entity.eid = self.rows[row][col]
+        # cache entity
+        self.req.set_entity_cache(entity)
+        return entity
+
     def _build_entity(self, row, col):
         """internal method to get a single entity, returns a partially
         initialized Entity instance.
@@ -488,19 +499,13 @@ class ResultSet(object):
         else:
             if entity.cw_rset is None:
                 # entity has no rset set, this means entity has been created by
-                # the querier (req is a repository session) and so jas no rset
+                # the querier (req is a repository session) and so has no rset
                 # info. Add it.
                 entity.cw_rset = self
                 entity.cw_row = row
                 entity.cw_col = col
             return entity
-        # build entity instance
-        etype = self.description[row][col]
-        entity = self.req.vreg['etypes'].etype_class(etype)(req, rset=self,
-                                                            row=row, col=col)
-        entity.eid = eid
-        # cache entity
-        req.set_entity_cache(entity)
+        entity = self._make_entity(row, col)
         # try to complete the entity if there are some additional columns
         if len(rowvalues) > 1:
             eschema = entity.e_schema
