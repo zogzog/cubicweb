@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,18 +15,26 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
+"""schema for cubicweb.devtools tests"""
+from yams.buildobjs import EntityType, SubjectRelation, String, RichString, Int, Date
 
-"""
-from yams.buildobjs import EntityType, SubjectRelation, String, Int, Date
 
-from cubes.person.schema import Person
+class Person(EntityType):
+    """a physical person"""
+    surname = String(required=True, fulltextindexed=True, indexed=True,
+                     maxsize=64)
+    firstname = String(fulltextindexed=True, maxsize=64)
+    civility = String(required=True, internationalizable=True,
+                      vocabulary=('Mr', 'Ms', 'Mrs'),
+                      default='Mr')
+    description = RichString(fulltextindexed=True)
+    birthday = Date()
 
-Person.add_relation(Date(), 'birthday')
 
 class Bug(EntityType):
     title = String(maxsize=64, required=True, fulltextindexed=True)
-    severity = String(vocabulary=('important', 'normal', 'minor'), default='normal')
+    severity = String(vocabulary=('important', 'normal', 'minor'),
+                      default='normal')
     cost = Int()
-    description	= String(maxsize=4096, fulltextindexed=True)
+    description = String(maxsize=4096, fulltextindexed=True)
     identical_to = SubjectRelation('Bug', symmetric=True)
