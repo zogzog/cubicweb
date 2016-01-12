@@ -489,13 +489,13 @@ class ResultSet(object):
         rowvalues = self.rows[row]
         eid = rowvalues[col]
         assert eid is not None
-        # return cached entity if exists. This also avoids potential recursion
-        # XXX should we consider updating a cached entity with possible
-        #     new attributes found in this resultset ?
         try:
             entity = req.entity_cache(eid)
+            if entity.cw_rset is self:
+                # return entity as is, avoiding recursion
+                return entity
         except KeyError:
-            pass
+            entity = self._make_entity(row, col)
         else:
             if entity.cw_rset is None:
                 # entity has no rset set, this means entity has been created by
@@ -504,8 +504,6 @@ class ResultSet(object):
                 entity.cw_rset = self
                 entity.cw_row = row
                 entity.cw_col = col
-            return entity
-        entity = self._make_entity(row, col)
         # try to complete the entity if there are some additional columns
         if len(rowvalues) > 1:
             eschema = entity.e_schema

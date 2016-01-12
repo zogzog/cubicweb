@@ -307,6 +307,11 @@ class ResultSetTC(CubicWebTC):
             self.assertEqual(e.cw_col, 0)
             self.assertEqual(e.cw_attr_cache['title'], 'zou')
             self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'path')
+            other_rset = req.execute('Any X, P WHERE X is Bookmark, X path P')
+            # check that get_entity fetches e from the request's cache, and
+            # updates it with attributes from the new rset
+            self.assertIs(other_rset.get_entity(0, 0), e)
+            self.assertIn('path', e.cw_attr_cache)
             self.assertEqual(e.view('text'), 'zou')
             self.assertEqual(pprelcachedict(e._cw_related_cache), [])
 
