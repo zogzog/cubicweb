@@ -77,10 +77,10 @@ def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
         snippets.append((dict([v]), rqlexprs))
     rqlhelper.compute_solutions(rqlst.children[0], {'eid': eid_func_map}, kwargs=kwargs)
     rewriter.rewrite(rqlst.children[0], snippets, kwargs, existingvars)
-    test_vrefs(rqlst.children[0])
+    check_vrefs(rqlst.children[0])
     return rewriter.rewritten
 
-def test_vrefs(node):
+def check_vrefs(node):
     vrefmaps = {}
     selects = []
     for vref in node.iget_nodes(nodes.VariableRef):
@@ -808,7 +808,7 @@ def rule_rewrite(rqlst, kwargs=None):
                                 kwargs=kwargs)
     rewriter.rewrite(rqlst)
     for select in rqlst.children:
-        test_vrefs(select)
+        check_vrefs(select)
     return rewriter.rewritten
 
 

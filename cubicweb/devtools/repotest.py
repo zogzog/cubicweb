@@ -37,7 +37,7 @@ def snippet_key(a):
     # a[0] may be a dict or a key/value tuple
     return (sorted(dict(a[0]).items()), [e.expression for e in a[1]])
 
-def test_plan(self, rql, expected, kwargs=None):
+def check_plan(self, rql, expected, kwargs=None):
     with self.session.new_cnx() as cnx:
         plan = self._prepare_plan(cnx, rql, kwargs)
         self.planner.build_plan(plan)

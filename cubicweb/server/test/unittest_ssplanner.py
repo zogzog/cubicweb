@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from cubicweb.devtools import TestServerConfiguration, get_test_db_handler
-from cubicweb.devtools.repotest import BasePlannerTC, test_plan
+from cubicweb.devtools.repotest import BasePlannerTC, check_plan
 from cubicweb.server.ssplanner import SSPlanner
 
 # keep cnx so it's not garbage collected and the associated session closed
@@ -34,7 +34,7 @@ def tearDownModule(*args):
     del repo, cnx
 
 class SSPlannerTC(BasePlannerTC):
-    _test = test_plan
+    _test = check_plan
 
     def setUp(self):
         self.__class__.repo = repo
