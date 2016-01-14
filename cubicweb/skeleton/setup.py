@@ -25,7 +25,7 @@ __docformat__ = "restructuredtext en"
 import os
 import sys
 import shutil
-from os.path import exists, join, walk
+from os.path import exists, join
 
 try:
     if os.environ.get('NO_SETUPTOOLS'):
@@ -87,33 +87,6 @@ def export(from_dir, to_dir,
            blacklist=BASE_BLACKLIST,
            ignore_ext=IGNORED_EXTENSIONS,
            verbose=True):
-    """make a mirror of from_dir in to_dir, omitting directories and files
-    listed in the black list
-    """
-    def make_mirror(arg, directory, fnames):
-        """walk handler"""
-        for norecurs in blacklist:
-            try:
-                fnames.remove(norecurs)
-            except ValueError:
-                pass
-        for filename in fnames:
-            # don't include binary files
-            if filename[-4:] in ignore_ext:
-                continue
-            if filename[-1] == '~':
-                continue
-            src = join(directory, filename)
-            dest = to_dir + src[len(from_dir):]
-            if verbose:
-                sys.stderr.write('%s -> %s\n' % (src, dest))
-            if os.path.isdir(src):
-                if not exists(dest):
-                    os.mkdir(dest)
-            else:
-                if exists(dest):
-                    os.remove(dest)
-                shutil.copy2(src, dest)
     try:
         os.mkdir(to_dir)
     except OSError as ex:
@@ -121,7 +94,27 @@ def export(from_dir, to_dir,
         import errno
         if ex.errno != errno.EEXIST:
             raise
-    walk(from_dir, make_mirror, None)
+    for dirpath, dirnames, filenames in os.walk(from_dir):
+        for norecurs in blacklist:
+            try:
+                dirnames.remove(norecurs)
+            except ValueError:
+                pass
+        for dirname in dirnames:
+            dest = join(to_dir, dirname)
+            if not exists(dest):
+                os.mkdir(dest)
+        for filename in filenames:
+            # don't include binary files
+            src = join(dirpath, filename)
+            dest = to_dir + src[len(from_dir):]
+            if filename[-4:] in ignore_ext:
+                continue
+            if filename[-1] == '~':
+                continue
+            if exists(dest):
+                os.remove(dest)
+            shutil.copy2(src, dest)
 
 
 class MyInstallLib(install_lib.install_lib):
