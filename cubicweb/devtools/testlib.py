@@ -31,7 +31,7 @@ from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
 
 import yams.schema
 
-from logilab.common.testlib import TestCase, InnerTest, Tags
+from logilab.common.testlib import TestCase, Tags
 from logilab.common.pytest import nocoverage
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
@@ -49,6 +49,16 @@ from cubicweb.server.hook import SendMailOp
 from cubicweb.server.session import Session
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import fake, htmlparser, DEFAULT_EMPTY_DB_ID
+
+
+if sys.version_info[:2] < (3, 4):
+    import unittest2
+    if not hasattr(unittest2.TestCase, 'subTest'):
+        raise ImportError('no subTest support in available unittest2')
+    class BaseTestCase(unittest2.TestCase, TestCase):
+        """Mix of logilab.common.testlib.TestCase and unittest2.TestCase"""
+else:
+    BaseTestCase = TestCase
 
 
 # low-level utilities ##########################################################
@@ -253,7 +263,7 @@ class RepoAccess(object):
 
 # base class for cubicweb tests requiring a full cw environments ###############
 
-class CubicWebTC(TestCase):
+class CubicWebTC(BaseTestCase):
     """abstract class for test using an apptest environment
 
     attributes:
@@ -1238,18 +1248,19 @@ class AutoPopulateTest(CubicWebTC):
                 propdefs[k]['default'] = True
         for view in self.list_views_for(rset):
             backup_rset = rset.copy(rset.rows, rset.description)
-            yield InnerTest(self._testname(rset, view.__regid__, 'view'),
-                            self.view, view.__regid__, rset,
-                            rset.req.reset_headers(), 'main-template')
+            with self.subTest(name=self._testname(rset, view.__regid__, 'view')):
+                self.view(view.__regid__, rset,
+                          rset.req.reset_headers(), 'main-template')
             # We have to do this because some views modify the
             # resultset's syntax tree
             rset = backup_rset
         for action in self.list_actions_for(rset):
-            yield InnerTest(self._testname(rset, action.__regid__, 'action'),
-                            self._test_action, action)
+            with self.subTest(name=self._testname(rset, action.__regid__, 'action')):
+                self._test_action(action)
         for box in self.list_boxes_for(rset):
             w = [].append
-            yield InnerTest(self._testname(rset, box.__regid__, 'box'), box.render, w)
+            with self.subTest(self._testname(rset, box.__regid__, 'box')):
+                box.render(w)
 
     @staticmethod
     def _testname(rset, objid, objtype):
@@ -1277,19 +1288,18 @@ class AutomaticWebTest(AutoPopulateTest):
     def test_one_each_config(self):
         self.auto_populate(1)
         for rset in self.iter_automatic_rsets(limit=1):
-            for testargs in self._test_everything_for(rset):
-                yield testargs
+            self._test_everything_for(rset)
 
     def test_ten_each_config(self):
         self.auto_populate(10)
         for rset in self.iter_automatic_rsets(limit=10):
-            for testargs in self._test_everything_for(rset):
-                yield testargs
+            self._test_everything_for(rset)
 
     def test_startup_views(self):
         for vid in self.list_startup_views():
             with self.admin_access.web_request() as req:
-                yield self.view, vid, None, req
+                with self.subTest(vid=vid):
+                    self.view(vid, None, req)
 
 
 # registry instrumentization ###################################################

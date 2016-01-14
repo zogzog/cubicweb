@@ -52,7 +52,8 @@ __depends__ = {
     'logilab-database': '>= 1.15.0',
     'passlib': '',
     'pytz': '',
-    'Markdown': ''
+    'Markdown': '',
+    'unittest2': '>= 0.7.0',
     }
 
 __recommends__ = {

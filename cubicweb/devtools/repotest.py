@@ -137,13 +137,14 @@ from logilab.database import get_db_helper
 
 from rql import RQLHelper
 
+from cubicweb.devtools.testlib import BaseTestCase
 from cubicweb.devtools.fake import FakeRepo, FakeConfig, FakeSession
 from cubicweb.server import set_debug, debugged
 from cubicweb.server.querier import QuerierHelper
 from cubicweb.server.session import Session
 from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
 
-class RQLGeneratorTC(TestCase):
+class RQLGeneratorTC(BaseTestCase):
     schema = backend = None # set this in concrete class
 
     @classmethod
