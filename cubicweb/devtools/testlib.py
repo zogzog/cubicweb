@@ -32,7 +32,7 @@ from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
 import yams.schema
 
 from logilab.common.testlib import TestCase, InnerTest, Tags
-from logilab.common.pytest import nocoverage, pause_trace
+from logilab.common.pytest import nocoverage
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
 from logilab.common.decorators import cached, classproperty, clear_cache, iclassmethod
@@ -402,16 +402,15 @@ class CubicWebTC(TestCase):
     def setUp(self):
         # monkey patch send mail operation so emails are sent synchronously
         self._patch_SendMailOp()
-        with pause_trace():
-            previous_failure = self.__class__.__dict__.get('_repo_init_failed')
-            if previous_failure is not None:
-                self.skipTest('repository is not initialised: %r' % previous_failure)
-            try:
-                self._init_repo()
-            except Exception as ex:
-                self.__class__._repo_init_failed = ex
-                raise
-            self.addCleanup(self._close_access)
+        previous_failure = self.__class__.__dict__.get('_repo_init_failed')
+        if previous_failure is not None:
+            self.skipTest('repository is not initialised: %r' % previous_failure)
+        try:
+            self._init_repo()
+        except Exception as ex:
+            self.__class__._repo_init_failed = ex
+            raise
+        self.addCleanup(self._close_access)
         self.config.set_anonymous_allowed(self.anonymous_allowed)
         self.setup_database()
         MAILBOX[:] = []  # reset mailbox
