@@ -39,13 +39,15 @@ class RealDatabaseTC(CubicWebTC):
 
     def test_all_primaries(self):
         for rset in self.iter_individual_rsets(limit=50):
-            yield self.view, 'primary', rset, rset.req.reset_headers()
+            with self.subTest(rset=rset):
+                self.view('primary', rset, rset.req.reset_headers())
 
     ## startup views
     def test_startup_views(self):
         for vid in self.list_startup_views():
-            req = self.request()
-            yield self.view, vid, None, req
+            with self.subTest(vid=vid):
+                req = self.request()
+                self.view(vid, None, req)
 
 
 if __name__ == '__main__':

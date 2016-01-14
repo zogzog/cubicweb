@@ -169,16 +169,16 @@ class PostgresLimitSizeTC(CubicWebTC):
         with self.admin_access.repo_cnx() as cnx:
             def sql(string):
                 return cnx.system_sql(string).fetchone()[0]
-            yield self.assertEqual, sql("SELECT limit_size('<p>hello</p>', 'text/html', 20)"), \
-                '<p>hello</p>'
-            yield self.assertEqual, sql("SELECT limit_size('<p>hello</p>', 'text/html', 2)"), \
-                'he...'
-            yield self.assertEqual, sql("SELECT limit_size('<br/>hello', 'text/html', 2)"), \
-                'he...'
-            yield self.assertEqual, sql("SELECT limit_size('<span class=\"1\">he</span>llo', 'text/html', 2)"), \
-                'he...'
-            yield self.assertEqual, sql("SELECT limit_size('<span>a>b</span>', 'text/html', 2)"), \
-                'a>...'
+            for html, size, expected in [
+                ('<p>hello</p>', 20, '<p>hello</p>'),
+                ('<p>hello</p>', 2, 'he...'),
+                ('<br/>hello', 2, 'he...'),
+                ('<span class=\"1\">he</span>llo', 2, 'he...'),
+                ('<span>a>b</span>', 2, 'a>...'),
+            ]:
+                with self.subTest(html=html, size=size):
+                    actual = sql("SELECT limit_size('%s', 'text/html', %d)" % (html, size))
+                    self.assertEqual(actual, expected)
 
 
 if __name__ == '__main__':

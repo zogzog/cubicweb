@@ -1256,10 +1256,6 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
             print('RQL:', rql)
             raise
 
-    def _parse(self, rqls):
-        for rql, sql in rqls:
-            yield self._check, rql, sql
-
     def _checkall(self, rql, sql):
         if isinstance(rql, tuple):
             rql, args = rql
@@ -1336,16 +1332,18 @@ FROM cw_CWUser AS _X
 WHERE _X.cw_login IS NULL''')
 
     def test_today(self):
-        for t in self._parse([("Any X WHERE X creation_date TODAY, X is Affaire",
-                              '''SELECT _X.cw_eid
+        for rql, sql in [
+            ("Any X WHERE X creation_date TODAY, X is Affaire",
+             '''SELECT _X.cw_eid
 FROM cw_Affaire AS _X
 WHERE DATE(_X.cw_creation_date)=CAST(clock_timestamp() AS DATE)'''),
-                             ("Personne P where not P datenaiss TODAY",
-                              '''SELECT _P.cw_eid
+            ("Personne P where not P datenaiss TODAY",
+             '''SELECT _P.cw_eid
 FROM cw_Personne AS _P
 WHERE NOT (DATE(_P.cw_datenaiss)=CAST(clock_timestamp() AS DATE))'''),
-                             ]):
-            yield t
+            ]:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
@@ -1375,43 +1373,52 @@ WHERE _X.cw_login ~ [0-9].*
 ''')
 
     def test_parser_parse(self):
-        for t in self._parse(PARSER):
-            yield t
+        for rql, sql in PARSER:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_basic_parse(self):
-        for t in self._parse(BASIC + BASIC_WITH_LIMIT):
-            yield t
+        for rql, sql in (BASIC + BASIC_WITH_LIMIT):
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_advanced_parse(self):
-        for t in self._parse(ADVANCED + ADVANCED_WITH_LIMIT_OR_ORDERBY + ADVANCED_WITH_GROUP_CONCAT):
-            yield t
+        for rql, sql in (ADVANCED + ADVANCED_WITH_LIMIT_OR_ORDERBY + ADVANCED_WITH_GROUP_CONCAT):
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_outer_join_parse(self):
-        for t in self._parse(OUTER_JOIN):
-            yield t
+        for rql, sql in OUTER_JOIN:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_virtual_vars_parse(self):
-        for t in self._parse(VIRTUAL_VARS):
-            yield t
+        for rql, sql in VIRTUAL_VARS:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_multiple_sel_parse(self):
-        for t in self._parse(MULTIPLE_SEL):
-            yield t
+        for rql, sql in MULTIPLE_SEL:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_functions(self):
-        for t in self._parse(FUNCS):
-            yield t
+        for rql, sql in FUNCS:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_negation(self):
-        for t in self._parse(NEGATIONS):
-            yield t
+        for rql, sql in NEGATIONS:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_intersection(self):
-        for t in self._parse(INTERSECT):
-            yield t
+        for rql, sql in INTERSECT:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_union(self):
-        for t in self._parse((
+        for rql, sql in [
             ('(Any N ORDERBY 1 WHERE X name N, X is State)'
              ' UNION '
              '(Any NN ORDERBY 1 WHERE XX name NN, XX is Transition)',
@@ -1422,12 +1429,12 @@ UNION ALL
 (SELECT _XX.cw_name
 FROM cw_Transition AS _XX
 ORDER BY 1)'''),
-            )):
-            yield t
+        ]:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_subquery(self):
-        for t in self._parse((
-
+        for rql, sql in [
             ('Any X,N '
              'WHERE NOT EXISTS(X owned_by U) '
              'WITH X,N BEING '
@@ -1516,9 +1523,9 @@ GROUP BY _T.cw_eid) AS _T1 LEFT OUTER JOIN (SELECT _T.cw_eid AS C0, SUM(_T.cw_du
 FROM cw_Affaire AS _T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_to=_T.cw_eid) LEFT OUTER JOIN cw_Tag AS _TAG ON (rel_tags0.eid_from=_TAG.cw_eid AND _TAG.cw_name=t)
 GROUP BY _T.cw_eid) AS _T0 ON (_T1.C0=_T0.C0)'''),
 
-                             )):
-            yield t
-
+        ]:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_subquery_error(self):
         rql = ('Any N WHERE X name N WITH X BEING '
@@ -1529,11 +1536,12 @@ GROUP BY _T.cw_eid) AS _T0 ON (_T1.C0=_T0.C0)'''),
         self.assertRaises(BadRQLQuery, self.o.generate, rqlst)
 
     def test_inline(self):
-        for t in self._parse(INLINE):
-            yield t
+        for rql, sql in INLINE:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_has_text(self):
-        for t in self._parse((
+        for rql, sql in [
             ('Any X WHERE X has_text "toto tata"',
              """SELECT appears0.uid
 FROM appears AS appears0
@@ -1610,9 +1618,9 @@ FROM appears AS appears1
 WHERE NOT (EXISTS(SELECT 1 FROM tags_relation AS rel_tags0 WHERE appears1.uid=rel_tags0.eid_to)) AND appears1.words @@ to_tsquery('default', 'pouet')
 '''),
 
-            )):
-            yield t
-
+        ]:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_from_clause_needed(self):
         queries = [("Any 1 WHERE EXISTS(T is CWGroup, T name 'managers')",
@@ -1622,8 +1630,9 @@ WHERE EXISTS(SELECT 1 FROM cw_CWGroup AS _T WHERE _T.cw_name=managers)'''),
                     '''SELECT 5, 6
 WHERE NOT (EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel_created_by0.eid_from=5 AND rel_created_by0.eid_to=6))'''),
                    ]
-        for t in self._parse(queries):
-            yield t
+        for rql, sql in queries:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_ambigous_exists_no_from_clause(self):
         self._check('Any COUNT(U) WHERE U eid 1, EXISTS (P owned_by U, P is IN (Note, Affaire))',
@@ -1730,8 +1739,9 @@ class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
         return sql.strip().replace(' SUBSTR', ' SUBSTRING').replace(' || ', ' + ').replace(' ILIKE ', ' LIKE ')
 
     def test_has_text(self):
-        for t in self._parse(HAS_TEXT_LG_INDEXER):
-            yield t
+        for rql, sql in HAS_TEXT_LG_INDEXER:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_regexp(self):
         self.skipTest('regexp-based pattern matching not implemented in sqlserver')
@@ -1753,12 +1763,14 @@ FROM cw_Personne AS _P''')
 FROM cw_Personne AS _P''')
 
     def test_basic_parse(self):
-        for t in self._parse(BASIC):# + BASIC_WITH_LIMIT):
-            yield t
+        for rql, sql in BASIC:# + BASIC_WITH_LIMIT):
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_advanced_parse(self):
-        for t in self._parse(ADVANCED):# + ADVANCED_WITH_LIMIT_OR_ORDERBY):
-            yield t
+        for rql, sql in ADVANCED:# + ADVANCED_WITH_LIMIT_OR_ORDERBY):
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_limit_offset(self):
         WITH_LIMIT = [
@@ -1872,8 +1884,9 @@ FROM orderedrows WHERE
 __RowNumber <= 1
 '''),
             ]
-        for t in self._parse(WITH_LIMIT):# + ADVANCED_WITH_LIMIT_OR_ORDERBY):
-            yield t
+        for rql, sql in WITH_LIMIT:# + ADVANCED_WITH_LIMIT_OR_ORDERBY):
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_cast(self):
         self._check("Any CAST(String, P) WHERE P is Personne",
@@ -1891,17 +1904,19 @@ GROUP BY DATEPART(YEAR, _X.cw_modification_date),DATEPART(MONTH, _X.cw_modificat
 ORDER BY 1''')
 
     def test_today(self):
-        for t in self._parse([("Any X WHERE X creation_date TODAY, X is Affaire",
-                        '''SELECT _X.cw_eid
+        for rql, sql in [
+            ("Any X WHERE X creation_date TODAY, X is Affaire",
+             '''SELECT _X.cw_eid
 FROM cw_Affaire AS _X
 WHERE DATE(_X.cw_creation_date)=%s''' % self.dbhelper.sql_current_date()),
 
-                       ("Personne P where not P datenaiss TODAY",
-                        '''SELECT _P.cw_eid
+             ("Personne P where not P datenaiss TODAY",
+              '''SELECT _P.cw_eid
 FROM cw_Personne AS _P
 WHERE NOT (DATE(_P.cw_datenaiss)=%s)''' % self.dbhelper.sql_current_date()),
-                       ]):
-            yield t
+        ]:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
@@ -1928,9 +1943,8 @@ FROM cw_CWUser AS _X
 WHERE _X.cw_login REGEXP [0-9].*
 ''')
 
-
     def test_union(self):
-        for t in self._parse((
+        for rql, sql in [
             ('(Any N ORDERBY 1 WHERE X name N, X is State)'
              ' UNION '
              '(Any NN ORDERBY 1 WHERE XX name NN, XX is Transition)',
@@ -1941,14 +1955,13 @@ UNION ALL
 SELECT _XX.cw_name
 FROM cw_Transition AS _XX
 ORDER BY 1'''),
-            )):
-            yield t
-
+        ]:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_subquery(self):
         # NOTE: no paren around UNION with sqlitebackend
-        for t in self._parse((
-
+        for rql, sql in [
             ('Any N ORDERBY 1 WITH N BEING '
              '((Any N WHERE X name N, X is State)'
              ' UNION '
@@ -1988,11 +2001,12 @@ SELECT _X.cw_eid AS C0, _X.cw_name AS C1
 FROM cw_Transition AS _X) AS _T0
 GROUP BY _T0.C1
 HAVING COUNT(_T0.C0)>1'''),
-            )):
-            yield t
+        ]:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
     def test_has_text(self):
-        for t in self._parse((
+        for rql, sql in [
             ('Any X WHERE X has_text "toto tata"',
              """SELECT DISTINCT appears0.uid
 FROM appears AS appears0
@@ -2037,8 +2051,9 @@ WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata
              """SELECT DISTINCT appears0.uid, 1.0
 FROM appears AS appears0
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata'))"""),
-            )):
-            yield t
+        ]:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
 
     def test_or_having_fake_terms_base(self):
@@ -2058,17 +2073,19 @@ GROUP BY YEAR(_X.cw_modification_date),MONTH(_X.cw_modification_date)
 ORDER BY 1'''),
 
     def test_today(self):
-        for t in self._parse([("Any X WHERE X creation_date TODAY, X is Affaire",
-                        '''SELECT _X.cw_eid
+        for rql, sql in [
+            ("Any X WHERE X creation_date TODAY, X is Affaire",
+             '''SELECT _X.cw_eid
 FROM cw_Affaire AS _X
 WHERE DATE(_X.cw_creation_date)=CURRENT_DATE'''),
 
-                       ("Personne P where not P datenaiss TODAY",
-                        '''SELECT _P.cw_eid
+            ("Personne P where not P datenaiss TODAY",
+             '''SELECT _P.cw_eid
 FROM cw_Personne AS _P
 WHERE NOT (DATE(_P.cw_datenaiss)=CURRENT_DATE)'''),
-                       ]):
-            yield t
+        ]:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
 
 class MySQLGenerator(PostgresSQLGeneratorTC):
@@ -2118,8 +2135,9 @@ WHERE EXISTS(SELECT 1 FROM cw_CWGroup AS _T WHERE _T.cw_name=managers)'''),
 FROM (SELECT 1) AS _T
 WHERE NOT (EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel_created_by0.eid_from=5 AND rel_created_by0.eid_to=6))'''),
                    ]
-        for t in self._parse(queries):
-            yield t
+        for rql, sql in queries:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
 
     def test_has_text(self):
@@ -2146,8 +2164,9 @@ FROM appears AS appears0, cw_Folder AS _X
 WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
 """)
             ]
-        for t in self._parse(queries):
-            yield t
+        for rql, sql in queries:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
 
     def test_ambigous_exists_no_from_clause(self):
@@ -2193,17 +2212,18 @@ GROUP BY EXTRACT(YEAR from _X.cw_modification_date),EXTRACT(MONTH from _X.cw_mod
 ORDER BY 1'''),
 
     def test_today(self):
-        for t in self._parse([("Any X WHERE X creation_date TODAY, X is Affaire",
-                        '''SELECT _X.cw_eid
+        for rql, sql in [
+            ("Any X WHERE X creation_date TODAY, X is Affaire",
+             '''SELECT _X.cw_eid
 FROM cw_Affaire AS _X
 WHERE DATE(_X.cw_creation_date)=CURRENT_DATE'''),
-
-                       ("Personne P where not P datenaiss TODAY",
-                        '''SELECT _P.cw_eid
+            ("Personne P where not P datenaiss TODAY",
+             '''SELECT _P.cw_eid
 FROM cw_Personne AS _P
 WHERE NOT (DATE(_P.cw_datenaiss)=CURRENT_DATE)'''),
-                       ]):
-            yield t
+            ]:
+            with self.subTest(rql=rql):
+                self._check(rql, sql)
 
 class removeUnsusedSolutionsTC(TestCase):
     def test_invariant_not_varying(self):

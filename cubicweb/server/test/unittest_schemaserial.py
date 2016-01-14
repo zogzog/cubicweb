@@ -17,12 +17,10 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for schema rql (de)serialization"""
 
-from logilab.common.testlib import TestCase, unittest_main
-
 from cubicweb import Binary
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.devtools import TestServerConfiguration
-from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.devtools.testlib import BaseTestCase as TestCase, CubicWebTC
 
 from cubicweb.server.schemaserial import (updateeschema2rql, updaterschema2rql, rschema2rql,
                                           eschema2rql, rdef2rql, specialize2rql,
@@ -382,7 +380,9 @@ class Schema2RQLTC(TestCase):
               'name': u'add_permission'})
             ]
         for i, (rql, args) in enumerate(updaterschema2rql(schema.rschema('add_permission'), 1)):
-            yield self.assertEqual, expected[i], (rql, args)
+            with self.subTest(i=i):
+                self.assertEqual((rql, args), expected[i])
+
 
 class Perms2RQLTC(TestCase):
     GROUP_MAPPING = {
@@ -443,4 +443,5 @@ class ComputedAttributeAndRelationTC(CubicWebTC):
                          schema['total_salary'].rdefs['Company', 'Int'].formula)
 
 if __name__ == '__main__':
-    unittest_main()
+    from unittest import main
+    main()
