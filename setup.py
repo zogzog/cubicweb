@@ -24,7 +24,7 @@
 import os
 import sys
 import shutil
-from os.path import isdir, exists, join, walk
+from os.path import dirname, exists, isdir, join
 
 try:
     if os.environ.get('NO_SETUPTOOLS'):
@@ -38,30 +38,40 @@ except ImportError:
     USE_SETUPTOOLS = False
 from distutils.command import install_data
 
+here = dirname(__file__)
+
 # import required features
-from __pkginfo__ import modname, version, license, description, web, \
-     author, author_email
+pkginfo = join(here, 'cubicweb', '__pkginfo__.py')
+__pkginfo__ = {}
+with open(pkginfo) as f:
+    exec(f.read(), __pkginfo__)
+modname = __pkginfo__['modname']
+version = __pkginfo__['version']
+license = __pkginfo__['license']
+description = __pkginfo__['description']
+web = __pkginfo__['web']
+author = __pkginfo__['author']
+author_email = __pkginfo__['author_email']
 
 long_description = open('README').read()
 
 # import optional features
-import __pkginfo__
 if USE_SETUPTOOLS:
     requires = {}
     for entry in ("__depends__",): # "__recommends__"):
-        requires.update(getattr(__pkginfo__, entry, {}))
+        requires.update(__pkginfo__.get(entry, {}))
     install_requires = [("%s %s" % (d, v and v or "")).strip()
                        for d, v in requires.items()]
 else:
     install_requires = []
 
-distname = getattr(__pkginfo__, 'distname', modname)
-scripts = getattr(__pkginfo__, 'scripts', ())
-include_dirs = getattr(__pkginfo__, 'include_dirs', ())
-data_files = getattr(__pkginfo__, 'data_files', None)
-subpackage_of = getattr(__pkginfo__, 'subpackage_of', None)
-ext_modules = getattr(__pkginfo__, 'ext_modules', None)
-package_data = getattr(__pkginfo__, 'package_data', {})
+distname = __pkginfo__.get('distname', modname)
+scripts = __pkginfo__.get('scripts', ())
+include_dirs = __pkginfo__.get('include_dirs', ())
+data_files = __pkginfo__.get('data_files', None)
+subpackage_of = __pkginfo__.get('subpackage_of', None)
+ext_modules = __pkginfo__.get('ext_modules', None)
+package_data = __pkginfo__.get('package_data', {})
 
 BASE_BLACKLIST = ('CVS', 'dist', 'build', '__buildlog')
 IGNORED_EXTENSIONS = ('.pyc', '.pyo', '.elc')
@@ -100,33 +110,6 @@ def export(from_dir, to_dir,
            blacklist=BASE_BLACKLIST,
            ignore_ext=IGNORED_EXTENSIONS,
            verbose=True):
-    """make a mirror of from_dir in to_dir, omitting directories and files
-    listed in the black list
-    """
-    def make_mirror(arg, directory, fnames):
-        """walk handler"""
-        for norecurs in blacklist:
-            try:
-                fnames.remove(norecurs)
-            except ValueError:
-                pass
-        for filename in fnames:
-            # don't include binary files
-            if filename[-4:] in ignore_ext:
-                continue
-            if filename[-1] == '~':
-                continue
-            src = '%s/%s' % (directory, filename)
-            dest = to_dir + src[len(from_dir):]
-            if verbose:
-               sys.stderr.write('%s -> %s\n' % (src, dest))
-            if os.path.isdir(src):
-                if not exists(dest):
-                    os.mkdir(dest)
-            else:
-                if exists(dest):
-                    os.remove(dest)
-                shutil.copy2(src, dest)
     try:
         os.mkdir(to_dir)
     except OSError as ex:
@@ -134,7 +117,27 @@ def export(from_dir, to_dir,
         import errno
         if ex.errno != errno.EEXIST:
             raise
-    walk(from_dir, make_mirror, None)
+    for dirpath, dirnames, filenames in os.walk(from_dir):
+        for norecurs in blacklist:
+            try:
+                dirnames.remove(norecurs)
+            except ValueError:
+                pass
+        for dirname in dirnames:
+            dest = join(to_dir, dirname)
+            if not exists(dest):
+                os.mkdir(dest)
+        for filename in filenames:
+            # don't include binary files
+            src = join(dirpath, filename)
+            dest = to_dir + src[len(from_dir):]
+            if filename[-4:] in ignore_ext:
+                continue
+            if filename[-1] == '~':
+                continue
+            if exists(dest):
+                os.remove(dest)
+            shutil.copy2(src, dest)
 
 
 EMPTY_FILE = '"""generated file, don\'t modify or your data will be lost"""\n'
@@ -219,8 +222,7 @@ def install(**kwargs):
         if USE_SETUPTOOLS:
             kwargs['namespace_packages'] = [subpackage_of]
     else:
-        kwargs['package_dir'] = {modname : '.'}
-        packages = [modname] + get_packages(os.getcwd(), modname)
+        packages = [modname] + get_packages(join(here, modname), modname)
     if USE_SETUPTOOLS:
         kwargs['install_requires'] = install_requires
         kwargs['zip_safe'] = False

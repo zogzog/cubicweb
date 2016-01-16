@@ -19,33 +19,33 @@ recursive-include doc/dev .txt *.rst
 recursive-include doc/images *.png *.svg
 include doc/conf.py
 
-recursive-include misc *.py *.png *.display
+recursive-include cubicweb/misc *.py *.png *.display
 
-include web/views/*.pt
-recursive-include web/data external_resources *.js *.css *.py *.png *.gif *.ico *.ttf *.svg *.woff *.eot
-recursive-include web/wdoc *.rst *.png *.xml ChangeLog*
-recursive-include devtools/data *.js *.css *.sh
+include cubicweb/web/views/*.pt
+recursive-include cubicweb/web/data external_resources *.js *.css *.py *.png *.gif *.ico *.ttf *.svg *.woff *.eot
+recursive-include cubicweb/web/wdoc *.rst *.png *.xml ChangeLog*
+recursive-include cubicweb/devtools/data *.js *.css *.sh
 
-recursive-include i18n *.pot *.po
-recursive-include schemas *.py *.sql
+recursive-include cubicweb/i18n *.pot *.po
+recursive-include cubicweb/schemas *.py *.sql
 
-recursive-include test/data bootstrap_cubes *.py *.sql
-recursive-include entities/test/data bootstrap_cubes *.py
-recursive-include sobjects/test/data bootstrap_cubes *.py
-recursive-include hooks/test/data bootstrap_cubes *.py
-recursive-include server/test/data bootstrap_cubes *.py source* *.conf.in *.ldif
-recursive-include devtools/test/data bootstrap_cubes *.py *.txt *.js *.po.ref
-recursive-include web/test/data bootstrap_cubes pouet.css *.py
-recursive-include etwist/test/data *.py
+recursive-include cubicweb/test/data bootstrap_cubes *.py *.sql
+recursive-include cubicweb/entities/test/data bootstrap_cubes *.py
+recursive-include cubicweb/sobjects/test/data bootstrap_cubes *.py
+recursive-include cubicweb/hooks/test/data bootstrap_cubes *.py
+recursive-include cubicweb/server/test/data bootstrap_cubes *.py source* *.conf.in *.ldif
+recursive-include cubicweb/devtools/test/data bootstrap_cubes *.py *.txt *.js *.po.ref
+recursive-include cubicweb/web/test/data bootstrap_cubes pouet.css *.py
+recursive-include cubicweb/etwist/test/data *.py
 
-recursive-include web/test/jstests *.js *.html *.css *.json
-recursive-include web/test/windmill *.py
+recursive-include cubicweb/web/test/jstests *.js *.html *.css *.json
+recursive-include cubicweb/web/test/windmill *.py
 
-recursive-include skeleton *.py *.css *.js *.po compat *.in *.tmpl rules
+recursive-include cubicweb/skeleton *.py *.css *.js *.po compat *.in *.tmpl rules
 
 prune doc/book/en/.static
 prune doc/book/fr/.static
 prune doc/html/_sources/
-prune misc/cwfs
+prune cubicweb/misc/cwfs
 prune doc/js_api
 global-exclude *.pyc

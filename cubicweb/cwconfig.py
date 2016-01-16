@@ -106,9 +106,9 @@ Development Mode
 `````````````````````
 If :file:`.hg` directory is found into the cubicweb package, there are specific resource rules.
 
-`<CW_SOFTWARE_ROOT>` is the mercurial checkout of cubicweb:
+`<CW_SOFTWARE_ROOT>` is the source checkout's ``cubicweb`` directory:
 
-* main cubes directory is `<CW_SOFTWARE_ROOT>/../cubes`. You can specify
+* main cubes directory is `<CW_SOFTWARE_ROOT>/../../cubes`. You can specify
   another one with :envvar:`CW_INSTANCES_DIR` environment variable or simply
   add some other directories by using :envvar:`CW_CUBES_PATH`
 
@@ -335,7 +335,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
 
     if (CWDEV and _forced_mode != 'system'):
         mode = 'user'
-        _CUBES_DIR = join(CW_SOFTWARE_ROOT, '../cubes')
+        _CUBES_DIR = join(CW_SOFTWARE_ROOT, '../../cubes')
     else:
         mode = _forced_mode or 'system'
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')

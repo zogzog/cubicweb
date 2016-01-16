@@ -29,7 +29,8 @@ class CubicWebCtlTC(TestCase):
     """test case for devtools commands"""
 
     def test_newcube(self):
-        cwctl = osp.abspath(osp.join(osp.dirname(__file__), '../../bin/cubicweb-ctl'))
+        cwctl = osp.abspath(osp.join(osp.dirname(__file__),
+                                     '../../../bin/cubicweb-ctl'))
 
         tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube")
         try:

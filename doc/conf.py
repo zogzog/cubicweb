@@ -36,9 +36,10 @@ from os import path as osp
 path = __file__
 path = osp.dirname(path)  # ./doc
 path = osp.dirname(path)  # ./
-path = osp.join(path, '__pkginfo__.py')  # ./__pkginfo__.py
+path = osp.join(path, 'cubicweb', '__pkginfo__.py')  # ./__pkginfo__.py
 cw = {}
-execfile(path, {}, cw)
+with open(path) as f:
+    exec(f.read(), cw)
 
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
