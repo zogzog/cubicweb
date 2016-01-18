@@ -23,7 +23,7 @@ Resource mode
 -------------
 
 Standard resource mode
-```````````````````````````
+``````````````````````
 
 A resource *mode* is a predefined set of settings for various resources
 directories, such as cubes, instances, etc. to ease development with the
@@ -44,24 +44,23 @@ framework. There are two running modes with *CubicWeb*:
   - temporary files (such as pid file) in :file:`/tmp`
 
 
-
-
 .. _CubicwebWithinVirtualEnv:
 
 Within virtual environment
-```````````````````````````
+``````````````````````````
 
 If you are not administrator of you machine or if you need to play with some
-specific version of |cubicweb| you can use `virtualenv`_ a tool to create
+specific version of |cubicweb| you can use virtualenv_ a tool to create
 isolated Python environments.
 
 - instances are stored in :file:`<VIRTUAL_ENV>/etc/cubicweb.d`
 - temporary files (such as pid file) in :file:`<VIRTUAL_ENV>/var/run/cubicweb`
 
-.. _`virtualenv`: http://pypi.python.org/pypi/virtualenv
+.. _virtualenv: http://pypi.python.org/pypi/virtualenv
+
 
 Custom resource location
-````````````````````````````````
+````````````````````````
 
 Notice that each resource path may be explicitly set using an environment
 variable if the default doesn't suit your needs. Here are the default resource
@@ -80,6 +79,7 @@ directories that are affected according to mode:
         CW_RUNTIME_DIR = /tmp
 
 Cubes search path is also affected, see the :ref:`Cube` section.
+
 
 Setting Cubicweb Mode
 `````````````````````
@@ -100,11 +100,14 @@ outputed by the :command:`cubicweb-ctl list` command.
 
 .. _`cubicweb is used from a mercurial repository`: CubicwebDevelopmentMod_
 
+
 .. _CubicwebDevelopmentMod:
 
-Development Mode
-`````````````````````
-If :file:`.hg` directory is found into the cubicweb package, there are specific resource rules.
+Development Mode (source)
+`````````````````````````
+
+If :file:`.hg` directory is found into the cubicweb package, there are
+specific resource rules.
 
 `<CW_SOFTWARE_ROOT>` is the source checkout's ``cubicweb`` directory:
 
@@ -115,6 +118,16 @@ If :file:`.hg` directory is found into the cubicweb package, there are specific 
 * cubicweb migration files are searched in `<CW_SOFTWARE_ROOT>/misc/migration`
   instead of `<INSTALL_PREFIX>/share/cubicweb/migration/`.
 
+
+Development Mode (virtualenv)
+`````````````````````````````
+
+If a virtualenv is found to be activated (i.e. a VIRTUAL_ENV variable is found
+in environment), the virtualenv root is used as `<INSTALL_PREFIX>`. This, in
+particular, makes it possible to work in `setuptools development mode`_
+(``python setup.py develop``) without any further configuration.
+
+.. _`setuptools development mode`: https://pythonhosted.org/setuptools/setuptools.html#development-mode
 
 .. _ConfigurationEnv:
 
@@ -220,24 +233,34 @@ def guess_configuration(directory):
                                  % (directory, modes))
     return modes[0]
 
-def _find_prefix(start_path=CW_SOFTWARE_ROOT):
-    """Runs along the parent directories of *start_path* (default to cubicweb source directory)
-    looking for one containing a 'share/cubicweb' directory.
-    The first matching directory is assumed as the prefix installation of cubicweb
+def _find_prefix(start_path=None):
+    """Return the prefix path of CubicWeb installation.
 
-    Returns the matching prefix or None.
+    Walk parent directories of `start_path` looking for one containing a
+    'share/cubicweb' directory. The first matching directory is assumed as the
+    prefix installation of CubicWeb.
+
+    If run from within a virtualenv, the virtualenv root is used as
+    `start_path`. Otherwise, `start_path` defaults to cubicweb package
+    directory path.
     """
-    prefix = start_path
+    if start_path is None:
+        try:
+            prefix = os.environ['VIRTUAL_ENV']
+        except KeyError:
+            prefix = CW_SOFTWARE_ROOT
+    else:
+        prefix = start_path
+    if not isdir(prefix):
+        prefix = dirname(prefix)
     old_prefix = None
-    if not isdir(start_path):
-        prefix = dirname(start_path)
     while (not isdir(join(prefix, 'share', 'cubicweb'))
-          or prefix.endswith('.egg')) and prefix != old_prefix:
+           or prefix.endswith('.egg')):
+        if prefix == old_prefix:
+            return sys.prefix
         old_prefix = prefix
         prefix = dirname(prefix)
-    if isdir(join(prefix, 'share', 'cubicweb')):
-        return prefix
-    return sys.prefix
+    return prefix
 
 # persistent options definition
 PERSISTENT_OPTIONS = (
@@ -333,7 +356,10 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
 
     quick_start = False
 
-    if (CWDEV and _forced_mode != 'system'):
+    if 'VIRTUAL_ENV' in os.environ:
+        _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
+        mode = 'user'
+    elif CWDEV and _forced_mode != 'system':
         mode = 'user'
         _CUBES_DIR = join(CW_SOFTWARE_ROOT, '../../cubes')
     else:

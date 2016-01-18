@@ -218,5 +218,17 @@ class FindPrefixTC(TestCase):
         prefix = tempfile.tempdir
         self.assertEqual(_find_prefix(prefix), sys.prefix)
 
+    @with_tempdir
+    def test_virtualenv(self):
+        venv = os.environ.get('VIRTUAL_ENV')
+        try:
+            prefix = os.environ['VIRTUAL_ENV'] = tempfile.tempdir
+            self.make_dirs('share', 'cubicweb')
+            self.assertEqual(_find_prefix(), prefix)
+        finally:
+            if venv:
+                os.environ['VIRTUAL_ENV'] = venv
+
+
 if __name__ == '__main__':
     unittest_main()
