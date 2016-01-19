@@ -17,13 +17,14 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.utils"""
 
-import re
-import decimal
 import datetime
+import decimal
+import doctest
+import re
 
 from six.moves import range
 
-from logilab.common.testlib import TestCase, DocTest, unittest_main
+from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import (make_uid, UStringIO, RepeatList, HTMLHead,
@@ -312,8 +313,12 @@ class HTMLHeadTC(CubicWebTC):
         finally:
             self.config.global_set_option('concat-resources', True)
 
-class DocTest(DocTest):
-    from cubicweb import utils as module
+
+def load_tests(loader, tests, ignore):
+    import cubicweb.utils
+    tests.addTests(doctest.DocTestSuite(cubicweb.utils))
+    return tests
+
 
 if __name__ == '__main__':
     unittest_main()

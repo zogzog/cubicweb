@@ -21,6 +21,7 @@
 __docformat__ = "restructuredtext en"
 
 
+import doctest
 import pkg_resources
 
 try:
@@ -28,7 +29,7 @@ try:
 except ImportError:
     from unittest2 import skipIf
 
-from logilab.common.testlib import DocTest, TestCase, unittest_main
+from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import uilib, utils as cwutils
 
@@ -194,8 +195,10 @@ quis nostrud exercitation ullamco laboris nisi"),
         self.assertMultiLineEqual(uilib.soup2xhtml(incoming, 'ascii'), expected)
 
 
-class DocTest(DocTest):
-    module = uilib
+def load_tests(loader, tests, ignore):
+    import cubicweb.utils
+    tests.addTests(doctest.DocTestSuite(uilib))
+    return tests
 
 
 if __name__ == '__main__':
