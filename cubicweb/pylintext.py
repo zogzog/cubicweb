@@ -5,6 +5,7 @@ Done:
 * add yams base types to yams.buildobjs module
 * add data() function to uiprops module's namespace
 * avoid 'abstract method not implemented' for `cell_call`, `entity_call`, `render_body`
+* avoid invalid-name on schema relation class names
 
 TODO:
 * avoid invalid class name for predicates and predicates
@@ -63,6 +64,22 @@ def data(string):
   return u''
 ''')
         module.locals['data'] = fake.locals['data']
+    # handle lower case with underscores for relation names in schema.py
+    if not module.qname().endswith('.schema'):
+        return
+    schema_locals = module.locals
+    for assnodes in schema_locals.values():
+        for node in assnodes:
+            if not isinstance(node, ClassDef):
+                continue
+            # XXX can we infer ancestor classes? it would be better to know for sure that
+            # one of the mother classes is yams.buildobjs.RelationDefinition for instance
+            for base in node.basenames:
+                if base in ('RelationDefinition', 'ComputedRelation', 'RelationType'):
+                    new_name = node.name.replace('_', '').capitalize()
+                    schema_locals[new_name] = schema_locals[node.name]
+                    del schema_locals[node.name]
+                    node.name = new_name
 
 
 def cubicweb_abstractmethods_transform(classdef):
