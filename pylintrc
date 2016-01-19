@@ -1,16 +1,28 @@
+[MASTER]
+load-plugins=cubicweb.pylintext
+
 [MESSAGES CONTROL]
-disable-msg = C0301
+disable = too-many-ancestors,too-many-instance-attributes,too-many-public-methods,
+      too-few-public-methods,too-many-arguments,import-error
 
 [VARIABLES]
-# Enable / disable this checker
-enable-variables = yes
-additional-builtins = _, display_name
+additional-builtins=_,display_name
 
 [BASIC]
-required-attributes=
 attr-rgx = (w|[a-z_][a-z0-9_]{2,30})
 variable-rgx = (w|[a-z_][a-z0-9_]{2,30})$
 argument-rgx = (w|[a-z_][a-z0-9_]{2,30})$
+good-names=w,_
 
 [TYPECHECK]
 generated-members=debug,info,notice,warning,error,critical,exception
+
+[CLASSES]
+exclude-protected=_cw,_cnx,
+      # namedtuple public API.
+      _asdict,_fields,_replace,_source,_make
+
+
+[FORMAT]
+max-line-length=100
+max-module-lines=2000
