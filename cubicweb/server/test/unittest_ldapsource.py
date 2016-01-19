@@ -116,8 +116,11 @@ class LDAPFeedTestBase(CubicWebTC):
 
     @classmethod
     def setUpClass(cls):
-        if not os.path.exists('/usr/sbin/slapd'):
-            raise unittest.SkipTest('slapd not found')
+        for path in ('/usr/sbin/slapd',
+                     '/usr/sbin/slapadd',
+                     '/usr/bin/ldapmodify'):
+            if not os.path.exists(path):
+                raise unittest.SkipTest('%s not found' % path)
         from cubicweb.cwctl import init_cmdline_log_threshold
         init_cmdline_log_threshold(cls.config, cls.loglevel)
         cls._tmpdir = create_slapd_configuration(cls)
