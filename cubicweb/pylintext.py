@@ -2,6 +2,7 @@
 
 from astroid import MANAGER, InferenceError, nodes, scoped_nodes, ClassDef, FunctionDef
 from astroid.builder import AstroidBuilder
+from pylint.checkers.utils import unimplemented_abstract_methods, class_is_abstract
 
 
 def turn_function_to_class(node):
@@ -47,6 +48,30 @@ def data(string):
         module.locals['data'] = fake.locals['data']
 
 
+def cubicweb_abstractmethods_transform(classdef):
+    if class_is_abstract(classdef):
+        return
+
+    def is_abstract(method):
+        return method.is_abstract(pass_is_abstract=False)
+
+    methods = sorted(
+        unimplemented_abstract_methods(classdef, is_abstract).items(),
+        key=lambda item: item[0],
+    )
+
+    def dummy_method():
+        """"""
+    for name, method in methods:
+        owner = method.parent.frame()
+        if owner is classdef:
+            continue
+        if name not in classdef.locals:
+            if name in ('entity_call', 'render_body'):
+                classdef.set_local(name, dummy_method)
+
+
 def register(linter):
     """called when loaded by pylint --load-plugins, nothing to do here"""
     MANAGER.register_transform(nodes.Module, cubicweb_transform)
+    MANAGER.register_transform(nodes.ClassDef, cubicweb_abstractmethods_transform)
