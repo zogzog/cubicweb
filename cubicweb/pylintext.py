@@ -1,11 +1,12 @@
-"""https://pastebin.logilab.fr/show/860/"""
+"""Pylint plugin for cubicweb"""
 
-from astroid import MANAGER, InferenceError, nodes, scoped_nodes
+from astroid import MANAGER, InferenceError, nodes, scoped_nodes, ClassDef, FunctionDef
 from astroid.builder import AstroidBuilder
+
 
 def turn_function_to_class(node):
     """turn a Function node into a Class node (in-place)"""
-    node.__class__ = scoped_nodes.Class
+    node.__class__ = ClassDef
     node.bases = ()
     # remove return nodes so that we don't get warned about 'return outside
     # function' by pylint
@@ -19,7 +20,7 @@ def cubicweb_transform(module):
     # is kept). Only look at module level functions, should be enough.
     for assnodes in module.locals.values():
         for node in assnodes:
-            if isinstance(node, scoped_nodes.Function) and node.decorators:
+            if isinstance(node, FunctionDef) and node.decorators:
                 for decorator in node.decorators.nodes:
                     try:
                         for infered in decorator.infer():
@@ -44,6 +45,7 @@ def data(string):
   return u''
 ''')
         module.locals['data'] = fake.locals['data']
+
 
 def register(linter):
     """called when loaded by pylint --load-plugins, nothing to do here"""
