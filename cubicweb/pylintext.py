@@ -1,7 +1,20 @@
-"""Pylint plugin for cubicweb"""
+"""Pylint plugin to analyse cubicweb cubes
 
-from astroid import MANAGER, InferenceError, nodes, scoped_nodes, ClassDef, FunctionDef
+Done:
+* turn functions decorated by @objectify_predicate into classes
+* add yams base types to yams.buildobjs module
+* add data() function to uiprops module's namespace
+* avoid 'abstract method not implemented' for `cell_call`, `entity_call`, `render_body`
+
+TODO:
+* avoid invalid class name for predicates and predicates
+* W:188, 0: Method '__lt__' is abstract in class 'Entity' but is not overridden (abstract-method)
+* generate entity attributes from the schema?
+"""
+
+from astroid import MANAGER, InferenceError, nodes, ClassDef, FunctionDef
 from astroid.builder import AstroidBuilder
+
 from pylint.checkers.utils import unimplemented_abstract_methods, class_is_abstract
 
 
@@ -9,10 +22,14 @@ def turn_function_to_class(node):
     """turn a Function node into a Class node (in-place)"""
     node.__class__ = ClassDef
     node.bases = ()
+    # mark class as a new style class
+    node._newstyle = True
     # remove return nodes so that we don't get warned about 'return outside
     # function' by pylint
     for rnode in node.nodes_of_class(nodes.Return):
         rnode.parent.body.remove(rnode)
+    # add __init__ method to avoid no-init
+
     # that seems to be enough :)
 
 
@@ -38,9 +55,9 @@ def cubicweb_transform(module):
     if module.name == 'yams.buildobjs':
         from yams import BASE_TYPES
         for etype in BASE_TYPES:
-            module.locals[etype] = [scoped_nodes.Class(etype, None)]
+            module.locals[etype] = [ClassDef(etype, None)]
     # add data() to uiprops module
-    if module.name.split('.')[-1] == 'uiprops':
+    elif module.name.split('.')[-1] == 'uiprops':
         fake = AstroidBuilder(MANAGER).string_build('''
 def data(string):
   return u''
@@ -60,18 +77,21 @@ def cubicweb_abstractmethods_transform(classdef):
         key=lambda item: item[0],
     )
 
-    def dummy_method():
-        """"""
+    dummy_method = AstroidBuilder(MANAGER).string_build('''
+def dummy_method(self):
+   """"""
+''')
+
     for name, method in methods:
         owner = method.parent.frame()
         if owner is classdef:
             continue
         if name not in classdef.locals:
-            if name in ('entity_call', 'render_body'):
+            if name in ('cell_call', 'entity_call', 'render_body'):
                 classdef.set_local(name, dummy_method)
 
 
 def register(linter):
     """called when loaded by pylint --load-plugins, nothing to do here"""
     MANAGER.register_transform(nodes.Module, cubicweb_transform)
-    MANAGER.register_transform(nodes.ClassDef, cubicweb_abstractmethods_transform)
+    MANAGER.register_transform(ClassDef, cubicweb_abstractmethods_transform)

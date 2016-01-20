@@ -1,17 +1,13 @@
 [MASTER]
 load-plugins=cubicweb.pylintext
+ignore=__pkginfo__
 
 [MESSAGES CONTROL]
 disable = too-many-ancestors,too-many-instance-attributes,too-many-public-methods,
       too-few-public-methods,too-many-arguments,import-error
 
-[VARIABLES]
-additional-builtins=_,display_name
-
 [BASIC]
-attr-rgx = (w|[a-z_][a-z0-9_]{2,30})
-variable-rgx = (w|[a-z_][a-z0-9_]{2,30})$
-argument-rgx = (w|[a-z_][a-z0-9_]{2,30})$
+function-rgx = [a-z_][a-z0-9_]{2,35}$
 good-names=w,_
 
 [TYPECHECK]
