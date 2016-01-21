@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for cubicweb-ctl commands from devtools"""
 
+import os
+import os.path as osp
 import sys
 import tempfile
 import shutil
@@ -28,12 +30,18 @@ class CubicWebCtlTC(TestCase):
     """test case for devtools commands"""
 
     def test_newcube(self):
+        expected = ['i18n', 'hooks.py', 'setup.py', 'views.py', 'test',
+                    'migration', 'entities.py', 'MANIFEST.in', 'schema.py',
+                    'cubicweb-foo.spec', '__init__.py', 'debian', 'data',
+                    '__pkginfo__.py', 'README']
         tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube")
         try:
             cmd = [sys.executable, '-m', 'cubicweb', 'newcube',
                    '--directory', tmpdir, 'foo']
             proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             stdout, _ = proc.communicate(b'short_desc\n')
+            self.assertItemsEqual(os.listdir(osp.join(tmpdir, 'foo')),
+                                  expected)
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
         self.assertEqual(proc.returncode, 0, msg=stdout)
