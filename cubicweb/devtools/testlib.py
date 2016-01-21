@@ -1184,7 +1184,7 @@ class AutoPopulateTest(CubicWebTC):
         existingrels = {}
         ignored_relations = SYSTEM_RELATIONS | self.ignored_relations
         for rschema in self.schema.relations():
-            if rschema.final or rschema in ignored_relations:
+            if rschema.final or rschema in ignored_relations or rschema.rule:
                 continue
             rset = cnx.execute('DISTINCT Any X,Y WHERE X %s Y' % rschema)
             existingrels.setdefault(rschema.type, set()).update((x, y) for x, y in rset)
