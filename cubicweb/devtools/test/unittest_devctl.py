@@ -36,7 +36,7 @@ class CubicWebCtlTC(TestCase):
         expected = ['i18n', 'hooks.py', 'setup.py', 'views.py', 'test',
                     'migration', 'entities.py', 'MANIFEST.in', 'schema.py',
                     'cubicweb-foo.spec', '__init__.py', 'debian', 'data',
-                    '__pkginfo__.py', 'README']
+                    '__pkginfo__.py', 'README', 'tox.ini']
         tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube")
         try:
             cmd = [sys.executable, '-m', 'cubicweb', 'newcube',
