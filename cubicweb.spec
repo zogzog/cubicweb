@@ -30,7 +30,7 @@ Requires:       %{python}-passlib
 Requires:       %{python}-lxml
 Requires:       %{python}-twisted-web
 Requires:       %{python}-markdown
-Requires:       %{python}-tz
+Requires:       pytz
 # the schema view uses `dot'; at least on el5, png output requires graphviz-gd
 Requires:       graphviz-gd
 Requires:       gettext
