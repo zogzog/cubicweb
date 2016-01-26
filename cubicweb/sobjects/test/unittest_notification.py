@@ -35,7 +35,7 @@ class NotificationTC(CubicWebTC):
             self.set_option('default-recipients-mode', 'none')
             self.assertEqual(finder.recipients(), [])
             self.set_option('default-recipients-mode', 'users')
-            self.assertEqual(finder.recipients(), [(u'admin@logilab.fr', 'fr')])
+            self.assertEqual(finder.recipients(), [req.user])
             self.set_option('default-recipients-mode', 'default-dest-addrs')
             self.set_option('default-dest-addrs', 'abcd@logilab.fr, efgh@logilab.fr')
             self.assertEqual(list(finder.recipients()),
