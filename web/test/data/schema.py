@@ -92,6 +92,11 @@ class composite_card11_2ttypes(RelationDefinition):
 class Ticket(EntityType):
     title = String(maxsize=32, required=True, fulltextindexed=True)
     concerns = SubjectRelation('Project', composite='object')
+    in_version = SubjectRelation('Version', composite='object',
+                                 cardinality='?*', inlined=True)
+
+class Version(EntityType):
+    name = String(required=True)
 
 class Filesystem(EntityType):
     name = String()

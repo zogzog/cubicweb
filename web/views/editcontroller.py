@@ -27,7 +27,7 @@ from logilab.common.graph import ordered_nodes
 
 from rql.utils import rqlvar_maker
 
-from cubicweb import Binary, ValidationError, neg_role
+from cubicweb import Binary, ValidationError
 from cubicweb.view import EntityAdapter
 from cubicweb.predicates import is_instance
 from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
@@ -209,12 +209,8 @@ class EditController(basecontrollers.ViewController):
         for querydef in self.relations_rql:
             self._cw.execute(*querydef)
         # delete pending composite
-        for entity, rtype, role, targettype in req.data['pending_composite_delete']:
-            # Check the composite relation was not re-set in the same form
-            # (see test_reparent_subentity in web/test/unittest_application.py)
-            entity.cw_clear_relation_cache(rtype, role)
-            if not entity.related(rtype, role=role, targettypes=(targettype,)):
-                entity.cw_delete()
+        for entity in req.data['pending_composite_delete']:
+            entity.cw_delete()
         # XXX this processes *all* pending operations of *all* entities
         if '__delete' in req.form:
             todelete = req.list_form_param('__delete', req.form, pop=True)
@@ -313,15 +309,15 @@ class EditController(basecontrollers.ViewController):
                     origvalues = set(data[0] for data in entity.related(field.name, field.role).rows)
                 else:
                     origvalues = set()
-
                 if value is None or value == origvalues:
                     continue # not edited / not modified / to do later
 
                 unlinked_eids = origvalues - value
+
                 if unlinked_eids:
                     # Special handling of composite relation removal
                     self.handle_composite_removal(
-                        form, field, unlinked_eids, rqlquery)
+                        form, field, unlinked_eids, value, rqlquery)
 
                 if rschema.inlined and rqlquery is not None and field.role == 'subject':
                     self.handle_inlined_relation(form, field, value, origvalues, rqlquery)
@@ -333,7 +329,8 @@ class EditController(basecontrollers.ViewController):
         except ProcessFormError as exc:
             self.errors.append((field, exc))
 
-    def handle_composite_removal(self, form, field, removed_values, rqlquery):
+    def handle_composite_removal(self, form, field,
+                                 removed_values, new_values, rqlquery):
         """
         In EditController-handled forms, when the user removes a composite
         relation, it triggers the removal of the related entity in the
@@ -343,6 +340,8 @@ class EditController(basecontrollers.ViewController):
         web/test/unittest_application.py.
         """
         rschema = self._cw.vreg.schema.rschema(field.name)
+        new_value_etypes = set(self._cw.entity_from_eid(eid).cw_etype
+                               for eid in new_values)
         for unlinked_eid in removed_values:
             unlinked_entity = self._cw.entity_from_eid(unlinked_eid)
             rdef = rschema.role_rdef(form.edited_entity.cw_etype,
@@ -350,19 +349,18 @@ class EditController(basecontrollers.ViewController):
                                      field.role)
             if rdef.composite is not None:
                 if rdef.composite == field.role:
-                    targettype = form.edited_entity.e_schema
                     to_be_removed = unlinked_entity
                 else:
-                    targettype = unlinked_entity.e_schema
+                    if unlinked_entity.cw_etype in new_value_etypes:
+                        # This is a same-rdef re-parenting: do not remove the entity
+                        continue
                     to_be_removed = form.edited_entity
                     self.info('Edition of %s is cancelled (deletion requested)',
                               to_be_removed)
                     rqlquery.canceled = True
                 self.info('Scheduling removal of %s as composite relation '
                           '%s was removed', to_be_removed, rdef)
-                form._cw.data['pending_composite_delete'].add(
-                    (to_be_removed, field.name,
-                     neg_role(rdef.composite), targettype))
+                form._cw.data['pending_composite_delete'].add(to_be_removed)
 
     def handle_inlined_relation(self, form, field, values, origvalues, rqlquery):
         """handle edition for the (rschema, x) relation of the given entity

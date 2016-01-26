@@ -275,6 +275,23 @@ class ApplicationTC(CubicWebTC):
                  if not key.startswith('_')])
             self.expect_redirect_handle_request(req)
 
+    def _edit_in_version(self, ticket_eid, version_eid, **kwargs):
+        version_eid = version_eid or '__cubicweb_internal_field__'
+        with self.admin_access.web_request() as req:
+            req.form = {
+                'eid': unicode(ticket_eid),
+                '__maineid': unicode(ticket_eid),
+                '__type:%s' % ticket_eid: 'Ticket',
+                'in_version-subject:%s' % ticket_eid: version_eid,
+            }
+            req.form.update(kwargs)
+            req.form['_cw_entity_fields:%s' % ticket_eid] = ','.join(
+                ['in_version-subject'] +
+                [key.split(':')[0]
+                 for key in kwargs.keys()
+                 if not key.startswith('_')])
+            self.expect_redirect_handle_request(req)
+
     def test_create_and_link_directories(self):
         with self.admin_access.web_request() as req:
             req.form = {
@@ -373,6 +390,25 @@ class ApplicationTC(CubicWebTC):
             self.assertTrue(cnx.find('Directory', eid=subd.eid))
             self.assertEqual(
                 cnx.find('Directory', eid=subd.eid).one().parent[0], top2)
+
+    def test_reparent_subentity_inlined(self):
+        """Editcontroller: re-parenting a subentity does not remove it
+        (inlined case)"""
+        with self.admin_access.repo_cnx() as cnx:
+            version1 = cnx.create_entity('Version', name=u'version1')
+            version2 = cnx.create_entity('Version', name=u'version2')
+            ticket = cnx.create_entity('Ticket', title=u'ticket',
+                                       in_version=version1)
+            cnx.commit()
+
+        self._edit_in_version(ticket.eid, version_eid=version2.eid)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Version', eid=version1.eid))
+            self.assertTrue(cnx.find('Version', eid=version2.eid))
+            self.assertTrue(cnx.find('Ticket', eid=ticket.eid))
+            self.assertEqual(
+                cnx.find('Ticket', eid=ticket.eid).one().in_version[0], version2)
 
     def test_subject_mixed_composite_subentity_removal_1(self):
         """Editcontroller: detaching several subentities respects each rdef's
