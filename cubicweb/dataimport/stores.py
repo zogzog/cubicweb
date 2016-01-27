@@ -264,9 +264,7 @@ class MetaGenerator(object):
         self.etype_rels = []
         # attributes/relations specific to each entity
         self.entity_attrs = ['cwuri']
-        #self.entity_rels = [] XXX not handled (YAGNI?)
-        schema = cnx.vreg.schema
-        rschema = schema.rschema
+        rschema = cnx.vreg.schema.rschema
         for rtype in self.META_RELATIONS:
             # skip owned_by / created_by if user is the internal manager
             if cnx.user.eid == -1 and rtype in ('owned_by', 'created_by'):
@@ -295,7 +293,10 @@ class MetaGenerator(object):
 
     def init_entity(self, entity):
         entity.eid = self.create_eid(self._cnx)
+        # if cwuri is specified, this is an extid. It's not if it's generated in the above loop
         extid = entity.cw_edited.get('cwuri')
+        if isinstance(extid, text_type):
+            extid = extid.encode('utf-8')
         for attr in self.entity_attrs:
             if attr in entity.cw_edited:
                 # already set, skip this attribute
@@ -303,8 +304,6 @@ class MetaGenerator(object):
             genfunc = self.generate(attr)
             if genfunc:
                 entity.cw_edited.edited_attribute(attr, genfunc(entity))
-        if isinstance(extid, text_type):
-            extid = extid.encode('utf-8')
         return self.source, extid
 
     def generate(self, rtype):
