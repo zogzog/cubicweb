@@ -1,5 +1,5 @@
 # coding: utf-8
-# copyright 2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2015-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -535,9 +535,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             if not data:
                 # There is no data for these etype for this flush round.
                 continue
-            # XXX It may be interresting to directly infer the columns'
-            # names from the schema instead of using .keys()
-            columns = data[0].keys()
+            # XXX It may be interresting to directly infer the columns' names from the schema
             # XXX For now, the _create_copyfrom_buffer does a "row[column]"
             # which can lead to a key error.
             # Thus we should create dictionary with all the keys.
