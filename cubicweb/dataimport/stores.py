@@ -159,6 +159,7 @@ class NoHookRQLObjectStore(RQLObjectStore):
         super(NoHookRQLObjectStore, self).__init__(cnx)
         self.source = cnx.repo.system_source
         self._rschema = cnx.repo.schema.rschema
+        self._create_eid = cnx.repo.system_source.create_eid
         self._add_relation = self.source.add_relation
         if metagen is None:
             metagen = MetaGenerator(cnx)
@@ -182,8 +183,9 @@ class NoHookRQLObjectStore(RQLObjectStore):
         entity.cw_edited = copy(entity.cw_edited)
         entity.cw_clear_relation_cache()
         entity.cw_edited.update(kwargs, skipsec=False)
-        entity_source, extid = self.metagen.init_entity(entity)
         cnx = self._cnx
+        entity.eid = self._create_eid(cnx)
+        entity_source, extid = self.metagen.init_entity(entity)
         self.source.add_info(cnx, entity, entity_source, extid)
         self.source.add_entity(cnx, entity)
         kwargs = dict()
@@ -257,7 +259,6 @@ class MetaGenerator(object):
         if source is None:
             source = cnx.repo.system_source
         self.source = source
-        self.create_eid = cnx.repo.system_source.create_eid
         self._now = datetime.utcnow()
         # attributes/relations shared by all entities of the same type
         self.etype_attrs = []
@@ -292,7 +293,6 @@ class MetaGenerator(object):
         return entity, rels
 
     def init_entity(self, entity):
-        entity.eid = self.create_eid(self._cnx)
         # if cwuri is specified, this is an extid. It's not if it's generated in the above loop
         extid = entity.cw_edited.get('cwuri')
         if isinstance(extid, text_type):
