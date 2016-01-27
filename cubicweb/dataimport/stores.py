@@ -258,7 +258,7 @@ class MetaGenerator(object):
             source = cnx.repo.system_source
         self.source = source
         self.create_eid = cnx.repo.system_source.create_eid
-        self.time = datetime.utcnow()
+        self._now = datetime.utcnow()
         # attributes/relations shared by all entities of the same type
         self.etype_attrs = []
         self.etype_rels = []
@@ -315,10 +315,10 @@ class MetaGenerator(object):
         return u'%s%s' % (self.baseurl, entity.eid)
 
     def gen_creation_date(self, entity):
-        return self.time
+        return self._now
 
     def gen_modification_date(self, entity):
-        return self.time
+        return self._now
 
     def gen_created_by(self, entity):
         return self._cnx.user.eid
