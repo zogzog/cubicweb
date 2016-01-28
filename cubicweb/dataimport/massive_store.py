@@ -277,10 +277,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # Create a table to save the constraints, it allows reloading even after crash
         self.sql('CREATE TABLE IF NOT EXISTS cwmassive_constraints'
                  '(origtable text, query text, type varchar(256))')
-        self._drop_table_indexes(tablename)
-
-    def _drop_table_indexes(self, tablename):
-        """ Drop and store table constraints and indexes """
         indexes = self._dbh.table_indexes(tablename)
         for name, query in indexes.items():
             self.sql('INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)',
@@ -313,31 +309,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
             # Indexes and constraints
             self.reapply_constraint_index(tablename)
 
-    def init_relation_table(self, rtype):
-        """ Get and remove all indexes for performance sake """
-        if not self.slave_mode and rtype not in self._initialized:
-            self._initialized.add(rtype)
-            self.sql('CREATE TABLE %s_relation_tmp (eid_from integer, eid_to integer)'
-                     % rtype.lower())
-            # Drop indexes and constraints
-            self.drop_and_store_indexes('%s_relation' % rtype.lower())
-            # Push the etype in the initialized table for easier restart
-            self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
-                     '(retype text, type varchar(128))')
-            self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'rtype')", {'e': rtype})
-
-    def init_etype_table(self, etype):
-        """ Add eid sequence to a particular etype table and
-        remove all indexes for performance sake """
-        if not self.slave_mode and etype not in self._initialized:
-            self._initialized.add(etype)
-            # Drop indexes and constraints
-            self.drop_and_store_indexes('cw_%s' % etype.lower())
-            # Push the rtype in the initialized table for easier restart
-            self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
-                     '(retype text, type varchar(128))')
-            self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'etype')", {'e': etype})
-
     def restart_eid_sequence(self, start_eid):
         self._cnx.system_sql(self._cnx.repo.system_source.dbhelper.sql_restart_numrange(
             'entities_id_seq', initial_value=start_eid))
@@ -366,8 +337,12 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """Given an entity type, attributes and inlined relations, returns the inserted entity's
         eid.
         """
-        # Init the table if necessary
-        self.init_etype_table(etype)
+        if not self.slave_mode and etype not in self._initialized:
+            self._initialized.add(etype)
+            self.drop_and_store_indexes('cw_%s' % etype.lower())
+            self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
+                     '(retype text, type varchar(128))')
+            self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'etype')", {'e': etype})
         # Add meta data if not given
         if 'modification_date' not in kwargs:
             kwargs['modification_date'] = self._now
@@ -388,8 +363,14 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """Insert into the database a  relation ``rtype`` between entities with eids ``eid_from``
         and ``eid_to``.
         """
-        # Init the table if necessary
-        self.init_relation_table(rtype)
+        if not self.slave_mode and rtype not in self._initialized:
+            self._initialized.add(rtype)
+            self.drop_and_store_indexes('%s_relation' % rtype.lower())
+            self.sql('CREATE TABLE %s_relation_tmp (eid_from integer, eid_to integer)'
+                     % rtype.lower())
+            self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
+                     '(retype text, type varchar(128))')
+            self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'rtype')", {'e': rtype})
         self._data_relations[rtype].append({'eid_from': eid_from, 'eid_to': eid_to})
 
     def flush(self):

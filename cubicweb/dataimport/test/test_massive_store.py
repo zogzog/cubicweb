@@ -174,7 +174,7 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             init_descr = self.get_db_descr(cnx)
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
-            store.init_etype_table('CWUser')
+            store.prepare_insert_entity('Location', name=u'toto')
             store.finish()
         with self.admin_access.repo_cnx() as cnx:
             final_descr = self.get_db_descr(cnx)
@@ -257,19 +257,19 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
     def test_multiple_insert(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
-            store.init_etype_table('TestLocation')
+            store.prepare_insert_entity('Location', name=u'toto')
             store.finish()
             store = MassiveObjectStore(cnx)
-            store.init_etype_table('TestLocation')
+            store.prepare_insert_entity('Location', name=u'toto')
             store.finish()
 
     def test_multiple_insert_relation(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
-            store.init_relation_table('used_language')
+            store.init_rtype_table('Country', 'used_language', 'Language')
             store.finish()
             store = MassiveObjectStore(cnx)
-            store.init_relation_table('used_language')
+            store.init_rtype_table('Country', 'used_language', 'Language')
             store.finish()
 
 
