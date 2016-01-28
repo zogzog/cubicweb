@@ -165,8 +165,8 @@ FROM information_schema.tables
 where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
         all_tables_descr = {}
         for tablename, in all_tables:
-            all_tables_descr[tablename] = set(pgh.index_list(tablename)).union(
-                set(pgh.constraint_list(tablename)))
+            all_tables_descr[tablename] = set(pgh.table_indexes(tablename)).union(
+                set(pgh.table_constraints(tablename)))
         return all_tables_descr
 
     def test_identical_schema(self):

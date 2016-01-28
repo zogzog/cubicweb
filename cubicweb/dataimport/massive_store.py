@@ -155,7 +155,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # Create a table to save the constraints, it allows reloading even after crash
         self.sql('CREATE TABLE IF NOT EXISTS cwmassive_constraints'
                  '(origtable text, query text, type varchar(256))')
-        constraints = self._dbh.application_constraints(tablename)
+        constraints = self._dbh.table_constraints(tablename)
         for name, query in constraints.items():
             self.sql('INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)',
                      {'e': tablename, 'c': query, 't': 'constraint'})
@@ -299,7 +299,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def _drop_table_indexes(self, tablename):
         """ Drop and store table constraints and indexes """
-        indexes = self._dbh.application_indexes(tablename)
+        indexes = self._dbh.table_indexes(tablename)
         for name, query in indexes.items():
             self.sql('INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)',
                      {'e': tablename, 'c': query, 't': 'index'})
@@ -641,16 +641,29 @@ def get_default_values(schema):
 
 
 class PGHelper(object):
+    """This class provides some helper methods to manipulate a postgres database metadata (index and
+    constraints).
+    """
+
     def __init__(self, cnx):
-        self.cnx = cnx
+        self.sql = cnx.system_sql
         # Deals with pg schema, see #3216686
         pg_schema = cnx.repo.config.system_source_config.get('db-namespace') or 'public'
         self.pg_schema = pg_schema
 
-    def application_indexes_constraints(self, tablename):
-        """ Get all the indexes/constraints for a given tablename """
-        indexes = self.application_indexes(tablename)
-        constraints = self.application_constraints(tablename)
+    def table_exists(self, tablename):
+        """Return True if the given table already exists in the database."""
+        cu = self.sql('SELECT 1 from information_schema.tables '
+                      'WHERE table_name=%(t)s AND table_schema=%(s)s',
+                      {'t': tablename, 's': self.pg_schema})
+        return bool(cu.fetchone())
+
+    def table_indexes_constraints(self, tablename):
+        """Return one dictionary with all indexes by name, another with all constraints by name,
+        for the given table.
+        """
+        indexes = self.table_indexes(tablename)
+        constraints = self.table_constraints(tablename)
         _indexes = {}
         for name, query in indexes.items():
             # Remove pkey indexes (automatically created by constraints)
@@ -659,73 +672,57 @@ class PGHelper(object):
                 _indexes[name] = query
         return _indexes, constraints
 
-    def table_exists(self, table_name):
-        cu = self.cnx.system_sql('SELECT 1 from information_schema.tables '
-                                 'WHERE table_name=%(t)s AND table_schema=%(s)s',
-                                 {'t': table_name, 's': self.pg_schema})
-        return bool(cu.fetchone())
-
-    def index_query(self, name):
-        """Get the request to be used to recreate the index"""
-        return self.cnx.system_sql("SELECT pg_get_indexdef(c.oid) "
-                                   "from pg_catalog.pg_class c "
-                                   "LEFT JOIN pg_catalog.pg_namespace n "
-                                   "ON n.oid = c.relnamespace "
-                                   "WHERE c.relname = %(r)s AND n.nspname=%(n)s",
-                                   {'r': name, 'n': self.pg_schema}).fetchone()[0]
-
-    def constraint_query(self, name):
-        """Get the request to be used to recreate the constraint"""
-        return self.cnx.system_sql("SELECT pg_get_constraintdef(c.oid) "
-                                   "from pg_catalog.pg_constraint c "
-                                   "LEFT JOIN pg_catalog.pg_namespace n "
-                                   "ON n.oid = c.connamespace "
-                                   "WHERE c.conname = %(r)s AND n.nspname=%(n)s",
-                                   {'r': name, 'n': self.pg_schema}).fetchone()[0]
-
-    def index_list(self, tablename):
-        # This SQL query (cf http://www.postgresql.org/message-id/432F450F.4080700@squiz.net)
-        # aims at getting all the indexes for each table.
-        sql = '''SELECT c.relname as "Name"
-        FROM pg_catalog.pg_class c
-        JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid
-        JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid
-        LEFT JOIN pg_catalog.pg_user u ON u.usesysid = c.relowner
-        LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-        WHERE c.relkind IN ('i','')
-        AND c2.relname = '%s'
-        AND i.indisprimary = FALSE
-        AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
-        AND pg_catalog.pg_table_is_visible(c.oid);''' % tablename
-        return self.cnx.system_sql(sql).fetchall()
-
-    def application_indexes(self, tablename):
-        """ Iterate over all the indexes """
-        indexes_list = self.index_list(tablename)
+    def table_indexes(self, tablename):
+        """Return a dictionary of indexes {index name: index sql}, constraints included."""
         indexes = {}
-        for name, in indexes_list:
-            indexes[name] = self.index_query(name)
+        for name in self._index_names(tablename):
+            indexes[name] = self._index_sql(name)
         return indexes
 
-    def constraint_list(self, tablename):
-        sql = '''SELECT i.conname as "Name"
-                 FROM pg_catalog.pg_class c
-                 JOIN pg_catalog.pg_constraint i ON i.conrelid = c.oid
-                 JOIN pg_catalog.pg_class c2 ON i.conrelid=c2.oid
-                 LEFT JOIN pg_catalog.pg_user u ON u.usesysid = c.relowner
-                 LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-                 WHERE
-                   c2.relname = '%s'
-                   AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
-                   AND pg_catalog.pg_table_is_visible(c.oid)
-                 ''' % tablename
-        return self.cnx.system_sql(sql).fetchall()
-
-    def application_constraints(self, tablename):
-        """ Iterate over all the constraints """
-        constraint_list = self.constraint_list(tablename)
+    def table_constraints(self, tablename):
+        """Return a dictionary of constraints {constraint name: constraint sql}."""
         constraints = {}
-        for name, in constraint_list:
-            query = self.constraint_query(name)
+        for name in self._constraint_names(tablename):
+            query = self._constraint_sql(name)
             constraints[name] = 'ALTER TABLE %s ADD CONSTRAINT %s %s' % (tablename, name, query)
         return constraints
+
+    def _index_names(self, tablename):
+        """Return the names of all indexes in the given table (including constraints.)"""
+        cu = self.sql("SELECT c.relname FROM pg_catalog.pg_class c "
+                      "JOIN pg_catalog.pg_index i ON i.indexrelid = c.oid "
+                      "JOIN pg_catalog.pg_class c2 ON i.indrelid = c2.oid "
+                      "LEFT JOIN pg_catalog.pg_user u ON u.usesysid = c.relowner "
+                      "LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace "
+                      "WHERE c.relkind IN ('i','') "
+                      " AND c2.relname = %(t)s "
+                      " AND i.indisprimary = FALSE "
+                      " AND n.nspname NOT IN ('pg_catalog', 'pg_toast') "
+                      " AND pg_catalog.pg_table_is_visible(c.oid);", {'t': tablename})
+        return [name for name, in cu.fetchall()]
+
+    def _constraint_names(self, tablename):
+        """Return the names of all constraints in the given table."""
+        cu = self.sql("SELECT i.conname FROM pg_catalog.pg_class c "
+                      "JOIN pg_catalog.pg_constraint i ON i.conrelid = c.oid "
+                      "JOIN pg_catalog.pg_class c2 ON i.conrelid=c2.oid "
+                      "LEFT JOIN pg_catalog.pg_user u ON u.usesysid = c.relowner "
+                      "LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace "
+                      "WHERE c2.relname = %(t)s "
+                      "AND n.nspname NOT IN ('pg_catalog', 'pg_toast') "
+                      "AND pg_catalog.pg_table_is_visible(c.oid)", {'t': tablename})
+        return [name for name, in cu.fetchall()]
+
+    def _index_sql(self, name):
+        """Return the SQL to be used to recreate the index of the given name."""
+        return self.sql('SELECT pg_get_indexdef(c.oid) FROM pg_catalog.pg_class c '
+                        'LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace '
+                        'WHERE c.relname = %(r)s AND n.nspname=%(n)s',
+                        {'r': name, 'n': self.pg_schema}).fetchone()[0]
+
+    def _constraint_sql(self, name):
+        """Return the SQL to be used to recreate the constraint."""
+        return self.sql('SELECT pg_get_constraintdef(c.oid) FROM pg_catalog.pg_constraint c '
+                        'LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.connamespace '
+                        'WHERE c.conname = %(r)s AND n.nspname=%(n)s',
+                        {'r': name, 'n': self.pg_schema}).fetchone()[0]
