@@ -140,7 +140,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if source is None:
             source = cnx.repo.system_source
         self.source = source
-        self._etype_eid_idx = dict(cnx.execute('Any XN,X WHERE X is CWEType, X name XN'))
 
     # INIT FUNCTIONS ########################################################
 
@@ -586,8 +585,10 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.metagen_push_relation(etype, self._cnx.user.eid, 'created_by_relation')
         self.metagen_push_relation(etype, self._cnx.user.eid, 'owned_by_relation')
         self.metagen_push_relation(etype, self.source.eid, 'cw_source_relation')
-        self.metagen_push_relation(etype, self._etype_eid_idx[etype], 'is_relation')
-        self.metagen_push_relation(etype, self._etype_eid_idx[etype], 'is_instance_of_relation')
+        eschema = self.schema[etype].eid
+        self.metagen_push_relation(etype, eschema.eid, 'is_relation')
+        for parent_eschema in eschema.ancestors() + [eschema]:
+            self.metagen_push_relation(etype, parent_eschema.eid, 'is_instance_of_relation')
         self.sql("INSERT INTO entities (eid, type, asource, extid) "
                  "SELECT cw_eid, '%s', 'system', NULL FROM cw_%s "
                  "WHERE NOT EXISTS (SELECT 1 FROM entities WHERE eid=cw_eid)"
