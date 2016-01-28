@@ -30,7 +30,7 @@ for cube in config.cubes():
     create_entity('CWProperty', pkey=u'system.version.%s' % cube.lower(),
                   value=text_type(config.cube_version(cube)))
 
-# some entities have been added before schema entities, fix the 'is' and
+# some entities have been added before schema entities, add their missing 'is' and
 # 'is_instance_of' relations
 for rtype in ('is', 'is_instance_of'):
     sql('INSERT INTO %s_relation '
