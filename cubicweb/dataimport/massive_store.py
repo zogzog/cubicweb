@@ -117,8 +117,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
         self.slave_mode = slave_mode
         self.default_values = get_default_values(cnx.vreg.schema)
-        pg_schema = cnx.repo.config.system_source_config.get('db-namespace') or 'public'
-        self._dbh = PGHelper(self._cnx, pg_schema)
+        self._dbh = PGHelper(cnx)
         self._data_entities = defaultdict(list)
         self._data_relations = defaultdict(list)
         self._now = datetime.now(pytz.utc)
@@ -680,9 +679,10 @@ def get_default_values(schema):
 
 
 class PGHelper(object):
-    def __init__(self, cnx, pg_schema='public'):
+    def __init__(self, cnx):
         self.cnx = cnx
         # Deals with pg schema, see #3216686
+        pg_schema = cnx.repo.config.system_source_config.get('db-namespace') or 'public'
         self.pg_schema = pg_schema
 
     def application_indexes_constraints(self, tablename):

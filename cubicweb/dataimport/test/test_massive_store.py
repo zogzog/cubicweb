@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2013-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr -- mailto:contact@logilab.fr
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -158,14 +158,11 @@ class MassImportSimpleTC(testlib.CubicWebTC):
 
     @staticmethod
     def get_db_descr(cnx):
-        pg_schema = (
-                cnx.repo.config.system_source_config.get('db-namespace')
-                or 'public')
-        pgh = PGHelper(cnx, pg_schema)
+        pgh = PGHelper(cnx)
         all_tables = cnx.system_sql('''
 SELECT table_name
 FROM information_schema.tables
-where table_schema = %(s)s''', {'s': pg_schema}).fetchall()
+where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
         all_tables_descr = {}
         for tablename, in all_tables:
             all_tables_descr[tablename] = set(pgh.index_list(tablename)).union(
