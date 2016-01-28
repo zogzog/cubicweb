@@ -21,7 +21,6 @@ from __future__ import absolute_import, print_function
 import codecs
 import csv as csvmod
 import warnings
-import os.path as osp
 
 from six import PY2, PY3, string_types
 
@@ -37,7 +36,7 @@ def count_lines(stream_or_filename):
     for i, line in enumerate(f):
         pass
     f.seek(0)
-    return i+1
+    return i + 1
 
 
 def ucsvreader_pb(stream_or_path, encoding='utf-8', delimiter=',', quotechar='"',

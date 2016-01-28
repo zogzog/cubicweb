@@ -1,4 +1,4 @@
-# copyright 2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2015-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr -- mailto:contact@logilab.fr
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -13,16 +13,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
+"""cubicweb-geonames schema
 
-"""cubicweb-geonames schema"""
-
-from yams.buildobjs import (EntityType, RelationDefinition, SubjectRelation,
-			    String, Int, BigInt, Float, Date)
-from cubicweb.schemas.base import ExternalUri
-
-"""
 See geonames readme.txt for more details.
 """
+
+from yams.buildobjs import (EntityType, RelationDefinition, SubjectRelation,
+                            String, Int, BigInt, Float, Date)
+
 
 class TestLocation(EntityType):
     """
@@ -31,6 +29,7 @@ class TestLocation(EntityType):
     """
     name = String(maxsize=1024, indexed=True, fulltextindexed=True)
     geonameid = Int(required=True, unique=True, indexed=True)
+
 
 class Location(EntityType):
     """
@@ -48,8 +47,10 @@ class Location(EntityType):
     feature_code = SubjectRelation('FeatureCode', cardinality='?*', inlined=True)
     country = SubjectRelation('Country', cardinality='?*', inlined=True)
     alternate_country_code = String(maxsize=60)
-    main_administrative_region = SubjectRelation('AdministrativeRegion', cardinality='?*', inlined=True)
-    second_administrative_region = SubjectRelation('AdministrativeRegion', cardinality='?*', inlined=True)
+    main_administrative_region = SubjectRelation('AdministrativeRegion',
+                                                 cardinality='?*', inlined=True)
+    second_administrative_region = SubjectRelation('AdministrativeRegion',
+                                                   cardinality='?*', inlined=True)
     admin_code_1 = String(maxsize=124)
     admin_code_2 = String(maxsize=124)
     admin_code_3 = String(maxsize=20)
@@ -60,6 +61,7 @@ class Location(EntityType):
     timezone = SubjectRelation('TimeZone', cardinality='?*', inlined=True)
     geonames_date = Date()
 
+
 class LocationName(EntityType):
     """
     Name of a Location
@@ -67,6 +69,7 @@ class LocationName(EntityType):
     name = String(maxsize=1024, indexed=True, fulltextindexed=True)
     language = SubjectRelation('Language', cardinality='?*', inlined=True)
     alternatenamesid = Int(indexed=True)
+
 
 class FeatureCode(EntityType):
     """
@@ -77,6 +80,7 @@ class FeatureCode(EntityType):
     main_code = String(maxsize=1, indexed=True)
     code = String(maxsize=12)
     description = String(maxsize=1024, fulltextindexed=True)
+
 
 class AdministrativeRegion(EntityType):
     """
@@ -89,6 +93,7 @@ class AdministrativeRegion(EntityType):
     geonameid = Int(indexed=True)
     asciiname = String(maxsize=200, fulltextindexed=True)
 
+
 class Language(EntityType):
     """
     Entity type for languages of Geonames.
@@ -99,6 +104,7 @@ class Language(EntityType):
     iso_639_2 = String(maxsize=64, indexed=True)
     iso_639_1 = String(maxsize=3, indexed=True)
 
+
 class Continent(EntityType):
     """
     Entity type for continents of geonames.
@@ -106,6 +112,7 @@ class Continent(EntityType):
     name = String(maxsize=1024, indexed=True, fulltextindexed=True)
     code = String(maxsize=2, indexed=True)
     geonameid = Int(indexed=True)
+
 
 class Country(EntityType):
     """
@@ -133,6 +140,7 @@ class Country(EntityType):
     neighbours_code = String(maxsize=200)
     equivalent_fips = String(maxsize=2)
 
+
 class TimeZone(EntityType):
     """
     Entity type for timezone of geonames.
@@ -143,10 +151,12 @@ class TimeZone(EntityType):
     dst = Float()
     raw_offset = Float()
 
+
 class used_language(RelationDefinition):
     subject = 'Country'
     object = 'Language'
     cardinality = '**'
+
 
 class neighbour_of(RelationDefinition):
     subject = 'Country'

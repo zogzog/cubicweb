@@ -225,7 +225,7 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
         self._add_relation = self._system_source.add_relation
         self.indexes_etypes = {}
         if nb_threads_statement != 1:
-            warn('[3.21] SQLGenObjectStore is no longer threaded', DeprecationWarning)
+            warnings.warn('[3.21] SQLGenObjectStore is no longer threaded', DeprecationWarning)
 
     def flush(self):
         """Flush data to the database"""

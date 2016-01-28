@@ -252,25 +252,31 @@ class ExtEntitiesImporter(object):
     :class:`ExtEntity`, into CubicWeb entities.
 
     :param schema: the CubicWeb's instance schema
+
     :param store: a CubicWeb `Store`
+
     :param extid2eid: optional {extid: eid} dictionary giving information on existing entities. It
         will be completed during import. You may want to use :func:`cwuri2eid` to build it.
-    :param existing_relation: optional {rtype: set((subj eid, obj eid))} mapping giving information on
-        existing relations of a given type. You may want to use :class:`RelationMapping` to build it.
-    :param  etypes_order_hint: optional ordered iterable on entity types, giving an hint on the order in
-        which they should be attempted to be imported
-    :param  import_log: optional object implementing the :class:`SimpleImportLog` interface to record
-        events occuring during the import
-    :param  raise_on_error: optional boolean flag - default to false, indicating whether errors should
-        be raised or logged. You usually want them to be raised during test but to be logged in
-        production.
+
+    :param existing_relation: optional {rtype: set((subj eid, obj eid))} mapping giving information
+        on existing relations of a given type. You may want to use :class:`RelationMapping` to build
+        it.
+
+    :param etypes_order_hint: optional ordered iterable on entity types, giving an hint on the
+        order in which they should be attempted to be imported
+
+    :param import_log: optional object implementing the :class:`SimpleImportLog` interface to
+        record events occuring during the import
+
+    :param raise_on_error: optional boolean flag - default to false, indicating whether errors
+        should be raised or logged. You usually want them to be raised during test but to be logged
+        in production.
 
     Instances of this class are meant to import external entities through :meth:`import_entities`
     which handles a stream of :class:`ExtEntity`. One may then plug arbitrary filters into the
     external entities stream.
 
     .. automethod:: import_entities
-
     """
 
     def __init__(self, schema, store, extid2eid=None, existing_relations=None,

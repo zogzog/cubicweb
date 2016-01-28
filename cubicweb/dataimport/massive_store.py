@@ -28,13 +28,11 @@ import pytz
 
 from yams.constraints import SizeConstraint
 
-from psycopg2 import ProgrammingError
-
-from cubicweb.server.schema2sql import rschema_has_table
 from cubicweb.schema import PURE_VIRTUAL_RTYPES
+from cubicweb.server.schema2sql import rschema_has_table
+from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.dataimport import stores, pgstore
 from cubicweb.utils import make_uid
-from cubicweb.server.sqlutils import SQL_PREFIX
 
 
 class MassiveObjectStore(stores.RQLObjectStore):
@@ -138,7 +136,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         cnx.read_security = False
         cnx.write_security = False
 
-    ### INIT FUNCTIONS ########################################################
+    # INIT FUNCTIONS ########################################################
 
     def _drop_all_constraints(self):
         schema = self._cnx.vreg.schema
@@ -202,7 +200,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._init_uri_eid.add(etype)
 
 
-    ### RELATE FUNCTION #######################################################
+    # RELATE FUNCTION #######################################################
 
     def relate_by_iid(self, iid_from, rtype, iid_to):
         """Add new relation based on the internal id (iid)
@@ -214,7 +212,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             iid_to = iid_to.encode('utf-8')
         self._data_uri_relations[rtype].append({'uri_from': iid_from, 'uri_to': iid_to})
 
-    ### FLUSH FUNCTIONS #######################################################
+    # FLUSH FUNCTIONS #######################################################
 
     def flush_relations(self):
         """ Flush the relations data
@@ -290,7 +288,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         except Exception as ex:
             self.logger.error("Can't insert relation %s: %s", rtype, ex)
 
-    ### SQL UTILITIES #########################################################
+    # SQL UTILITIES #########################################################
 
     def drop_and_store_indexes(self, tablename):
         """Drop indexes and constraints"""
@@ -375,7 +373,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             'entities_id_seq', initial_value=start_eid))
         self._cnx.commit()
 
-    ### ENTITIES CREATION #####################################################
+    # ENTITIES CREATION #####################################################
 
     def _get_eid_gen(self):
         """ Function getting the next eid. This is done by preselecting
@@ -471,7 +469,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self.sql('DROP TABLE IF EXISTS %s' % table_name)
         self.commit()
 
-    ### FLUSH #################################################################
+    # FLUSH #################################################################
 
     def on_commit(self):
         if self.on_commit_callback:
@@ -600,8 +598,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                  % (rtype, eid_to, etype.lower()))
 
 
-### CONSTRAINTS MANAGEMENT FUNCTIONS  ##########################################
-
 def get_size_constraints(schema):
     """analyzes yams ``schema`` and returns the list of size constraints.
 
@@ -623,6 +619,7 @@ def get_size_constraints(schema):
                     maxsize = constraint.max
                     eschema_constraints[rschema.type] = maxsize
     return size_constraints
+
 
 def get_default_values(schema):
     """analyzes yams ``schema`` and returns the list of default values.
