@@ -124,10 +124,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._uri_eid_inserted = set()
         # set of rtypes for which we have a %(rtype)s_relation_iid_tmp table
         self._uri_rtypes = set()
-        # set of etypes whose tables are created
-        self._entities = set()
-        # set of rtypes for which we have a %(rtype)s_relation_tmp table
-        self._rtypes = set()
+        # set of etypes/rtypes whose tables are created
+        self._initialized = set()
 
         self._now = datetime.now(pytz.utc)
         self._default_cwuri = make_uid('_auto_generated')
@@ -333,40 +331,28 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def init_relation_table(self, rtype):
         """ Get and remove all indexes for performance sake """
-        # Create temporary table
-        if not self.slave_mode and rtype not in self._rtypes:
+        if not self.slave_mode and rtype not in self._initialized:
+            self._initialized.add(rtype)
             self.sql('CREATE TABLE %s_relation_tmp (eid_from integer, eid_to integer)'
                      % rtype.lower())
             # Drop indexes and constraints
-            tablename = '%s_relation' % rtype.lower()
-            self.drop_and_store_indexes(tablename)
+            self.drop_and_store_indexes('%s_relation' % rtype.lower())
             # Push the etype in the initialized table for easier restart
-            self.init_create_initialized_table()
-            self.sql('INSERT INTO cwmassive_initialized VALUES (%(e)s, %(t)s)',
-                     {'e': rtype, 't': 'rtype'})
-            # Mark rtype as "initialized" for faster check
-            self._rtypes.add(rtype)
-
-    def init_create_initialized_table(self):
-        """ Create the cwmassive initialized table
-        """
-        self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
-                 '(retype text, type varchar(128))')
+            self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
+                     '(retype text, type varchar(128))')
+            self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'rtype')", {'e': rtype})
 
     def init_etype_table(self, etype):
         """ Add eid sequence to a particular etype table and
         remove all indexes for performance sake """
-        if etype not in self._entities:
-            # Only for non-initialized etype and not slave mode store
-            if not self.slave_mode:
-                # Drop indexes and constraints
-                tablename = 'cw_%s' % etype.lower()
-                self.drop_and_store_indexes(tablename)
-                # Push the etype in the initialized table for easier restart
-                self.init_create_initialized_table()
-                self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'etype')", {'e': etype})
-            # Mark etype as "initialized" for faster check
-            self._entities.add(etype)
+        if not self.slave_mode and etype not in self._initialized:
+            self._initialized.add(etype)
+            # Drop indexes and constraints
+            self.drop_and_store_indexes('cw_%s' % etype.lower())
+            # Push the rtype in the initialized table for easier restart
+            self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
+                     '(retype text, type varchar(128))')
+            self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'etype')", {'e': etype})
 
     def restart_eid_sequence(self, start_eid):
         self._cnx.system_sql(self._cnx.repo.system_source.dbhelper.sql_restart_numrange(
