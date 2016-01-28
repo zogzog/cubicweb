@@ -429,9 +429,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
             # Clear data cache
             self._data_entities[etype] = []
         if not self.slave_mode:
-            self.flush_meta_data()
+            self.flush_metadata()
 
-    def flush_meta_data(self):
+    def flush_metadata(self):
         """ Flush the meta data (entities table, is_instance table, ...)
         """
         if self.slave_mode:
@@ -450,7 +450,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             if etype not in already_flushed:
                 # Deals with meta data
                 self.logger.info('Flushing meta data for %s' % etype)
-                self.insert_massive_meta_data(etype)
+                self.insert_massive_metadata(etype)
                 self.sql('INSERT INTO cwmassive_metadata VALUES (%(e)s)', {'e': etype})
 
     def _cleanup_relations(self, rtype):
@@ -463,7 +463,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # Drop temporary relation table
         self.sql('DROP TABLE %(r)s_relation_tmp' % {'r': rtype.lower()})
 
-    def insert_massive_meta_data(self, etype):
+    def insert_massive_metadata(self, etype):
         """ Massive insertion of meta data for a given etype, based on SQL statements.
         """
         # Push data - Use coalesce to avoid NULL (and get 0), if there is no
