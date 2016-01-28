@@ -263,7 +263,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self._dbh.drop_indexes(tablename)
 
     def restart_eid_sequence(self, start_eid):
-        self._cnx.system_sql(self._cnx.repo.system_source.dbhelper.sql_restart_numrange(
+        self.sql(self._cnx.repo.system_source.dbhelper.sql_restart_numrange(
             'entities_id_seq', initial_value=start_eid))
         self._cnx.commit()
 
