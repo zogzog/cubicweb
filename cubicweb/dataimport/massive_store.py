@@ -466,22 +466,19 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def insert_massive_metadata(self, etype):
         """ Massive insertion of meta data for a given etype, based on SQL statements.
         """
-        # Push data - Use coalesce to avoid NULL (and get 0), if there is no
-        # entities of this type in the entities table.
-        # Meta data relations
-        self.metagen_push_relation(etype, self._cnx.user.eid, 'created_by_relation')
-        self.metagen_push_relation(etype, self._cnx.user.eid, 'owned_by_relation')
-        self.metagen_push_relation(etype, self.source.eid, 'cw_source_relation')
+        self._insert_meta_relation(etype, self._cnx.user.eid, 'created_by_relation')
+        self._insert_meta_relation(etype, self._cnx.user.eid, 'owned_by_relation')
+        self._insert_meta_relation(etype, self.source.eid, 'cw_source_relation')
         eschema = self.schema[etype].eid
-        self.metagen_push_relation(etype, eschema.eid, 'is_relation')
+        self._insert_meta_relation(etype, eschema.eid, 'is_relation')
         for parent_eschema in eschema.ancestors() + [eschema]:
-            self.metagen_push_relation(etype, parent_eschema.eid, 'is_instance_of_relation')
+            self._insert_meta_relation(etype, parent_eschema.eid, 'is_instance_of_relation')
         self.sql("INSERT INTO entities (eid, type, asource, extid) "
                  "SELECT cw_eid, '%s', 'system', NULL FROM cw_%s "
                  "WHERE NOT EXISTS (SELECT 1 FROM entities WHERE eid=cw_eid)"
                  % (etype, etype.lower()))
 
-    def metagen_push_relation(self, etype, eid_to, rtype):
+    def _insert_meta_relation(self, etype, eid_to, rtype):
         self.sql("INSERT INTO %s (eid_from, eid_to) SELECT cw_eid, %s FROM cw_%s "
                  "WHERE NOT EXISTS (SELECT 1 FROM entities WHERE eid=cw_eid)"
                  % (rtype, eid_to, etype.lower()))
