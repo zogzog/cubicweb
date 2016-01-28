@@ -1,4 +1,4 @@
-# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,37 +24,43 @@ from cubicweb.devtools.testlib import CubicWebTC
 
 
 class RQLObjectStoreTC(CubicWebTC):
+    store_impl = stores.RQLObjectStore
 
-    def test_all(self):
+    def test_base(self):
         with self.admin_access.repo_cnx() as cnx:
-            store = stores.RQLObjectStore(cnx)
+            store = self.store_impl(cnx)
             # Check data insertion
             group_eid = store.prepare_insert_entity('CWGroup', name=u'grp')
             user_eid = store.prepare_insert_entity('CWUser', login=u'lgn',
                                                    upassword=u'pwd')
             store.prepare_insert_relation(user_eid, 'in_group', group_eid)
-            cnx.commit()
-            users = cnx.execute('CWUser X WHERE X login "lgn"')
-            self.assertEqual(1, len(users))
-            self.assertEqual(user_eid, users.one().eid)
+            store.commit()
+            user = cnx.execute('CWUser X WHERE X login "lgn"').one()
+            self.assertEqual(user_eid, user.eid)
+            self.assertTrue(user.creation_date)
+            self.assertTrue(user.modification_date)
+            self.assertTrue(user.cwuri)
+            self.assertEqual(user.created_by[0].eid, cnx.user.eid)
+            self.assertEqual(user.owned_by[0].eid, cnx.user.eid)
+            self.assertEqual(user.cw_source[0].name, 'system')
+            self.assertEqual(cnx.describe(user.eid), ('CWUser', 'system', None))
             groups = cnx.execute('CWGroup X WHERE U in_group X, U login "lgn"')
-            self.assertEqual(1, len(users))
             self.assertEqual(group_eid, groups.one().eid)
             # Check data update
             store.prepare_update_entity('CWGroup', group_eid, name=u'new_grp')
-            cnx.commit()
-            group = cnx.execute('CWGroup X WHERE X name "grp"')
-            self.assertEqual(len(group), 0)
-            group = cnx.execute('CWGroup X WHERE X name "new_grp"')
-            self.assertEqual, len(group), 1
+            store.commit()
+            self.assertFalse(cnx.execute('CWGroup X WHERE X name "grp"'))
+            self.assertTrue(cnx.execute('CWGroup X WHERE X name "new_grp"'))
             # Check data update with wrong type
             with self.assertRaises(AssertionError):
                 store.prepare_update_entity('CWUser', group_eid, name=u'new_user')
-            cnx.commit()
-            group = cnx.execute('CWGroup X WHERE X name "new_user"')
-            self.assertEqual(len(group), 0)
-            group = cnx.execute('CWGroup X WHERE X name "new_grp"')
-            self.assertEqual(len(group), 1)
+            store.commit()
+            self.assertFalse(cnx.execute('CWGroup X WHERE X name "new_user"'))
+            self.assertTrue(cnx.execute('CWGroup X WHERE X name "new_grp"'))
+
+
+class NoHookRQLObjectStoreTC(RQLObjectStoreTC):
+    store_impl = stores.NoHookRQLObjectStore
 
 
 class MetaGeneratorTC(CubicWebTC):
