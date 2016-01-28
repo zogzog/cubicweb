@@ -297,6 +297,9 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
     # re-login using the admin user
     config._cubes = None # avoid assertion error
     repo = get_repository(config=config)
+    # replace previous schema by the new repo's one. This is necessary so that we give the proper
+    # schema to `initialize_schema` above since it will initialize .eid attribute of schema elements
+    schema = repo.schema
     with connect(repo, login, password=pwd) as cnx:
         with cnx.security_enabled(False, False):
             repo.system_source.eid = ssource.eid # redo this manually
