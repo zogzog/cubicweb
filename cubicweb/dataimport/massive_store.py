@@ -115,17 +115,17 @@ class MassiveObjectStore(stores.RQLObjectStore):
         cnx.read_security = False
         cnx.write_security = False
 
-        self._data_uri_relations = defaultdict(list)
         self._data_entities = defaultdict(list)
         self._data_relations = defaultdict(list)
+        self._initialized = set()
+        # uri handling
+        self._data_uri_relations = defaultdict(list)
         # etypes for which we have a uri_eid_%(etype)s table
         self._init_uri_eid = set()
         # etypes for which we have a uri_eid_%(e)s_idx index
         self._uri_eid_inserted = set()
         # set of rtypes for which we have a %(rtype)s_relation_iid_tmp table
         self._uri_rtypes = set()
-        # set of etypes/rtypes whose tables are created
-        self._initialized = set()
 
         self._now = datetime.now(pytz.utc)
         self._default_cwuri = make_uid('_auto_generated')
@@ -139,41 +139,12 @@ class MassiveObjectStore(stores.RQLObjectStore):
             source = cnx.repo.system_source
         self.source = source
 
-    # INIT FUNCTIONS ########################################################
-
-    def _drop_all_constraints(self):
-        etypes_tables = ('cw_%s' % eschema.type.lower() for eschema in self.schema.entities()
-                         if not eschema.final)
-        rtypes_tables = ('%s_relation' % rschema.type.lower() for rschema in self.schema.relations()
-                         if rschema_has_table(rschema, skip_relations=PURE_VIRTUAL_RTYPES))
-        for tablename in chain(etypes_tables, rtypes_tables, ('entities',)):
-            self._store_and_drop_constraints(tablename)
-
-    def _store_and_drop_constraints(self, tablename):
-        # Create a table to save the constraints, it allows reloading even after crash
-        self.sql('CREATE TABLE IF NOT EXISTS cwmassive_constraints'
-                 '(origtable text, query text, type varchar(256))')
-        constraints = self._dbh.table_constraints(tablename)
-        for name, query in constraints.items():
-            self.sql('INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)',
-                     {'e': tablename, 'c': query, 't': 'constraint'})
-            self.sql('ALTER TABLE %s DROP CONSTRAINT %s' % (tablename, name))
-
-    def reapply_all_constraints(self):
-        if not self._dbh.table_exists('cwmassive_constraints'):
-            self.logger.info('The table cwmassive_constraints does not exist')
-            return
-        cu = self.sql("SELECT query FROM cwmassive_constraints WHERE type='constraint'")
-        for query, in cu.fetchall():
-            self.sql(query)
-            self.sql("DELETE FROM cwmassive_constraints WHERE type='constraint' AND query=%(q)s",
-                     {'q': query})
+    # URI related things #######################################################
 
     def init_rtype_table(self, etype_from, rtype, etype_to):
         """ Build temporary table for standard rtype """
-        # Create an uri_eid table for each etype for a better
-        # control of which etype is concerned by a particular
-        # possibly multivalued relation.
+        # Create an uri_eid table for each etype for a better control of which etype is concerned by
+        # a particular possibly multivalued relation.
         for etype in (etype_from, etype_to):
             if etype and etype not in self._init_uri_eid:
                 self._init_uri_eid.add(etype)
@@ -190,8 +161,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
             else:
                 self.logger.warning("inlined relation %s: cannot insert it", rtype)
 
-    # RELATE FUNCTION #######################################################
-
     def relate_by_iid(self, iid_from, rtype, iid_to):
         """Add new relation based on the internal id (iid)
         of the entities (not the eid)"""
@@ -201,8 +170,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if isinstance(iid_to, unicode):
             iid_to = iid_to.encode('utf-8')
         self._data_uri_relations[rtype].append({'uri_from': iid_from, 'uri_to': iid_to})
-
-    # FLUSH FUNCTIONS #######################################################
 
     def flush_relations(self):
         """ Flush the relations data
@@ -279,6 +246,31 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self.logger.error("Can't insert relation %s: %s", rtype, ex)
 
     # SQL UTILITIES #########################################################
+
+    def _drop_all_constraints(self):
+        etypes_tables = ('cw_%s' % eschema.type.lower() for eschema in self.schema.entities()
+                         if not eschema.final)
+        rtypes_tables = ('%s_relation' % rschema.type.lower() for rschema in self.schema.relations()
+                         if rschema_has_table(rschema, skip_relations=PURE_VIRTUAL_RTYPES))
+        # Create a table to save the constraints, it allows reloading even after crash
+        self.sql('CREATE TABLE IF NOT EXISTS cwmassive_constraints'
+                 '(origtable text, query text, type varchar(256))')
+        for tablename in chain(etypes_tables, rtypes_tables, ('entities',)):
+            constraints = self._dbh.table_constraints(tablename)
+            for name, query in constraints.items():
+                self.sql('INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)',
+                         {'e': tablename, 'c': query, 't': 'constraint'})
+                self.sql('ALTER TABLE %s DROP CONSTRAINT %s' % (tablename, name))
+
+    def _reapply_all_constraints(self):
+        if not self._dbh.table_exists('cwmassive_constraints'):
+            self.logger.info('The table cwmassive_constraints does not exist')
+            return
+        cu = self.sql("SELECT query FROM cwmassive_constraints WHERE type='constraint'")
+        for query, in cu.fetchall():
+            self.sql(query)
+            self.sql("DELETE FROM cwmassive_constraints WHERE type='constraint' AND query=%(q)s",
+                     {'q': query})
 
     def drop_and_store_indexes(self, tablename):
         """Drop indexes and constraints"""
@@ -438,7 +430,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                     self._cleanup_relations(retype)
                 self.sql('DELETE FROM cwmassive_initialized WHERE retype = %(e)s',
                          {'e': retype})
-        self.reapply_all_constraints()
+        self._reapply_all_constraints()
         # Delete the meta data table
         for table_name in ('cwmassive_initialized', 'cwmassive_constraints', 'cwmassive_metadata'):
             self.sql('DROP TABLE IF EXISTS %s' % table_name)
