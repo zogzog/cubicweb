@@ -125,8 +125,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._count_cwuri = 0
         self.on_commit_callback = on_commit_callback
         self.on_rollback_callback = on_rollback_callback
-        # Do our meta tables already exist?
-        self._init_massive_metatables()
         self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
         # recreate then when self.finish() is called
 
@@ -156,12 +154,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self._store_and_drop_constraints(tablename)
 
     def _store_and_drop_constraints(self, tablename):
-        if not self._constraint_table_created:
-            # Create a table to save the constraints
-            # Allow reload even after crash
-            sql = "CREATE TABLE cwmassive_constraints (origtable text, query text, type varchar(256))"
-            self.sql(sql)
-            self._constraint_table_created = True
+        # Create a table to save the constraints, it allows reloading even after crash
+        self.sql('CREATE TABLE IF NOT EXISTS cwmassive_constraints'
+                 '(origtable text, query text, type varchar(256))')
         constraints = self._dbh.application_constraints(tablename)
         for name, query in constraints.items():
             sql = 'INSERT INTO cwmassive_constraints VALUES (%(e)s, %(c)s, %(t)s)'
@@ -191,13 +186,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if rtype not in self._uri_rtypes:
             # Create the temporary table
             if not self._cnx.repo.schema.rschema(rtype).inlined:
-                try:
-                    sql = 'CREATE TABLE %(r)s_relation_iid_tmp (uri_from character ' \
-                          'varying(%(s)s), uri_to character varying(%(s)s))'
-                    self.sql(sql % {'r': rtype, 's': self.iid_maxsize})
-                except ProgrammingError:
-                    # XXX Already exist (probably due to multiple import)
-                    pass
+                self.sql('CREATE TABLE IF NOT EXISTS %(r)s_relation_iid_tmp'
+                         '(uri_from character varying(%(s)s), uri_to character varying(%(s)s))'
+                         % {'r': rtype, 's': self.iid_maxsize})
             else:
                 self.logger.warning("inlined relation %s: cannot insert it", rtype)
             # Add it to the initialized set
@@ -206,20 +197,12 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def _init_uri_eid_table(self, etype):
         """ Build a temporary table for id/eid convertion
         """
-        try:
-            sql = "CREATE TABLE uri_eid_%(e)s (uri character varying(%(size)s), eid integer)"
-            self.sql(sql % {'e': etype.lower(), 'size': self.iid_maxsize,})
-        except ProgrammingError:
-            # XXX Already exist (probably due to multiple import)
-            pass
+        self.sql('CREATE TABLE IF NOT EXISTS uri_eid_%(e)s'
+                 '(uri character varying(%(size)s), eid integer)'
+                 % {'e': etype.lower(), 'size': self.iid_maxsize})
         # Add it to the initialized set
         self._init_uri_eid.add(etype)
 
-    def _init_massive_metatables(self):
-        # Check if our tables are not already created (i.e. a restart)
-        self._initialized_table_created = self._dbh.table_exists('cwmassive_initialized')
-        self._constraint_table_created = self._dbh.table_exists('cwmassive_constraints')
-        self._metadata_table_created = self._dbh.table_exists('cwmassive_metadata')
 
     ### RELATE FUNCTION #######################################################
 
@@ -312,13 +295,10 @@ class MassiveObjectStore(stores.RQLObjectStore):
     ### SQL UTILITIES #########################################################
 
     def drop_and_store_indexes(self, tablename):
-        # Drop indexes and constraints
-        if not self._constraint_table_created:
-            # Create a table to save the constraints
-            # Allow reload even after crash
-            sql = "CREATE TABLE cwmassive_constraints (origtable text, query text, type varchar(256))"
-            self.sql(sql)
-            self._constraint_table_created = True
+        """Drop indexes and constraints"""
+        # Create a table to save the constraints, it allows reloading even after crash
+        self.sql('CREATE TABLE IF NOT EXISTS cwmassive_constraints'
+                 '(origtable text, query text, type varchar(256))')
         self._drop_table_indexes(tablename)
 
     def _drop_table_indexes(self, tablename):
@@ -375,10 +355,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def init_create_initialized_table(self):
         """ Create the cwmassive initialized table
         """
-        if not self._initialized_table_created:
-            sql = "CREATE TABLE cwmassive_initialized (retype text, type varchar(128))"
-            self.sql(sql)
-            self._initialized_table_created = True
+        self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
+                 '(retype text, type varchar(128))')
 
     def init_etype_table(self, etype):
         """ Add eid sequence to a particular etype table and
@@ -494,8 +472,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.reapply_all_constraints()
         # Delete the meta data table
         for table_name in ('cwmassive_initialized', 'cwmassive_constraints', 'cwmassive_metadata'):
-            if self._dbh.table_exists(table_name):
-                self.sql('DROP TABLE %s' % table_name)
+            self.sql('DROP TABLE IF EXISTS %s' % table_name)
         self.commit()
 
     ### FLUSH #################################################################
@@ -572,11 +549,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if not self._dbh.table_exists('cwmassive_initialized'):
             self.logger.info('No information available for initialized etypes/rtypes')
             return
-        if not self._metadata_table_created:
-            # Keep the correctly flush meta data in database
-            sql = "CREATE TABLE cwmassive_metadata (etype text)"
-            self.sql(sql)
-            self._metadata_table_created = True
+        # Keep the correctly flush meta data in database
+        self.sql('CREATE TABLE IF NOT EXISTS cwmassive_metadata (etype text)')
         crs = self.sql('SELECT etype FROM cwmassive_metadata')
         already_flushed = set(e for e, in crs.fetchall())
         crs = self.sql('SELECT retype FROM cwmassive_initialized WHERE type = %(t)s',
