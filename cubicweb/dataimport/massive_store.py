@@ -21,6 +21,7 @@ import logging
 from datetime import datetime
 from collections import defaultdict
 from io import StringIO
+from itertools import chain
 
 from six.moves import range
 
@@ -106,7 +107,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
         self.logger = logging.getLogger('dataimport.massive_store')
         self.sql = cnx.system_sql
-        self.default_values = get_default_values(cnx.vreg.schema)
+        self.schema = self._cnx.vreg.schema
+        self.default_values = get_default_values(self.schema)
         self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
         self._dbh = PGHelper(cnx)
 
@@ -143,16 +145,11 @@ class MassiveObjectStore(stores.RQLObjectStore):
     # INIT FUNCTIONS ########################################################
 
     def _drop_all_constraints(self):
-        schema = self._cnx.vreg.schema
-        tables = ['cw_%s' % etype.type.lower()
-                  for etype in schema.entities() if not etype.final]
-        for rschema in schema.relations():
-            if rschema.inlined:
-                continue
-            elif rschema_has_table(rschema, skip_relations=PURE_VIRTUAL_RTYPES):
-                tables.append('%s_relation' % rschema.type.lower())
-        tables.append('entities')
-        for tablename in tables:
+        etypes_tables = ('cw_%s' % eschema.type.lower() for eschema in self.schema.entities()
+                         if not eschema.final)
+        rtypes_tables = ('%s_relation' % rschema.type.lower() for rschema in self.schema.relations()
+                         if rschema_has_table(rschema, skip_relations=PURE_VIRTUAL_RTYPES))
+        for tablename in chain(etypes_tables, rtypes_tables, ('entities',)):
             self._store_and_drop_constraints(tablename)
 
     def _store_and_drop_constraints(self, tablename):
@@ -185,7 +182,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self._init_uri_eid_table(etype)
         if rtype not in self._uri_rtypes:
             # Create the temporary table
-            if not self._cnx.repo.schema.rschema(rtype).inlined:
+            if not self.schema.rschema(rtype).inlined:
                 self.sql('CREATE TABLE IF NOT EXISTS %(r)s_relation_iid_tmp'
                          '(uri_from character varying(%(s)s), uri_to character varying(%(s)s))'
                          % {'r': rtype, 's': self.iid_maxsize})
@@ -229,7 +226,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.logger.info('Empty Buffer for rtype %s', rtype)
                 continue
             cursor = self._cnx.cnxset.cu
-            if not self._cnx.repo.schema.rschema(rtype).inlined:
+            if not self.schema.rschema(rtype).inlined:
                 cursor.copy_from(buf, '%s_relation_iid_tmp' % rtype.lower(),
                                  null='NULL', columns=('uri_from', 'uri_to'))
             else:
@@ -260,7 +257,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self.fill_uri_eid_table(etype_from, uri_label_from)
         if uri_label_to and etype_to not in self._uri_eid_inserted:
             self.fill_uri_eid_table(etype_to, uri_label_to)
-        if self._cnx.repo.schema.rschema(rtype).inlined:
+        if self.schema.rschema(rtype).inlined:
             self.logger.warning("Can't insert inlined relation %s", rtype)
             return
         if uri_label_from and uri_label_to:
@@ -448,7 +445,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self.sql('DROP TABLE uri_eid_%s' % etype.lower())
         # Remove relations tables
         for rtype in self._uri_rtypes:
-            if not self._cnx.repo.schema.rschema(rtype).inlined:
+            if not self.schema.rschema(rtype).inlined:
                 self.sql('DROP TABLE %(r)s_relation_iid_tmp' % {'r': rtype})
             else:
                 self.logger.warning("inlined relation %s: no cleanup to be done for it" % rtype)
