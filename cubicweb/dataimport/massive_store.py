@@ -176,27 +176,19 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # possibly multivalued relation.
         for etype in (etype_from, etype_to):
             if etype and etype not in self._init_uri_eid:
-                self._init_uri_eid_table(etype)
+                self._init_uri_eid.add(etype)
+                self.sql('CREATE TABLE IF NOT EXISTS uri_eid_%(e)s'
+                         '(uri character varying(%(size)s), eid integer)'
+                         % {'e': etype.lower(), 'size': self.iid_maxsize})
         if rtype not in self._uri_rtypes:
             # Create the temporary table
             if not self.schema.rschema(rtype).inlined:
                 self.sql('CREATE TABLE IF NOT EXISTS %(r)s_relation_iid_tmp'
                          '(uri_from character varying(%(s)s), uri_to character varying(%(s)s))'
                          % {'r': rtype, 's': self.iid_maxsize})
+                self._uri_rtypes.add(rtype)
             else:
                 self.logger.warning("inlined relation %s: cannot insert it", rtype)
-            # Add it to the initialized set
-            self._uri_rtypes.add(rtype)
-
-    def _init_uri_eid_table(self, etype):
-        """ Build a temporary table for id/eid convertion
-        """
-        self.sql('CREATE TABLE IF NOT EXISTS uri_eid_%(e)s'
-                 '(uri character varying(%(size)s), eid integer)'
-                 % {'e': etype.lower(), 'size': self.iid_maxsize})
-        # Add it to the initialized set
-        self._init_uri_eid.add(etype)
-
 
     # RELATE FUNCTION #######################################################
 
@@ -235,13 +227,13 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def fill_uri_eid_table(self, etype, uri_label):
         """ Fill the uri_eid table
         """
-        self.logger.info('Fill uri_eid for etype %s', etype)
-        self.sql('INSERT INTO uri_eid_%(e)s SELECT cw_%(l)s, cw_eid FROM cw_%(e)s'
-                 % {'l': uri_label, 'e': etype.lower()})
-        # Add indexes
-        self.sql('CREATE INDEX uri_eid_%(e)s_idx ON uri_eid_%(e)s' '(uri)' % {'e': etype.lower()})
-        # Set the etype as converted
-        self._uri_eid_inserted.add(etype)
+        if etype not in self._uri_eid_inserted:
+            self._uri_eid_inserted.add(etype)
+            self.logger.info('Fill uri_eid for etype %s', etype)
+            self.sql('INSERT INTO uri_eid_%(e)s SELECT cw_%(l)s, cw_eid FROM cw_%(e)s'
+                     % {'l': uri_label, 'e': etype.lower()})
+            self.sql('CREATE INDEX uri_eid_%(e)s_idx ON uri_eid_%(e)s(uri)'
+                     % {'e': etype.lower()})
 
     def convert_relations(self, etype_from, rtype, etype_to,
                           uri_label_from='cwuri', uri_label_to='cwuri'):
@@ -250,9 +242,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # Always flush relations to be sure
         self.logger.info('Convert relations %s %s %s', etype_from, rtype, etype_to)
         self.flush_relations()
-        if uri_label_from and etype_from not in self._uri_eid_inserted:
+        if uri_label_from:
             self.fill_uri_eid_table(etype_from, uri_label_from)
-        if uri_label_to and etype_to not in self._uri_eid_inserted:
+        if uri_label_to:
             self.fill_uri_eid_table(etype_to, uri_label_to)
         if self.schema.rschema(rtype).inlined:
             self.logger.warning("Can't insert inlined relation %s", rtype)
@@ -430,10 +422,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self.sql('DROP TABLE uri_eid_%s' % etype.lower())
         # Remove relations tables
         for rtype in self._uri_rtypes:
-            if not self.schema.rschema(rtype).inlined:
-                self.sql('DROP TABLE %(r)s_relation_iid_tmp' % {'r': rtype})
-            else:
-                self.logger.warning("inlined relation %s: no cleanup to be done for it" % rtype)
+            self.sql('DROP TABLE %(r)s_relation_iid_tmp' % {'r': rtype})
         # Create meta constraints (entities, is_instance_of, ...)
         self._create_metatables_constraints()
         # Get all the initialized etypes/rtypes
@@ -443,7 +432,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.logger.info('Cleanup for %s' % retype)
                 if _type == 'etype':
                     # Cleanup entities tables - Recreate indexes
-                    self._cleanup_entities(retype)
+                    self.reapply_constraint_index('cw_%s' % etype.lower())
                 elif _type == 'rtype':
                     # Cleanup relations tables
                     self._cleanup_relations(retype)
@@ -542,12 +531,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.logger.info('Flushing meta data for %s' % etype)
                 self.insert_massive_meta_data(etype)
                 self.sql('INSERT INTO cwmassive_metadata VALUES (%(e)s)', {'e': etype})
-
-    def _cleanup_entities(self, etype):
-        """ Cleanup etype table """
-        # Create indexes and constraints
-        tablename = SQL_PREFIX + etype.lower()
-        self.reapply_constraint_index(tablename)
 
     def _cleanup_relations(self, rtype):
         """ Cleanup rtype table """
