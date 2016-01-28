@@ -40,13 +40,16 @@ class MassiveObjectStore(stores.RQLObjectStore):
     Store for massive import of data, with delayed insertion of meta data.
 
     WARNINGS:
-   - This store may be only used with PostgreSQL for now, as it relies
-     on the COPY FROM method, and on specific PostgreSQL tables to get all
-     the indexes.
-   - This store can only insert relations that are not inlined (i.e.,
-     which do *not* have inlined=True in their definition in the schema).
 
-   It should be used as follows:
+    - This store may only be used with PostgreSQL for now, as it relies
+      on the COPY FROM method, and on specific PostgreSQL tables to get all
+      the indexes.
+
+    - This store can only insert relations that are not inlined (i.e.,
+      which do *not* have inlined=True in their definition in the schema), unless they are
+      specified as entity attributes.
+
+    It should be used as follows:
 
        store = MassiveObjectStore(cnx)
        store.init_rtype_table('Person', 'lives_in', 'Location')
@@ -96,12 +99,23 @@ class MassiveObjectStore(stores.RQLObjectStore):
         - eids_seq_range: size of eid range reserved by the store for each batch
         """
         super(MassiveObjectStore, self).__init__(cnx)
-        self.logger = logging.getLogger('dataimport.massive_store')
-        self._cnx = cnx
-        self.sql = cnx.system_sql
-        self._data_uri_relations = defaultdict(list)
+        self.on_commit_callback = on_commit_callback
+        self.on_rollback_callback = on_rollback_callback
+        self.slave_mode = slave_mode
         self.eids_seq_range = eids_seq_range
 
+        self.logger = logging.getLogger('dataimport.massive_store')
+        self.sql = cnx.system_sql
+        self.default_values = get_default_values(cnx.vreg.schema)
+        self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
+        self._dbh = PGHelper(cnx)
+
+        cnx.read_security = False
+        cnx.write_security = False
+
+        self._data_uri_relations = defaultdict(list)
+        self._data_entities = defaultdict(list)
+        self._data_relations = defaultdict(list)
         # etypes for which we have a uri_eid_%(etype)s table
         self._init_uri_eid = set()
         # etypes for which we have a uri_eid_%(e)s_idx index
@@ -113,28 +127,18 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # set of rtypes for which we have a %(rtype)s_relation_tmp table
         self._rtypes = set()
 
-        self.slave_mode = slave_mode
-        self.default_values = get_default_values(cnx.vreg.schema)
-        self._dbh = PGHelper(cnx)
-        self._data_entities = defaultdict(list)
-        self._data_relations = defaultdict(list)
         self._now = datetime.now(pytz.utc)
         self._default_cwuri = make_uid('_auto_generated')
-        self._count_cwuri = 0
-        self.on_commit_callback = on_commit_callback
-        self.on_rollback_callback = on_rollback_callback
-        self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
-        # recreate then when self.finish() is called
 
         if not self.slave_mode:
+            # drop constraint and metadata table, they will be recreated when self.finish() is
+            # called
             self._drop_all_constraints()
             self._drop_metatables_constraints()
         if source is None:
             source = cnx.repo.system_source
         self.source = source
         self._etype_eid_idx = dict(cnx.execute('Any XN,X WHERE X is CWEType, X name XN'))
-        cnx.read_security = False
-        cnx.write_security = False
 
     # INIT FUNCTIONS ########################################################
 
