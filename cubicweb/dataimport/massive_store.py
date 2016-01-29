@@ -400,7 +400,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             # Thus we should create dictionary with all the keys.
             columns = set()
             for d in data:
-                columns.update(d.keys())
+                columns.update(d)
             _data = []
             _base_data = dict.fromkeys(columns)
             for d in data:
