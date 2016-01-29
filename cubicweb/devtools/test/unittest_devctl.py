@@ -1,4 +1,4 @@
-# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,6 +26,14 @@ from subprocess import Popen, PIPE, STDOUT
 from unittest import TestCase
 
 
+def newcube(directory, name):
+    cmd = [sys.executable, '-m' 'cubicweb', 'newcube',
+           '--directory', directory, name]
+    proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    stdout, _ = proc.communicate(b'short_desc\n')
+    return proc.returncode, stdout
+
+
 class CubicWebCtlTC(TestCase):
     """test case for devtools commands"""
 
@@ -39,15 +47,23 @@ class CubicWebCtlTC(TestCase):
                     '__pkginfo__.py', 'README', 'tox.ini']
         tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube")
         try:
-            cmd = [sys.executable, '-m', 'cubicweb', 'newcube',
-                   '--directory', tmpdir, 'foo']
-            proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-            stdout, _ = proc.communicate(b'short_desc\n')
-            self.assertItemsEqual(os.listdir(osp.join(tmpdir, 'foo')),
-                                  expected)
+            retcode, stdout = newcube(tmpdir, 'foo')
+            self.assertItemsEqual(os.listdir(osp.join(tmpdir, 'foo')), expected)
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
-        self.assertEqual(proc.returncode, 0, msg=stdout)
+        self.assertEqual(retcode, 0, msg=stdout)
+
+    def test_flake8(self):
+        """Ensure newcube built from skeleton is flake8-compliant"""
+        tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube-flake8")
+        try:
+            newcube(tmpdir, 'foo')
+            cmd = [sys.executable, '-m', 'flake8', osp.join(tmpdir, 'foo')]
+            proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+            retcode = proc.wait()
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+        self.assertEqual(retcode, 0, proc.stdout.read())
 
 
 if __name__ == '__main__':
