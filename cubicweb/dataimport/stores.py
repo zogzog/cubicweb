@@ -151,13 +151,16 @@ class RQLObjectStore(object):
 
 class NoHookRQLObjectStore(RQLObjectStore):
     """Store that works by accessing low-level CubicWeb's source API, with all hooks deactivated. It
-    must be given a metadata generator object to handle metadata which are usually handled by hooks
-    (see :class:`MetaGenerator`).
+    may be given a metadata generator object to handle metadata which are usually handled by hooks.
+
+    Arguments:
+    - `cnx`, a connection to the repository
+    - `metagen`, optional :class:`MetaGenerator` instance
     """
 
     def __init__(self, cnx, metagen=None):
         super(NoHookRQLObjectStore, self).__init__(cnx)
-        self.source = cnx.repo.system_source
+        self._system_source = cnx.repo.system_source
         self._rschema = cnx.repo.schema.rschema
         self._create_eid = cnx.repo.system_source.create_eid
         self._add_relation = self.source.add_relation
@@ -186,8 +189,8 @@ class NoHookRQLObjectStore(RQLObjectStore):
         cnx = self._cnx
         entity.eid = self._create_eid(cnx)
         entity_source, extid = self.metagen.init_entity(entity)
-        self.source.add_info(cnx, entity, entity_source, extid)
-        self.source.add_entity(cnx, entity)
+        self._system_source.add_info(cnx, entity, entity_source, extid)
+        self._system_source.add_entity(cnx, entity)
         kwargs = dict()
         if inspect.getargspec(self._add_relation).keywords:
             kwargs['subjtype'] = entity.cw_etype

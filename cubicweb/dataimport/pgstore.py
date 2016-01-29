@@ -217,19 +217,19 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
         """
         super(SQLGenObjectStore, self).__init__(cnx)
         ### hijack default source
-        self.source = SQLGenSourceWrapper(
-            self.source, cnx.vreg.schema,
+        self._system_source = SQLGenSourceWrapper(
+            self._system_source, cnx.vreg.schema,
             dump_output_dir=dump_output_dir)
         ### XXX This is done in super().__init__(), but should be
         ### redone here to link to the correct source
-        self._add_relation = self.source.add_relation
+        self._add_relation = self._system_source.add_relation
         self.indexes_etypes = {}
         if nb_threads_statement != 1:
             warn('[3.21] SQLGenObjectStore is no longer threaded', DeprecationWarning)
 
     def flush(self):
         """Flush data to the database"""
-        self.source.flush()
+        self._system_source.flush()
 
     def relate(self, subj_eid, rtype, obj_eid, **kwargs):
         if subj_eid is None or obj_eid is None:
@@ -249,7 +249,7 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
                 """turn an index name to (database) attribute name"""
                 return index.replace(etype.lower(), '').replace('idx', '').strip('_')
             indices = [(index, index_to_attr(index))
-                       for index in self.source.dbhelper.list_indices(cu, etype)
+                       for index in self._system_source.dbhelper.list_indices(cu, etype)
                        # Do not consider 'cw_etype_pkey' index
                        if not index.endswith('key')]
             self.indexes_etypes[etype] = indices
