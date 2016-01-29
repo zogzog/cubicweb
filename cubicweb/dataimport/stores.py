@@ -1,4 +1,4 @@
-# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -158,8 +158,8 @@ class NoHookRQLObjectStore(RQLObjectStore):
     def __init__(self, cnx, metagen=None):
         super(NoHookRQLObjectStore, self).__init__(cnx)
         self.source = cnx.repo.system_source
-        self.rschema = cnx.repo.schema.rschema
-        self.add_relation = self.source.add_relation
+        self._rschema = cnx.repo.schema.rschema
+        self._add_relation = self.source.add_relation
         if metagen is None:
             metagen = MetaGenerator(cnx)
         self.metagen = metagen
@@ -187,18 +187,18 @@ class NoHookRQLObjectStore(RQLObjectStore):
         self.source.add_info(cnx, entity, entity_source, extid)
         self.source.add_entity(cnx, entity)
         kwargs = dict()
-        if inspect.getargspec(self.add_relation).keywords:
+        if inspect.getargspec(self._add_relation).keywords:
             kwargs['subjtype'] = entity.cw_etype
         for rtype, targeteids in rels.items():
             # targeteids may be a single eid or a list of eids
-            inlined = self.rschema(rtype).inlined
+            inlined = self._rschema(rtype).inlined
             try:
                 for targeteid in targeteids:
-                    self.add_relation(cnx, entity.eid, rtype, targeteid,
-                                      inlined, **kwargs)
+                    self._add_relation(cnx, entity.eid, rtype, targeteid,
+                                       inlined, **kwargs)
             except TypeError:
-                self.add_relation(cnx, entity.eid, rtype, targeteids,
-                                  inlined, **kwargs)
+                self._add_relation(cnx, entity.eid, rtype, targeteids,
+                                   inlined, **kwargs)
         self._nb_inserted_entities += 1
         return entity.eid
 
@@ -210,11 +210,10 @@ class NoHookRQLObjectStore(RQLObjectStore):
         and ``eid_to``.
         """
         assert not rtype.startswith('reverse_')
-        self.add_relation(self._cnx, eid_from, rtype, eid_to,
-                          self.rschema(rtype).inlined)
-        if self.rschema(rtype).symmetric:
-            self.add_relation(self._cnx, eid_to, rtype, eid_from,
-                              self.rschema(rtype).inlined)
+        rschema = self._rschema(rtype)
+        self._add_relation(self._cnx, eid_from, rtype, eid_to, rschema.inlined)
+        if rschema.symmetric:
+            self._add_relation(self._cnx, eid_to, rtype, eid_from, rschema.inlined)
         self._nb_inserted_relations += 1
 
     @property

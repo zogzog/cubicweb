@@ -40,6 +40,7 @@ def _execmany_thread_not_copy_from(cu, statement, data, table=None,
     """
     cu.executemany(statement, data)
 
+
 def _execmany_thread_copy_from(cu, statement, data, table,
                                columns, encoding='utf-8'):
     """ Execute thread with copy from
@@ -53,6 +54,7 @@ def _execmany_thread_copy_from(cu, statement, data, table,
             cu.copy_from(buf, table, null=u'NULL')
         else:
             cu.copy_from(buf, table, null=u'NULL', columns=columns)
+
 
 def _execmany_thread(sql_connect, statements, dump_output_dir=None,
                      support_copy_from=True, encoding='utf-8'):
@@ -220,7 +222,7 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
             dump_output_dir=dump_output_dir)
         ### XXX This is done in super().__init__(), but should be
         ### redone here to link to the correct source
-        self.add_relation = self.source.add_relation
+        self._add_relation = self.source.add_relation
         self.indexes_etypes = {}
         if nb_threads_statement != 1:
             warn('[3.21] SQLGenObjectStore is no longer threaded', DeprecationWarning)
@@ -233,11 +235,11 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
         if subj_eid is None or obj_eid is None:
             return
         # XXX Could subjtype be inferred ?
-        self.source.add_relation(self._cnx, subj_eid, rtype, obj_eid,
-                                 self.rschema(rtype).inlined, **kwargs)
+        self._add_relation(self._cnx, subj_eid, rtype, obj_eid,
+                           self.rschema(rtype).inlined, **kwargs)
         if self.rschema(rtype).symmetric:
-            self.source.add_relation(self._cnx, obj_eid, rtype, subj_eid,
-                                     self.rschema(rtype).inlined, **kwargs)
+            self._add_relation(self._cnx, obj_eid, rtype, subj_eid,
+                               self.rschema(rtype).inlined, **kwargs)
 
     def drop_indexes(self, etype):
         """Drop indexes for a given entity type"""
@@ -368,7 +370,7 @@ class SQLGenSourceWrapper(object):
                                      'inlined relation %s'
                                      ', as it cannot be inferred: '
                                      'this type is given as keyword argument '
-                                     '``subjtype``'% rtype)
+                                     '``subjtype``' % rtype)
             statement = self.sqlgen.update(SQL_PREFIX + subjtype,
                                            data, ['cw_eid'])
         else:
