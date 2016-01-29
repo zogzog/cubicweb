@@ -114,6 +114,8 @@ def export(from_dir, to_dir,
                 continue
             if exists(dest):
                 os.remove(dest)
+            if verbose:
+                sys.stderr.write('%s -> %s\n' % (src, dest))
             shutil.copy2(src, dest)
 
 
