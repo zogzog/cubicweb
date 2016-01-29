@@ -436,9 +436,8 @@ class SQLGenSourceWrapper(object):
                 self._handle_is_relation_sql(cnx,
                                              'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
                                              (entity.eid, eschema_eid(cnx, eschema)))
-        if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
-            self._handle_is_relation_sql(cnx, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                         (entity.eid, source.eid))
+        self._handle_is_relation_sql(cnx, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                     (entity.eid, source.eid))
         # now we can update the full text index
         if self.do_fti and self.need_fti_indexation(entity.cw_etype):
             self.index_entity(cnx, entity=entity)
