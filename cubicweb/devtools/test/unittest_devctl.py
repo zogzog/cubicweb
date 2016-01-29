@@ -17,7 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for cubicweb-ctl commands from devtools"""
 
-import os.path as osp
 import sys
 import tempfile
 import shutil
@@ -29,12 +28,9 @@ class CubicWebCtlTC(TestCase):
     """test case for devtools commands"""
 
     def test_newcube(self):
-        cwctl = osp.abspath(osp.join(osp.dirname(__file__),
-                                     '../../../bin/cubicweb-ctl'))
-
         tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube")
         try:
-            cmd = [sys.executable, cwctl, 'newcube',
+            cmd = [sys.executable, '-m', 'cubicweb', 'newcube',
                    '--directory', tmpdir, 'foo']
             proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             stdout, _ = proc.communicate(b'short_desc\n')

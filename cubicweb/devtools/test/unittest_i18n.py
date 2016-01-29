@@ -62,11 +62,10 @@ class cubePotGeneratorTC(TestCase):
         else:
             env['PYTHONPATH'] = ''
         env['PYTHONPATH'] += DATADIR
-        cwctl = osp.abspath(osp.join(osp.dirname(__file__),
-                                     '../../../bin/cubicweb-ctl'))
         with open(os.devnull, 'w') as devnull:
-            subprocess.check_call([sys.executable, cwctl, 'i18ncube', 'i18ntestcube'],
-                                  env=env, stdout=devnull)
+            subprocess.check_call(
+                [sys.executable, '-m', 'cubicweb', 'i18ncube', 'i18ntestcube'],
+                env=env, stdout=devnull)
         cube = osp.join(DATADIR, 'cubes', 'i18ntestcube')
         msgs = load_po(osp.join(cube, 'i18n', 'en.po.ref'))
         newmsgs = load_po(osp.join(cube, 'i18n', 'en.po'))
