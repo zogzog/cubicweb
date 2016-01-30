@@ -69,6 +69,15 @@ class CWPropertyHooksTC(CubicWebTC):
                 req.execute('INSERT CWProperty X: X pkey "ui.language", X value "hop"')
             self.assertEqual(cm.exception.errors, {'value-subject': u'unauthorized value'})
 
+    def test_vreg_propertyvalues_update(self):
+        self.vreg.register_property(
+            'test.int', type='Int', help='', sitewide=True)
+        with self.admin_access.repo_cnx() as cnx:
+            cnx.execute('INSERT CWProperty X: X pkey "test.int", X value "42"')
+            cnx.commit()
+        self.assertEqual(self.vreg.property_value('test.int'), 42)
+
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()
