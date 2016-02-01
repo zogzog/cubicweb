@@ -54,19 +54,19 @@ case the store requires additional work once everything is done.
 
 .. autoclass:: cubicweb.dataimport.stores.RQLObjectStore
 .. autoclass:: cubicweb.dataimport.stores.NoHookRQLObjectStore
-.. autoclass:: cubicweb.dataimport.stores.MetaGenerator
+.. autoclass:: cubicweb.dataimport.stores.MetadataGenerator
 """
 import inspect
 import warnings
 from datetime import datetime
 from copy import copy
 
-from six import text_type
+from six import text_type, add_metaclass
 
 import pytz
 
-from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached
+from logilab.common.deprecation import deprecated, class_deprecated
 
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES
 from cubicweb.server.edition import EditedEntity
@@ -157,18 +157,20 @@ class NoHookRQLObjectStore(RQLObjectStore):
 
     Arguments:
     - `cnx`, a connection to the repository
-    - `metagen`, optional :class:`MetaGenerator` instance
+    - `metagen`, optional :class:`MetadataGenerator` instance
     """
 
     def __init__(self, cnx, metagen=None):
         super(NoHookRQLObjectStore, self).__init__(cnx)
+        if metagen is None:
+            metagen = MetadataGenerator(cnx)
+        if isinstance(metagen, MetadataGenerator):
+            metagen = _MetaGeneratorBWCompatWrapper(metagen)
+        self.metagen = metagen
         self._system_source = cnx.repo.system_source
         self._rschema = cnx.repo.schema.rschema
-        self._create_eid = cnx.repo.system_source.create_eid
-        self._add_relation = self.source.add_relation
-        if metagen is None:
-            metagen = MetaGenerator(cnx)
-        self.metagen = metagen
+        self._create_eid = self._system_source.create_eid
+        self._add_relation = self._system_source.add_relation
         self._nb_inserted_entities = 0
         self._nb_inserted_types = 0
         self._nb_inserted_relations = 0
@@ -239,6 +241,165 @@ class NoHookRQLObjectStore(RQLObjectStore):
         return self._nb_inserted_relations
 
 
+class MetadataGenerator(object):
+    """Class responsible for generating standard metadata for imported entities. You may want to
+    derive it to add application specific's metadata. This class (or a subclass) may either be
+    given to a nohook or massive store.
+
+    Parameters:
+    * `cnx`: connection to the repository
+    * `baseurl`: optional base URL to be used for `cwuri` generation - default to config['base-url']
+    * `source`: optional source to be used as `cw_source` for imported entities
+    """
+    META_RELATIONS = (META_RTYPES
+                      - VIRTUAL_RTYPES
+                      - set(('eid', 'cwuri',
+                             'is', 'is_instance_of', 'cw_source')))
+
+    def __init__(self, cnx, baseurl=None, source=None):
+        self._cnx = cnx
+        if baseurl is None:
+            config = cnx.vreg.config
+            baseurl = config['base-url'] or config.default_base_url()
+        if not baseurl[-1] == '/':
+            baseurl += '/'
+        self._baseurl = baseurl
+        if source is None:
+            source = cnx.repo.system_source
+        self.source = source
+        self._need_extid = source is not cnx.repo.system_source
+        self._now = datetime.now(pytz.utc)
+        # attributes/relations shared by all entities of the same type
+        self._etype_attrs = []
+        self._etype_rels = []
+        # attributes/relations specific to each entity
+        self._entity_attrs = ['cwuri']
+        rschema = cnx.vreg.schema.rschema
+        for rtype in self.META_RELATIONS:
+            # skip owned_by / created_by if user is the internal manager
+            if cnx.user.eid == -1 and rtype in ('owned_by', 'created_by'):
+                continue
+            if rschema(rtype).final:
+                self._etype_attrs.append(rtype)
+            else:
+                self._etype_rels.append(rtype)
+
+    # etype is provided in the 3 methods below as proven useful to custom implementation but not
+    # used by the default implementation
+
+    def etype_attrs(self, etype):
+        """Return the list of attributes to be set for all entities of the given type."""
+        return self._etype_attrs[:]
+
+    def etype_rels(self, etype):
+        """Return the list of relations to be set for all entities of the given type."""
+        return self._etype_rels[:]
+
+    def entity_attrs(self, etype):
+        """Return the list of attributes whose value is set per instance, not per type, for the
+        given type.
+        """
+        return self._entity_attrs[:]
+
+    @cached
+    def base_etype_attrs(self, etype):
+        """Return a dictionary of attributes to be set for all entities of the given type."""
+        attrs = {}
+        for attr in self.etype_attrs(etype):
+            genfunc = self._generator(attr)
+            if genfunc:
+                attrs[attr] = genfunc(etype)
+        return attrs
+
+    @cached
+    def base_etype_rels(self, etype):
+        """Return a dictionary of relations to be set for all entities of the given type."""
+        rels = {}
+        for rel in self.etype_rels(etype):
+            genfunc = self._generator(rel)
+            if genfunc:
+                rels[rel] = genfunc(etype)
+        return rels
+
+    def entity_extid(self, etype, eid, attrs):
+        """Return the extid for the entity of given type and eid, to be inserted in the 'entities'
+        system table.
+        """
+        if self._need_extid:
+            extid = attrs.get('cwuri')
+            if extid is None:
+                raise Exception('entity from an external source but no extid specified')
+            elif isinstance(extid, text_type):
+                extid = extid.encode('utf-8')
+        else:
+            extid = None
+        return extid
+
+    def init_entity_attrs(self, etype, eid, attrs):
+        """Insert into an entity attrs dictionary attributes whose value is set per instance, not per
+        type.
+        """
+        for attr in self.entity_attrs(etype):
+            if attr in attrs:
+                # already set, skip this attribute
+                continue
+            genfunc = self._generator(attr)
+            if genfunc:
+                attrs[attr] = genfunc(etype, eid, attrs)
+
+    def _generator(self, rtype):
+        return getattr(self, 'gen_%s' % rtype, None)
+
+    def gen_cwuri(self, etype, eid, attrs):
+        assert self._baseurl, 'baseurl is None while generating cwuri'
+        return u'%s%s' % (self._baseurl, eid)
+
+    def gen_creation_date(self, etype):
+        return self._now
+
+    def gen_modification_date(self, etype):
+        return self._now
+
+    def gen_created_by(self, etype):
+        return self._cnx.user.eid
+
+    def gen_owned_by(self, etype):
+        return self._cnx.user.eid
+
+
+class _MetaGeneratorBWCompatWrapper(object):
+    """Class wrapping a MetadataGenerator to adapt it to the MetaGenerator interface.
+    """
+    META_RELATIONS = (META_RTYPES
+                      - VIRTUAL_RTYPES
+                      - set(('eid', 'cwuri',
+                             'is', 'is_instance_of', 'cw_source')))
+
+    def __init__(self, mdgenerator):
+        self._mdgen = mdgenerator
+
+    @cached
+    def base_etype_dicts(self, etype):
+        cnx = self._mdgen._cnx
+        entity = cnx.vreg['etypes'].etype_class(etype)(cnx)
+        # entity are "surface" copied, avoid shared dict between copies
+        del entity.cw_extra_kwargs
+        entity.cw_edited = EditedEntity(entity)
+        attrs = self._mdgen.base_etype_attrs(etype)
+        entity.cw_edited.update(attrs, skipsec=False)
+        rels = self._mdgen.base_etype_rels(etype)
+        return entity, rels
+
+    def init_entity(self, entity):
+        # if cwuri is specified, this is an extid. It's not if it's generated in the above loop
+        extid = self._mdgen.entity_extid(entity.cw_etype, entity.eid, entity.cw_edited)
+        attrs = dict(entity.cw_edited)
+        self._mdgen.init_entity_attrs(entity.cw_etype, entity.eid, attrs)
+        entity.cw_edited.update(attrs, skipsec=False)
+        return self._mdgen.source, extid
+
+
+@add_metaclass(class_deprecated)
 class MetaGenerator(object):
     """Class responsible for generating standard metadata for imported entities. You may want to
     derive it to add application specific's metadata.
@@ -248,6 +409,8 @@ class MetaGenerator(object):
     * `baseurl`: optional base URL to be used for `cwuri` generation - default to config['base-url']
     * `source`: optional source to be used as `cw_source` for imported entities
     """
+    __deprecation_warning__ = '[3.23] this class is deprecated, use MetadataGenerator instead'
+
     META_RELATIONS = (META_RTYPES
                       - VIRTUAL_RTYPES
                       - set(('eid', 'cwuri',

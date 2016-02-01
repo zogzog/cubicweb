@@ -66,20 +66,22 @@ class NoHookRQLObjectStoreTC(RQLObjectStoreTC):
 
 
 class MetaGeneratorTC(CubicWebTC):
+    metagenerator_impl = stores.MetaGenerator
+    _etype_rels = staticmethod(lambda x: x.etype_rels)
 
     def test_dont_generate_relation_to_internal_manager(self):
         with self.admin_access.repo_cnx() as cnx:
-            metagen = stores.MetaGenerator(cnx)
-            self.assertIn('created_by', metagen.etype_rels)
-            self.assertIn('owned_by', metagen.etype_rels)
+            metagen = self.metagenerator_impl(cnx)
+            self.assertIn('created_by', self._etype_rels(metagen))
+            self.assertIn('owned_by', self._etype_rels(metagen))
         with self.repo.internal_cnx() as cnx:
-            metagen = stores.MetaGenerator(cnx)
-            self.assertNotIn('created_by', metagen.etype_rels)
-            self.assertNotIn('owned_by', metagen.etype_rels)
+            metagen = self.metagenerator_impl(cnx)
+            self.assertNotIn('created_by', self._etype_rels(metagen))
+            self.assertNotIn('owned_by', self._etype_rels(metagen))
 
     def test_dont_generate_specified_values(self):
         with self.admin_access.repo_cnx() as cnx:
-            metagen = stores.MetaGenerator(cnx)
+            metagen = self.metagenerator_impl(cnx)
             # hijack gen_modification_date to ensure we don't go through it
             metagen.gen_modification_date = None
             md = DT.datetime.now(pytz.utc) - DT.timedelta(days=1)
@@ -88,6 +90,39 @@ class MetaGeneratorTC(CubicWebTC):
             with cnx.ensure_cnx_set:
                 metagen.init_entity(entity)
             self.assertEqual(entity.cw_edited['modification_date'], md)
+
+
+class MetadataGeneratorWrapperTC(MetaGeneratorTC):
+    @staticmethod
+    def metagenerator_impl(cnx):
+        return stores._MetaGeneratorBWCompatWrapper(stores.MetadataGenerator(cnx))
+
+    _etype_rels = staticmethod(lambda x: x._mdgen._etype_rels)
+
+
+class MetadataGeneratorTC(CubicWebTC):
+
+    def test_dont_generate_relation_to_internal_manager(self):
+        with self.admin_access.repo_cnx() as cnx:
+            metagen = stores.MetadataGenerator(cnx)
+            self.assertIn('created_by', metagen.etype_rels('CWUser'))
+            self.assertIn('owned_by', metagen.etype_rels('CWUser'))
+        with self.repo.internal_cnx() as cnx:
+            metagen = stores.MetadataGenerator(cnx)
+            self.assertNotIn('created_by', metagen.etype_rels('CWUser'))
+            self.assertNotIn('owned_by', metagen.etype_rels('CWUser'))
+
+    def test_dont_generate_specified_values(self):
+        with self.admin_access.repo_cnx() as cnx:
+            metagen = stores.MetadataGenerator(cnx)
+            # hijack gen_modification_date to ensure we don't go through it
+            metagen.gen_modification_date = None
+            md = DT.datetime.now(pytz.utc) - DT.timedelta(days=1)
+            attrs = metagen.base_etype_attrs('CWUser')
+            attrs.update(dict(modification_date=md))
+            with cnx.ensure_cnx_set:
+                metagen.init_entity_attrs('CWUser', 1, attrs)
+            self.assertEqual(attrs['modification_date'], md)
 
 
 if __name__ == '__main__':
