@@ -225,7 +225,6 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
         with self.admin_access.repo_cnx() as cnx:
             master_store = MassiveObjectStore(cnx, slave_mode=False)
             slave_store = MassiveObjectStore(cnx, slave_mode=True)
-            self.assertRaises(RuntimeError, slave_store.flush_metadata)
             self.assertRaises(RuntimeError, slave_store.finish)
 
     def test_simple_insert(self):

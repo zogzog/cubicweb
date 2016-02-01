@@ -353,8 +353,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                          {'e': retype})
         self._dbh.restore_indexes_and_constraints()
         # Delete the meta data table
-        for table_name in ('cwmassive_initialized', 'cwmassive_metadata'):
-            self.sql('DROP TABLE IF EXISTS %s' % table_name)
+        self.sql('DROP TABLE IF EXISTS cwmassive_initialized')
         self.commit()
 
     # FLUSH #################################################################
@@ -421,30 +420,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self.on_rollback(exc, etype, data)
             # Clear data cache
             self._data_entities[etype] = []
-        if not self.slave_mode:
-            self.flush_metadata()
-
-    def flush_metadata(self):
-        """ Flush the meta data (entities table, is_instance table, ...)
-        """
-        if self.slave_mode:
-            raise RuntimeError('Flushing meta data is not allow in slave mode')
-        if not self._dbh.table_exists('cwmassive_initialized'):
-            self.logger.info('No information available for initialized etypes/rtypes')
-            return
-        # Keep the correctly flush meta data in database
-        self.sql('CREATE TABLE IF NOT EXISTS cwmassive_metadata (etype text)')
-        cu = self.sql('SELECT etype FROM cwmassive_metadata')
-        already_flushed = set(e for e, in cu.fetchall())
-        cu = self.sql('SELECT retype FROM cwmassive_initialized WHERE type = %(t)s',
-                      {'t': 'etype'})
-        all_etypes = set(e for e, in cu.fetchall())
-        for etype in all_etypes:
-            if etype not in already_flushed:
-                # Deals with meta data
-                self.logger.info('Flushing meta data for %s' % etype)
-                self.insert_massive_metadata(etype)
-                self.sql('INSERT INTO cwmassive_metadata VALUES (%(e)s)', {'e': etype})
+            if not self.slave_mode:
+                self._insert_etype_metadata(etype)
 
     def _cleanup_relations(self, rtype):
         """ Cleanup rtype table """
@@ -456,8 +433,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # Drop temporary relation table
         self.sql('DROP TABLE %(r)s_relation_tmp' % {'r': rtype.lower()})
 
-    def insert_massive_metadata(self, etype):
-        """ Massive insertion of meta data for a given etype, based on SQL statements.
+    def _insert_etype_metadata(self, etype):
+        """Massive insertion of meta data for a given etype, based on SQL statements.
         """
         # insert standard metadata relations
         for rtype, eid in self.metagen.base_etype_rels(etype).items():

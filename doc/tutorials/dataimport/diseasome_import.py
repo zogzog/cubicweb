@@ -153,7 +153,6 @@ def diseasome_import(session, file_name, store):
     # are pushed as well. By metadata we mean information on the creation
     # time and author.
     if _is_of_class(store, 'MassiveObjectStore'):
-        store.flush_meta_data()
         for relation in ('classes', 'possible_drugs', 'omim', 'omim_page', 
                          'chromosomal_location', 'same_as'):
             # Afterwards, relations are actually created in the database.
