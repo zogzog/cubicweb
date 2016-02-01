@@ -18,22 +18,18 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from datetime import datetime
+from copy import copy
 from collections import defaultdict
 from io import StringIO
 from itertools import chain
 
 from six.moves import range
 
-import pytz
-
 from yams.constraints import SizeConstraint
 
 from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server.schema2sql import rschema_has_table
-from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.dataimport import stores, pgstore
-from cubicweb.utils import make_uid
 
 
 class MassiveObjectStore(stores.RQLObjectStore):
@@ -92,8 +88,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def __init__(self, cnx,
                  on_commit_callback=None, on_rollback_callback=None,
                  slave_mode=False,
-                 source=None,
-                 eids_seq_range=10000):
+                 eids_seq_range=10000,
+                 metagen=None):
         """ Create a MassiveObject store, with the following attributes:
 
         - cnx: CubicWeb cnx
@@ -104,6 +100,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.on_rollback_callback = on_rollback_callback
         self.slave_mode = slave_mode
         self.eids_seq_range = eids_seq_range
+        if metagen is None:
+            metagen = stores.MetadataGenerator(cnx)
+        self.metagen = metagen
 
         self.logger = logging.getLogger('dataimport.massive_store')
         self.sql = cnx.system_sql
@@ -127,17 +126,20 @@ class MassiveObjectStore(stores.RQLObjectStore):
         # set of rtypes for which we have a %(rtype)s_relation_iid_tmp table
         self._uri_rtypes = set()
 
-        self._now = datetime.now(pytz.utc)
-        self._default_cwuri = make_uid('_auto_generated')
-
         if not self.slave_mode:
             # drop constraint and metadata table, they will be recreated when self.finish() is
             # called
             self._drop_all_constraints()
             self._drop_metatables_constraints()
-        if source is None:
-            source = cnx.repo.system_source
-        self.source = source
+
+    def _get_eid_gen(self):
+        """ Function getting the next eid. This is done by preselecting
+        a given number of eids from the 'entities_id_seq', and then
+        storing them"""
+        while True:
+            last_eid = self._cnx.repo.system_source.create_eid(self._cnx, self.eids_seq_range)
+            for eid in range(last_eid - self.eids_seq_range + 1, last_eid + 1):
+                yield eid
 
     # URI related things #######################################################
 
@@ -267,23 +269,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
             'entities_id_seq', initial_value=start_eid))
         self._cnx.commit()
 
-    # ENTITIES CREATION #####################################################
-
-    def _get_eid_gen(self):
-        """ Function getting the next eid. This is done by preselecting
-        a given number of eids from the 'entities_id_seq', and then
-        storing them"""
-        while True:
-            last_eid = self._cnx.repo.system_source.create_eid(self._cnx, self.eids_seq_range)
-            for eid in range(last_eid - self.eids_seq_range + 1, last_eid + 1):
-                yield eid
-
-    def _apply_default_values(self, etype, kwargs):
-        """Apply the default values for a given etype, attribute and value."""
-        default_values = self.default_values[etype]
-        missing_keys = set(default_values) - set(kwargs)
-        kwargs.update((key, default_values[key]) for key in missing_keys)
-
     # store api ################################################################
 
     def prepare_insert_entity(self, etype, **kwargs):
@@ -296,21 +281,20 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
                      '(retype text, type varchar(128))')
             self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'etype')", {'e': etype})
-        # Add meta data if not given
-        if 'modification_date' not in kwargs:
-            kwargs['modification_date'] = self._now
-        if 'creation_date' not in kwargs:
-            kwargs['creation_date'] = self._now
-        if 'cwuri' not in kwargs:
-            kwargs['cwuri'] = self._default_cwuri + str(self._count_cwuri)
-            self._count_cwuri += 1
-        if 'eid' not in kwargs:
-            # If eid is not given and the eids sequence is set,
-            # use the value from the sequence
-            kwargs['eid'] = self.get_next_eid()
-        self._apply_default_values(etype, kwargs)
-        self._data_entities[etype].append(kwargs)
-        return kwargs.get('eid')
+        attrs = self.metagen.base_etype_attrs(etype)
+        data = copy(attrs)  # base_etype_attrs is @cached, a copy is necessary
+        data.update(kwargs)
+        if 'eid' not in data:
+            # If eid is not given and the eids sequence is set, use the value from the sequence
+            eid = self.get_next_eid()
+            data['eid'] = eid
+        # XXX default values could be set once for all in base entity
+        default_values = self.default_values[etype]
+        missing_keys = set(default_values) - set(data)
+        data.update((key, default_values[key]) for key in missing_keys)
+        self.metagen.init_entity_attrs(etype, data['eid'], data)
+        self._data_entities[etype].append(data)
+        return data['eid']
 
     def prepare_insert_relation(self, eid_from, rtype, eid_to, **kwargs):
         """Insert into the database a  relation ``rtype`` between entities with eids ``eid_from``
@@ -466,13 +450,16 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def insert_massive_metadata(self, etype):
         """ Massive insertion of meta data for a given etype, based on SQL statements.
         """
-        self._insert_meta_relation(etype, self._cnx.user.eid, 'created_by_relation')
-        self._insert_meta_relation(etype, self._cnx.user.eid, 'owned_by_relation')
-        self._insert_meta_relation(etype, self.source.eid, 'cw_source_relation')
-        eschema = self.schema[etype].eid
+        # insert standard metadata relations
+        for rtype, eid in self.metagen.base_etype_rels(etype).items():
+            self._insert_meta_relation(etype, eid, '%s_relation' % rtype)
+        # insert cw_source, is and is_instance_of relations (normally handled by the system source)
+        self._insert_meta_relation(etype, self.metagen.source.eid, 'cw_source_relation')
+        eschema = self.schema[etype]
         self._insert_meta_relation(etype, eschema.eid, 'is_relation')
-        for parent_eschema in eschema.ancestors() + [eschema]:
+        for parent_eschema in chain(eschema.ancestors(), [eschema]):
             self._insert_meta_relation(etype, parent_eschema.eid, 'is_instance_of_relation')
+        # finally insert records into the entities table
         self.sql("INSERT INTO entities (eid, type, asource, extid) "
                  "SELECT cw_eid, '%s', 'system', NULL FROM cw_%s "
                  "WHERE NOT EXISTS (SELECT 1 FROM entities WHERE eid=cw_eid)"
