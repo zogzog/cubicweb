@@ -44,6 +44,11 @@ from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
 
 
+STD_BLACKLIST = set(STD_BLACKLIST)
+STD_BLACKLIST.add('.tox')
+STD_BLACKLIST.add('test')
+
+
 class DevConfiguration(ServerConfiguration, WebConfiguration):
     """dummy config to get full library schema and appobjects for
     a cube or for cubicweb (without a home)
@@ -453,7 +458,7 @@ def update_cube_catalogs(cubedir):
     schemapotstream.close()
     print('TAL', end=' ')
     tali18nfile = osp.join(tempdir, 'tali18n.py')
-    ptfiles = find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',))
+    ptfiles = find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST)
     extract_from_tal(ptfiles, tali18nfile)
     print('Javascript')
     jsfiles =  [jsfile for jsfile in find('.', '.js')
@@ -468,7 +473,7 @@ def update_cube_catalogs(cubedir):
             potfiles.append(tmppotfile)
     print('-> creating cube-specific catalog')
     tmppotfile = osp.join(tempdir, 'generated.pot')
-    cubefiles = find('.', '.py', blacklist=STD_BLACKLIST+('test',))
+    cubefiles = find('.', '.py', blacklist=STD_BLACKLIST)
     cubefiles.append(tali18nfile)
     cmd = ['xgettext', '--no-location', '--omit-header', '-k_', '-o', tmppotfile]
     cmd.extend(cubefiles)
