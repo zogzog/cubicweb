@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,13 +26,10 @@ __docformat__ = 'restructuredtext en'
 import sys
 import os
 from contextlib import contextmanager
-import logging
-import subprocess
 
 from six import string_types
 from six.moves import input
 
-from logilab.common import nullobject
 from logilab.common.configuration import Configuration, merge_options
 from logilab.common.shellutils import ASK, generate_password
 
@@ -45,6 +42,7 @@ from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.serverconfig import (
     USER_OPTIONS, ServerConfiguration, SourceConfiguration,
     ask_source_config, generate_source_config)
+
 
 # utility functions ###########################################################
 
@@ -102,6 +100,7 @@ def source_cnx(source, dbname=None, special_privs=False, interactive=True):
         cnx.logged_user = user
     return cnx
 
+
 def system_source_cnx(source, dbms_system_base=False,
                       special_privs='CREATE/DROP DATABASE', interactive=True):
     """shortcut to get a connextion to the instance system database
@@ -116,14 +115,13 @@ def system_source_cnx(source, dbms_system_base=False,
     return source_cnx(source, special_privs=special_privs,
                       interactive=interactive)
 
+
 def _db_sys_cnx(source, special_privs, interactive=True):
     """return a connection on the RDMS system table (to create/drop a user or a
     database)
     """
     import logilab.common as lgp
     lgp.USE_MX_DATETIME = False
-    driver = source['db-driver']
-    helper = get_db_helper(driver)
     # connect on the dbms system base to create our base
     cnx = system_source_cnx(source, True, special_privs=special_privs,
                             interactive=interactive)
@@ -134,6 +132,7 @@ def _db_sys_cnx(source, special_privs, interactive=True):
         # set_isolation_level() is psycopg specific
         set_isolation_level(0)
     return cnx
+
 
 def repo_cnx(config):
     """return a in-memory repository and a repoapi connection to it"""
@@ -170,8 +169,7 @@ class RepositoryCreateHandler(CommandHandler):
         if not automatic:
             print(underline_title('Configuring the repository'))
             config.input_config('email', inputlevel)
-            print('\n'+underline_title('Configuring the sources'))
-        sourcesfile = config.sources_file()
+            print('\n' + underline_title('Configuring the sources'))
         # hack to make Method('default_instance_id') usable in db option defs
         # (in native.py)
         sconfig = SourceConfiguration(config,
@@ -249,13 +247,11 @@ class RepositoryDeleteHandler(CommandHandler):
             print('-> database schema %s dropped' % db_namespace)
 
     def _drop_database(self, source):
-        dbname = source['db-name']
         if source['db-driver'] == 'sqlite':
             print('deleting database file %(db-name)s' % source)
             os.unlink(source['db-name'])
             print('-> database %(db-name)s dropped.' % source)
         else:
-            helper = get_db_helper(source['db-driver'])
             with db_sys_transaction(source, privilege='DROP DATABASE') as cursor:
                 print('dropping database %(db-name)s' % source)
                 cursor.execute('DROP DATABASE "%(db-name)s"' % source)
@@ -326,14 +322,14 @@ class CreateInstanceDBCommand(Command):
     min_args = max_args = 1
     options = (
         ('automatic',
-         {'short': 'a', 'action' : 'store_true',
+         {'short': 'a', 'action': 'store_true',
           'default': False,
           'help': 'automatic mode: never ask and use default answer to every '
           'question. this may require that your login match a database super '
           'user (allowed to create database & all).',
           }),
         ('config-level',
-         {'short': 'l', 'type' : 'int', 'metavar': '<level>',
+         {'short': 'l', 'type': 'int', 'metavar': '<level>',
           'default': 0,
           'help': 'configuration level (0..2): 0 will ask for essential '
           'configuration parameters only while 2 will ask for all parameters',
@@ -343,7 +339,7 @@ class CreateInstanceDBCommand(Command):
           'default': True,
           'help': 'create the database (yes by default)'
           }),
-        )
+    )
 
     def run(self, args):
         """run the command with its specific arguments"""
@@ -357,11 +353,11 @@ class CreateInstanceDBCommand(Command):
         helper = get_db_helper(driver)
         if driver == 'sqlite':
             if os.path.exists(dbname) and (
-                automatic or
-                ASK.confirm('Database %s already exists. Drop it?' % dbname)):
+                    automatic or
+                    ASK.confirm('Database %s already exists. Drop it?' % dbname)):
                 os.unlink(dbname)
         elif self.config.create_db:
-            print('\n'+underline_title('Creating the system database'))
+            print('\n' + underline_title('Creating the system database'))
             # connect on the dbms system base to create our base
             dbcnx = _db_sys_cnx(source, 'CREATE/DROP DATABASE and / or USER',
                                 interactive=not automatic)
@@ -369,12 +365,14 @@ class CreateInstanceDBCommand(Command):
             try:
                 if helper.users_support:
                     user = source['db-user']
-                    if not helper.user_exists(cursor, user) and (automatic or \
-                           ASK.confirm('Create db user %s ?' % user, default_is_yes=False)):
+                    if not helper.user_exists(cursor, user) and (
+                            automatic or
+                            ASK.confirm('Create db user %s ?' % user, default_is_yes=False)):
                         helper.create_user(source['db-user'], source.get('db-password'))
                         print('-> user %s created.' % user)
                 if dbname in helper.list_databases(cursor):
-                    if automatic or ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
+                    if automatic or ASK.confirm('Database %s already exists -- '
+                                                'do you want to drop it ?' % dbname):
                         cursor.execute('DROP DATABASE "%s"' % dbname)
                     else:
                         print('you may want to run "cubicweb-ctl db-init '
@@ -405,7 +403,8 @@ class CreateInstanceDBCommand(Command):
                         helper.create_language(cursor, extlang)
                     except Exception as exc:
                         print('-> ERROR:', exc)
-                        print('-> could not create language %s, some stored procedures might be unusable' % extlang)
+                        print('-> could not create language %s, '
+                              'some stored procedures might be unusable' % extlang)
                         cnx.rollback()
                     else:
                         cnx.commit()
@@ -436,7 +435,7 @@ class InitInstanceCommand(Command):
     min_args = max_args = 1
     options = (
         ('automatic',
-         {'short': 'a', 'action' : 'store_true',
+         {'short': 'a', 'action': 'store_true',
           'default': False,
           'help': 'automatic mode: never ask and use default answer to every '
           'question.',
@@ -452,11 +451,11 @@ class InitInstanceCommand(Command):
           'help': 'insert drop statements to remove previously existant '
           'tables, indexes... (no by default)'
           }),
-        )
+    )
 
     def run(self, args):
         check_options_consistency(self.config)
-        print('\n'+underline_title('Initializing the system database'))
+        print('\n' + underline_title('Initializing the system database'))
         from cubicweb.server import init_repository
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
@@ -471,7 +470,7 @@ class InitInstanceCommand(Command):
                 schema=system.get('db-namespace'), **extra)
         except Exception as ex:
             raise ConfigurationError(
-                'You seem to have provided wrong connection information in '\
+                'You seem to have provided wrong connection information in '
                 'the %s file. Resolve this first (error: %s).'
                 % (config.sources_file(), str(ex).strip()))
         init_repository(config, drop=self.config.drop)
@@ -495,7 +494,7 @@ class AddSourceCommand(Command):
          {'short': 'l', 'type': 'int', 'default': 1,
           'help': 'level threshold for questions asked when configuring another source'
           }),
-        )
+    )
 
     def run(self, args):
         appid = args[0]
@@ -508,7 +507,7 @@ class AddSourceCommand(Command):
                 cubes = repo.get_cubes()
                 while True:
                     type = input('source type (%s): '
-                                        % ', '.join(sorted(SOURCE_TYPES)))
+                                 % ', '.join(sorted(SOURCE_TYPES)))
                     if type not in SOURCE_TYPES:
                         print('-> unknown source type, use one of the available types.')
                         continue
@@ -518,20 +517,20 @@ class AddSourceCommand(Command):
                         sourcecube = SOURCE_TYPES[type].module.split('.', 2)[1]
                         # if the source adapter is coming from an external component,
                         # ensure it's specified in used cubes
-                        if not sourcecube in cubes:
+                        if sourcecube not in cubes:
                             print ('-> this source type require the %s cube which is '
                                    'not used by the instance.')
                             continue
                     break
                 while True:
                     parser = input('parser type (%s): '
-                                        % ', '.join(sorted(repo.vreg['parsers'])))
+                                   % ', '.join(sorted(repo.vreg['parsers'])))
                     if parser in repo.vreg['parsers']:
                         break
                     print('-> unknown parser identifier, use one of the available types.')
                 while True:
                     sourceuri = input('source identifier (a unique name used to '
-                                          'tell sources apart): ').strip()
+                                      'tell sources apart): ').strip()
                     if not sourceuri:
                         print('-> mandatory.')
                     else:
@@ -565,11 +564,12 @@ class GrantUserOnInstanceCommand(Command):
     min_args = max_args = 2
     options = (
         ('set-owner',
-         {'short': 'o', 'type' : 'yn', 'metavar' : '<yes or no>',
-          'default' : False,
+         {'short': 'o', 'type': 'yn', 'metavar': '<yes or no>',
+          'default': False,
           'help': 'Set the user as tables owner if yes (no by default).'}
          ),
-        )
+    )
+
     def run(self, args):
         """run the command with its specific arguments"""
         from cubicweb.server.sqlutils import sqlexec, sqlgrants
@@ -604,13 +604,13 @@ class ResetAdminPasswordCommand(Command):
     min_args = max_args = 1
     options = (
         ('password',
-         {'short': 'p', 'type' : 'string', 'metavar' : '<new-password>',
-          'default' : None,
+         {'short': 'p', 'type': 'string', 'metavar': '<new-password>',
+          'default': None,
           'help': 'Use this password instead of prompt for one.\n'
                   '/!\ THIS IS AN INSECURE PRACTICE /!\ \n'
                   'the password will appear in shell history'}
          ),
-        )
+    )
 
     def run(self, args):
         """run the command with its specific arguments"""
@@ -661,7 +661,6 @@ class ResetAdminPasswordCommand(Command):
         cnx.close()
 
 
-
 def _remote_dump(host, appid, output, sudo=False):
     # XXX generate unique/portable file name
     from datetime import date
@@ -682,8 +681,8 @@ def _remote_dump(host, appid, output, sudo=False):
     rmcmd = 'ssh -t %s "rm -f /tmp/%s"' % (host, filename)
     print(rmcmd)
     if os.system(rmcmd) and not ASK.confirm(
-        'An error occurred while deleting remote dump at /tmp/%s. '
-        'Continue anyway?' % filename):
+            'An error occurred while deleting remote dump at /tmp/%s. '
+            'Continue anyway?' % filename):
         raise ExecutionError('Error while deleting remote dump at /tmp/%s' % filename)
 
 
@@ -694,9 +693,10 @@ def _local_dump(appid, output, format='native'):
     mih.backup_database(output, askconfirm=False, format=format)
     mih.shutdown()
 
+
 def _local_restore(appid, backupfile, drop, format='native'):
     config = ServerConfiguration.config_for(appid)
-    config.verbosity = 1 # else we won't be asked for confirmation on problems
+    config.verbosity = 1  # else we won't be asked for confirmation on problems
     config.quick_start = True
     mih = config.migration_handler(connect=False, verbosity=1)
     mih.restore_database(backupfile, drop, askconfirm=False, format=format)
@@ -726,6 +726,7 @@ def _local_restore(appid, backupfile, drop, format='native'):
     # * database version = installed software, database version = instance fs version
     #   ok!
 
+
 def instance_status(config, cubicwebapplversion, vcconf):
     cubicwebversion = config.cubicweb_version()
     if cubicwebapplversion > cubicwebversion:
@@ -736,7 +737,8 @@ def instance_status(config, cubicwebapplversion, vcconf):
         try:
             softversion = config.cube_version(cube)
         except ConfigurationError:
-            print('-> Error: no cube version information for %s, please check that the cube is installed.' % cube)
+            print('-> Error: no cube version information for %s, '
+                  'please check that the cube is installed.' % cube)
             continue
         try:
             applversion = vcconf[cube]
@@ -764,13 +766,13 @@ class DBDumpCommand(Command):
     min_args = max_args = 1
     options = (
         ('output',
-         {'short': 'o', 'type' : 'string', 'metavar' : '<file>',
-          'default' : None,
+         {'short': 'o', 'type': 'string', 'metavar': '<file>',
+          'default': None,
           'help': 'Specify the backup file where the backup will be stored.'}
          ),
         ('sudo',
-         {'short': 's', 'action' : 'store_true',
-          'default' : False,
+         {'short': 's', 'action': 'store_true',
+          'default': False,
           'help': 'Use sudo on the remote host.'}
          ),
         ('format',
@@ -779,7 +781,7 @@ class DBDumpCommand(Command):
           'help': '"native" format uses db backend utilities to dump the database. '
                   '"portable" format uses a database independent format'}
          ),
-        )
+    )
 
     def run(self, args):
         appid = args[0]
@@ -788,8 +790,6 @@ class DBDumpCommand(Command):
             _remote_dump(host, appid, self.config.output, self.config.sudo)
         else:
             _local_dump(appid, self.config.output, format=self.config.format)
-
-
 
 
 class DBRestoreCommand(Command):
@@ -804,7 +804,7 @@ class DBRestoreCommand(Command):
 
     options = (
         ('no-drop',
-         {'short': 'n', 'action' : 'store_true', 'default' : False,
+         {'short': 'n', 'action': 'store_true', 'default': False,
           'help': 'for some reason the database doesn\'t exist and so '
           'should not be dropped.'}
          ),
@@ -812,7 +812,7 @@ class DBRestoreCommand(Command):
          {'short': 'f', 'default': 'native', 'type': 'choice',
           'choices': ('native', 'portable'),
           'help': 'the format used when dumping the database'}),
-        )
+    )
 
     def run(self, args):
         appid, backupfile = args
@@ -851,19 +851,19 @@ class DBCopyCommand(Command):
     min_args = max_args = 2
     options = (
         ('no-drop',
-         {'short': 'n', 'action' : 'store_true',
-          'default' : False,
+         {'short': 'n', 'action': 'store_true',
+          'default': False,
           'help': 'For some reason the database doesn\'t exist and so '
           'should not be dropped.'}
          ),
         ('keep-dump',
-         {'short': 'k', 'action' : 'store_true',
-          'default' : False,
+         {'short': 'k', 'action': 'store_true',
+          'default': False,
           'help': 'Specify that the dump file should not be automatically removed.'}
          ),
         ('sudo',
-         {'short': 's', 'action' : 'store_true',
-          'default' : False,
+         {'short': 's', 'action': 'store_true',
+          'default': False,
           'help': 'Use sudo on the remote host.'}
          ),
         ('format',
@@ -872,7 +872,7 @@ class DBCopyCommand(Command):
           'help': '"native" format uses db backend utilities to dump the database. '
                   '"portable" format uses a database independent format'}
          ),
-        )
+    )
 
     def run(self, args):
         import tempfile
@@ -903,34 +903,33 @@ class CheckRepositoryCommand(Command):
     min_args = max_args = 1
     options = (
         ('checks',
-         {'short': 'c', 'type' : 'csv', 'metavar' : '<check list>',
-          'default' : ('entities', 'relations',
-                       'mandatory_relations', 'mandatory_attributes',
-                       'metadata', 'schema', 'text_index'),
+         {'short': 'c', 'type': 'csv', 'metavar': '<check list>',
+          'default': ('entities', 'relations',
+                      'mandatory_relations', 'mandatory_attributes',
+                      'metadata', 'schema', 'text_index'),
           'help': 'Comma separated list of check to run. By default run all \
 checks, i.e. entities, relations, mandatory_relations, mandatory_attributes, \
 metadata, text_index and schema.'}
          ),
 
         ('autofix',
-         {'short': 'a', 'type' : 'yn', 'metavar' : '<yes or no>',
-          'default' : False,
+         {'short': 'a', 'type': 'yn', 'metavar': '<yes or no>',
+          'default': False,
           'help': 'Automatically correct integrity problems if this option \
 is set to "y" or "yes", else only display them'}
          ),
         ('reindex',
-         {'short': 'r', 'type' : 'yn', 'metavar' : '<yes or no>',
-          'default' : False,
+         {'short': 'r', 'type': 'yn', 'metavar': '<yes or no>',
+          'default': False,
           'help': 're-indexes the database for full text search if this \
 option is set to "y" or "yes" (may be long for large database).'}
          ),
         ('force',
-         {'short': 'f', 'action' : 'store_true',
-          'default' : False,
+         {'short': 'f', 'action': 'store_true',
+          'default': False,
           'help': 'don\'t check instance is up to date.'}
          ),
-
-        )
+    )
 
     def run(self, args):
         from cubicweb.server.checkintegrity import check
@@ -981,10 +980,10 @@ class SynchronizeSourceCommand(Command):
     arguments = '<instance> <source>'
     min_args = max_args = 2
     options = (
-            ('loglevel',
-             {'short': 'l', 'type' : 'choice', 'metavar': '<log level>',
-              'default': 'info', 'choices': ('debug', 'info', 'warning', 'error'),
-             }),
+        ('loglevel',
+         {'short': 'l', 'type': 'choice', 'metavar': '<log level>',
+          'default': 'info', 'choices': ('debug', 'info', 'warning', 'error')},
+         ),
     )
 
     def run(self, args):
@@ -1010,9 +1009,7 @@ class SynchronizeSourceCommand(Command):
                 print(key, ':', val)
 
 
-
 def permissionshandler(relation, perms):
-    from yams.schema import RelationDefinitionSchema
     from yams.buildobjs import DEFAULT_ATTRPERMS
     from cubicweb.schema import (PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS,
                                  PUB_SYSTEM_ATTR_PERMS, RO_REL_PERMS, RO_ATTR_PERMS)
@@ -1063,21 +1060,24 @@ for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
 
 db_options = (
     ('db',
-     {'short': 'd', 'type' : 'named', 'metavar' : '[section1.]key1:value1,[section2.]key2:value2',
+     {'short': 'd', 'type': 'named', 'metavar': '[section1.]key1:value1,[section2.]key2:value2',
       'default': None,
-      'help': '''set <key> in <section> to <value> in "source" configuration file. If <section> is not specified, it defaults to "system".
+      'help': '''set <key> in <section> to <value> in "source" configuration file. If
+<section> is not specified, it defaults to "system".
 
 Beware that changing admin.login or admin.password using this command
 will NOT update the database with new admin credentials.  Use the
 reset-admin-pwd command instead.
 ''',
       }),
-    )
+)
 
 ConfigureInstanceCommand.options = merge_options(
-        ConfigureInstanceCommand.options + db_options)
+    ConfigureInstanceCommand.options + db_options)
 
 configure_instance = ConfigureInstanceCommand.configure_instance
+
+
 def configure_instance2(self, appid):
     configure_instance(self, appid)
     if self.config.db is not None:
@@ -1091,10 +1091,12 @@ def configure_instance2(self, appid):
             try:
                 srccfg[section][key] = value
             except KeyError:
-                raise ConfigurationError('unknown configuration key "%s" in section "%s" for source' % (key, section))
+                raise ConfigurationError('unknown configuration key "%s" in section "%s" for source'
+                                         % (key, section))
         admcfg = Configuration(options=USER_OPTIONS)
         admcfg['login'] = srccfg['admin']['login']
         admcfg['password'] = srccfg['admin']['password']
         srccfg['admin'] = admcfg
         appcfg.write_sources_file(srccfg)
+
 ConfigureInstanceCommand.configure_instance = configure_instance2
