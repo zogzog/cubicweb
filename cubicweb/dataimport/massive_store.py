@@ -22,6 +22,7 @@ from copy import copy
 from collections import defaultdict
 from io import StringIO
 from itertools import chain
+from base64 import b64encode
 
 from six.moves import range
 
@@ -281,6 +282,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
                      '(retype text, type varchar(128))')
             self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'etype')", {'e': etype})
+            self.sql('ALTER TABLE cw_%s ADD COLUMN extid VARCHAR(256)' % etype.lower())
         attrs = self.metagen.base_etype_attrs(etype)
         data = copy(attrs)  # base_etype_attrs is @cached, a copy is necessary
         data.update(kwargs)
@@ -292,6 +294,10 @@ class MassiveObjectStore(stores.RQLObjectStore):
         default_values = self.default_values[etype]
         missing_keys = set(default_values) - set(data)
         data.update((key, default_values[key]) for key in missing_keys)
+        extid = self.metagen.entity_extid(etype, data['eid'], data)
+        if extid is not None:
+            extid = b64encode(extid).decode('ascii')
+        data['extid'] = extid
         self.metagen.init_entity_attrs(etype, data['eid'], data)
         self._data_entities[etype].append(data)
         return data['eid']
@@ -338,7 +344,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
             cu = self.sql('SELECT retype, type FROM cwmassive_initialized')
             for retype, _type in cu.fetchall():
                 self.logger.info('Cleanup for %s' % retype)
-                if _type == 'rtype':
+                if _type == 'etype':
+                    self.sql('ALTER TABLE cw_%s DROP COLUMN extid' % retype)
+                elif _type == 'rtype':
                     # Cleanup relations tables
                     self._cleanup_relations(retype)
                 self.sql('DELETE FROM cwmassive_initialized WHERE retype = %(e)s',
@@ -404,7 +412,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
             if not buf:
                 # The buffer is empty. This is probably due to error in _create_copyfrom_buffer
                 raise ValueError('Error in buffer creation for etype %s' % etype)
-            columns = ['cw_%s' % attr for attr in columns]
+            columns = ['cw_%s' % attr if attr != 'extid' else attr
+                       for attr in columns]
             cursor = self._cnx.cnxset.cu
             try:
                 cursor.copy_from(buf, 'cw_%s' % etype.lower(), null='NULL', columns=columns)
@@ -461,9 +470,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self._insert_meta_relation(etype, parent_eschema.eid, 'is_instance_of_relation')
         # finally insert records into the entities table
         self.sql("INSERT INTO entities (eid, type, asource, extid) "
-                 "SELECT cw_eid, '%s', 'system', NULL FROM cw_%s "
+                 "SELECT cw_eid, '%s', '%s', extid FROM cw_%s "
                  "WHERE NOT EXISTS (SELECT 1 FROM entities WHERE eid=cw_eid)"
-                 % (etype, etype.lower()))
+                 % (etype, self.metagen.source.uri, etype.lower()))
 
     def _insert_meta_relation(self, etype, eid_to, rtype):
         self.sql("INSERT INTO %s (eid_from, eid_to) SELECT cw_eid, %s FROM cw_%s "

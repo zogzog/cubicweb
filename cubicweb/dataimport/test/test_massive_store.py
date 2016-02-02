@@ -18,10 +18,12 @@
 
 import itertools
 
-from cubicweb.dataimport import ucsvreader
 from cubicweb.devtools import testlib, PostgresApptestConfiguration
 from cubicweb.devtools import startpgcluster, stoppgcluster
+from cubicweb.dataimport import ucsvreader, stores
 from cubicweb.dataimport.massive_store import MassiveObjectStore, PGHelper
+
+from test_stores import NoHookRQLObjectStoreWithCustomMDGenStoreTC
 
 
 def setUpModule():
@@ -30,6 +32,16 @@ def setUpModule():
 
 def tearDownModule(*args):
     stoppgcluster(__file__)
+
+
+class MassiveObjectStoreWithCustomMDGenStoreTC(NoHookRQLObjectStoreWithCustomMDGenStoreTC):
+    configcls = PostgresApptestConfiguration
+
+    def store_impl(self, cnx):
+        source = cnx.create_entity('CWSource', type=u'datafeed', name=u'test', url=u'test')
+        cnx.commit()
+        metagen = stores.MetadataGenerator(cnx, source=cnx.repo.sources_by_eid[source.eid])
+        return MassiveObjectStore(cnx, metagen=metagen)
 
 
 class MassImportSimpleTC(testlib.CubicWebTC):
@@ -183,20 +195,20 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
     def test_on_commit_callback(self):
         counter = itertools.count()
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, on_commit_callback=lambda:next(counter))
+            store = MassiveObjectStore(cnx, on_commit_callback=lambda: next(counter))
             store.prepare_insert_entity('Location', name=u'toto')
             store.flush()
             store.commit()
-        self.assertGreaterEqual(next(counter), 1)
+        self.assertEqual(next(counter), 1)
 
     def test_on_rollback_callback(self):
         counter = itertools.count()
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, on_rollback_callback=lambda *_: next(counter))
             store.prepare_insert_entity('Location', nm='toto')
+            store.commit()  # commit modification to the database before flush
             store.flush()
-            store.commit()
-        self.assertGreaterEqual(next(counter), 1)
+        self.assertEqual(next(counter), 1)
 
     def test_slave_mode_indexes(self):
         with self.admin_access.repo_cnx() as cnx:
