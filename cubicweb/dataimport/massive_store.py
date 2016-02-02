@@ -34,8 +34,7 @@ from cubicweb.dataimport import stores, pgstore
 
 
 class MassiveObjectStore(stores.RQLObjectStore):
-    """
-    Store for massive import of data, with delayed insertion of meta data.
+    """Store for massive import of data, with delayed insertion of meta data.
 
     WARNINGS:
 
@@ -82,6 +81,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
        ...
        store.commit()
        store.finish()
+
+    Full-text indexation is not handled, you'll have to reindex the proper entity types by yourself
+    if desired.
     """
     # max size of the iid, used to create the iid_eid conversion table
     iid_maxsize = 1024
@@ -305,8 +307,11 @@ class MassiveObjectStore(stores.RQLObjectStore):
     def prepare_insert_relation(self, eid_from, rtype, eid_to, **kwargs):
         """Insert into the database a  relation ``rtype`` between entities with eids ``eid_from``
         and ``eid_to``.
+
+        Relation must not be inlined.
         """
         if not self.slave_mode and rtype not in self._initialized:
+            assert not self._cnx.vreg.schema.rschema(rtype).inlined
             self._initialized.add(rtype)
             self._dbh.drop_indexes('%s_relation' % rtype.lower())
             self.sql('CREATE TABLE %s_relation_tmp (eid_from integer, eid_to integer)'
