@@ -40,7 +40,7 @@ import sys
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.configuration import Method
-from logilab.common.shellutils import getlogin
+from logilab.common.shellutils import getlogin, ASK
 from logilab.database import get_db_helper, sqlgen
 
 from yams import schema2sql as y2sql
@@ -1708,15 +1708,20 @@ class DatabaseIndependentBackupRestore(object):
         tables = archive.read('tables.txt').splitlines()
         sequences = archive.read('sequences.txt').splitlines()
         numranges = archive.read('numranges.txt').splitlines()
-        file_versions = self._parse_versions(archive.read('versions.txt'))
-        versions = set(self._get_versions())
-        if file_versions != versions:
-            self.logger.critical('Unable to restore : versions do not match')
-            self.logger.critical('Expected:\n%s', '\n'.join('%s : %s' % (cube, ver)
-                                                            for cube, ver in sorted(versions)))
-            self.logger.critical('Found:\n%s', '\n'.join('%s : %s' % (cube, ver)
-                                                         for cube, ver in sorted(file_versions)))
-            raise ValueError('Unable to restore : versions do not match')
+        archive_versions = self._parse_versions(archive.read('versions.txt'))
+        db_versions = set(self._get_versions())
+        if archive_versions != db_versions:
+            self.logger.critical('Restore warning : versions do not match')
+            new_cubes = db_versions - archive_versions
+            if new_cubes:
+                self.logger.critical('In the db:\n%s', '\n'.join('%s : %s' % (cube, ver)
+                                                            for cube, ver in sorted(new_cubes)))
+            old_cubes = archive_versions - db_versions
+            if old_cubes:
+                self.logger.critical('In the archive:\n%s', '\n'.join('%s : %s' % (cube, ver)
+                                                            for cube, ver in sorted(old_cubes)))
+            if not ASK.confirm('Versions mismatch: continue anyway ?', False):
+                raise ValueError('Unable to restore : versions do not match')
         table_chunks = {}
         for name in archive.namelist():
             if not name.startswith('tables/'):
