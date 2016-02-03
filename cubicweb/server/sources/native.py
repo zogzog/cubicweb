@@ -1457,7 +1457,9 @@ FOR EACH ROW BEGIN
     DELETE FROM tx_relation_actions WHERE tx_uuid=OLD.tx_uuid;
 END;;
 '''
-    schema += ';;'.join(helper.sqls_create_multicol_unique_index('entities', ['extid']))
+    # define a multi-columns index on a single index to please sqlserver, which doesn't like several
+    # null entries in a UNIQUE column
+    schema += ';;'.join(helper.sqls_create_multicol_unique_index('entities', ['extid'], 'entities_extid_idx'))
     schema += ';;\n'
     return schema
 
