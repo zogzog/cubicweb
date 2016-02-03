@@ -56,7 +56,7 @@ from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.server import hook
 from cubicweb.server import schema2sql as y2sql
-from cubicweb.server.utils import crypt_password, eschema_eid, verify_and_update
+from cubicweb.server.utils import crypt_password, verify_and_update
 from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
 from cubicweb.server.hook import CleanupDeletedEidsCacheOp
@@ -915,17 +915,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                  'asource': text_type(source.uri)}
         self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
-        try:
+
+        if entity.e_schema.eid is not None:  # else schema has not yet been serialized
             self._handle_is_relation_sql(cnx, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                         (entity.eid, eschema_eid(cnx, entity.e_schema)))
-        except IndexError:
-            # during schema serialization, skip
-            pass
-        else:
+                                         (entity.eid, entity.e_schema.eid))
             for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
                 self._handle_is_relation_sql(cnx,
                                              'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                             (entity.eid, eschema_eid(cnx, eschema)))
+                                             (entity.eid, eschema.eid))
         if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
             self._handle_is_relation_sql(cnx, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
                                          (entity.eid, source.eid))

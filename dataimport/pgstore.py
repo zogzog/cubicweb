@@ -30,7 +30,6 @@ from six import string_types, integer_types, text_type, binary_type
 from six.moves import cPickle as pickle, range
 
 from cubicweb.utils import make_uid
-from cubicweb.server.utils import eschema_eid
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.dataimport.stores import NoHookRQLObjectStore
 
@@ -425,17 +424,12 @@ class SQLGenSourceWrapper(object):
                  'asource': source.uri}
         self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
-        try:
-            self._handle_is_relation_sql(cnx, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                         (entity.eid, eschema_eid(cnx, entity.e_schema)))
-        except IndexError:
-            # during schema serialization, skip
-            pass
-        else:
-            for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-                self._handle_is_relation_sql(cnx,
-                                             'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                             (entity.eid, eschema_eid(cnx, eschema)))
+        self._handle_is_relation_sql(cnx, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                     (entity.eid, entity.e_schema.eid))
+        for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
+            self._handle_is_relation_sql(cnx,
+                                         'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                         (entity.eid, eschema.eid))
         self._handle_is_relation_sql(cnx, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
                                      (entity.eid, source.eid))
         # now we can update the full text index

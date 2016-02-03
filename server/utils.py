@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -30,6 +30,8 @@ from six.moves import input
 
 from passlib.utils import handlers as uh, to_hash_str
 from passlib.context import CryptContext
+
+from logilab.common.deprecation import deprecated
 
 from cubicweb.md5crypt import crypt as md5crypt
 
@@ -76,16 +78,14 @@ def crypt_password(passwd, salt=None):
     # wrong password
     return b''
 
-
+@deprecated('[3.22] no more necessary, directly get eschema.eid')
 def eschema_eid(cnx, eschema):
-    """get eid of the CWEType entity for the given yams type. You should use
-    this because when schema has been loaded from the file-system, not from the
-    database, (e.g. during tests), eschema.eid is not set.
+    """get eid of the CWEType entity for the given yams type.
+
+    This used to be necessary because when the schema has been loaded from the
+    file-system, not from the database, (e.g. during tests), eschema.eid was
+    not set.
     """
-    if eschema.eid is None:
-        eschema.eid = cnx.execute(
-            'Any X WHERE X is CWEType, X name %(name)s',
-            {'name': text_type(eschema)})[0][0]
     return eschema.eid
 
 
