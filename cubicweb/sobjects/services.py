@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,6 +26,7 @@ from yams.schema import role_name
 from cubicweb import ValidationError
 from cubicweb.server import Service
 from cubicweb.predicates import match_user_groups, match_kwargs
+
 
 class StatsService(Service):
     """Return a dictionary containing some statistics about the repository
@@ -161,14 +162,14 @@ class RegisterUserService(Service):
 
 
 class SourceSynchronizationService(Service):
-    """Force synchronization of a datafeed source"""
+    """Force synchronization of a datafeed source. Actual synchronization is done
+    asynchronously, this will simply create and return the entity which will hold the import
+    log.
+    """
     __regid__ = 'source-sync'
     __select__ = Service.__select__ & match_user_groups('managers')
 
     def call(self, source_eid):
-        source_entity = self._cw.entity_from_eid(source_eid)
-        repo = self._cw.repo # Service are repo side only.
-        with repo.internal_cnx() as cnx:
-            source = repo.sources_by_uri[source_entity.name]
-            source.pull_data(cnx)
-
+        source = self._cw.repo.sources_by_eid[source_eid]
+        result = source.pull_data(self._cw, force=True, async=True)
+        return result['import_log_eid']

@@ -1,4 +1,4 @@
-# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -204,7 +204,6 @@ class MappingChecker(object):
         pass
 
 
-
 class CWSourceImportsTab(EntityView):
     __regid__ = 'cwsource-imports'
     __select__ = (is_instance('CWSource')
@@ -250,12 +249,12 @@ class CWSourceSyncView(EntityView):
     title = _('synchronize')
 
     def entity_call(self, entity):
-        self._cw.call_service('source-sync', source_eid=entity.eid)
-        msg = self._cw._('Source has been synchronized')
-        url = entity.absolute_url(tab='cwsource-imports', __message=msg)
+        import_log_eid = self._cw.call_service('source-sync', source_eid=entity.eid)
+        msg = self._cw._('Synchronization has been requested, refresh this page in a few '
+                         'minutes.')
+        import_log = self._cw.entity_from_eid(import_log_eid)
+        url = import_log.absolute_url(__message=msg)
         raise Redirect(url)
-
-
 
 
 # sources management view ######################################################
