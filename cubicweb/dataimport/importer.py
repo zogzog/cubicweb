@@ -1,4 +1,4 @@
-# copyright 2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2015-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr -- mailto:contact@logilab.fr
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -72,6 +72,37 @@ def use_extid_as_cwuri(extid2eid):
                 extentity.values.setdefault('cwuri', set([extentity.extid.decode('utf-8')]))
             yield extentity
     return use_extid_as_cwuri_filter
+
+
+def drop_extra_values(extentities, schema, import_log):
+    """Return a generator of :class:`ExtEntity` objects that will ensure their attributes and
+    inlined relations have a single value. When it's not the case, a warning will be recorded in
+    the import log and one value among other will be kept (randomly).
+
+    `schema` is the instance's schema, `import_log` is an instance of a class implementing the
+    :class:`SimpleImportLog` interface.
+
+    Example usage:
+
+    .. code-block:: python
+
+        importer = ExtEntitiesImporter(schema, store, import_log)
+        importer.import_entities(drop_extra_values(extentities, schema, import_log))
+
+    """
+    _get_rschema = schema.rschema
+    for extentity in extentities:
+        entity_dict = extentity.values
+        for key, rtype, role in extentity.iter_rdefs():
+            rschema = _get_rschema(rtype)
+            if (rschema.final or (rschema.inlined and role == 'subject')) \
+               and len(entity_dict[key]) > 1:
+                values = ', '.join(repr(v) for v in entity_dict[key])
+                import_log.record_warning(
+                    "more than one value for attribute %r, only one will be kept: %s"
+                    % (rtype, values), path=extentity.extid)
+                entity_dict[key] = set([entity_dict[key].pop()])
+        yield extentity
 
 
 class RelationMapping(object):
@@ -160,6 +191,8 @@ class ExtEntity(object):
 
         Return a list of non inlined relations that may be inserted later, each relations defined by
         a 3-tuple (subject extid, relation type, object extid).
+
+        The instance's schema is given as argument.
 
         Take care the importer may call this method several times.
         """

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2015-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr -- mailto:contact@logilab.fr
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -16,15 +16,13 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 """Tests for cubicweb.dataimport.importer"""
 
-from collections import defaultdict
-
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.dataimport import RQLObjectStore, ucsvreader
-from cubicweb.dataimport.importer import (ExtEntity, ExtEntitiesImporter, SimpleImportLog,
-                                          RelationMapping, use_extid_as_cwuri)
+from cubicweb.dataimport.importer import (ExtEntity, ExtEntitiesImporter, RelationMapping,
+                                          SimpleImportLog, use_extid_as_cwuri, drop_extra_values)
 
 
 class RelationMappingTC(CubicWebTC):
@@ -163,6 +161,21 @@ class UseExtidAsCwuriTC(TestCase):
         personne.values.pop('cwuri')
         list(set_cwuri((personne,)))
         self.assertNotIn('cwuri', personne.values)
+
+
+class DropExtraValuesTC(CubicWebTC):
+
+    def test(self):
+        personne = ExtEntity('Personne', b'1', {'nom': set([u'de la lune', 'di la luna']),
+                                                'prenom': set([u'Jean']),
+                                                'enfant': set('23'),
+                                                'connait': set('45')})
+        log = SimpleImportLog('<unspecified>')
+        list(drop_extra_values((personne,), self.schema, log))
+        self.assertEqual(len(personne.values['nom']), 1)
+        self.assertEqual(len(personne.values['enfant']), 1)
+        self.assertEqual(len(personne.values['connait']), 2)
+        self.assertEqual(len(log.logs), 2)
 
 
 def extentities_from_csv(fpath):
