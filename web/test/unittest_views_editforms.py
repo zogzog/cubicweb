@@ -15,7 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+
 from logilab.common.testlib import unittest_main, mock_object
+from logilab.common import tempattr
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.views import uicfg
@@ -180,6 +182,22 @@ class AutomaticEntityFormTC(CubicWebTC):
             with self.temporary_permissions(EmailAddress={'add': ()}):
                 autoform = self.vreg['forms'].select('edition', req, entity=req.user)
                 self.assertEqual(list(autoform.inlined_form_views()), [])
+
+    def test_inlined_form_views(self):
+        # when some relation has + cardinality, and some already linked entities which are not
+        # updatable, a link to optionally add a new sub-entity should be displayed, not a sub-form
+        # forcing creation of a sub-entity
+        from cubicweb.web.views import autoform
+        with self.admin_access.web_request() as req:
+            req.create_entity('EmailAddress', address=u'admin@cubicweb.org',
+                              reverse_use_email=req.user.eid)
+            use_email_schema = self.vreg.schema['CWUser'].rdef('use_email')
+            with tempattr(use_email_schema, 'cardinality', '+1'):
+                with self.temporary_permissions(EmailAddress={'update': ()}):
+                    form = self.vreg['forms'].select('edition', req, entity=req.user)
+                    formviews = list(form.inlined_form_views())
+                    self.assertEqual(len(formviews), 1, formviews)
+                    self.assertIsInstance(formviews[0], autoform.InlineAddNewLinkView)
 
     def test_check_inlined_rdef_permissions(self):
         # try to check permissions when creating an entity ('user' below is a
