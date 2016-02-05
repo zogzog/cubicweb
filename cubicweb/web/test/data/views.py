@@ -37,8 +37,8 @@ def _recursive_replace_stream_by_content(tree):
 
 @ajaxfunc(output_type='json')
 def fileupload(self):
-    """ Return a json copy of the web request formin which uploaded files
-    are read and their content substitute the received streams.
+    """ Return a json copy of the web request form in which uploaded files
+    are read and the received streams are replaced by their content.
     """
     try:
         result_dict = {}
