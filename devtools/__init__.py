@@ -405,7 +405,7 @@ class TestDataBaseHandler(object):
         """Factory method to create a new Repository Instance"""
         config._cubes = None
         repo = config.repository()
-        config.repository = lambda x=None: repo
+        config.repository = lambda vreg=None: repo
         # extending Repository class
         repo._has_started = False
         repo._needs_refresh = False
