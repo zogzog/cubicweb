@@ -232,11 +232,10 @@ class CubicWebPublisher(object):
                         result += ['%s %s -- (%.3f sec, %.3f CPU sec)' % q
                                    for q in cnx.executed_queries]
                         cnx.executed_queries = []
-                        self._query_log.write('\n'.join(result).encode(req.encoding))
+                        self._query_log.write('\n'.join(result))
                         self._query_log.flush()
                     except Exception:
                         self.exception('error while logging queries')
-
 
 
     def main_handle_request(self, req, path):
