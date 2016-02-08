@@ -36,7 +36,7 @@ class TwistedCWAnonTC(CubicWebServerTC):
         self.assertEqual(response.status, http_client.OK)
 
     def test_base_url(self):
-        if self.config['base-url'] not in self.web_get().read():
+        if self.config['base-url'] not in self.web_get().read().decode('ascii'):
             self.fail('no mention of base url in retrieved page')
 
 
