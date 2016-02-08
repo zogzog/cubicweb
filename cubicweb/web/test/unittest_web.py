@@ -28,7 +28,7 @@ except (ImportError, AssertionError):
     requests = None
 
 from logilab.common.testlib import TestCase, unittest_main
-from cubicweb.devtools.httptest import CubicWebServerTC
+from cubicweb.devtools.httptest import CubicWebWsgiTC
 from cubicweb.devtools.fake import FakeRequest
 
 class AjaxReplaceUrlTC(TestCase):
@@ -56,7 +56,7 @@ class AjaxReplaceUrlTC(TestCase):
             req.html_headers.post_inlined_scripts[0])
 
 
-class FileUploadTC(CubicWebServerTC):
+class FileUploadTC(CubicWebWsgiTC):
 
     def setUp(self):
         "Skip whole test class if a suitable requests module is not available"
@@ -101,17 +101,17 @@ class FileUploadTC(CubicWebServerTC):
         self.assertDictEqual(expect, loads(webreq.text))
 
 
-class LanguageTC(CubicWebServerTC):
+class LanguageTC(CubicWebWsgiTC):
 
     def test_language_neg(self):
         headers = {'Accept-Language': 'fr'}
         webreq = self.web_request(headers=headers)
-        self.assertIn('lang="fr"', webreq.read())
+        self.assertIn(b'lang="fr"', webreq.read())
         vary = [h.lower().strip() for h in webreq.getheader('Vary').split(',')]
         self.assertIn('accept-language', vary)
         headers = {'Accept-Language': 'en'}
         webreq = self.web_request(headers=headers)
-        self.assertIn('lang="en"', webreq.read())
+        self.assertIn(b'lang="en"', webreq.read())
         vary = [h.lower().strip() for h in webreq.getheader('Vary').split(',')]
         self.assertIn('accept-language', vary)
 
@@ -132,7 +132,7 @@ class LanguageTC(CubicWebServerTC):
         self.assertIn('HttpOnly', webreq.getheader('set-cookie'))
 
 
-class MiscOptionsTC(CubicWebServerTC):
+class MiscOptionsTC(CubicWebWsgiTC):
     @classmethod
     def setUpClass(cls):
         super(MiscOptionsTC, cls).setUpClass()
@@ -151,7 +151,7 @@ class MiscOptionsTC(CubicWebServerTC):
 
     def test_datadir_url(self):
         webreq = self.web_request()
-        self.assertNotIn('/data/', webreq.read())
+        self.assertNotIn(b'/data/', webreq.read())
 
     @classmethod
     def tearDownClass(cls):
