@@ -72,7 +72,8 @@ class FileUploadTC(CubicWebServerTC):
         return open(join(self.datadir, fname), 'rb')
 
     def _fcontent(self, fname):
-        return self._fobject(fname).read()
+        with self._fobject(fname) as f:
+            return f.read()
 
     def test_single_file_upload(self):
         files = {'file': ('schema.py', self._fobject('schema.py'))}
