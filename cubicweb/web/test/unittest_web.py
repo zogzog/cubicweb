@@ -19,6 +19,7 @@
 from json import loads
 from os.path import join
 import tempfile
+import hashlib
 
 try:
     import requests
@@ -75,13 +76,17 @@ class FileUploadTC(CubicWebServerTC):
         with self._fobject(fname) as f:
             return f.read()
 
+    def _fhash(self, fname):
+        content = self._fcontent(fname)
+        return hashlib.md5(content).hexdigest()
+
     def test_single_file_upload(self):
         files = {'file': ('schema.py', self._fobject('schema.py'))}
         webreq = requests.post(self._post_url, files=files)
         # check backward compat : a single uploaded file leads to a single
         # 2-uple in the request form
         expect = {'fname': u'fileupload',
-                  'file': ['schema.py', self._fcontent('schema.py')]}
+                  'file': ['schema.py', self._fhash('schema.py')]}
         self.assertEqual(webreq.status_code, 200)
         self.assertDictEqual(expect, loads(webreq.text))
 
@@ -90,8 +95,8 @@ class FileUploadTC(CubicWebServerTC):
                  ('files', ('views.py',  self._fobject('views.py')))]
         webreq = requests.post(self._post_url, files=files,)
         expect = {'fname': u'fileupload',
-                  'files': [['schema.py', self._fcontent('schema.py')],
-                            ['views.py', self._fcontent('views.py')]],}
+                  'files': [['schema.py', self._fhash('schema.py')],
+                            ['views.py', self._fhash('views.py')]],}
         self.assertEqual(webreq.status_code, 200)
         self.assertDictEqual(expect, loads(webreq.text))
 
