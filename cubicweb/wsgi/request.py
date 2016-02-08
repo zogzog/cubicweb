@@ -81,8 +81,12 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
                                                   headers= headers_in)
         self.content = environ['wsgi.input']
         if files is not None:
-            for key, part in files.items():
-                self.form[key] = (part.filename, part.file)
+            for key, part in files.iterallitems():
+                self.form.setdefault(key, []).append((part.filename, part.file))
+            # 3.16.4 backward compat
+            for key in files.keys():
+                if len(self.form[key]) == 1:
+                    self.form[key] = self.form[key][0]
 
     def __repr__(self):
         # Since this is called as part of error handling, we need to be very
