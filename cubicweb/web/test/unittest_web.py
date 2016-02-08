@@ -82,7 +82,7 @@ class FileUploadTC(CubicWebServerTC):
         expect = {'fname': u'fileupload',
                   'file': ['schema.py', self._fcontent('schema.py')]}
         self.assertEqual(webreq.status_code, 200)
-        self.assertDictEqual(expect, loads(webreq.content))
+        self.assertDictEqual(expect, loads(webreq.text))
 
     def test_multiple_file_upload(self):
         files = [('files', ('schema.py', self._fobject('schema.py'))),
@@ -92,7 +92,7 @@ class FileUploadTC(CubicWebServerTC):
                   'files': [['schema.py', self._fcontent('schema.py')],
                             ['views.py', self._fcontent('views.py')]],}
         self.assertEqual(webreq.status_code, 200)
-        self.assertDictEqual(expect, loads(webreq.content))
+        self.assertDictEqual(expect, loads(webreq.text))
 
 
 class LanguageTC(CubicWebServerTC):
