@@ -4170,13 +4170,13 @@ msgid "text/html"
 msgstr "html"
 
 msgid "text/markdown"
-msgstr "texte au format markdown"
+msgstr "texte au format Markdown"
 
 msgid "text/plain"
-msgstr "texte pur"
+msgstr "texte"
 
 msgid "text/rest"
-msgstr "ReST"
+msgstr "texte au format reStructuredText"
 
 msgid "the URI of the object"
 msgstr "l'Uri de l'objet"
