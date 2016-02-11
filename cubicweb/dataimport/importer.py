@@ -62,7 +62,7 @@ def use_extid_as_cwuri(extid2eid):
 
     .. code-block:: python
 
-        importer = SKOSExtEntitiesImporter(cnx, store, import_log)
+        importer = ExtEntitiesImporter(cnx, store, import_log)
         set_cwuri = use_extid_as_cwuri(importer.extid2eid)
         importer.import_entities(set_cwuri(extentities))
     """
