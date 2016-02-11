@@ -312,7 +312,7 @@ class EntityFieldsForm(FieldsForm):
         try:
             return super(EntityFieldsForm, cls_or_self).field_by_name(name, role)
         except form.FieldNotFound:
-            if eschema is None or role is None or not name in eschema.schema:
+            if eschema is None or role is None or name not in eschema.schema:
                 raise
             rschema = eschema.schema.rschema(name)
             # XXX use a sample target type. Document this.
@@ -325,7 +325,7 @@ class EntityFieldsForm(FieldsForm):
                 kwargs = {}
             if fieldcls:
                 if not isinstance(fieldcls, type):
-                    return fieldcls # already and instance
+                    return fieldcls  # already and instance
                 return fieldcls(name=name, role=role, eidparam=True, **kwargs)
             if isinstance(cls_or_self, type):
                 req = None

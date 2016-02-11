@@ -63,7 +63,6 @@ Entity specific fields and function
 """
 __docformat__ = "restructuredtext en"
 
-from warnings import warn
 from datetime import datetime, timedelta
 
 from six import PY2, text_type, string_types
@@ -79,35 +78,38 @@ from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
 from cubicweb import Binary, tags, uilib, neg_role
-from cubicweb.utils import support_args
-from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param, \
-     formwidgets as fw
+from cubicweb.web import (INTERNAL_FIELD_VALUE, ProcessFormError, eid_param,
+                          formwidgets as fw)
 from cubicweb.web.views import uicfg
+
 
 class UnmodifiedField(Exception):
     """raise this when a field has not actually been edited and you want to skip
     it
     """
 
+
 def normalize_filename(filename):
     return filename.split('\\')[-1]
+
 
 def vocab_sort(vocab):
     """sort vocabulary, considering option groups"""
     result = []
     partresult = []
     for label, value in vocab:
-        if value is None: # opt group start
+        if value is None:  # opt group start
             if partresult:
                 result += sorted(partresult)
                 partresult = []
-            result.append( (label, value) )
+            result.append((label, value))
         else:
-            partresult.append( (label, value) )
+            partresult.append((label, value))
     result += sorted(partresult)
     return result
 
 _MARKER = nullobject()
+
 
 class Field(object):
     """This class is the abstract base class for all fields. It hold a bunch
@@ -480,7 +482,7 @@ class Field(object):
         return self._ensure_correctly_typed(form, value)
 
     def _ensure_correctly_typed(self, form, value):
-        """widget might to return date as a correctly formatted string or as
+        """widget might return e.g. a date as a correctly formatted string or as
         correctly typed objects, but process_for_value must return a typed value.
         Override this method to type the value if necessary
         """
