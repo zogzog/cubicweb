@@ -166,9 +166,9 @@ for cwconstraint in rql('Any C WHERE R constrained_by C').entities():
             cstr, helper, prefix='cw_')
     args = {'e': rdef.subject.type, 'c': cstrname, 'v': check}
     if repo.system_source.dbdriver == 'postgres':
-        sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS %(c)s' % args)
+        sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS %(c)s' % args, ask_confirm=False)
     elif repo.system_source.dbdriver.startswith('sqlserver'):
         sql("IF OBJECT_ID('%(c)s', 'C') IS NOT NULL "
-            "ALTER TABLE cw_%(e)s DROP CONSTRAINT %(c)s" % args)
-    sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s CHECK(%(v)s)' % args)
+            "ALTER TABLE cw_%(e)s DROP CONSTRAINT %(c)s" % args, ask_confirm=False)
+    sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s CHECK(%(v)s)' % args, ask_confirm=False)
 commit()
