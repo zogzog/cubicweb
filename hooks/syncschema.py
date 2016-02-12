@@ -606,21 +606,22 @@ class RDefDelOp(MemSchemaOperation):
         # relations, but only if it's the last instance for this relation type
         # for other relations
         if (rschema.final or rschema.inlined):
-            rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R, '
-                           'R eid %%(r)s, X from_entity E, E eid %%(e)s'
-                           % rdeftype,
-                           {'r': rschema.eid, 'e': rdef.subject.eid})
-            if rset[0][0] == 0 and not cnx.deleted_in_transaction(rdef.subject.eid):
-                ptypes = cnx.transaction_data.setdefault('pendingrtypes', set())
-                ptypes.add(rschema.type)
-                DropColumn.get_instance(cnx).add_data((str(rdef.subject), str(rschema)))
-            elif rschema.inlined:
-                cnx.system_sql('UPDATE %s%s SET %s%s=NULL WHERE '
-                               'EXISTS(SELECT 1 FROM entities '
-                               '       WHERE eid=%s%s AND type=%%(to_etype)s)'
-                               % (SQL_PREFIX, rdef.subject, SQL_PREFIX, rdef.rtype,
-                                  SQL_PREFIX, rdef.rtype),
-                               {'to_etype': rdef.object.type})
+            if not cnx.deleted_in_transaction(rdef.subject.eid):
+                rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R, '
+                               'R eid %%(r)s, X from_entity E, E eid %%(e)s'
+                               % rdeftype,
+                               {'r': rschema.eid, 'e': rdef.subject.eid})
+                if rset[0][0] == 0:
+                    ptypes = cnx.transaction_data.setdefault('pendingrtypes', set())
+                    ptypes.add(rschema.type)
+                    DropColumn.get_instance(cnx).add_data((str(rdef.subject), str(rschema)))
+                elif rschema.inlined:
+                    cnx.system_sql('UPDATE %s%s SET %s%s=NULL WHERE '
+                                   'EXISTS(SELECT 1 FROM entities '
+                                   '       WHERE eid=%s%s AND type=%%(to_etype)s)'
+                                   % (SQL_PREFIX, rdef.subject, SQL_PREFIX, rdef.rtype,
+                                      SQL_PREFIX, rdef.rtype),
+                                   {'to_etype': rdef.object.type})
         elif lastrel:
             DropRelationTable(cnx, str(rschema))
         else:

@@ -211,3 +211,8 @@ class New(EntityType):
 class same_as(RelationDefinition):
     subject = ('Societe',)
     object = 'ExternalUri'
+
+class inlined_rel(RelationDefinition):
+    subject = object = 'Folder2'
+    inlined = True
+    cardinality = '??'

@@ -276,7 +276,7 @@ class MigrationCommandsTC(MigrationTC):
                                'description', 'description_format',
                                'eid',
                                'filed_under2', 'has_text',
-                               'identity', 'in_basket', 'is', 'is_instance_of',
+                               'identity', 'in_basket', 'inlined_rel', 'is', 'is_instance_of',
                                'modification_date', 'name', 'owned_by'])
             self.assertCountEqual([str(rs) for rs in self.schema['Folder2'].object_relations()],
                                   ['filed_under2', 'identity'])
