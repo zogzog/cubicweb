@@ -20,7 +20,6 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
-from functools import partial
 
 from six import text_type, string_types, integer_types
 from six.moves import range
