@@ -423,5 +423,9 @@ class IUserFriendlyCheckConstraint(IUserFriendlyError):
         else:
             assert 0
         key = rschema.type + '-subject'
-        msg, args = constraint.failed_message(key, self.entity.cw_edited[rschema.type])
+        # use .get since a constraint may be associated to an attribute that isn't edited (e.g.
+        # constraint between two attributes). This should be the purpose of an api rework at some
+        # point, we currently rely on the fact that such constraint will provide a dedicated user
+        # message not relying on the `value` argument
+        msg, args = constraint.failed_message(key, self.entity.cw_edited.get(rschema.type))
         raise ValidationError(self.entity.eid, {key: msg}, args)
