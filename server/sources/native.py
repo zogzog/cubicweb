@@ -1711,17 +1711,17 @@ class DatabaseIndependentBackupRestore(object):
         archive_versions = self._parse_versions(archive.read('versions.txt'))
         db_versions = set(self._get_versions())
         if archive_versions != db_versions:
-            self.logger.critical('Restore warning : versions do not match')
+            self.logger.critical('Restore warning: versions do not match')
             new_cubes = db_versions - archive_versions
             if new_cubes:
-                self.logger.critical('In the db:\n%s', '\n'.join('%s : %s' % (cube, ver)
+                self.logger.critical('In the db:\n%s', '\n'.join('%s: %s' % (cube, ver)
                                                             for cube, ver in sorted(new_cubes)))
             old_cubes = archive_versions - db_versions
             if old_cubes:
-                self.logger.critical('In the archive:\n%s', '\n'.join('%s : %s' % (cube, ver)
+                self.logger.critical('In the archive:\n%s', '\n'.join('%s: %s' % (cube, ver)
                                                             for cube, ver in sorted(old_cubes)))
             if not ASK.confirm('Versions mismatch: continue anyway ?', False):
-                raise ValueError('Unable to restore : versions do not match')
+                raise ValueError('Unable to restore: versions do not match')
         table_chunks = {}
         for name in archive.namelist():
             if not name.startswith('tables/'):
