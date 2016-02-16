@@ -23,7 +23,6 @@ import httplib
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache, classproperty
 
-from cubicweb import AuthenticationError
 from cubicweb import view
 from cubicweb.devtools.testlib import CubicWebTC, real_error_handling
 from cubicweb.devtools.fake import FakeRequest
@@ -256,6 +255,259 @@ class ApplicationTC(CubicWebTC):
             self.assertEqual(forminfo['error'].errors,
                               {'login-subject': u'the value "admin" is already used, use another one'})
             self.assertEqual(forminfo['values'], req.form)
+
+    def _edit_parent(self, dir_eid, parent_eid, role='subject',
+                     etype='Directory', **kwargs):
+        parent_eid = parent_eid or '__cubicweb_internal_field__'
+        with self.admin_access.web_request() as req:
+            req.form = {
+                'eid': unicode(dir_eid),
+                '__maineid': unicode(dir_eid),
+                '__type:%s' % dir_eid: etype,
+                'parent-%s:%s' % (role, dir_eid): parent_eid,
+            }
+            req.form.update(kwargs)
+            req.form['_cw_entity_fields:%s' % dir_eid] = ','.join(
+                ['parent-%s' % role] +
+                [key.split(':')[0]
+                 for key in kwargs.keys()
+                 if not key.startswith('_')])
+            self.expect_redirect_handle_request(req)
+
+    def _edit_in_version(self, ticket_eid, version_eid, **kwargs):
+        version_eid = version_eid or '__cubicweb_internal_field__'
+        with self.admin_access.web_request() as req:
+            req.form = {
+                'eid': unicode(ticket_eid),
+                '__maineid': unicode(ticket_eid),
+                '__type:%s' % ticket_eid: 'Ticket',
+                'in_version-subject:%s' % ticket_eid: version_eid,
+            }
+            req.form.update(kwargs)
+            req.form['_cw_entity_fields:%s' % ticket_eid] = ','.join(
+                ['in_version-subject'] +
+                [key.split(':')[0]
+                 for key in kwargs.keys()
+                 if not key.startswith('_')])
+            self.expect_redirect_handle_request(req)
+
+    def test_create_and_link_directories(self):
+        with self.admin_access.web_request() as req:
+            req.form = {
+                'eid': (u'A', u'B'),
+                '__maineid': u'A',
+                '__type:A': 'Directory',
+                '__type:B': 'Directory',
+                'parent-subject:B': u'A',
+                'name-subject:A': u'topd',
+                'name-subject:B': u'subd',
+                '_cw_entity_fields:A': 'name-subject',
+                '_cw_entity_fields:B': 'parent-subject,name-subject',
+            }
+            self.expect_redirect_handle_request(req)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', name=u'topd'))
+            self.assertTrue(cnx.find('Directory', name=u'subd'))
+            self.assertEqual(1, cnx.execute(
+                'Directory SUBD WHERE SUBD parent TOPD,'
+                ' SUBD name "subd", TOPD name "topd"').rowcount)
+
+    def test_create_subentity(self):
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            cnx.commit()
+
+        with self.admin_access.web_request() as req:
+            req.form = {
+                'eid': (unicode(topd.eid), u'B'),
+                '__maineid': unicode(topd.eid),
+                '__type:%s' % topd.eid: 'Directory',
+                '__type:B': 'Directory',
+                'parent-object:%s' % topd.eid: u'B',
+                'name-subject:B': u'subd',
+                '_cw_entity_fields:%s' % topd.eid: 'parent-object',
+                '_cw_entity_fields:B': 'name-subject',
+            }
+            self.expect_redirect_handle_request(req)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', name=u'topd'))
+            self.assertTrue(cnx.find('Directory', name=u'subd'))
+            self.assertEqual(1, cnx.execute(
+                'Directory SUBD WHERE SUBD parent TOPD,'
+                ' SUBD name "subd", TOPD name "topd"').rowcount)
+
+    def test_subject_subentity_removal(self):
+        """Editcontroller: detaching a composite relation removes the subentity
+        (edit from the subject side)
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            sub1 = cnx.create_entity('Directory', name=u'sub1', parent=topd)
+            sub2 = cnx.create_entity('Directory', name=u'sub2', parent=topd)
+            cnx.commit()
+
+        attrs = {'name-subject:%s' % sub1.eid: ''}
+        self._edit_parent(sub1.eid, parent_eid=None, **attrs)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertFalse(cnx.find('Directory', eid=sub1.eid))
+            self.assertTrue(cnx.find('Directory', eid=sub2.eid))
+
+    def test_object_subentity_removal(self):
+        """Editcontroller: detaching a composite relation removes the subentity
+        (edit from the object side)
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            sub1 = cnx.create_entity('Directory', name=u'sub1', parent=topd)
+            sub2 = cnx.create_entity('Directory', name=u'sub2', parent=topd)
+            cnx.commit()
+
+        self._edit_parent(topd.eid, parent_eid=sub1.eid, role='object')
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertTrue(cnx.find('Directory', eid=sub1.eid))
+            self.assertFalse(cnx.find('Directory', eid=sub2.eid))
+
+    def test_reparent_subentity(self):
+        "Editcontroller: re-parenting a subentity does not remove it"
+        with self.admin_access.repo_cnx() as cnx:
+            top1 = cnx.create_entity('Directory', name=u'top1')
+            top2 = cnx.create_entity('Directory', name=u'top2')
+            subd = cnx.create_entity('Directory', name=u'subd', parent=top1)
+            cnx.commit()
+
+        self._edit_parent(subd.eid, parent_eid=top2.eid)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=top1.eid))
+            self.assertTrue(cnx.find('Directory', eid=top2.eid))
+            self.assertTrue(cnx.find('Directory', eid=subd.eid))
+            self.assertEqual(
+                cnx.find('Directory', eid=subd.eid).one().parent[0], top2)
+
+    def test_reparent_subentity_inlined(self):
+        """Editcontroller: re-parenting a subentity does not remove it
+        (inlined case)"""
+        with self.admin_access.repo_cnx() as cnx:
+            version1 = cnx.create_entity('Version', name=u'version1')
+            version2 = cnx.create_entity('Version', name=u'version2')
+            ticket = cnx.create_entity('Ticket', title=u'ticket',
+                                       in_version=version1)
+            cnx.commit()
+
+        self._edit_in_version(ticket.eid, version_eid=version2.eid)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Version', eid=version1.eid))
+            self.assertTrue(cnx.find('Version', eid=version2.eid))
+            self.assertTrue(cnx.find('Ticket', eid=ticket.eid))
+            self.assertEqual(
+                cnx.find('Ticket', eid=ticket.eid).one().in_version[0], version2)
+
+    def test_subject_mixed_composite_subentity_removal_1(self):
+        """Editcontroller: detaching several subentities respects each rdef's
+        compositeness - Remove non composite
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            fs = cnx.create_entity('Filesystem', name=u'/tmp')
+            subd = cnx.create_entity('Directory', name=u'subd',
+                                     parent=(topd, fs))
+            cnx.commit()
+
+        self._edit_parent(subd.eid, parent_eid=topd.eid)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertTrue(cnx.find('Directory', eid=subd.eid))
+            self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
+            self.assertEqual(cnx.find('Directory', eid=subd.eid).one().parent,
+                             [topd,])
+
+    def test_subject_mixed_composite_subentity_removal_2(self):
+        """Editcontroller: detaching several subentities respects each rdef's
+        compositeness - Remove composite
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            fs = cnx.create_entity('Filesystem', name=u'/tmp')
+            subd = cnx.create_entity('Directory', name=u'subd',
+                                     parent=(topd, fs))
+            cnx.commit()
+
+        self._edit_parent(subd.eid, parent_eid=fs.eid)
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertFalse(cnx.find('Directory', eid=subd.eid))
+            self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
+
+    def test_object_mixed_composite_subentity_removal_1(self):
+        """Editcontroller: detaching several subentities respects each rdef's
+        compositeness - Remove non composite
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            fs = cnx.create_entity('Filesystem', name=u'/tmp')
+            subd = cnx.create_entity('Directory', name=u'subd',
+                                     parent=(topd, fs))
+            cnx.commit()
+
+        self._edit_parent(fs.eid, parent_eid=None, role='object',
+                          etype='Filesystem')
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertTrue(cnx.find('Directory', eid=subd.eid))
+            self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
+            self.assertEqual(cnx.find('Directory', eid=subd.eid).one().parent,
+                             [topd,])
+
+    def test_object_mixed_composite_subentity_removal_2(self):
+        """Editcontroller: detaching several subentities respects each rdef's
+        compositeness - Remove composite
+        """
+        with self.admin_access.repo_cnx() as cnx:
+            topd = cnx.create_entity('Directory', name=u'topd')
+            fs = cnx.create_entity('Filesystem', name=u'/tmp')
+            subd = cnx.create_entity('Directory', name=u'subd',
+                                     parent=(topd, fs))
+            cnx.commit()
+
+        self._edit_parent(topd.eid, parent_eid=None, role='object')
+
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertTrue(cnx.find('Directory', eid=topd.eid))
+            self.assertFalse(cnx.find('Directory', eid=subd.eid))
+            self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
+
+    def test_delete_mandatory_composite(self):
+        with self.admin_access.repo_cnx() as cnx:
+            perm = cnx.create_entity('DirectoryPermission')
+            mydir = cnx.create_entity('Directory', name=u'dir',
+                                      has_permission=perm)
+            cnx.commit()
+
+        with self.admin_access.web_request() as req:
+            dir_eid = unicode(mydir.eid)
+            perm_eid = unicode(perm.eid)
+            req.form = {
+                'eid': [dir_eid, perm_eid],
+                '__maineid' : dir_eid,
+                '__type:%s' % dir_eid: 'Directory',
+                '__type:%s' % perm_eid: 'DirectoryPermission',
+                '_cw_entity_fields:%s' % dir_eid: '',
+                '_cw_entity_fields:%s' % perm_eid: 'has_permission-object',
+                'has_permission-object:%s' % perm_eid: '',
+                }
+            path, _params = self.expect_redirect_handle_request(req, 'edit')
+            self.assertTrue(req.find('Directory', eid=mydir.eid))
+            self.assertFalse(req.find('DirectoryPermission', eid=perm.eid))
 
     def test_ajax_view_raise_arbitrary_error(self):
         class ErrorAjaxView(view.View):

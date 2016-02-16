@@ -92,6 +92,33 @@ class composite_card11_2ttypes(RelationDefinition):
 class Ticket(EntityType):
     title = String(maxsize=32, required=True, fulltextindexed=True)
     concerns = SubjectRelation('Project', composite='object')
+    in_version = SubjectRelation('Version', composite='object',
+                                 cardinality='?*', inlined=True)
+
+class Version(EntityType):
+    name = String(required=True)
+
+class Filesystem(EntityType):
+    name = String()
+
+class DirectoryPermission(EntityType):
+    value = String()
+
+class parent_fs(RelationDefinition):
+    name = 'parent'
+    subject = 'Directory'
+    object = 'Filesystem'
+
+class Directory(EntityType):
+    name = String(required=True)
+    has_permission = SubjectRelation('DirectoryPermission', cardinality='*1',
+                                     composite='subject')
+
+class parent_directory(RelationDefinition):
+    name = 'parent'
+    subject = 'Directory'
+    object = 'Directory'
+    composite = 'object'
 
 class Folder(EntityType):
     name = String(required=True)
