@@ -29,7 +29,7 @@ from logilab.common.graph import ordered_nodes
 
 from rql.utils import rqlvar_maker
 
-from cubicweb import Binary, ValidationError
+from cubicweb import Binary, ValidationError, UnknownEid
 from cubicweb.view import EntityAdapter
 from cubicweb.predicates import is_instance
 from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
@@ -77,12 +77,14 @@ class RqlQuery(object):
         self.edited = []
         self.restrictions = []
         self.kwargs = {}
+        self.canceled = False
 
     def __repr__(self):
         return ('Query <edited=%r restrictions=%r kwargs=%r>' % (
             self.edited, self.restrictions, self.kwargs))
 
     def insert_query(self, etype):
+        assert not self.canceled
         if self.edited:
             rql = 'INSERT %s X: %s' % (etype, ','.join(self.edited))
         else:
@@ -92,6 +94,7 @@ class RqlQuery(object):
         return rql
 
     def update_query(self, eid):
+        assert not self.canceled
         varmaker = rqlvar_maker()
         var = varmaker.next()
         while var in self.kwargs:
@@ -190,6 +193,7 @@ class EditController(basecontrollers.ViewController):
         # deserves special treatment
         req.data['pending_inlined'] = defaultdict(set)
         req.data['pending_others'] = set()
+        req.data['pending_composite_delete'] = set()
         try:
             for formparams in self._ordered_formparams():
                 eid = self.edit_entity(formparams)
@@ -208,6 +212,9 @@ class EditController(basecontrollers.ViewController):
         # then execute rql to set all relations
         for querydef in self.relations_rql:
             self._cw.execute(*querydef)
+        # delete pending composite
+        for entity in req.data['pending_composite_delete']:
+            entity.cw_delete()
         # XXX this processes *all* pending operations of *all* entities
         if '__delete' in req.form:
             todelete = req.list_form_param('__delete', req.form, pop=True)
@@ -264,14 +271,17 @@ class EditController(basecontrollers.ViewController):
         # creation, add relevant data to the rqlquery
         for form_, field in req.data['pending_inlined'].pop(entity.eid, ()):
             rqlquery.set_inlined(field.name, form_.edited_entity.eid)
-        if self.errors:
-            errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
-            raise ValidationError(valerror_eid(entity.eid), errors)
-        if eid is None: # creation or copy
-            entity.eid = eid = self._insert_entity(etype, formparams['eid'], rqlquery)
-        elif rqlquery.edited: # edition of an existant entity
-            self.check_concurrent_edition(formparams, eid)
-            self._update_entity(eid, rqlquery)
+        if not rqlquery.canceled:
+            if self.errors:
+                errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
+                raise ValidationError(valerror_eid(entity.eid), errors)
+            if eid is None: # creation or copy
+                entity.eid = eid = self._insert_entity(etype, formparams['eid'], rqlquery)
+            elif rqlquery.edited: # edition of an existant entity
+                self.check_concurrent_edition(formparams, eid)
+                self._update_entity(eid, rqlquery)
+        else:
+            self.errors = []
         if is_main_entity:
             self.notify_edited(entity)
         if '__delete' in formparams:
@@ -285,7 +295,8 @@ class EditController(basecontrollers.ViewController):
         return eid
 
     def handle_formfield(self, form, field, rqlquery=None):
-        eschema = form.edited_entity.e_schema
+        entity = form.edited_entity
+        eschema = entity.e_schema
         try:
             for field, value in field.process_posted(form):
                 if not (
@@ -293,24 +304,73 @@ class EditController(basecontrollers.ViewController):
                     or
                     (field.role == 'object' and field.name in eschema.objrels)):
                     continue
+
                 rschema = self._cw.vreg.schema.rschema(field.name)
                 if rschema.final:
                     rqlquery.set_attribute(field.name, value)
+                    continue
+
+                if entity.has_eid():
+                    origvalues = set(data[0] for data in entity.related(field.name, field.role).rows)
                 else:
-                    if form.edited_entity.has_eid():
-                        origvalues = set(entity.eid for entity in form.edited_entity.related(field.name, field.role, entities=True))
-                    else:
-                        origvalues = set()
-                    if value is None or value == origvalues:
-                        continue # not edited / not modified / to do later
-                    if rschema.inlined and rqlquery is not None and field.role == 'subject':
-                        self.handle_inlined_relation(form, field, value, origvalues, rqlquery)
-                    elif form.edited_entity.has_eid():
-                        self.handle_relation(form, field, value, origvalues)
-                    else:
-                        form._cw.data['pending_others'].add( (form, field) )
+                    origvalues = set()
+                if value is None or value == origvalues:
+                    continue # not edited / not modified / to do later
+
+                unlinked_eids = origvalues - value
+
+                if unlinked_eids:
+                    # Special handling of composite relation removal
+                    self.handle_composite_removal(
+                        form, field, unlinked_eids, value, rqlquery)
+
+                if rschema.inlined and rqlquery is not None and field.role == 'subject':
+                    self.handle_inlined_relation(form, field, value, origvalues, rqlquery)
+                elif form.edited_entity.has_eid():
+                    self.handle_relation(form, field, value, origvalues)
+                else:
+                    form._cw.data['pending_others'].add( (form, field) )
+
         except ProcessFormError as exc:
             self.errors.append((field, exc))
+
+    def handle_composite_removal(self, form, field,
+                                 removed_values, new_values, rqlquery):
+        """
+        In EditController-handled forms, when the user removes a composite
+        relation, it triggers the removal of the related entity in the
+        composite. This is where this happens.
+
+        See for instance test_subject_subentity_removal in
+        web/test/unittest_application.py.
+        """
+        rschema = self._cw.vreg.schema.rschema(field.name)
+        new_value_etypes = set()
+        # the user could have included nonexisting eids in the POST; don't crash.
+        for eid in new_values:
+            try:
+                new_value_etypes.add(self._cw.entity_from_eid(eid).cw_etype)
+            except UnknownEid:
+                continue
+        for unlinked_eid in removed_values:
+            unlinked_entity = self._cw.entity_from_eid(unlinked_eid)
+            rdef = rschema.role_rdef(form.edited_entity.cw_etype,
+                                     unlinked_entity.cw_etype,
+                                     field.role)
+            if rdef.composite is not None:
+                if rdef.composite == field.role:
+                    to_be_removed = unlinked_entity
+                else:
+                    if unlinked_entity.cw_etype in new_value_etypes:
+                        # This is a same-rdef re-parenting: do not remove the entity
+                        continue
+                    to_be_removed = form.edited_entity
+                    self.info('Edition of %s is cancelled (deletion requested)',
+                              to_be_removed)
+                    rqlquery.canceled = True
+                self.info('Scheduling removal of %s as composite relation '
+                          '%s was removed', to_be_removed, rdef)
+                form._cw.data['pending_composite_delete'].add(to_be_removed)
 
     def handle_inlined_relation(self, form, field, values, origvalues, rqlquery):
         """handle edition for the (rschema, x) relation of the given entity

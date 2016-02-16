@@ -76,7 +76,7 @@ from yams.schema import KNOWN_METAATTRIBUTES, role_name
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
-from cubicweb import Binary, tags, uilib
+from cubicweb import Binary, tags, uilib, neg_role
 from cubicweb.utils import support_args
 from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param, \
      formwidgets as fw
@@ -1200,10 +1200,13 @@ def guess_field(eschema, rschema, role='subject', req=None, **kwargs):
     else:
         targetschema = rdef.subject
     card = rdef.role_cardinality(role)
+    composite = getattr(rdef, 'composite', None)
     kwargs['name'] = rschema.type
     kwargs['role'] = role
     kwargs['eidparam'] = True
-    kwargs.setdefault('required', card in '1+')
+    # don't mark composite relation as required, we want the composite element
+    # to be removed when not linked to its parent
+    kwargs.setdefault('required', card in '1+' and composite != neg_role(role))
     if role == 'object':
         kwargs.setdefault('label', (eschema.type, rschema.type + '_object'))
     else:
