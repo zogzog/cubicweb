@@ -27,7 +27,7 @@ from logilab.common.graph import ordered_nodes
 
 from rql.utils import rqlvar_maker
 
-from cubicweb import Binary, ValidationError
+from cubicweb import Binary, ValidationError, UnknownEid
 from cubicweb.view import EntityAdapter
 from cubicweb.predicates import is_instance
 from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
@@ -340,8 +340,13 @@ class EditController(basecontrollers.ViewController):
         web/test/unittest_application.py.
         """
         rschema = self._cw.vreg.schema.rschema(field.name)
-        new_value_etypes = set(self._cw.entity_from_eid(eid).cw_etype
-                               for eid in new_values)
+        new_value_etypes = set()
+        # the user could have included nonexisting eids in the POST; don't crash.
+        for eid in new_values:
+            try:
+                new_value_etypes.add(self._cw.entity_from_eid(eid).cw_etype)
+            except UnknownEid:
+                continue
         for unlinked_eid in removed_values:
             unlinked_entity = self._cw.entity_from_eid(unlinked_eid)
             rdef = rschema.role_rdef(form.edited_entity.cw_etype,
