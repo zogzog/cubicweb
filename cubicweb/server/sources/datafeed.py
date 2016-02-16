@@ -171,14 +171,18 @@ class DataFeedSource(AbstractSource):
                     {'x': self.eid, 'date': self.latest_retrieval})
         cnx.commit()
 
-    def acquire_synchronization_lock(self, cnx):
+    def acquire_synchronization_lock(self, cnx, force=False):
         # XXX race condition until WHERE of SET queries is executed using
         # 'SELECT FOR UPDATE'
         now = datetime.now(tz=utc)
+        if force:
+            maxdt = now
+        else:
+            maxdt = now - self.max_lock_lifetime
         if not cnx.execute(
-            'SET X in_synchronization %(now)s WHERE X eid %(x)s, '
-            'X in_synchronization NULL OR X in_synchronization < %(maxdt)s',
-            {'x': self.eid, 'now': now, 'maxdt': now - self.max_lock_lifetime}):
+                'SET X in_synchronization %(now)s WHERE X eid %(x)s, '
+                'X in_synchronization NULL OR X in_synchronization < %(maxdt)s',
+                {'x': self.eid, 'now': now, 'maxdt': maxdt}):
             self.error('concurrent synchronization detected, skip pull')
             cnx.commit()
             return False
@@ -198,7 +202,7 @@ class DataFeedSource(AbstractSource):
         """
         if not force and self.fresh():
             return {}
-        if not self.acquire_synchronization_lock(cnx):
+        if not self.acquire_synchronization_lock(cnx, force):
             return {}
         try:
             return self._pull_data(cnx, force, raise_on_error)
