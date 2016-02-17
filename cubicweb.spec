@@ -15,7 +15,7 @@ Source0:        http://download.logilab.org/pub/cubicweb/cubicweb-%{version}.tar
 License:        LGPLv2+
 Group:          Development/Languages/Python
 Vendor:         Logilab <contact@logilab.fr>
-Url:            http://www.cubicweb.org/project/cubicweb
+Url:            https://www.cubicweb.org/project/cubicweb
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch:      noarch
