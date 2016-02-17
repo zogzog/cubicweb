@@ -28,6 +28,7 @@ from cubicweb.schema import RRQLExpression
 AFFK = uicfg.autoform_field_kwargs
 AFS = uicfg.autoform_section
 
+
 def rbc(entity, formtype, section):
     if section in ('attributes', 'metadata', 'hidden'):
         permission = 'update'

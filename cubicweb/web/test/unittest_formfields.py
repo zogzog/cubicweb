@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,17 +24,17 @@ from yams.constraints import StaticVocabularyConstraint, SizeConstraint
 import cubicweb
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.web.formwidgets import PasswordInput, TextArea, Select, Radio
+from cubicweb.web.formwidgets import PasswordInput, Select, Radio
 from cubicweb.web.formfields import *
 from cubicweb.web.views.forms import EntityFieldsForm, FieldsForm
 
-from cubes.file.entities import File
 
 def setUpModule(*args):
     global schema
     config = TestServerConfiguration('data', apphome=GuessFieldTC.datadir)
     config.bootstrap_cubes()
     schema = config.load_schema()
+
 
 class GuessFieldTC(CubicWebTC):
 
@@ -43,12 +43,6 @@ class GuessFieldTC(CubicWebTC):
             title_field = guess_field(schema['State'], schema['name'], req=req)
             self.assertIsInstance(title_field, StringField)
             self.assertEqual(title_field.required, True)
-
-#         synopsis_field = guess_field(schema['State'], schema['synopsis'])
-#         self.assertIsInstance(synopsis_field, StringField)
-#         self.assertIsInstance(synopsis_field.widget, TextArea)
-#         self.assertEqual(synopsis_field.required, False)
-#         self.assertEqual(synopsis_field.help, 'an abstract for this state')
 
         with self.admin_access.web_request() as req:
             description_field = guess_field(schema['State'], schema['description'], req=req)
@@ -65,11 +59,6 @@ class GuessFieldTC(CubicWebTC):
             self.assertEqual(description_format_field.internationalizable, True)
             self.assertEqual(description_format_field.sort, True)
 
-#         wikiid_field = guess_field(schema['State'], schema['wikiid'])
-#         self.assertIsInstance(wikiid_field, StringField)
-#         self.assertEqual(wikiid_field.required, False)
-
-
     def test_cwuser_fields(self):
         with self.admin_access.web_request() as req:
             upassword_field = guess_field(schema['CWUser'], schema['upassword'], req=req)
@@ -78,7 +67,8 @@ class GuessFieldTC(CubicWebTC):
             self.assertEqual(upassword_field.required, True)
 
         with self.admin_access.web_request() as req:
-            last_login_time_field = guess_field(schema['CWUser'], schema['last_login_time'], req=req)
+            last_login_time_field = guess_field(schema['CWUser'], schema['last_login_time'],
+                                                req=req)
             self.assertIsInstance(last_login_time_field, DateTimeField)
             self.assertEqual(last_login_time_field.required, False)
 
@@ -95,15 +85,7 @@ class GuessFieldTC(CubicWebTC):
             self.assertEqual(owned_by_field.required, False)
             self.assertEqual(owned_by_field.role, 'object')
 
-
     def test_file_fields(self):
-        # data_format_field = guess_field(schema['File'], schema['data_format'])
-        # self.assertEqual(data_format_field, None)
-        # data_encoding_field = guess_field(schema['File'], schema['data_encoding'])
-        # self.assertEqual(data_encoding_field, None)
-        # data_name_field = guess_field(schema['File'], schema['data_name'])
-        # self.assertEqual(data_name_field, None)
-
         with self.admin_access.web_request() as req:
             data_field = guess_field(schema['File'], schema['data'], req=req)
             self.assertIsInstance(data_field, FileField)
@@ -117,10 +99,9 @@ class GuessFieldTC(CubicWebTC):
             salesterm_field = guess_field(schema['Salesterm'], schema['reason'], req=req)
             constraints = schema['reason'].rdef('Salesterm', 'String').constraints
             self.assertEqual([c.__class__ for c in constraints],
-                              [SizeConstraint, StaticVocabularyConstraint])
+                             [SizeConstraint, StaticVocabularyConstraint])
             self.assertIsInstance(salesterm_field, StringField)
             self.assertIsInstance(salesterm_field.widget, Select)
-
 
     def test_bool_field_base(self):
         with self.admin_access.web_request() as req:
@@ -129,7 +110,7 @@ class GuessFieldTC(CubicWebTC):
             self.assertEqual(field.required, False)
             self.assertIsInstance(field.widget, Radio)
             self.assertEqual(field.vocabulary(mock(_cw=mock(_=cubicweb._))),
-                              [(u'yes', '1'), (u'no', '')])
+                             [(u'yes', '1'), (u'no', '')])
 
     def test_bool_field_explicit_choices(self):
         with self.admin_access.web_request() as req:
@@ -137,7 +118,7 @@ class GuessFieldTC(CubicWebTC):
                                 choices=[(u'maybe', '1'), (u'no', '')], req=req)
             self.assertIsInstance(field.widget, Radio)
             self.assertEqual(field.vocabulary(mock(req=mock(_=cubicweb._))),
-                              [(u'maybe', '1'), (u'no', '')])
+                             [(u'maybe', '1'), (u'no', '')])
 
 
 class MoreFieldsTC(CubicWebTC):
@@ -152,10 +133,10 @@ class MoreFieldsTC(CubicWebTC):
             self.assertEqual(description_format_field.sort, True)
             # unlike below, initial is bound to form.form_field_format
             self.assertEqual(description_format_field.value(form), 'text/plain')
-            req.cnx.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
+            req.cnx.create_entity('CWProperty', pkey=u"ui.default-text-format", value=u"text/rest",
+                                  for_user=req.user.eid)
             req.cnx.commit()
             self.assertEqual(description_format_field.value(form), 'text/rest')
-
 
     def test_property_key_field(self):
         from cubicweb.web.views.cwproperties import PropertyKeyField
@@ -171,15 +152,17 @@ class MoreFieldsTC(CubicWebTC):
 class CompoundFieldTC(CubicWebTC):
 
     def test_multipart(self):
-        """Ensures that compound forms have needs_multipart set if their
-        children require it"""
+        """Ensures that compound forms have needs_multipart set if their children require it"""
         class AForm(FieldsForm):
             comp = CompoundField([IntField(), StringField()])
+
         with self.admin_access.web_request() as req:
             aform = AForm(req, None)
             self.assertFalse(aform.needs_multipart)
+
         class MForm(FieldsForm):
             comp = CompoundField([IntField(), FileField()])
+
         with self.admin_access.web_request() as req:
             mform = MForm(req, None)
             self.assertTrue(mform.needs_multipart)
@@ -188,12 +171,12 @@ class CompoundFieldTC(CubicWebTC):
 class UtilsTC(TestCase):
     def test_vocab_sort(self):
         self.assertEqual(vocab_sort([('Z', 1), ('A', 2),
-                                      ('Group 1', None), ('Y', 3), ('B', 4),
-                                      ('Group 2', None), ('X', 5), ('C', 6)]),
-                          [('A', 2), ('Z', 1),
-                           ('Group 1', None), ('B', 4), ('Y', 3),
-                           ('Group 2', None), ('C', 6), ('X', 5)]
-                          )
+                                     ('Group 1', None), ('Y', 3), ('B', 4),
+                                     ('Group 2', None), ('X', 5), ('C', 6)]),
+                         [('A', 2), ('Z', 1),
+                          ('Group 1', None), ('B', 4), ('Y', 3),
+                          ('Group 2', None), ('C', 6), ('X', 5)])
+
 
 if __name__ == '__main__':
     unittest_main()

@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -34,6 +34,7 @@ from cubicweb.web.views.basecontrollers import ViewController
 from cubicweb.web.application import anonymized_request
 from cubicweb import repoapi
 
+
 class FakeMapping:
     """emulates a mapping module"""
     def __init__(self):
@@ -41,9 +42,11 @@ class FakeMapping:
         self.ATTRIBUTES_MAP = {}
         self.RELATIONS_MAP = {}
 
+
 class MockCursor:
     def __init__(self):
         self.executed = []
+
     def execute(self, rql, args=None, build_descr=False):
         args = args or {}
         self.executed.append(rql % args)
@@ -69,21 +72,19 @@ class RequestBaseTC(TestCase):
     def setUp(self):
         self._cw = FakeRequest()
 
-
     def test_list_arg(self):
         """tests the list_arg() function"""
         list_arg = self._cw.list_form_param
         self.assertEqual(list_arg('arg3', {}), [])
-        d = {'arg1' : "value1",
-             'arg2' : ('foo', INTERNAL_FIELD_VALUE,),
-             'arg3' : ['bar']}
+        d = {'arg1': "value1",
+             'arg2': ('foo', INTERNAL_FIELD_VALUE,),
+             'arg3': ['bar']}
         self.assertEqual(list_arg('arg1', d, True), ['value1'])
-        self.assertEqual(d, {'arg2' : ('foo', INTERNAL_FIELD_VALUE), 'arg3' : ['bar'],})
+        self.assertEqual(d, {'arg2': ('foo', INTERNAL_FIELD_VALUE), 'arg3': ['bar']})
         self.assertEqual(list_arg('arg2', d, True), ['foo'])
-        self.assertEqual({'arg3' : ['bar'],}, d)
-        self.assertEqual(list_arg('arg3', d), ['bar',])
-        self.assertEqual({'arg3' : ['bar'],}, d)
-
+        self.assertEqual({'arg3': ['bar']}, d)
+        self.assertEqual(list_arg('arg3', d), ['bar'])
+        self.assertEqual({'arg3': ['bar']}, d)
 
     def test_from_controller(self):
         self._cw.vreg['controllers'] = {'view': 1, 'login': 1}
@@ -107,51 +108,40 @@ class UtilsTC(TestCase):
     def setUp(self):
         self.ctrl = FakeController()
 
-    #def test_which_mapping(self):
-    #    """tests which mapping is used (application or core)"""
-    #    init_mapping()
-    #    from cubicweb.common import mapping
-    #    self.assertEqual(mapping.MAPPING_USED, 'core')
-    #    sys.modules['mapping'] = FakeMapping()
-    #    init_mapping()
-    #    self.assertEqual(mapping.MAPPING_USED, 'application')
-    #    del sys.modules['mapping']
-
     def test_execute_linkto(self):
         """tests the execute_linkto() function"""
         self.assertEqual(self.ctrl.execute_linkto(), None)
         self.assertEqual(self.ctrl._cursor.executed,
-                          [])
+                         [])
 
-        self.ctrl.set_form({'__linkto' : 'works_for:12_13_14:object',
-                              'eid': 8})
+        self.ctrl.set_form({'__linkto': 'works_for:12_13_14:object',
+                            'eid': 8})
         self.ctrl.execute_linkto()
         self.assertEqual(self.ctrl._cursor.executed,
-                          ['SET Y works_for X WHERE X eid 8, Y eid %s' % i
-                           for i in (12, 13, 14)])
+                         ['SET Y works_for X WHERE X eid 8, Y eid %s' % i
+                          for i in (12, 13, 14)])
 
         self.ctrl.new_cursor()
-        self.ctrl.set_form({'__linkto' : 'works_for:12_13_14:subject',
-                              'eid': 8})
+        self.ctrl.set_form({'__linkto': 'works_for:12_13_14:subject',
+                            'eid': 8})
         self.ctrl.execute_linkto()
         self.assertEqual(self.ctrl._cursor.executed,
-                          ['SET X works_for Y WHERE X eid 8, Y eid %s' % i
-                           for i in (12, 13, 14)])
-
-
-        self.ctrl.new_cursor()
-        self.ctrl._cw.form = {'__linkto' : 'works_for:12_13_14:object'}
-        self.ctrl.execute_linkto(eid=8)
-        self.assertEqual(self.ctrl._cursor.executed,
-                          ['SET Y works_for X WHERE X eid 8, Y eid %s' % i
-                           for i in (12, 13, 14)])
+                         ['SET X works_for Y WHERE X eid 8, Y eid %s' % i
+                          for i in (12, 13, 14)])
 
         self.ctrl.new_cursor()
-        self.ctrl.set_form({'__linkto' : 'works_for:12_13_14:subject'})
+        self.ctrl._cw.form = {'__linkto': 'works_for:12_13_14:object'}
         self.ctrl.execute_linkto(eid=8)
         self.assertEqual(self.ctrl._cursor.executed,
-                          ['SET X works_for Y WHERE X eid 8, Y eid %s' % i
-                           for i in (12, 13, 14)])
+                         ['SET Y works_for X WHERE X eid 8, Y eid %s' % i
+                          for i in (12, 13, 14)])
+
+        self.ctrl.new_cursor()
+        self.ctrl.set_form({'__linkto': 'works_for:12_13_14:subject'})
+        self.ctrl.execute_linkto(eid=8)
+        self.assertEqual(self.ctrl._cursor.executed,
+                         ['SET X works_for Y WHERE X eid 8, Y eid %s' % i
+                          for i in (12, 13, 14)])
 
 
 class ApplicationTC(CubicWebTC):
@@ -184,23 +174,23 @@ class ApplicationTC(CubicWebTC):
             user = req.user
             eid = text_type(user.eid)
             req.form = {
-                'eid':       eid,
-                '__type:'+eid:    'CWUser', '_cw_entity_fields:'+eid: 'login-subject',
-                'login-subject:'+eid:     '', # ERROR: no login specified
-                 # just a sample, missing some necessary information for real life
+                'eid': eid,
+                '__type:' + eid: 'CWUser',
+                '_cw_entity_fields:' + eid: 'login-subject',
+                'login-subject:' + eid: '',  # ERROR: no login specified
+                # just a sample, missing some necessary information for real life
                 '__errorurl': 'view?vid=edition...'
-                }
+            }
             path, params = self.expect_redirect_handle_request(req, 'edit')
             forminfo = req.session.data['view?vid=edition...']
             eidmap = forminfo['eidmap']
             self.assertEqual(eidmap, {})
             values = forminfo['values']
-            self.assertEqual(values['login-subject:'+eid], '')
+            self.assertEqual(values['login-subject:' + eid], '')
             self.assertEqual(values['eid'], eid)
             error = forminfo['error']
             self.assertEqual(error.entity, user.eid)
             self.assertEqual(error.errors['login-subject'], 'required field')
-
 
     def test_validation_error_dont_loose_subentity_data_ctrl(self):
         """test creation of two linked entities
@@ -227,9 +217,8 @@ class ApplicationTC(CubicWebTC):
             self.assertIsInstance(forminfo['eidmap']['Y'], int)
             self.assertEqual(forminfo['error'].entity, 'X')
             self.assertEqual(forminfo['error'].errors,
-                              {'login-subject': 'required field'})
+                             {'login-subject': 'required field'})
             self.assertEqual(forminfo['values'], req.form)
-
 
     def test_validation_error_dont_loose_subentity_data_repo(self):
         """test creation of two linked entities
@@ -238,17 +227,18 @@ class ApplicationTC(CubicWebTC):
         """
         with self.admin_access.web_request() as req:
             # set Y before X to ensure both entities are edited, not only X
-            req.form = {'eid': ['Y', 'X'], '__maineid': 'X',
-                        '__type:X': 'CWUser', '_cw_entity_fields:X': 'login-subject,upassword-subject',
-                        # already existent user
-                        'login-subject:X': u'admin',
-                        'upassword-subject:X': u'admin', 'upassword-subject-confirm:X': u'admin',
-                        '__type:Y': 'EmailAddress', '_cw_entity_fields:Y': 'address-subject',
-                        'address-subject:Y': u'bougloup@logilab.fr',
-                        'use_email-object:Y': 'X',
-                        # necessary to get validation error handling
-                        '__errorurl': 'view?vid=edition...',
-                        }
+            req.form = {
+                'eid': ['Y', 'X'], '__maineid': 'X',
+                '__type:X': 'CWUser', '_cw_entity_fields:X': 'login-subject,upassword-subject',
+                # already existent user
+                'login-subject:X': u'admin',
+                'upassword-subject:X': u'admin', 'upassword-subject-confirm:X': u'admin',
+                '__type:Y': 'EmailAddress', '_cw_entity_fields:Y': 'address-subject',
+                'address-subject:Y': u'bougloup@logilab.fr',
+                'use_email-object:Y': 'X',
+                # necessary to get validation error handling
+                '__errorurl': 'view?vid=edition...',
+            }
             path, params = self.expect_redirect_handle_request(req, 'edit')
             forminfo = req.session.data['view?vid=edition...']
             self.assertEqual(set(forminfo['eidmap']), set('XY'))
@@ -256,7 +246,7 @@ class ApplicationTC(CubicWebTC):
             self.assertIsInstance(forminfo['eidmap']['Y'], int)
             self.assertEqual(forminfo['error'].entity, forminfo['eidmap']['X'])
             self.assertEqual(forminfo['error'].errors,
-                              {'login-subject': u'the value "admin" is already used, use another one'})
+                             {'login-subject': u'the value "admin" is already used, use another one'})
             self.assertEqual(forminfo['values'], req.form)
 
     def _edit_parent(self, dir_eid, parent_eid, role='subject',
@@ -515,13 +505,15 @@ class ApplicationTC(CubicWebTC):
     def test_ajax_view_raise_arbitrary_error(self):
         class ErrorAjaxView(view.View):
             __regid__ = 'test.ajax.error'
+
             def call(self):
                 raise Exception('whatever')
+
         with self.temporary_appobjects(ErrorAjaxView):
             with real_error_handling(self.app) as app:
                 with self.admin_access.web_request(vid='test.ajax.error') as req:
                     req.ajax_request = True
-                    page = app.handle_request(req, '')
+                    app.handle_request(req, '')
         self.assertEqual(http_client.INTERNAL_SERVER_ERROR,
                          req.status_out)
 
@@ -580,12 +572,12 @@ class ApplicationTC(CubicWebTC):
         self.assertAuthFailure(req)
         try:
             form = self.app.handle_request(req, 'login')
-        except Redirect as redir:
+        except Redirect:
             self.fail('anonymous user should get login form')
         clear_cache(req, 'get_authorization')
         self.assertIn(b'__login', form)
         self.assertIn(b'__password', form)
-        self.assertFalse(req.cnx) # Mock cnx are False
+        self.assertFalse(req.cnx)  # Mock cnx are False
         req.form['__login'] = self.admlogin
         req.form['__password'] = self.admpassword
         self.assertAuthSuccess(req, origsession)
@@ -599,13 +591,7 @@ class ApplicationTC(CubicWebTC):
             cnx.execute('INSERT EmailAddress X: X address %(address)s, U primary_email X '
                         'WHERE U login %(login)s', {'address': address, 'login': login})
             cnx.commit()
-        # # option allow-email-login not set
         req, origsession = self.init_authentication('cookie')
-        # req.form['__login'] = address
-        # req.form['__password'] = self.admpassword
-        # self.assertAuthFailure(req)
-        # option allow-email-login set
-        #origsession.login = address
         self.set_option('allow-email-login', True)
         req.form['__login'] = address
         req.form['__password'] = self.admpassword
