@@ -43,6 +43,7 @@ from six.moves.urllib.parse import urlparse
 from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
 from logilab.common.configuration import merge_options
+from logilab.common.deprecation import deprecated
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.utils import support_args
@@ -103,38 +104,19 @@ class InstanceCommand(Command):
         )
     actionverb = None
 
+    @deprecated('[3.22] startorder is not used any more')
     def ordered_instances(self):
-        """return instances in the order in which they should be started,
-        considering $REGISTRY_DIR/startorder file if it exists (useful when
-        some instances depends on another as external source).
-
-        Instance used by another one should appears first in the file (one
-        instance per line)
+        """return list of known instances
         """
         regdir = cwcfg.instances_dir()
-        _allinstances = list_instances(regdir)
-        if isfile(join(regdir, 'startorder')):
-            allinstances = []
-            for line in open(join(regdir, 'startorder')):
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    try:
-                        _allinstances.remove(line)
-                        allinstances.append(line)
-                    except ValueError:
-                        print('ERROR: startorder file contains unexistant '
-                              'instance %s' % line)
-            allinstances += _allinstances
-        else:
-            allinstances = _allinstances
-        return allinstances
+        return list_instances(regdir)
 
     def run(self, args):
         """run the <command>_method on each argument (a list of instance
         identifiers)
         """
         if not args:
-            args = self.ordered_instances()
+            args = list_instances(cwcfg.instances_dir())
             try:
                 askconfirm = not self.config.force
             except AttributeError:
@@ -572,11 +554,6 @@ class StopInstanceCommand(InstanceCommand):
     name = 'stop'
     actionverb = 'stopped'
 
-    def ordered_instances(self):
-        instances = super(StopInstanceCommand, self).ordered_instances()
-        instances.reverse()
-        return instances
-
     def stop_instance(self, appid):
         """stop the instance's server"""
         config = cwcfg.config_for(appid)
@@ -620,29 +597,6 @@ class RestartInstanceCommand(StartInstanceCommand):
     """
     name = 'restart'
     actionverb = 'restarted'
-
-    def run_args(self, args, askconfirm):
-        regdir = cwcfg.instances_dir()
-        if not isfile(join(regdir, 'startorder')) or len(args) <= 1:
-            # no specific startorder
-            super(RestartInstanceCommand, self).run_args(args, askconfirm)
-            return
-        print ('some specific start order is specified, will first stop all '
-               'instances then restart them.')
-        # get instances in startorder
-        for appid in args:
-            if askconfirm:
-                print('*'*72)
-                if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
-                    continue
-            StopInstanceCommand(self.logger).stop_instance(appid)
-        forkcmd = [w for w in sys.argv if not w in args]
-        forkcmd[1] = 'start'
-        forkcmd = ' '.join(forkcmd)
-        for appid in reversed(args):
-            status = system('%s %s' % (forkcmd, appid))
-            if status:
-                sys.exit(status)
 
     def restart_instance(self, appid):
         StopInstanceCommand(self.logger).stop_instance(appid)

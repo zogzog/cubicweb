@@ -148,7 +148,8 @@ class _AddCWPropertyOp(hook.Operation):
         """the observed connections set has been commited"""
         cwprop = self.cwprop
         if not cwprop.for_user:
-            self.cnx.vreg['propertyvalues'][cwprop.pkey] = cwprop.value
+            self.cnx.vreg['propertyvalues'][cwprop.pkey] = \
+                self.cnx.vreg.typed_value(cwprop.pkey, cwprop.value)
         # if for_user is set, update is handled by a ChangeCWPropertyOp operation
 
 

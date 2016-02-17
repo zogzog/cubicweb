@@ -152,7 +152,6 @@ FILES_TO_IGNORE = set([
 
     'cubicweb.fckcwconfig.js',
     'cubicweb.fckcwconfig-full.js',
-    'cubicweb.goa.js',
     'cubicweb.compat.js',
     ])
 

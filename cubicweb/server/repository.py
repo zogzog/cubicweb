@@ -226,6 +226,11 @@ class Repository(object):
             if not config.creating:
                 self.info("set fs instance'schema")
             self.set_schema(config.load_schema(expand_cubes=True))
+            if not config.creating:
+                # set eids on entities schema
+                with self.internal_cnx() as cnx:
+                    for etype, eid in cnx.execute('Any XN,X WHERE X is CWEType, X name XN'):
+                        self.schema.eschema(etype).eid = eid
         else:
             # normal start: load the instance schema from the database
             self.info('loading schema from the repository')

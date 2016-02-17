@@ -34,7 +34,11 @@ from six.moves import builtins
 CW_SOFTWARE_ROOT = __path__[0]
 
 import sys, os, logging
-from io import BytesIO
+if (2, 7) <= sys.version_info < (2, 7, 4):
+    # http://bugs.python.org/issue10211
+    from StringIO import StringIO as BytesIO
+else:
+    from io import BytesIO
 
 from six.moves import cPickle as pickle
 
@@ -79,12 +83,14 @@ class Binary(BytesIO):
     def __init__(self, buf=b''):
         assert isinstance(buf, self._allowed_types), \
                "Binary objects must use bytes/buffer objects, not %s" % buf.__class__
-        super(Binary, self).__init__(buf)
+        # don't call super, BytesIO may be an old-style class (on python < 2.7.4)
+        BytesIO.__init__(self, buf)
 
     def write(self, data):
         assert isinstance(data, self._allowed_types), \
                "Binary objects must use bytes/buffer objects, not %s" % data.__class__
-        super(Binary, self).write(data)
+        # don't call super, BytesIO may be an old-style class (on python < 2.7.4)
+        BytesIO.write(self, data)
 
     def to_file(self, fobj):
         """write a binary to disk

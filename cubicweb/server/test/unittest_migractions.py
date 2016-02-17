@@ -276,10 +276,10 @@ class MigrationCommandsTC(MigrationTC):
                                'description', 'description_format',
                                'eid',
                                'filed_under2', 'has_text',
-                               'identity', 'in_basket', 'is', 'is_instance_of',
+                               'identity', 'in_basket', 'inlined_rel', 'is', 'is_instance_of',
                                'modification_date', 'name', 'owned_by'])
             self.assertCountEqual([str(rs) for rs in self.schema['Folder2'].object_relations()],
-                                  ['filed_under2', 'identity'])
+                                  ['filed_under2', 'identity', 'inlined_rel'])
             # Old will be missing as it has been renamed into 'New' in the migrated
             # schema while New hasn't been added here.
             self.assertEqual(sorted(str(e) for e in self.schema['filed_under2'].subjects()),

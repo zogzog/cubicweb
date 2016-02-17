@@ -5,9 +5,10 @@
 %define python python
 %define __python /usr/bin/python
 %endif
+%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           cubicweb
-Version:        3.22.0
+Version:        3.22.1
 Release:        logilab.1%{?dist}
 Summary:        CubicWeb is a semantic web application framework
 Source0:        http://download.logilab.org/pub/cubicweb/cubicweb-%{version}.tar.gz
@@ -30,7 +31,7 @@ Requires:       %{python}-passlib
 Requires:       %{python}-lxml
 Requires:       %{python}-twisted-web
 Requires:       %{python}-markdown
-Requires:       %{python}-tz
+Requires:       pytz
 # the schema view uses `dot'; at least on el5, png output requires graphviz-gd
 Requires:       graphviz-gd
 Requires:       gettext
@@ -57,5 +58,6 @@ rm -rf $RPM_BUILD_ROOT
 %files 
 %defattr(-, root, root)
 %dir /var/log/cubicweb
-/*
-
+%{_prefix}/share/cubicweb
+%{python_sitelib}
+%{_bindir}

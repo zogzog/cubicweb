@@ -56,7 +56,8 @@ Depends:
  cubicweb-postgresql-support
  | cubicweb-mysql-support
  | python-pysqlite2,
- python-passlib
+ python-passlib,
+ python-tz,
 Recommends:
  cubicweb-documentation (= ${source:Version}),
 Suggests:

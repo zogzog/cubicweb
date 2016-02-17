@@ -117,19 +117,19 @@ class Unauthorized(SecurityError):
     """raised when a user tries to perform an action without sufficient
     credentials
     """
-    msg = 'You are not allowed to perform this operation'
-    msg1 = 'You are not allowed to perform %s operation on %s'
+    msg = u'You are not allowed to perform this operation'
+    msg1 = u'You are not allowed to perform %s operation on %s'
     var = None
 
-    def __str__(self):
+    def __unicode__(self):
         try:
             if self.args and len(self.args) == 2:
                 return self.msg1 % self.args
             if self.args:
-                return ' '.join(self.args)
+                return u' '.join(self.args)
             return self.msg
         except Exception as ex:
-            return str(ex)
+            return text_type(ex)
 
 class Forbidden(SecurityError):
     """raised when a user tries to perform a forbidden action

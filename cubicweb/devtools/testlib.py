@@ -318,7 +318,6 @@ class CubicWebTC(BaseTestCase):
         """return admin session"""
         return self._admin_session
 
-    # XXX this doesn't need to a be classmethod anymore
     def _init_repo(self):
         """init the repository and connection to it.
         """

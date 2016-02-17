@@ -132,7 +132,7 @@ class ExtEntitiesImporterTC(CubicWebTC):
             importer = self.importer(cnx)
             # First import
             richelieu = ExtEntity('Personne', 11,
-                                  {'nom': {u'Richelieu Diacre'}})
+                                  {'nom': set([u'Richelieu Diacre'])})
             importer.import_entities([richelieu])
             cnx.commit()
             rset = cnx.execute('Any X WHERE X is Personne')
@@ -140,7 +140,7 @@ class ExtEntitiesImporterTC(CubicWebTC):
             self.assertEqual(entity.nom, u'Richelieu Diacre')
             # Second import
             richelieu = ExtEntity('Personne', 11,
-                                  {'nom': {u'Richelieu Cardinal'}})
+                                  {'nom': set([u'Richelieu Cardinal'])})
             importer.import_entities([richelieu])
             cnx.commit()
             rset = cnx.execute('Any X WHERE X is Personne')
