@@ -14,7 +14,7 @@ This package contains:
 Install
 -------
 
-More details at http://docs.cubicweb.org/book/admin/setup
+More details at https://docs.cubicweb.org/book/admin/setup
 
 Getting started
 ---------------
@@ -26,12 +26,12 @@ Execute::
  cubicweb-ctl start -D myblog
  sensible-browser http://localhost:8080/
 
-Details at http://docs.cubicweb.org/tutorials/base/blog-in-five-minutes
+Details at https://docs.cubicweb.org/tutorials/base/blog-in-five-minutes
 
 Documentation
 -------------
 
-Look in the doc/ subdirectory or read http://docs.cubicweb.org/
+Look in the doc/ subdirectory or read https://docs.cubicweb.org/
 
 
-It includes the Entypo pictograms by Daniel Bruce — www.entypo.com
+CubicWeb includes the Entypo pictograms by Daniel Bruce — www.entypo.com
