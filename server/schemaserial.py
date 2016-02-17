@@ -23,12 +23,13 @@ __docformat__ = "restructuredtext en"
 import os
 import json
 import sys
+import sqlite3
 
 from six import PY2, text_type, string_types
 
 from logilab.common.shellutils import ProgressBar, DummyProgressBar
 
-from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
+from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo, constraints
 
 from cubicweb import Binary
 from cubicweb.schema import (KNOWN_RPROPERTIES, CONSTRAINTS, ETYPE_NAME_MAP,
@@ -312,12 +313,20 @@ def deserialize_ertype_permissions(cnx):
             res.setdefault(eid, {}).setdefault(action, []).append( (expr, mainvars, expreid) )
     return res
 
+
 def deserialize_rdef_constraints(cnx):
     """return the list of relation definition's constraints as instances"""
+    if cnx.repo.system_source.dbdriver != 'sqlite' or sqlite3.sqlite_version_info >= (3, 7, 12):
+            # these are implemented as CHECK constraints in sql, don't do the work twice. Unless we
+            # are using too old version of sqlite which misses the constraint name in the integrity
+            # error so we've to check them by ourselves anyway
+            constraints.StaticVocabularyConstraint.check = lambda *args: True
+            constraints.IntervalBoundConstraint.check = lambda *args: True
+            constraints.BoundaryConstraint.check = lambda *args: True
     res = {}
     for rdefeid, ceid, ct, val in cnx.execute(
-        'Any E, X,TN,V WHERE E constrained_by X, X is CWConstraint, '
-        'X cstrtype T, T name TN, X value V', build_descr=False):
+            'Any E, X,TN,V WHERE E constrained_by X, X is CWConstraint, '
+            'X cstrtype T, T name TN, X value V', build_descr=False):
         cstr = CONSTRAINTS[ct].deserialize(val)
         cstr.eid = ceid
         res.setdefault(rdefeid, []).append(cstr)
