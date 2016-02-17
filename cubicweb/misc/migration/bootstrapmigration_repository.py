@@ -45,6 +45,7 @@ def replace_eid_sequence_with_eid_numrange(session):
         cursor.execute(dbh.sql_sequence_current_state('entities_id_seq'))
         lasteid = cursor.fetchone()[0]
     except: # programming error, already migrated
+        session.rollback()
         return
 
     cursor.execute(dbh.sql_drop_sequence('entities_id_seq'))
