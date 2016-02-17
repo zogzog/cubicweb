@@ -87,18 +87,6 @@ if applcubicwebversion < (3, 19, 0) and cubicwebversion >= (3, 19, 0):
 
     replace_eid_sequence_with_eid_numrange(session)
 
-if applcubicwebversion < (3, 20, 0) and cubicwebversion >= (3, 20, 0):
-    ss._IGNORED_PROPS.append('formula')
-    add_attribute('CWAttribute', 'formula', commit=False)
-    ss._IGNORED_PROPS.remove('formula')
-    commit()
-    add_entity_type('CWComputedRType')
-    commit()
-
-if schema['TZDatetime'].eid is None:
-    add_entity_type('TZDatetime', auto=False)
-if schema['TZTime'].eid is None:
-    add_entity_type('TZTime', auto=False)
 
 if applcubicwebversion < (3, 18, 0) and cubicwebversion >= (3, 18, 0):
     driver = config.system_source_config['db-driver']
@@ -436,6 +424,19 @@ if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
 
 if applcubicwebversion < (3, 2, 0) and cubicwebversion >= (3, 2, 0):
     add_cube('card', update_database=False)
+
+if applcubicwebversion < (3, 20, 0) and cubicwebversion >= (3, 20, 0):
+    ss._IGNORED_PROPS.append('formula')
+    add_attribute('CWAttribute', 'formula', commit=False)
+    ss._IGNORED_PROPS.remove('formula')
+    commit()
+    add_entity_type('CWComputedRType')
+    commit()
+
+if schema['TZDatetime'].eid is None:
+    add_entity_type('TZDatetime', auto=False)
+if schema['TZTime'].eid is None:
+    add_entity_type('TZTime', auto=False)
 
 
 if applcubicwebversion < (3, 21, 1) and cubicwebversion >= (3, 21, 1):
