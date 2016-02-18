@@ -35,7 +35,7 @@ from logilab.common.shellutils import ASK, generate_password
 
 from logilab.database import get_db_helper, get_connection
 
-from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
+from cubicweb import AuthenticationError, ExecutionError, ConfigurationError, SourceException
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
 from cubicweb.cwctl import CWCTL, check_options_consistency, ConfigureInstanceCommand
 from cubicweb.server import SOURCE_TYPES
@@ -995,18 +995,25 @@ class SynchronizeSourceCommand(Command):
         init_cmdline_log_threshold(config, self['loglevel'])
         repo = repoapi.get_repository(config=config)
         repo.hm.call_hooks('server_maintenance', repo=repo)
+        status = 0
         try:
             try:
                 source = repo.sources_by_uri[args[1]]
             except KeyError:
                 raise ExecutionError('no source named %r' % args[1])
             with repo.internal_cnx() as cnx:
-                stats = source.pull_data(cnx, force=True, raise_on_error=True)
+                try:
+                    stats = source.pull_data(cnx, force=True, raise_on_error=True)
+                except SourceException as exc:
+                    print("can't synchronize the source:", exc)
+                    status = 1
+                    stats = {}
         finally:
             repo.shutdown()
         for key, val in stats.items():
             if val:
                 print(key, ':', val)
+        sys.exit(status)
 
 
 def permissionshandler(relation, perms):
