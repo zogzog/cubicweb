@@ -1,0 +1,12 @@
+3.23 (UNRELEASED)
+=================
+
+Backwards-incompatible changes
+------------------------------
+
+* Generative tests *à la logilab-common* are not supported anymore in
+  `CubicWebTC`. It is advised to use the subtests_ API (available on
+  `CubicWebTC` either from the standard library as of Python 3.4 or through
+  unittest2 package otherwise).
+
+.. _subtests: https://docs.python.org/3/library/unittest.html#distinguishing-test-iterations-using-subtests

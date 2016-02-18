@@ -23,6 +23,7 @@ import re
 from os.path import dirname, join, abspath
 from math import log
 from contextlib import contextmanager
+from inspect import isgeneratorfunction
 from itertools import chain
 
 from six import text_type, string_types
@@ -316,6 +317,14 @@ class CubicWebTC(BaseTestCase):
         self.repo = None
         self._open_access = set()
         super(CubicWebTC, self).__init__(*args, **kwargs)
+
+    def run(self, *args, **kwds):
+        testMethod = getattr(self, self._testMethodName)
+        if isgeneratorfunction(testMethod):
+            raise RuntimeError(
+                '%s appears to be a generative test. This is not handled '
+                'anymore, use subTest API instead.' % self)
+        return super(CubicWebTC, self).run(*args, **kwds)
 
     # repository connection handling ###########################################
 
