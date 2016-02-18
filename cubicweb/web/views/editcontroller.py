@@ -187,12 +187,13 @@ class EditController(basecontrollers.ViewController):
             req.transaction_data['__maineid'] = form['__maineid']
         # no specific action, generic edition
         self._to_create = req.data['eidmap'] = {}
-        # those two data variables are used to handle relation from/to entities
+        # those three data variables are used to handle relation from/to entities
         # which doesn't exist at time where the entity is edited and that
         # deserves special treatment
         req.data['pending_inlined'] = defaultdict(set)
         req.data['pending_others'] = set()
         req.data['pending_composite_delete'] = set()
+        req.data['pending_values'] = dict()
         try:
             for formparams in self._ordered_formparams():
                 self.edit_entity(formparams)
@@ -205,10 +206,20 @@ class EditController(basecontrollers.ViewController):
         # treated now (pop to ensure there are no attempt to add new ones)
         pending_inlined = req.data.pop('pending_inlined')
         assert not pending_inlined, pending_inlined
+        pending_values = req.data.pop('pending_values')
         # handle all other remaining relations now
         while req.data['pending_others']:
             form_, field = req.data['pending_others'].pop()
-            self.handle_formfield(form_, field)
+            # attempt to retrieve values and original values if they have already gone through
+            # handle_formfield (may not if there has been some not yet known eid at the first
+            # processing round). In the later case we've to go back through handle_formfield.
+            try:
+                values, origvalues = pending_values.pop((form_, field))
+            except KeyError:
+                self.handle_formfield(form_, field)
+            else:
+                self.handle_relation(form_, field, values, origvalues)
+        assert not pending_values, 'unexpected remaining pending values %s' % pending_values
         del req.data['pending_others']
         # then execute rql to set all relations
         for querydef in self.relations_rql:
@@ -330,6 +341,7 @@ class EditController(basecontrollers.ViewController):
                     self.handle_relation(form, field, value, origvalues)
                 else:
                     form._cw.data['pending_others'].add((form, field))
+                    form._cw.data['pending_values'][(form, field)] = (value, origvalues)
 
         except ProcessFormError as exc:
             self.errors.append((field, exc))

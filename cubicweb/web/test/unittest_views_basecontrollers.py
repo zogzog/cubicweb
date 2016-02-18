@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,22 +27,20 @@ import lxml
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import monkeypatch
 
-from cubicweb import Binary, NoSelectableObject, ValidationError, AuthenticationError
+from cubicweb import Binary, NoSelectableObject, ValidationError, transaction as tx
 from cubicweb.schema import RRQLExpression
+from cubicweb.predicates import is_instance
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.webtest import CubicWebTestTC
 from cubicweb.devtools.httptest import CubicWebServerTC
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
-from cubicweb.web import Redirect, RemoteCallFailed, http_headers
-import cubicweb.server.session
-from cubicweb.server.session import Connection
+from cubicweb.web import Redirect, RemoteCallFailed, http_headers, formfields as ff
 from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
 from cubicweb.web.views.basecontrollers import JSonController, xhtmlize, jsonize
 from cubicweb.web.views.ajaxcontroller import ajaxfunc, AjaxFunction
-import cubicweb.transaction as tx
+from cubicweb.server.session import Connection
 from cubicweb.server.hook import Hook, Operation
-from cubicweb.predicates import is_instance
 
 
 class ViewControllerTC(CubicWebTestTC):
@@ -617,6 +615,58 @@ class EditControllerTC(CubicWebTC):
             finally:
                 blogentry.__class__.cw_skip_copy_for = []
 
+    def test_avoid_multiple_process_posted(self):
+        # test that when some entity is being created and data include non-inlined relations, the
+        # values for this relation are stored for later usage, without calling twice field's
+        # process_form method, which may be unexpected for custom fields
+
+        orig_process_posted = ff.RelationField.process_posted
+
+        def count_process_posted(self, form):
+            res = list(orig_process_posted(self, form))
+            nb_process_posted_calls[0] += 1
+            return res
+
+        ff.RelationField.process_posted = count_process_posted
+
+        try:
+            with self.admin_access.web_request() as req:
+                gueid = req.execute('CWGroup G WHERE G name "users"')[0][0]
+                req.form = {
+                    'eid': 'X',
+                    '__type:X': 'CWUser',
+                    '_cw_entity_fields:X': 'login-subject,upassword-subject,in_group-subject',
+                    'login-subject:X': u'adim',
+                    'upassword-subject:X': u'toto', 'upassword-subject-confirm:X': u'toto',
+                    'in_group-subject:X': repr(gueid),
+                }
+                nb_process_posted_calls = [0]
+                self.expect_redirect_handle_request(req, 'edit')
+                self.assertEqual(nb_process_posted_calls[0], 1)
+                user = req.find('CWUser', login=u'adim').one()
+                self.assertEqual(set(g.eid for g in user.in_group), set([gueid]))
+                req.form = {
+                    'eid': ['X', 'Y'],
+                    '__type:X': 'CWUser',
+                    '_cw_entity_fields:X': 'login-subject,upassword-subject,in_group-subject',
+                    'login-subject:X': u'dlax',
+                    'upassword-subject:X': u'toto', 'upassword-subject-confirm:X': u'toto',
+                    'in_group-subject:X': repr(gueid),
+
+                    '__type:Y': 'EmailAddress',
+                    '_cw_entity_fields:Y': 'address-subject,use_email-object',
+                    'address-subject:Y': u'dlax@cw.org',
+                    'use_email-object:Y': 'X',
+                }
+                nb_process_posted_calls = [0]
+                self.expect_redirect_handle_request(req, 'edit')
+                self.assertEqual(nb_process_posted_calls[0], 3)  # 3 = 1 (in_group) + 2 (use_email)
+                user = req.find('CWUser', login=u'dlax').one()
+                self.assertEqual(set(e.address for e in user.use_email), set(['dlax@cw.org']))
+
+        finally:
+            ff.RelationField.process_posted = orig_process_posted
+
     def test_nonregr_eetype_etype_editing(self):
         """non-regression test checking that a manager user can edit a CWEType entity
         """
@@ -668,7 +718,6 @@ class EditControllerTC(CubicWebTC):
             e = req.execute('Any C, T WHERE C eid %(x)s, C content T', {'x': eid}).get_entity(0, 0)
             self.assertEqual(e.title, '"13:03:40"')
             self.assertEqual(e.content, '"13:03:43"')
-
 
     def test_nonregr_multiple_empty_email_addr(self):
         with self.admin_access.web_request() as req:
