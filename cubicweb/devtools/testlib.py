@@ -31,8 +31,8 @@ from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
 
 import yams.schema
 
-from logilab.common.testlib import TestCase, Tags
 from logilab.common.pytest import nocoverage
+from logilab.common.testlib import Tags
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
 from logilab.common.decorators import cached, classproperty, clear_cache, iclassmethod
@@ -52,13 +52,35 @@ from cubicweb.devtools import fake, htmlparser, DEFAULT_EMPTY_DB_ID
 
 
 if sys.version_info[:2] < (3, 4):
-    import unittest2
-    if not hasattr(unittest2.TestCase, 'subTest'):
+    from unittest2 import TestCase
+    if not hasattr(TestCase, 'subTest'):
         raise ImportError('no subTest support in available unittest2')
-    class BaseTestCase(unittest2.TestCase, TestCase):
-        """Mix of logilab.common.testlib.TestCase and unittest2.TestCase"""
 else:
-    BaseTestCase = TestCase
+    from unittest import TestCase
+
+
+# provide a data directory for the test class ##################################
+
+class BaseTestCase(TestCase):
+
+    @classproperty
+    @cached
+    def datadir(cls): # pylint: disable=E0213
+        """helper attribute holding the standard test's data directory
+        """
+        mod = sys.modules[cls.__module__]
+        return join(dirname(abspath(mod.__file__)), 'data')
+    # cache it (use a class method to cache on class since TestCase is
+    # instantiated for each test run)
+
+    @classmethod
+    def datapath(cls, *fname):
+        """joins the object's datadir and `fname`"""
+        return join(cls.datadir, *fname)
+
+
+if hasattr(BaseTestCase, 'assertItemsEqual'):
+    BaseTestCase.assertCountEqual = BaseTestCase.assertItemsEqual
 
 
 # low-level utilities ##########################################################
@@ -283,7 +305,7 @@ class CubicWebTC(BaseTestCase):
     appid = 'data'
     configcls = devtools.ApptestConfiguration
     requestcls = fake.FakeRequest
-    tags = TestCase.tags | Tags('cubicweb', 'cw_repo')
+    tags = Tags('cubicweb', 'cw_repo')
     test_db_id = DEFAULT_EMPTY_DB_ID
 
     # anonymous is logged by default in cubicweb test cases
