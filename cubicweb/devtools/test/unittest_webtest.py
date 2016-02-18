@@ -37,5 +37,5 @@ class CWTIdentTC(CubicWebTestTC):
 
 
 if __name__ == '__main__':
-    from logilab.common.testlib import unittest_main
-    unittest_main()
+    import unittest
+    unittest.main()
