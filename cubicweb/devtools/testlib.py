@@ -924,16 +924,6 @@ class CubicWebTC(BaseTestCase):
         req.form['vid'] = vid
         viewsreg = self.vreg['views']
         view = viewsreg.select(vid, req, rset=rset, **kwargs)
-        # set explicit test description
-        if rset is not None:
-            # coerce to "bytes" on py2 because the description will be sent to
-            # sys.stdout/stderr which takes "bytes" on py2 and "unicode" on py3
-            rql = str(rset.printable_rql())
-            self.set_description("testing vid=%s defined in %s with (%s)" % (
-                vid, view.__module__, rql))
-        else:
-            self.set_description("testing vid=%s defined in %s without rset" % (
-                vid, view.__module__))
         if template is None:  # raw view testing, no template
             viewfunc = view.render
         else:

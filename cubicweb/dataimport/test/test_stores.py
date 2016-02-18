@@ -41,7 +41,6 @@ class RQLObjectStoreTC(CubicWebTC):
             self.assertEqual(1, len(users))
             self.assertEqual(group_eid, groups.one().eid)
             # Check data update
-            self.set_description('Check data update')
             store.prepare_update_entity('CWGroup', group_eid, name=u'new_grp')
             cnx.commit()
             group = cnx.execute('CWGroup X WHERE X name "grp"')

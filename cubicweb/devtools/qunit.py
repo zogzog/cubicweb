@@ -136,7 +136,6 @@ class QUnitTestCase(cwwebtest.CubicWebTestTC):
             try:
                 result, test_name, msg = self.test_queue.get(timeout=timeout)
                 test_name = '%s (%s)' % (test_name, test_file)
-                self.set_description(test_name)
                 if result is None:
                     break
                 test_count += 1
