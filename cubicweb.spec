@@ -58,6 +58,6 @@ rm -rf $RPM_BUILD_ROOT
 %files 
 %defattr(-, root, root)
 %dir /var/log/cubicweb
-%{_prefix}/share/cubicweb
-%{python_sitelib}
-%{_bindir}
+%{_prefix}/share/cubicweb/*
+%{python_sitelib}/*
+%{_bindir}/*
