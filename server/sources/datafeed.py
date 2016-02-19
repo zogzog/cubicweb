@@ -493,23 +493,9 @@ class DataFeedXMLParser(DataFeedParser):
                 raise
             self.import_log.record_error(str(ex))
             return True
-        error = False
-        commit = self._cw.commit
-        rollback = self._cw.rollback
         for args in parsed:
-            try:
-                self.process_item(*args, raise_on_error=raise_on_error)
-                # commit+set_cnxset instead of commit(free_cnxset=False) to let
-                # other a chance to get our connections set
-                commit()
-            except ValidationError as exc:
-                if raise_on_error:
-                    raise
-                self.source.error('Skipping %s because of validation error %s'
-                                  % (args, exc))
-                rollback()
-                error = True
-        return error
+            self.process_item(*args, raise_on_error=raise_on_error)
+        return False
 
     def parse(self, url):
         stream = self.retrieve_url(url)
