@@ -29,6 +29,9 @@ from unittest import TestCase
 class CubicWebCtlTC(TestCase):
     """test case for devtools commands"""
 
+    if not hasattr(TestCase, 'assertItemsEqual'):
+        assertItemsEqual = TestCase.assertCountEqual
+
     def test_newcube(self):
         expected = ['i18n', 'hooks.py', 'setup.py', 'views.py', 'test',
                     'migration', 'entities.py', 'MANIFEST.in', 'schema.py',
