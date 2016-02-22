@@ -4,7 +4,7 @@
 modname = 'pyramid'
 distname = 'cubicweb-pyramid'
 
-numversion = (0, 3, 2)
+numversion = (0, 4, 0)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LGPL'

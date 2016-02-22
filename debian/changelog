@@ -1,3 +1,9 @@
+/bin/bash: q: command not found
+
+  * new upstream release 
+
+ -- David Douard <david.douard@logilab.fr>  Thu, 24 Mar 2016 13:51:48 +0100
+
 cubicweb-pyramid (0.3.2-1) unstable; urgency=medium
 
   * new upstream release
