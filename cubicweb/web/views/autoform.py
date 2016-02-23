@@ -899,13 +899,13 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             ttype = tschema.type
             formviews = list(self.inline_edition_form_view(rschema, ttype, role))
             card = rschema.role_rdef(entity.e_schema, ttype, role).role_cardinality(role)
-            related = entity.has_eid() and entity.related(rschema, role)
-            if self.should_display_inline_creation_form(rschema, related, card):
+            existing = entity.related(rschema, role) if entity.has_eid() else formviews
+            if self.should_display_inline_creation_form(rschema, existing, card):
                 formviews += self.inline_creation_form_view(rschema, ttype, role)
             # we can create more than one related entity, we thus display a link
             # to add new related entities
             if self.must_display_add_new_relation_link(rschema, role, tschema,
-                                                       ttype, related, card):
+                                                       ttype, existing, card):
                 addnewlink = self._cw.vreg['views'].select(
                     'inline-addnew-link', self._cw,
                     etype=ttype, rtype=rschema, role=role, card=card,
@@ -915,24 +915,24 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             allformviews += formviews
         return allformviews
 
-    def should_display_inline_creation_form(self, rschema, existant, card):
+    def should_display_inline_creation_form(self, rschema, existing, card):
         """return true if a creation form should be inlined
 
         by default true if there is no related entity and we need at least one
         """
-        return not existant and card in '1+'
+        return not existing and card in '1+'
 
-    def should_display_add_new_relation_link(self, rschema, existant, card):
+    def should_display_add_new_relation_link(self, rschema, existing, card):
         """return true if we should add a link to add a new creation form
         (through ajax call)
 
         by default true if there is no related entity or if the relation has
         multiple cardinality
         """
-        return not existant or card in '+*'
+        return not existing or card in '+*'
 
     def must_display_add_new_relation_link(self, rschema, role, tschema,
-                                           ttype, existant, card):
+                                           ttype, existing, card):
         """return true if we must add a link to add a new creation form
         (through ajax call)
 
@@ -941,7 +941,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         relation.
         """
         return (self.should_display_add_new_relation_link(
-                    rschema, existant, card) and
+                    rschema, existing, card) and
                 self.check_inlined_rdef_permissions(
                     rschema, role, tschema, ttype))
 

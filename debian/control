@@ -19,7 +19,7 @@ Build-Depends:
  python-yams (>= 0.42.0),
  python-lxml,
 Standards-Version: 3.9.1
-Homepage: http://www.cubicweb.org
+Homepage: https://www.cubicweb.org
 X-Python-Version: >= 2.6
 
 Package: cubicweb

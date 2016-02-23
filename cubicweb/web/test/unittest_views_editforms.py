@@ -198,6 +198,13 @@ class AutomaticEntityFormTC(CubicWebTC):
                     formviews = list(form.inlined_form_views())
                     self.assertEqual(len(formviews), 1, formviews)
                     self.assertIsInstance(formviews[0], autoform.InlineAddNewLinkView)
+            # though do not introduce regression on entity creation with 1 cardinality relation
+            with tempattr(use_email_schema, 'cardinality', '11'):
+                user = self.vreg['etypes'].etype_class('CWUser')(req)
+                form = self.vreg['forms'].select('edition', req, entity=user)
+                formviews = list(form.inlined_form_views())
+                self.assertEqual(len(formviews), 1, formviews)
+                self.assertIsInstance(formviews[0], autoform.InlineEntityCreationFormView)
 
     def test_check_inlined_rdef_permissions(self):
         # try to check permissions when creating an entity ('user' below is a

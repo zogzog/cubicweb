@@ -1140,12 +1140,6 @@ class CubicWebSchema(Schema):
 
 # additional cw specific constraints ###########################################
 
-# these are implemented as CHECK constraints in sql, don't do the work
-# twice
-StaticVocabularyConstraint.check = lambda *args: True
-IntervalBoundConstraint.check = lambda *args: True
-BoundaryConstraint.check = lambda *args: True
-
 class BaseRQLConstraint(RRQLExpression, BaseConstraint):
     """base class for rql constraints"""
     distinct_query = None
