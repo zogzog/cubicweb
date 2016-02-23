@@ -1,3 +1,75 @@
 Summary
 -------
-Add the 'pyramid' command to cubicweb-ctl"
+
+Add the 'pyramid' command to cubicweb-ctl".
+
+This cube also add a ``CWSession`` entity type so that sessions can be
+stored in the database, which allows to run a Cubicweb instance
+without having to set up a session storage (like redis or memcache)
+solution.
+
+However, for production systems, it is greatly advised to use such a
+storage solution for the sessions.
+
+The handling of the sessions is made by pyramid (see the
+`pyramid's documentation on sessions`_ for more details).
+
+For example, to set up a redis based session storage, you need the
+`pyramid-redis-session`_ package, then you must configure pyramid to
+use this backend, by configuring the ``pyramid.ini`` file in the instance's
+config directory (near the ``all-in-one.conf`` file):
+
+
+.. code-block:: ini
+
+   [main]
+   cubicweb.defaults = no # we do not want to load the default cw session handling
+
+   cubicweb.auth.authtkt.session.secret = <secret1>
+   cubicweb.auth.authtkt.persistent.secret = <secret2>
+   cubicweb.auth.authtkt.session.secure = yes
+   cubicweb.auth.authtkt.persistent.secure = yes
+
+   redis.sessions.secret = <secret3>
+   redis.sessions.prefix = <my-app>:
+
+   redis.sessions.url = redis://localhost:6379/0
+
+   pyramid.includes =
+           pyramid_redis_sessions
+           pyramid_cubicweb.auth
+           pyramid_cubicweb.login
+
+
+See the documentation of `Pyramid Cubicweb`_ for more details.
+
+
+Secrets
+~~~~~~~
+
+There are a number of secrets to configure in ``pyramid.ini``. They
+should be different one from each other, as explained in `Pyramid's
+documentation`_.
+
+For the record:
+
+:cubicweb.session.secret: This secret is used to encrypt the session's
+   data ID (data themselved are stored in the backend, database or
+   redis) when using the integrated (``CWSession`` based) session data
+   storage.
+
+:redis.session.secret: This secret is used to encrypt the session's
+   data ID (data themselved are stored in the backend, database or
+   redis) when using redis as backend.
+
+:cubicweb.auth.authtkt.session.secret: This secret is used to encrypt
+   the authentication cookie.
+
+:cubicweb.auth.authtkt.persistent.secret: This secret is used to
+   encrypt the persistent authentication cookie.
+
+
+.. _`Pyramid Cubicweb`: http://pyramid-cubicweb.readthedocs.org/
+.. _`pyramid's documentation on sessions`: http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/sessions.html
+.. _`pyramid-redis-session`: http://pyramid-redis-sessions.readthedocs.org/en/latest/index.html
+.. _`Pyramid's documentation`: http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/security.html#admonishment-against-secret-sharing
