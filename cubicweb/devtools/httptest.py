@@ -62,52 +62,17 @@ def get_available_port(ports_scan):
     raise RuntimeError('get_available_port([ports_range]) cannot find an available port')
 
 
-class CubicWebServerTC(CubicWebTC):
+class _CubicWebServerTC(CubicWebTC):
     """Class for running a Twisted-based test web server.
     """
     ports_range = range(7000, 8000)
 
     def start_server(self):
-        from twisted.internet import reactor
-        from cubicweb.etwist.server import run
-        # use a semaphore to avoid starting test while the http server isn't
-        # fully initilialized
-        semaphore = threading.Semaphore(0)
-        def safe_run(*args, **kwargs):
-            try:
-                run(*args, **kwargs)
-            finally:
-                semaphore.release()
-
-        reactor.addSystemEventTrigger('after', 'startup', semaphore.release)
-        t = threading.Thread(target=safe_run, name='cubicweb_test_web_server',
-                args=(self.config, True), kwargs={'repo': self.repo})
-        self.web_thread = t
-        t.start()
-        semaphore.acquire()
-        if not self.web_thread.isAlive():
-            # XXX race condition with actual thread death
-            raise RuntimeError('Could not start the web server')
-        #pre init utils connection
-        parseurl = urlparse(self.config['base-url'])
-        assert parseurl.port == self.config['port'], (self.config['base-url'], self.config['port'])
-        self._web_test_cnx = http_client.HTTPConnection(parseurl.hostname,
-                                                        parseurl.port)
-        self._ident_cookie = None
+        raise NotImplementedError
 
     def stop_server(self, timeout=15):
         """Stop the webserver, waiting for the thread to return"""
-        from twisted.internet import reactor
-        if self._web_test_cnx is None:
-            self.web_logout()
-            self._web_test_cnx.close()
-        try:
-            reactor.stop()
-            self.web_thread.join(timeout)
-            assert not self.web_thread.isAlive()
-
-        finally:
-            reactor.__init__()
+        raise NotImplementedError
 
     def web_login(self, user=None, passwd=None):
         """Log the current http session for the provided credential
@@ -152,7 +117,7 @@ class CubicWebServerTC(CubicWebTC):
         return self.web_request(path=path, body=body, headers=headers)
 
     def setUp(self):
-        super(CubicWebServerTC, self).setUp()
+        super(_CubicWebServerTC, self).setUp()
         port = self.config['port'] or get_available_port(self.ports_range)
         self.config.global_set_option('port', port) # force rewrite here
         self.config.global_set_option('base-url', 'http://127.0.0.1:%d/' % port)
@@ -161,10 +126,98 @@ class CubicWebServerTC(CubicWebTC):
         self.start_server()
 
     def tearDown(self):
-        from twisted.internet import error
+        self.stop_server()
+        super(_CubicWebServerTC, self).tearDown()
+
+
+class CubicWebServerTC(_CubicWebServerTC):
+    def start_server(self):
+        from twisted.internet import reactor
+        from cubicweb.etwist.server import run
+        # use a semaphore to avoid starting test while the http server isn't
+        # fully initilialized
+        semaphore = threading.Semaphore(0)
+        def safe_run(*args, **kwargs):
+            try:
+                run(*args, **kwargs)
+            finally:
+                semaphore.release()
+
+        reactor.addSystemEventTrigger('after', 'startup', semaphore.release)
+        t = threading.Thread(target=safe_run, name='cubicweb_test_web_server',
+                args=(self.config, True), kwargs={'repo': self.repo})
+        self.web_thread = t
+        t.start()
+        semaphore.acquire()
+        if not self.web_thread.isAlive():
+            # XXX race condition with actual thread death
+            raise RuntimeError('Could not start the web server')
+        #pre init utils connection
+        parseurl = urlparse(self.config['base-url'])
+        assert parseurl.port == self.config['port'], (self.config['base-url'], self.config['port'])
+        self._web_test_cnx = http_client.HTTPConnection(parseurl.hostname,
+                                                        parseurl.port)
+        self._ident_cookie = None
+
+    def stop_server(self, timeout=15):
+        """Stop the webserver, waiting for the thread to return"""
+        from twisted.internet import reactor
+        if self._web_test_cnx is None:
+            self.web_logout()
+            self._web_test_cnx.close()
         try:
-            self.stop_server()
-        except error.ReactorNotRunning as err:
-            # Server could be launched manually
-            print(err)
-        super(CubicWebServerTC, self).tearDown()
+            reactor.stop()
+            self.web_thread.join(timeout)
+            assert not self.web_thread.isAlive()
+
+        finally:
+            reactor.__init__()
+
+
+class CubicWebWsgiTC(CubicWebServerTC):
+    def start_server(self):
+        from cubicweb.wsgi.handler import CubicWebWSGIApplication
+        from wsgiref import simple_server
+        from six.moves import queue
+
+        config = self.config
+        port = config['port'] or 8080
+        interface = config['interface']
+        handler_cls = simple_server.WSGIRequestHandler
+        app = CubicWebWSGIApplication(config)
+        start_flag = queue.Queue()
+
+        def run(config, *args, **kwargs):
+            try:
+                self.httpd = simple_server.WSGIServer((interface, port), handler_cls)
+                self.httpd.set_app(app)
+            except Exception as exc:
+                start_flag.put(False)
+                start_flag.put(exc)
+                raise
+            else:
+                start_flag.put(True)
+            try:
+                self.httpd.serve_forever()
+            finally:
+                self.httpd.server_close()
+        t = threading.Thread(target=run, name='cubicweb_test_web_server',
+                             args=(self.config, True), kwargs={'repo': self.repo})
+        self.web_thread = t
+        t.start()
+        flag = start_flag.get()
+        if not flag:
+            t.join()
+            self.fail(start_flag.get())
+        parseurl = urlparse(self.config['base-url'])
+        assert parseurl.port == self.config['port'], (self.config['base-url'], self.config['port'])
+        self._web_test_cnx = http_client.HTTPConnection(parseurl.hostname,
+                                                        parseurl.port)
+        self._ident_cookie = None
+
+    def stop_server(self, timeout=15):
+        if self._web_test_cnx is None:
+            self.web_logout()
+            self._web_test_cnx.close()
+        self.httpd.shutdown()
+        self.web_thread.join(timeout)
