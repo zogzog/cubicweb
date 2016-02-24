@@ -26,6 +26,7 @@ import random
 import threading
 import socket
 
+from six import PY3
 from six.moves import range, http_client
 from six.moves.urllib.parse import urlparse
 
@@ -132,6 +133,8 @@ class _CubicWebServerTC(CubicWebTC):
 
 class CubicWebServerTC(_CubicWebServerTC):
     def start_server(self):
+        if PY3:
+            self.skipTest('not using twisted on python3')
         from twisted.internet import reactor
         from cubicweb.etwist.server import run
         # use a semaphore to avoid starting test while the http server isn't
