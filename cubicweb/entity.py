@@ -547,7 +547,7 @@ class Entity(AppObject):
             self.e_schema, self.eid, list(self.cw_attr_cache), id(self))
 
     def __lt__(self, other):
-        raise NotImplementedError('comparison not implemented for %s' % self.__class__)
+        return NotImplemented
 
     def __eq__(self, other):
         if isinstance(self.eid, integer_types):
