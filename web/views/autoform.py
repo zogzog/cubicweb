@@ -484,13 +484,19 @@ def cancel_edition(self, errorurl):
 
 def _add_pending(req, eidfrom, rel, eidto, kind):
     key = 'pending_%s' % kind
-    pendings = req.session.data.setdefault(key, set())
-    pendings.add( (int(eidfrom), rel, int(eidto)) )
+    pendings = req.session.data.get(key, [])
+    value = (int(eidfrom), rel, int(eidto))
+    if value not in pendings:
+        pendings.append(value)
+        req.session.data[key] = pendings
 
 def _remove_pending(req, eidfrom, rel, eidto, kind):
     key = 'pending_%s' % kind
     pendings = req.session.data[key]
-    pendings.remove( (int(eidfrom), rel, int(eidto)) )
+    value = (int(eidfrom), rel, int(eidto))
+    if value in pendings:
+        pendings.remove(value)
+        req.session.data[key] = pendings
 
 @ajaxfunc(output_type='json')
 def remove_pending_insert(self, args):
