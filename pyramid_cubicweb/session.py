@@ -144,7 +144,15 @@ def includeme(config):
 
     See also :ref:`defaults_module`
     """
-    secret = config.registry['cubicweb.config']['pyramid-session-secret']
+    settings = config.registry.settings
+    secret = settings.get('cubicweb.session.secret', '')
+    if not secret:
+        secret = config.registry['cubicweb.config'].get('pyramid-session-secret')
+        warnings.warn('''
+        Please migrate pyramid-session-secret from
+        all-in-one.conf to cubicweb.session.secret config entry in
+        your pyramid.ini file.
+        ''')
     if not secret:
         secret = 'notsosecret'
         warnings.warn('''
@@ -152,8 +160,8 @@ def includeme(config):
             !! WARNING !! !! WARNING !!
 
             The session cookies are signed with a static secret key.
-            To put your own secret key, edit your all-in-one.conf file
-            and set the 'pyramid-session-secret' key.
+            To put your own secret key, edit your pyramid.ini file
+            and set the 'cubicweb.session.secret' key.
 
             YOU SHOULD STOP THIS INSTANCE unless your really know what you
             are doing !!

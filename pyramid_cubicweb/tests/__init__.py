@@ -13,8 +13,6 @@ class PyramidCWTest(CubicWebTestTC):
         super(PyramidCWTest, cls).init_config(config)
         config.global_set_option('https-url', 'https://localhost.local/')
         config.global_set_option('anonymous-user', 'anon')
-        config['pyramid-auth-secret'] = 'authsecret'
-        config['pyramid-session-secret'] = 'sessionsecret'
         config.https_uiprops = None
         config.https_datadir_url = None
 
