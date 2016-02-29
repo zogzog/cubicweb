@@ -360,6 +360,29 @@ class ResultSetTC(CubicWebTC):
             self.assertEqual(s.cw_attr_cache['name'], 'activated')
             self.assertRaises(KeyError, s.cw_attr_cache.__getitem__, 'description')
 
+    def test_get_entity_recursion(self):
+        with self.admin_access.repo_cnx() as cnx:
+            cnx.create_entity('EmailAddress', address=u'toto',
+                              reverse_primary_email=cnx.user.eid)
+            cnx.commit()
+
+        # get_entity should fill the caches for user and email, even if both
+        # entities are already in the connection's entity cache
+        with self.admin_access.repo_cnx() as cnx:
+            mail = cnx.find('EmailAddress').one()
+            rset = cnx.execute('Any X, E WHERE X primary_email E')
+            u = rset.get_entity(0, 0)
+            self.assertTrue(u.cw_relation_cached('primary_email', 'subject'))
+            self.assertTrue(mail.cw_relation_cached('primary_email', 'object'))
+
+        with self.admin_access.repo_cnx() as cnx:
+            mail = cnx.find('EmailAddress').one()
+            rset = cnx.execute('Any X, E WHERE X primary_email E')
+            rset.get_entity(0, 1)
+            self.assertTrue(mail.cw_relation_cached('primary_email', 'object'))
+            u = cnx.user
+            self.assertTrue(u.cw_relation_cached('primary_email', 'subject'))
+
 
     def test_get_entity_cache_with_left_outer_join(self):
         with self.admin_access.web_request() as req:

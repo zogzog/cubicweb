@@ -470,7 +470,7 @@ class ResultSet(object):
         self.req.set_entity_cache(entity)
         return entity
 
-    def _build_entity(self, row, col):
+    def _build_entity(self, row, col, seen=None):
         """internal method to get a single entity, returns a partially
         initialized Entity instance.
 
@@ -484,16 +484,13 @@ class ResultSet(object):
         :return: the partially initialized `Entity` instance
         """
         req = self.req
-        if req is None:
-            raise AssertionError('dont call get_entity with no req on the result set')
+        assert req is not None, 'do not call get_entity with no req on the result set'
+
         rowvalues = self.rows[row]
         eid = rowvalues[col]
         assert eid is not None
         try:
             entity = req.entity_cache(eid)
-            if entity.cw_rset is self:
-                # return entity as is, avoiding recursion
-                return entity
         except KeyError:
             entity = self._make_entity(row, col)
         else:
@@ -504,6 +501,12 @@ class ResultSet(object):
                 entity.cw_rset = self
                 entity.cw_row = row
                 entity.cw_col = col
+        # avoid recursion
+        if seen is None:
+            seen = set()
+        if col in seen:
+            return entity
+        seen.add(col)
         # try to complete the entity if there are some additional columns
         if len(rowvalues) > 1:
             eschema = entity.e_schema
@@ -521,7 +524,7 @@ class ResultSet(object):
                     rrset = ResultSet([], rql % (rtype, entity.eid))
                     rrset.req = req
                 else:
-                    rrset = self._build_entity(row, col_idx).as_rset()
+                    rrset = self._build_entity(row, col_idx, seen).as_rset()
                 entity.cw_set_relation_cache(rtype, role, rrset)
         return entity
 
