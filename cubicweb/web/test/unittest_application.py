@@ -527,10 +527,9 @@ class ApplicationTC(CubicWebTC):
         """test against current script injection"""
         injected = '<i>toto</i>'
         cleaned = 'toto'
-        for kwargs in ({'vid': injected},
-                       {'vtitle': injected},
-                       ):
-            yield self._test_cleaned, kwargs, injected, cleaned
+        for kwargs in ({'vid': injected}, {'vtitle': injected}):
+            with self.subTest(**kwargs):
+                self._test_cleaned(kwargs, injected, cleaned)
 
     def test_site_wide_eproperties_sync(self):
         # XXX work in all-in-one configuration but not in twisted for instance

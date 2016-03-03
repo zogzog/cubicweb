@@ -327,7 +327,8 @@ class MultiLinesRsetTC(CubicWebTC):
 
             for (expected, operator, assertion) in testdata:
                 selector = multi_lines_rset(expected, operator)
-                yield self.assertEqual, selector(None, req, rset=rset), assertion
+                with self.subTest(expected=expected, operator=operator):
+                    self.assertEqual(selector(None, req, rset=rset), assertion)
 
 
 class MatchKwargsTC(TestCase):
