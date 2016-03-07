@@ -154,6 +154,15 @@ The Pyramid CubicWeb specific configuration entries are:
 
         (1 day) Reissue time in seconds.
 
+    Both policies set the ``secure`` flag to ``True`` by default, meaning that
+    cookies will only be sent back over a secure connection (see
+    `Authentication Policies documentation`_ for details). This can be
+    configured through :confval:`cubicweb.auth.authtkt.persistent.secure` and
+    :confval:`cubicweb.auth.authtkt.session.secure` configuration options.
+
+    .. _`Authentication Policies documentation`: \
+        http://docs.pylonsproject.org/projects/pyramid/en/latest/api/authentication.html
+
 .. confval:: cubicweb.auth.groups_principals (bool)
 
     (True) Setup a callback on the authentication stack that inject the user
