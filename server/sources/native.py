@@ -1486,7 +1486,12 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
         if 'CWUser' in schema: # probably an empty schema if not true...
             # rql syntax trees used to authenticate users
             self._passwd_rqlst = self.source.compile_rql(self.passwd_rql, self._sols)
-            self._auth_rqlst = self.source.compile_rql(self.auth_rql, self._sols)
+            if 'CWSource' in schema:
+                self._auth_rqlst = self.source.compile_rql(self.auth_rql, self._sols)
+            else:
+                self._auth_rqlst = self.source.compile_rql(
+                        u'Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s',
+                        ({'X': 'CWUser', 'P': 'Password'},))
 
     def authenticate(self, cnx, login, password=None, **kwargs):
         """return CWUser eid for the given login/password if this account is
