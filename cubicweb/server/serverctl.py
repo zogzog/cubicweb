@@ -1043,6 +1043,7 @@ class SchemaDiffCommand(Command):
         appid = args.pop(0)
         diff_tool = args.pop(0)
         config = ServerConfiguration.config_for(appid)
+        config.repairing = True
         repo = repoapi.get_repository(config=config)
         fsschema = config.load_schema(expand_cubes=True)
         schema_diff(fsschema, repo.schema, permissionshandler, diff_tool, ignore=('eid',))
