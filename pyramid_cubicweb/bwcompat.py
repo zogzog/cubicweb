@@ -138,6 +138,7 @@ class CubicWebPyramidHandler(object):
         else:
             try:
                 req.data['ex'] = exc
+                req.data['excinfo'] = excinfo
                 errview = vreg['views'].select('error', req)
                 template = self.appli.main_template_id(req)
                 content = vreg['views'].main_template(req, template, view=errview)
