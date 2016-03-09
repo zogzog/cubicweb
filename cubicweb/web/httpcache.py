@@ -104,8 +104,7 @@ class EntityHTTPCacheManager(EtagHTTPCacheManager):
 class NoEtag(Exception):
     """an etag can't be generated"""
 
-__all__ = ('GMTOFFSET',
-           'NoHTTPCacheManager', 'MaxAgeHTTPCacheManager',
+__all__ = ('NoHTTPCacheManager', 'MaxAgeHTTPCacheManager',
            'EtagHTTPCacheManager', 'EntityHTTPCacheManager')
 
 # monkey patching, so view doesn't depends on this module and we have all
