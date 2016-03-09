@@ -42,7 +42,7 @@ def _test_cache(hin, hout, method='GET'):
     return req
 
 class HTTPCache(TestCase):
-    """Check that the http cache logiac work as expected
+    """Check that the http cache logic works as expected
     (as far as we understood the RFC)
 
     """
