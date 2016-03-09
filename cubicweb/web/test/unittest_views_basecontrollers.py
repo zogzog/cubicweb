@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.web.views.basecontrollers unit tests"""
 
+import time
+
 from six import text_type
 from six.moves.urllib.parse import urlsplit, urlunsplit, urljoin, parse_qs
 
@@ -31,7 +33,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.webtest import CubicWebTestTC
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
-from cubicweb.web import Redirect, RemoteCallFailed
+from cubicweb.web import Redirect, RemoteCallFailed, http_headers
 import cubicweb.server.session
 from cubicweb.server.session import Connection
 from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
@@ -44,9 +46,11 @@ from cubicweb.predicates import is_instance
 
 class ViewControllerTC(CubicWebTestTC):
     def test_view_ctrl_with_valid_cache_headers(self):
+        now = time.time()
         resp = self.webapp.get('/manage')
         self.assertEqual(resp.etag, 'manage/guests')
         self.assertEqual(resp.status_code, 200)
+        self.assertGreaterEqual(http_headers.parseDateTime(resp.headers['Last-Modified']), int(now))
         cache_headers = {'if-modified-since': resp.headers['Last-Modified'],
                          'if-none-match': resp.etag}
         resp = self.webapp.get('/manage', headers=cache_headers)

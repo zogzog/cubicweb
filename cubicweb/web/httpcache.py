@@ -19,7 +19,7 @@
 
 __docformat__ = "restructuredtext en"
 
-from time import mktime
+from calendar import timegm
 from datetime import datetime
 
 class NoHTTPCacheManager(object):
@@ -78,7 +78,7 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
         # the front-end correctly generate it
         # ("%a, %d %b %Y %H:%M:%S GMT" return localized date that
         # twisted don't parse correctly)
-        req.set_header('Last-modified', mktime(mdate.timetuple()), raw=False)
+        req.set_header('Last-modified', timegm(mdate.timetuple()), raw=False)
 
 
 class EntityHTTPCacheManager(EtagHTTPCacheManager):

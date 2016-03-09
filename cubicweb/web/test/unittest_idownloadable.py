@@ -17,13 +17,16 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import datetime
 from functools import partial
 
-from logilab.common.testlib import unittest_main
+from pytz import utc
 
 from cubicweb.devtools.testlib import CubicWebTC, real_error_handling
 from cubicweb import view
 from cubicweb.predicates import is_instance
+from cubicweb.web import http_headers
+
 
 class IDownloadableUser(view.EntityAdapter):
     __regid__ = 'IDownloadable'
@@ -72,6 +75,9 @@ class IDownloadableTC(CubicWebTC):
                              get('content-disposition'))
             self.assertEqual(['text/plain;charset=ascii'],
                              get('content-type'))
+            last_mod = http_headers.parseDateTime(get('last-modified')[0])
+            self.assertEqual(datetime.fromtimestamp(last_mod, tz=utc),
+                             req.user.modification_date.replace(microsecond=0))
             self.assertEqual(b'Babar is not dead!', data)
 
     def test_header_with_space(self):
@@ -146,4 +152,5 @@ class IDownloadableTC(CubicWebTC):
             self.assertEqual(req.status_out, 500)
 
 if __name__ == '__main__':
-    unittest_main()
+    from unittest import main
+    main()
