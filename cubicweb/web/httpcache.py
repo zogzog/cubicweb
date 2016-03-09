@@ -67,7 +67,7 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
     def set_headers(self):
         req = self.req
         try:
-            req.set_header('Etag', '"%s"' % self.etag())
+            req.set_header('Etag', 'W/"%s"' % self.etag())
         except NoEtag:
             super(EtagHTTPCacheManager, self).set_headers()
             return
