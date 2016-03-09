@@ -1,4 +1,3 @@
-from cubicweb.server.session import hooks_control
 
 for uri, cfg in config.read_sources_file().items():
     if uri in ('system', 'admin'):
@@ -9,7 +8,7 @@ add_entity_type('CWSource')
 add_relation_definition('CWSource', 'cw_source', 'CWSource')
 add_entity_type('CWSourceHostConfig')
 
-with hooks_control(session, session.HOOKS_ALLOW_ALL, 'cw.sources'):
+with session.allow_all_hooks_but('cw.sources'):
     create_entity('CWSource', type=u'native', name=u'system')
 commit()
 
