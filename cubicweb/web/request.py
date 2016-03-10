@@ -746,7 +746,7 @@ class _CubicWebRequestBase(RequestSessionBase):
             'cache-control', 'vary',
             # Others:
             'server', 'proxy-authenticate', 'www-authenticate', 'warning'):
-            value = self._headers_in.getRawHeaders(header)
+            value = self.headers_out.getRawHeaders(header)
             if value is not None:
                 headers.setRawHeaders(header, value)
         return headers
