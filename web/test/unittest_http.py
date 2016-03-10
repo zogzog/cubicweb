@@ -152,6 +152,7 @@ class HTTPCache(TestCase):
                ]
         req = _test_cache(hin, hout)
         self.assertCache(304, req.status_out, 'etag match')
+        self.assertEqual(req.headers_out.getRawHeaders('etag'), ['babar'])
         # etag match in multiple
         hin  = [('if-none-match', 'loutre'),
                 ('if-none-match', 'babar'),
@@ -160,6 +161,7 @@ class HTTPCache(TestCase):
                ]
         req = _test_cache(hin, hout)
         self.assertCache(304, req.status_out, 'etag match in multiple')
+        self.assertEqual(req.headers_out.getRawHeaders('etag'), ['babar'])
         # client use "*" as etag
         hin  = [('if-none-match', '*'),
                ]
@@ -167,6 +169,7 @@ class HTTPCache(TestCase):
                ]
         req = _test_cache(hin, hout)
         self.assertCache(304, req.status_out, 'client use "*" as etag')
+        self.assertEqual(req.headers_out.getRawHeaders('etag'), ['babar'])
 
     @tag('etag', 'last_modified')
     def test_both(self):
@@ -216,6 +219,7 @@ class HTTPCache(TestCase):
                ]
         req = _test_cache(hin, hout)
         self.assertCache(304, req.status_out, 'both ok')
+        self.assertEqual(req.headers_out.getRawHeaders('etag'), ['babar'])
 
     @tag('etag', 'HEAD')
     def test_head_verb(self):
@@ -235,6 +239,7 @@ class HTTPCache(TestCase):
                ]
         req = _test_cache(hin, hout, method='HEAD')
         self.assertCache(304, req.status_out, 'not modifier HEAD verb')
+        self.assertEqual(req.headers_out.getRawHeaders('etag'), ['babar'])
 
     @tag('etag', 'POST')
     def test_post_verb(self):
