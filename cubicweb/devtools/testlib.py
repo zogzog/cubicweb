@@ -32,8 +32,7 @@ from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
 
 import yams.schema
 
-from logilab.common.pytest import nocoverage
-from logilab.common.testlib import Tags
+from logilab.common.testlib import Tags, nocoverage
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
 from logilab.common.decorators import cached, classproperty, clear_cache, iclassmethod
