@@ -254,8 +254,8 @@ class ApplicationTC(CubicWebTC):
         parent_eid = parent_eid or '__cubicweb_internal_field__'
         with self.admin_access.web_request() as req:
             req.form = {
-                'eid': unicode(dir_eid),
-                '__maineid': unicode(dir_eid),
+                'eid': text_type(dir_eid),
+                '__maineid': text_type(dir_eid),
                 '__type:%s' % dir_eid: etype,
                 'parent-%s:%s' % (role, dir_eid): parent_eid,
             }
@@ -271,8 +271,8 @@ class ApplicationTC(CubicWebTC):
         version_eid = version_eid or '__cubicweb_internal_field__'
         with self.admin_access.web_request() as req:
             req.form = {
-                'eid': unicode(ticket_eid),
-                '__maineid': unicode(ticket_eid),
+                'eid': text_type(ticket_eid),
+                '__maineid': text_type(ticket_eid),
                 '__type:%s' % ticket_eid: 'Ticket',
                 'in_version-subject:%s' % ticket_eid: version_eid,
             }
@@ -313,8 +313,8 @@ class ApplicationTC(CubicWebTC):
 
         with self.admin_access.web_request() as req:
             req.form = {
-                'eid': (unicode(topd.eid), u'B'),
-                '__maineid': unicode(topd.eid),
+                'eid': (text_type(topd.eid), u'B'),
+                '__maineid': text_type(topd.eid),
                 '__type:%s' % topd.eid: 'Directory',
                 '__type:B': 'Directory',
                 'parent-object:%s' % topd.eid: u'B',
@@ -487,8 +487,8 @@ class ApplicationTC(CubicWebTC):
             cnx.commit()
 
         with self.admin_access.web_request() as req:
-            dir_eid = unicode(mydir.eid)
-            perm_eid = unicode(perm.eid)
+            dir_eid = text_type(mydir.eid)
+            perm_eid = text_type(perm.eid)
             req.form = {
                 'eid': [dir_eid, perm_eid],
                 '__maineid' : dir_eid,
