@@ -193,7 +193,7 @@ class CalendarView(EntityView):
         if cssclass:
             self.w(u'<div class="%s" id="%s"></div>' % (cssclass, self.calendar_id))
         else:
-            self.w(u'<div id="%s"></div>' % (cssclass, self.calendar_id))
+            self.w(u'<div id="%s"></div>' % self.calendar_id)
 
     def add_onload(self):
         fullcalendar_options = self.fullcalendar_options.copy()
