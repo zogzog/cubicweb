@@ -46,7 +46,6 @@ from logilab.common.configuration import merge_options
 from logilab.common.deprecation import deprecated
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
-from cubicweb.utils import admincnx
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
 from cubicweb.toolsutils import Command, rm, create_dir, underline_title
 from cubicweb.__pkginfo__ import version
@@ -880,7 +879,6 @@ directly give URI as instance id instead',
             sources = ('all',)
         config.set_sources_mode(sources)
         config.repairing = self.config.force
-        cnx = admincnx(appid)
         mih = config.migration_handler()
         return mih, lambda: mih.shutdown()
 
