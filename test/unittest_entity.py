@@ -656,14 +656,18 @@ du :eid:`1:*ReST*`'''
             from cubicweb import mttransforms
             if mttransforms.HAS_PYGMENTS_TRANSFORMS:
                 import pygments
-                if tuple(int(i) for i in pygments.__version__.split('.')[:2]) >= (1, 3):
-                    self.assertEqual(e.printable_value('data'),
-                                      '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span>
-</pre></div>''')
+                if tuple(int(i) for i in pygments.__version__.split('.')[:3]) >= (2, 1, 1):
+                    span = '<span/>'
                 else:
-                    self.assertEqual(e.printable_value('data'),
-                                      '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">1</span>
-</pre></div>''')
+                    span = ''
+                if tuple(int(i) for i in pygments.__version__.split('.')[:2]) >= (1, 3):
+                    mi = 'mi'
+                else:
+                    mi = 'mf'
+
+                self.assertEqual(e.printable_value('data'),
+                                 '''<div class="highlight"><pre>%s<span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="%s">1</span>
+</pre></div>''' % (span, mi))
             else:
                 self.assertEqual(e.printable_value('data'),
                                   '''<pre class="python">
