@@ -86,7 +86,8 @@ class ChangeStateForm(forms.CompositeEntityForm):
 
     form_renderer_id = 'base' # don't want EntityFormRenderer
     form_buttons = [fwdgs.SubmitButton(),
-                    fwdgs.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
+                    fwdgs.Button(stdmsgs.BUTTON_CANCEL,
+                                 {'class': fwdgs.Button.css_class + ' cwjs-edition-cancel'})]
 
 
 class ChangeStateFormView(form.FormViewMixIn, EntityView):
