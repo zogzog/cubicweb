@@ -616,26 +616,23 @@ this option is set to yes",
 
     @classmethod
     def load_available_configs(cls):
-        from logilab.common.modutils import load_module_from_file
-        for conffile in ('web/webconfig.py',  'etwist/twconfig.py',
-                        'server/serverconfig.py',):
-            if exists(join(CW_SOFTWARE_ROOT, conffile)):
-                load_module_from_file(join(CW_SOFTWARE_ROOT, conffile))
+        for confmod in ('web.webconfig',  'etwist.twconfig',
+                        'server.serverconfig',):
+            try:
+                __import__('cubicweb.%s' % confmod)
+            except ImportError:
+                pass
 
     @classmethod
     def load_cwctl_plugins(cls):
-        from logilab.common.modutils import load_module_from_file
         cls.cls_adjust_sys_path()
-        for ctlfile in ('web/webctl.py',  'etwist/twctl.py',
-                        'server/serverctl.py',
-                        'devtools/devctl.py',):
-            if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
-                try:
-                    load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
-                except ImportError as err:
-                    cls.error('could not import the command provider %s: %s',
-                              ctlfile, err)
-                cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
+        for ctlmod in ('web.webctl',  'etwist.twctl', 'server.serverctl',
+                       'devtools.devctl'):
+            try:
+                __import__('cubicweb.%s' % ctlmod)
+            except ImportError:
+                continue
+            cls.info('loaded cubicweb-ctl plugin %s', ctlmod)
         for cube in cls.available_cubes():
             pluginfile = join(cls.cube_dir(cube), 'ccplugin.py')
             initfile = join(cls.cube_dir(cube), '__init__.py')
