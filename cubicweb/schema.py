@@ -40,7 +40,8 @@ from yams import BadSchemaDefinition, buildobjs as ybo
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema, \
      RelationDefinitionSchema, PermissionMixIn, role_name
 from yams.constraints import (BaseConstraint, FormatConstraint, BoundaryConstraint,
-                              IntervalBoundConstraint, StaticVocabularyConstraint)
+                              IntervalBoundConstraint, StaticVocabularyConstraint,
+                              cstr_json_dumps, cstr_json_loads)
 from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
                          cleanup_sys_modules, fill_schema_from_namespace)
 
@@ -1145,13 +1146,17 @@ class BaseRQLConstraint(RRQLExpression, BaseConstraint):
     distinct_query = None
 
     def serialize(self):
-        # start with a semicolon for bw compat, see below
-        return ';' + ','.join(sorted(self.mainvars)) + ';' + self.expression
+        return cstr_json_dumps({u'mainvars': sorted(self.mainvars),
+                                u'expression': self.expression})
 
     @classmethod
     def deserialize(cls, value):
-        _, mainvars, expression = value.split(';', 2)
-        return cls(expression, mainvars)
+        try:
+            d = cstr_json_loads(value)
+            return cls(d['expression'], d['mainvars'])
+        except ValueError:
+            _, mainvars, expression = value.split(';', 2)
+            return cls(expression, mainvars)
 
     def check(self, entity, rtype, value):
         """return true if the value satisfy the constraint, else false"""
@@ -1199,15 +1204,20 @@ class RepoEnforcedRQLConstraintMixIn(object):
         self.msg = msg
 
     def serialize(self):
-        # start with a semicolon for bw compat, see below
-        return ';%s;%s\n%s' % (','.join(sorted(self.mainvars)), self.expression,
-                               self.msg or '')
+        return cstr_json_dumps({
+            u'mainvars': sorted(self.mainvars),
+            u'expression': self.expression,
+            u'msg': self.msg})
 
     @classmethod
     def deserialize(cls, value):
-        value, msg = value.split('\n', 1)
-        _, mainvars, expression = value.split(';', 2)
-        return cls(expression, mainvars, msg)
+        try:
+            d = cstr_json_loads(value)
+            return cls(d['expression'], d['mainvars'], d['msg'])
+        except ValueError:
+            value, msg = value.split('\n', 1)
+            _, mainvars, expression = value.split(';', 2)
+            return cls(expression, mainvars, msg)
 
     def repo_check(self, session, eidfrom, rtype, eidto=None):
         """raise ValidationError if the relation doesn't satisfy the constraint
