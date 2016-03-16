@@ -767,24 +767,36 @@ this option is set to yes",
 
     apphome = None
 
-    def load_site_cubicweb(self, paths=None):
-        """load instance's specific site_cubicweb file"""
-        if paths is None:
-            paths = self.cubes_path()
-            if self.apphome is not None:
-                paths = [self.apphome] + paths
-        for path in reversed(paths):
-            sitefile = join(path, 'site_cubicweb.py')
-            if exists(sitefile) and not sitefile in self._site_loaded:
-                self._load_site_cubicweb(sitefile)
-                self._site_loaded.add(sitefile)
+    def load_site_cubicweb(self, cubes=()):
+        """load site_cubicweb file for `cubes`"""
+        for cube in reversed(cubes or self.cubes()):
+            if cube in self._site_loaded:
+                continue
+            try:
+                self._load_site_cubicweb(cube)
+                self._site_loaded.add(cube)
+            except ImportError:
+                continue
+        if self.apphome is not None:
+            # Would occur, e.g., upon `cubicweb-ctl i18ncube <cube>`.
+            self._load_app_site_cubicweb()
 
-    def _load_site_cubicweb(self, sitefile):
-        # XXX extrapath argument to load_module_from_file only in lgc > 0.50.2
-        from logilab.common.modutils import load_module_from_modpath, modpath_from_file
-        module = load_module_from_modpath(modpath_from_file(sitefile, self.extrapath))
-        self.debug('%s loaded', sitefile)
-        return module
+    def _load_site_cubicweb(self, cube):
+        """Load site_cubicweb.py from `cube`."""
+        modname = 'cubes.%s.site_cubicweb' % cube
+        __import__(modname)
+        return sys.modules[modname].__dict__
+
+    def _load_app_site_cubicweb(self):
+        """Load site_cubicweb.py in `apphome`."""
+        assert self.apphome is not None
+        site_globals = {}
+        apphome_site = join(self.apphome, 'site_cubicweb.py')
+        if exists(apphome_site):
+            with open(apphome_site, 'rb') as f:
+                code = compile(f.read(), apphome_site, 'exec')
+                exec(code, site_globals)
+        return site_globals
 
     def cwproperty_definitions(self):
         cfg = self.persistent_options_configuration()
@@ -1078,7 +1090,7 @@ the repository',
         if not isinstance(cubes, list):
             cubes = list(cubes)
         self._cubes = self.reorder_cubes(list(self._cubes) + cubes)
-        self.load_site_cubicweb([self.cube_dir(cube) for cube in cubes])
+        self.load_site_cubicweb(cubes)
 
     def main_config_file(self):
         """return instance's control configuration file"""
@@ -1147,11 +1159,11 @@ the repository',
             # init gettext
             self._gettext_init()
 
-    def _load_site_cubicweb(self, sitefile):
+    def _load_site_cubicweb(self, cube):
         # overridden to register cube specific options
-        mod = super(CubicWebConfiguration, self)._load_site_cubicweb(sitefile)
-        if getattr(mod, 'options', None):
-            self.register_options(mod.options)
+        mod = super(CubicWebConfiguration, self)._load_site_cubicweb(cube)
+        if 'options' in mod:
+            self.register_options(mod['options'])
             self.load_defaults()
 
     def init_log(self, logthreshold=None, force=False):
