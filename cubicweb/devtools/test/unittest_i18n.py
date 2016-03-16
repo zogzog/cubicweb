@@ -18,15 +18,16 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for i18n messages generator"""
 
-import os, os.path as osp
+import os
+import os.path as osp
 import sys
-import subprocess
+from subprocess import PIPE, Popen, STDOUT
 
 from unittest import TestCase, main
 
-from cubicweb.cwconfig import CubicWebNoAppConfiguration
 
 DATADIR = osp.join(osp.abspath(osp.dirname(__file__)), 'data')
+
 
 def load_po(fname):
     """load a po file and  return a set of encountered (msgid, msgctx)"""
@@ -38,7 +39,7 @@ def load_po(fname):
                 continue
             if line.startswith('msgstr'):
                 assert not (msgid, msgctxt) in msgs
-                msgs.add( (msgid, msgctxt) )
+                msgs.add((msgid, msgctxt))
                 msgid = msgctxt = None
             elif line.startswith('msgid'):
                 msgid = line.split(' ', 1)[1][1:-1]
@@ -62,10 +63,10 @@ class cubePotGeneratorTC(TestCase):
         else:
             env['PYTHONPATH'] = ''
         env['PYTHONPATH'] += DATADIR
-        with open(os.devnull, 'w') as devnull:
-            subprocess.check_call(
-                [sys.executable, '-m', 'cubicweb', 'i18ncube', 'i18ntestcube'],
-                env=env, stdout=devnull)
+        cmd = [sys.executable, '-m', 'cubicweb', 'i18ncube', 'i18ntestcube']
+        proc = Popen(cmd, env=env, stdout=PIPE, stderr=STDOUT)
+        stdout, _ = proc.communicate()
+        self.assertEqual(proc.returncode, 0, msg=stdout)
         cube = osp.join(DATADIR, 'cubes', 'i18ntestcube')
         msgs = load_po(osp.join(cube, 'i18n', 'en.po.ref'))
         newmsgs = load_po(osp.join(cube, 'i18n', 'en.po'))
