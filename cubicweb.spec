@@ -29,7 +29,7 @@ Requires:       %{python}-yams >= 0.42.0
 Requires:       %{python}-logilab-database >= 1.15.0
 Requires:       %{python}-passlib
 Requires:       %{python}-lxml
-Requires:       %{python}-twisted-web << 16.0.0
+Requires:       %{python}-twisted-web < 16.0.0
 Requires:       %{python}-markdown
 Requires:       pytz
 # the schema view uses `dot'; at least on el5, png output requires graphviz-gd
