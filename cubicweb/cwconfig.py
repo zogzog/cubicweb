@@ -776,24 +776,20 @@ this option is set to yes",
                 continue
         if self.apphome is not None:
             # Would occur, e.g., upon `cubicweb-ctl i18ncube <cube>`.
-            self._load_app_site_cubicweb()
+            self._load_site_cubicweb(None)
 
     def _load_site_cubicweb(self, cube):
-        """Load site_cubicweb.py from `cube`."""
-        modname = 'cubes.%s.site_cubicweb' % cube
-        __import__(modname)
-        return sys.modules[modname].__dict__
-
-    def _load_app_site_cubicweb(self):
-        """Load site_cubicweb.py in `apphome`."""
-        assert self.apphome is not None
-        site_globals = {}
-        apphome_site = join(self.apphome, 'site_cubicweb.py')
-        if exists(apphome_site):
-            with open(apphome_site, 'rb') as f:
-                code = compile(f.read(), apphome_site, 'exec')
-                exec(code, site_globals)
-        return site_globals
+        """Load site_cubicweb.py from `cube` (or apphome if cube is None)."""
+        if cube is not None:
+            modname = 'cubes.%s.site_cubicweb' % cube
+            __import__(modname)
+            return sys.modules[modname]
+        else:
+            import imp
+            apphome_site = join(self.apphome, 'site_cubicweb.py')
+            if exists(apphome_site):
+                with open(apphome_site, 'rb') as f:
+                    return imp.load_source('site_cubicweb', apphome_site, f)
 
     def cwproperty_definitions(self):
         cfg = self.persistent_options_configuration()
@@ -1159,8 +1155,8 @@ the repository',
     def _load_site_cubicweb(self, cube):
         # overridden to register cube specific options
         mod = super(CubicWebConfiguration, self)._load_site_cubicweb(cube)
-        if 'options' in mod:
-            self.register_options(mod['options'])
+        if getattr(mod, 'options', None):
+            self.register_options(mod.options)
             self.load_defaults()
 
     def init_log(self, logthreshold=None, force=False):
