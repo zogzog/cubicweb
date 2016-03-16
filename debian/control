@@ -108,7 +108,7 @@ Depends:
  ${python:Depends},
  cubicweb-web (= ${source:Version}),
  cubicweb-ctl (= ${source:Version}),
- python-twisted-web
+ python-twisted-web (<< 16.0.0),
 Recommends:
  cubicweb-documentation (= ${source:Version})
 Description: twisted-based web interface for the CubicWeb framework
