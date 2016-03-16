@@ -1010,7 +1010,6 @@ class Session(object):
         self.sessionid = _id or make_uid(unormalize(user.login))
         self.user = user # XXX repoapi: deprecated and store only a login.
         self.repo = repo
-        self.vreg = repo.vreg
         self._timestamp = Timestamp()
         self.data = {}
         self.closed = False

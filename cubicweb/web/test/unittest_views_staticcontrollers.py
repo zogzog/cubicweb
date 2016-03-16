@@ -55,7 +55,7 @@ class StaticDirectoryControllerTC(staticfilespublishermixin, CubicWebTC):
 
     def test_check_static_dir_access(self):
         """write a file in the static directory and test the access"""
-        staticdir = osp.join(self.session.vreg.config.static_directory)
+        staticdir = osp.join(self.vreg.config.static_directory)
         if not os.path.exists(staticdir):
             os.makedirs(staticdir)
         filename = osp.join(staticdir, 'test')
