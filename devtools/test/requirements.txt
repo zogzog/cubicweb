@@ -1,3 +1,3 @@
-Twisted
+Twisted < 16.0.0
 webtest
 cubicweb-person

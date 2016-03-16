@@ -1,6 +1,6 @@
 requests
 webtest
-Twisted
+Twisted < 16.0.0
 cubicweb-blog
 cubicweb-file
 cubicweb-tag

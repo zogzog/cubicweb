@@ -63,7 +63,7 @@ __recommends__ = {
     'vobject': '>= 0.6.0',      # for ical view
     'rdflib': None,             #
     'pyzmq': None,
-    'Twisted': '',
+    'Twisted': '< 16.0.0',
     #'Products.FCKeditor':'',
     #'SimpleTAL':'>= 4.1.6',
     }
