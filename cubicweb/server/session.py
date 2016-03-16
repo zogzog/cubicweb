@@ -1025,12 +1025,6 @@ class Session(object):
         self.closed = True
         self.info('closed session %s for user %s', self.sessionid, self.user.login)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass
-
     def __unicode__(self):
         return '<session %s (%s 0x%x)>' % (
             unicode(self.user.login), self.sessionid, id(self))

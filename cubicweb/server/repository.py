@@ -691,12 +691,11 @@ class Repository(object):
         Beware that unlike the older :meth:`internal_session`, internal
         connections have all hooks beside security enabled.
         """
-        with Session(InternalManager(), self) as session:
-            with session.new_cnx() as cnx:
-                cnx.user._cw = cnx  # XXX remove when "vreg = user._cw.vreg"
-                                    # hack in entity.py is gone
-                with cnx.security_enabled(read=False, write=False):
-                    yield cnx
+        with Session(InternalManager(), self).new_cnx() as cnx:
+            cnx.user._cw = cnx  # XXX remove when "vreg = user._cw.vreg"
+                                # hack in entity.py is gone
+            with cnx.security_enabled(read=False, write=False):
+                yield cnx
 
     def _get_session(self, sessionid, txid=None, checkshuttingdown=True):
         """return the session associated with the given session identifier"""
