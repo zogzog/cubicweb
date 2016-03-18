@@ -57,12 +57,13 @@ def login_password_login(request):
         request, user_eid,
         persistent=asbool(request.params.get('__setauthcookie', False)))
 
-    new_path = request.params.get('postlogin_path', '/')
+    new_path = request.params.get('postlogin_path', '')
 
     if new_path == 'login':
-        new_path = '/'
+        new_path = ''
 
-    raise HTTPSeeOther(new_path, headers=headers)
+    url = request.cw_request.build_url(new_path)
+    raise HTTPSeeOther(url, headers=headers)
 
 
 @view_config(route_name='login', effective_principals=security.Authenticated)
