@@ -1,3 +1,9 @@
+pyramid-cubicweb (0.6.0-1) unstable; urgency=medium
+
+  * new upstream release 
+
+ -- David Douard <david.douard@logilab.fr>  Thu, 24 Mar 2016 10:44:58 +0100
+
 pyramid-cubicweb (0.5.0) unstable; urgency=medium
 
   * new upstream release

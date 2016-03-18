@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pyramid-cubicweb',
-    version='0.5.0',
+    version='0.6.0',
     description='Integrate CubicWeb with a Pyramid application.',
     author='Christophe de Vienne',
     author_email='username: christophe, domain: unlish.com',
