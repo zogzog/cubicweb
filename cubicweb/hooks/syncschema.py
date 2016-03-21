@@ -992,7 +992,8 @@ class DelCWETypeHook(SyncSchemaHook):
         # delete every entities of this type
         if name not in ETYPE_NAME_MAP:
             MemSchemaCWETypeDel(self._cw, etype=name)
-        DropTable(self._cw, table=SQL_PREFIX + name)
+        if not self.entity.final:
+            DropTable(self._cw, table=SQL_PREFIX + name)
 
 
 class AfterDelCWETypeHook(DelCWETypeHook):
