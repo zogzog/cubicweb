@@ -60,8 +60,8 @@ class RepositoryTC(CubicWebTC):
     def test_unique_together_schema(self):
         person = self.repo.schema.eschema('Personne')
         self.assertEqual(len(person._unique_together), 1)
-        self.assertItemsEqual(person._unique_together[0],
-                                           ('nom', 'prenom', 'inline2'))
+        self.assertCountEqual(person._unique_together[0],
+                              ('nom', 'prenom', 'inline2'))
 
     def test_all_entities_have_owner(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -405,7 +405,7 @@ class SchemaDeserialTC(CubicWebTC):
                 self.assertEqual(len(rows), 3)
                 person = self.repo.schema.eschema('Personne')
                 self.assertEqual(len(person._unique_together), 1)
-                self.assertItemsEqual(person._unique_together[0],
+                self.assertCountEqual(person._unique_together[0],
                                       ('nom', 'prenom', 'inline2'))
 
         finally:
