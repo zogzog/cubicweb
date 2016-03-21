@@ -362,7 +362,6 @@ class SchemaDeserialTC(CubicWebTC):
         helper.TYPE_CONVERTERS.pop('BabarTestType', None)
         super(SchemaDeserialTC, cls).tearDownClass()
 
-    @unittest.skip('Numeric final type is not properly dropped')
     def test_deserialization_base(self):
         """Check the following deserialization
 

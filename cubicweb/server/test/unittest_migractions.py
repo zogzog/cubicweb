@@ -302,6 +302,7 @@ class MigrationCommandsTC(MigrationTC):
                 self.assertEqual(fields['%snum' % SQL_PREFIX], ('numeric', None)) # XXX
             finally:
                 mh.cmd_drop_cube('fakecustomtype')
+                mh.drop_entity_type('Numeric')
 
     def test_add_drop_entity_type(self):
         with self.mh() as (cnx, mh):
