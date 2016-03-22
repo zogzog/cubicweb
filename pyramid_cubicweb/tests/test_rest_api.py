@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
-from . import PyramidCWTest
-
 from pyramid_cubicweb.rest_api import EntityResource
 from pyramid_cubicweb.core import CubicWebPyramidRequest
 from pyramid.view import view_config
+
+from pyramid_cubicweb.tests import PyramidCWTest
 
 
 class RestApiTest(PyramidCWTest):
@@ -52,3 +52,8 @@ def rql_execute_view(context, request):
 
 def includeme(config):
     config.scan(__name__)
+
+
+if __name__ == '__main__':
+    from unittest import main
+    main()

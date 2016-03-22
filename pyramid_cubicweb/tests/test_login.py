@@ -39,3 +39,8 @@ class LoginTest(PyramidCWTest):
         self.assertNotIn('auth_tkt', cookies)
         self.assertIn('pauth_tkt', cookies)
         self.assertIsNotNone(cookies['pauth_tkt'].expires)
+
+
+if __name__ == '__main__':
+    from unittest import main
+    main()

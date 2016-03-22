@@ -24,3 +24,8 @@ class ToolsTest(PyramidCWTest):
         with self.admin_access.repo_cnx() as cnx:
             tools.cnx_attach_entity(cnx, user)
             self.assertEqual(user.login, 'anon')
+
+
+if __name__ == '__main__':
+    from unittest import main
+    main()

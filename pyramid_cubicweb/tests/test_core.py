@@ -42,3 +42,8 @@ class CoreTest(PyramidCWTest):
         res = self.webapp.get('/uncommitable')
         self.assertEqual(res.text, 'OK')
         self.assertEqual(res.status_int, 200)
+
+
+if __name__ == '__main__':
+    from unittest import main
+    main()

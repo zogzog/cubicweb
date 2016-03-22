@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from StringIO import StringIO
 
 import webtest
@@ -96,3 +96,8 @@ class WSGIAppTest(PyramidCWTest):
                 '/', POST=params,
                 content_type='application/x-www-form-urlencoded'))
         self.assertEqual(u"é", req.form['arg'])
+
+
+if __name__ == '__main__':
+    from unittest import main
+    main()
