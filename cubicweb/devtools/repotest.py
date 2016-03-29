@@ -325,7 +325,7 @@ _orig_check_permissions = ExecutionPlan._check_permissions
 
 def _check_permissions(*args, **kwargs):
     res, restricted = _orig_check_permissions(*args, **kwargs)
-    res = DumbOrderedDict(sorted(res.items(), key=lambda x: [y.items() for y in x[1]]))
+    res = DumbOrderedDict(sorted(res.items(), key=lambda x: [list(y.items()) for y in x[1]]))
     return res, restricted
 
 def _dummy_check_permissions(self, rqlst):
