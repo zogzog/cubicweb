@@ -100,14 +100,6 @@ class DumbOrderedDict(list):
     def items(self):
         return [x for x in list.__iter__(self)]
 
-class DumbOrderedDict2(object):
-    def __init__(self, origdict, sortkey):
-        self.origdict = origdict
-        self.sortkey = sortkey
-    def __getattr__(self, attr):
-        return getattr(self.origdict, attr)
-    def __iter__(self):
-        return iter(sorted(self.origdict, key=self.sortkey))
 
 def schema_eids_idx(schema):
     """return a dictionary mapping schema types to their eids so we can reread
