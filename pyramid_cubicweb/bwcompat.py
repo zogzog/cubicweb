@@ -95,13 +95,6 @@ class CubicWebPyramidHandler(object):
                 # for this exception) should be enough
                 # content = self.appli.ajax_error_handler(req, ex)
                 raise
-            finally:
-                # XXX CubicWebPyramidRequest.headers_out should
-                # access directly the pyramid response headers.
-                request.response.headers.clear()
-                for k, v in req.headers_out.getAllRawHeaders():
-                    for item in v:
-                        request.response.headers.add(k, item)
 
             if content is not None:
                 request.response.body = content
@@ -118,6 +111,13 @@ class CubicWebPyramidHandler(object):
             if not content:
                 content = vreg['views'].main_template(req, 'login')
                 request.response.body = content
+        finally:
+            # XXX CubicWebPyramidRequest.headers_out should
+            # access directly the pyramid response headers.
+            request.response.headers.clear()
+            for k, v in req.headers_out.getAllRawHeaders():
+                for item in v:
+                    request.response.headers.add(k, item)
 
         return request.response
 
