@@ -110,6 +110,7 @@ class CubicWebPyramidHandler(object):
             # cubicweb.dbapi._NeedAuthAccessMock.
             if not content:
                 content = vreg['views'].main_template(req, 'login')
+                request.response.status_code = 403
                 request.response.body = content
         finally:
             # XXX CubicWebPyramidRequest.headers_out should
