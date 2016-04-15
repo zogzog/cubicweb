@@ -1012,7 +1012,19 @@ class Entity(AppObject):
         return self.cw_related_rqlst(
             rtype, role=role, targettypes=targettypes, limit=limit).as_string()
 
-    def cw_related_rqlst(self, rtype, role='subject', targettypes=None, limit=None):
+    def cw_related_rqlst(self, rtype, role='subject', targettypes=None,
+                         limit=None, sort_terms=None):
+        """Return the select node of the RQL query of entities related through
+        `rtype` with this entity as `role`, possibly filtered by
+        `targettypes`.
+
+        The RQL query can be given a `limit` and sort terms with `sort_terms`
+        arguments being a sequence of ``(<relation type>, <sort ascending>)``
+        (e.g. ``[('name', True), ('modification_date', False)]`` would lead to
+        a sorting by ``name``, ascending and then by ``modification_date``,
+        descending. If `sort_terms` is not specified the default sorting is by
+        ``modification_date``, descending.
+        """
         vreg = self._cw.vreg
         rschema = vreg.schema[rtype]
         select = Select()
@@ -1053,22 +1065,31 @@ class Entity(AppObject):
         if gcard == '1':
             select.remove_sort_terms()
         elif not select.orderby:
-            # if modification_date is already retrieved, we use it instead
-            # of adding another variable for sorting. This should not be
-            # problematic, but it is with sqlserver, see ticket #694445
-            for rel in select.where.get_nodes(RqlRelation):
-                if (rel.r_type == 'modification_date'
-                    and rel.children[0].variable == mainvar
-                    and rel.children[1].operator == '='):
-                    var = rel.children[1].children[0].variable
-                    select.add_sort_var(var, asc=False)
-                    break
-            else:
-                mdvar = select.make_variable()
-                rel = make_relation(mainvar, 'modification_date',
-                                    (mdvar,), VariableRef)
-                select.add_restriction(rel)
-                select.add_sort_var(mdvar, asc=False)
+            # Build a mapping (rtype, node) for relations usable for sorting.
+            sorting_relations = {}
+            for r in select.where.get_nodes(RqlRelation):
+                lhs, rhs = r.children
+                if lhs.variable != mainvar:
+                    continue
+                if r.operator() != '=':
+                    continue
+                rhs_term = rhs.children[0]
+                if not isinstance(rhs_term, VariableRef):
+                    continue
+                sorting_relations[r.r_type] = r
+            sort_terms = sort_terms or [('modification_date', False)]
+            for term, order in sort_terms:
+                # Add a relation for sorting only if it is not only retrieved
+                # (e.g. modification_date) instead of adding another variable
+                # for sorting. This should not be problematic, but it is with
+                # sqlserver, see ticket #694445.
+                rel = sorting_relations.get(term)
+                if rel is None:
+                    mdvar = select.make_variable()
+                    rel = make_relation(mainvar, term, (mdvar,), VariableRef)
+                    select.add_restriction(rel)
+                var = rel.children[1].children[0].variable
+                select.add_sort_var(var, asc=order)
         return select
 
     # generic vocabulary methods ##############################################

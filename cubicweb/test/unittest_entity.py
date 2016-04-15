@@ -319,6 +319,17 @@ class EntityTC(CubicWebTC):
                              'WHERE E eid %(x)s, E tags X, X is Personne, X modification_date AA, '
                              'X nom AB')
 
+    def test_related_rql_sort_terms(self):
+        with self.admin_access.web_request() as req:
+            tag = self.vreg['etypes'].etype_class('Tag')(req)
+            select = tag.cw_related_rqlst('tags', 'subject',
+                                          sort_terms=(('nom', True),
+                                                      ('modification_date', False)))
+            expected = (
+                'Any X,AA ORDERBY AB,AA DESC '
+                'WHERE E eid %(x)s, E tags X, X modification_date AA, X nom AB')
+            self.assertEqual(select.as_string(), expected)
+
     def test_related_rql_ambiguous_cant_use_fetch_order(self):
         with self.admin_access.web_request() as req:
             tag = self.vreg['etypes'].etype_class('Tag')(req)
