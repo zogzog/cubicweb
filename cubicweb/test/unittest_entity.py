@@ -290,17 +290,18 @@ class EntityTC(CubicWebTC):
             Personne.fetch_attrs, Personne.cw_fetch_order = fetch_config(('nom', ))
             # XXX
             self.assertEqual(p.cw_related_rql('evaluee'),
-                              'Any X,AA ORDERBY AA DESC '
-                              'WHERE E eid %(x)s, E evaluee X, X modification_date AA')
+                             'Any X,AA ORDERBY AA DESC '
+                             'WHERE E eid %(x)s, E evaluee X, X modification_date AA')
 
             tag = self.vreg['etypes'].etype_class('Tag')(req)
-            self.assertEqual(tag.cw_related_rql('tags', 'subject'),
-                              'Any X,AA ORDERBY AA DESC '
-                              'WHERE E eid %(x)s, E tags X, X modification_date AA')
+            select = tag.cw_related_rqlst('tags', 'subject')
+            self.assertEqual(select.as_string(),
+                             'Any X,AA ORDERBY AA DESC '
+                             'WHERE E eid %(x)s, E tags X, X modification_date AA')
             self.assertEqual(tag.cw_related_rql('tags', 'subject', ('Personne',)),
-                              'Any X,AA,AB ORDERBY AB '
-                              'WHERE E eid %(x)s, E tags X, X is Personne, X modification_date AA, '
-                              'X nom AB')
+                             'Any X,AA,AB ORDERBY AB '
+                             'WHERE E eid %(x)s, E tags X, X is Personne, X modification_date AA, '
+                             'X nom AB')
 
     def test_related_rql_ambiguous_cant_use_fetch_order(self):
         with self.admin_access.web_request() as req:

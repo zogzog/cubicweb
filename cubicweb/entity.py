@@ -1009,6 +1009,10 @@ class Entity(AppObject):
             return rset
 
     def cw_related_rql(self, rtype, role='subject', targettypes=None, limit=None):
+        return self.cw_related_rqlst(
+            rtype, role=role, targettypes=targettypes, limit=limit).as_string()
+
+    def cw_related_rqlst(self, rtype, role='subject', targettypes=None, limit=None):
         vreg = self._cw.vreg
         rschema = vreg.schema[rtype]
         select = Select()
@@ -1065,7 +1069,7 @@ class Entity(AppObject):
                                     (mdvar,), VariableRef)
                 select.add_restriction(rel)
                 select.add_sort_var(mdvar, asc=False)
-        return select.as_string()
+        return select
 
     # generic vocabulary methods ##############################################
 
