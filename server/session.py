@@ -1806,7 +1806,7 @@ class InternalManager(object):
     # CWUser compat for notification ###########################################
 
     def name(self):
-        return 'cubicweb'
+        return ''
 
     class _IEmailable:
         @staticmethod
