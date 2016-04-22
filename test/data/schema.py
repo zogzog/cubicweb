@@ -17,13 +17,17 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from yams.buildobjs import (EntityType, String, RichString, Bytes,
-                            SubjectRelation, RelationDefinition)
+                            ComputedRelation, SubjectRelation, RelationDefinition)
 
 from cubicweb.schema import (WorkflowableEntityType,
                              RQLConstraint, RQLVocabularyConstraint)
 
 
 from cubicweb import _
+
+
+class buddies(ComputedRelation):
+    rule = 'S in_group G, O in_group G'
 
 
 class Personne(EntityType):

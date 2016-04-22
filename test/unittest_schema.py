@@ -178,7 +178,7 @@ class SchemaReaderClassTest(TestCase):
         self.assertListEqual(sorted(expected_entities), entities)
         relations = sorted([str(r) for r in schema.relations()])
         expected_relations = ['actionnaire', 'add_permission', 'address', 'alias', 'allowed_transition', 'associe',
-                              'bookmarked_by', 'by_transition',
+                              'bookmarked_by', 'by_transition', 'buddies',
 
                               'cardinality', 'comment', 'comment_format',
                               'composite', 'condition', 'config', 'connait',
@@ -225,7 +225,7 @@ class SchemaReaderClassTest(TestCase):
 
         eschema = schema.eschema('CWUser')
         rels = sorted(str(r) for r in eschema.subject_relations())
-        self.assertListEqual(rels, ['created_by', 'creation_date', 'custom_workflow',
+        self.assertListEqual(rels, ['buddies', 'created_by', 'creation_date', 'custom_workflow',
                                     'cw_source', 'cwuri', 'eid',
                                     'evaluee', 'firstname', 'has_group_permission',
                                     'has_text', 'identity',
@@ -235,7 +235,7 @@ class SchemaReaderClassTest(TestCase):
                                     'primary_email', 'surname', 'upassword',
                                     'use_email'])
         rels = sorted(r.type for r in eschema.object_relations())
-        self.assertListEqual(rels, ['bookmarked_by', 'created_by', 'for_user',
+        self.assertListEqual(rels, ['bookmarked_by', 'buddies', 'created_by', 'for_user',
                                      'identity', 'owned_by', 'wf_info_for'])
         rschema = schema.rschema('relation_type')
         properties = rschema.rdef('CWAttribute', 'CWRType')

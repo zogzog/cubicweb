@@ -783,7 +783,7 @@ class Entity(AppObject):
         for rschema in self.e_schema.subject_relations():
             if rschema.type in skip_copy_for['subject']:
                 continue
-            if rschema.final or rschema.meta:
+            if rschema.final or rschema.meta or rschema.rule:
                 continue
             # skip already defined relations
             if getattr(self, rschema.type):
@@ -802,7 +802,7 @@ class Entity(AppObject):
             execute(rql, {'x': self.eid, 'y': ceid})
             self.cw_clear_relation_cache(rschema.type, 'subject')
         for rschema in self.e_schema.object_relations():
-            if rschema.meta:
+            if rschema.meta or rschema.rule:
                 continue
             # skip already defined relations
             if self.related(rschema.type, 'object'):
