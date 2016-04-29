@@ -37,13 +37,11 @@ from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.edition import EditedEntity
 
 
-def dbg_st_search(uri, union, varmap, args, cachekey=None, prefix='rql for'):
+def dbg_st_search(uri, union, args, cachekey=None, prefix='rql for'):
     if server.DEBUG & server.DBG_RQL:
         global t
         print('  %s %s source: %s' % (prefix, uri, repr(union.as_string())))
         t = time()
-        if varmap:
-            print('    using varmap', varmap)
         if server.DEBUG & server.DBG_MORE:
             print('    args', repr(args))
             print('    cache key', cachekey)
@@ -361,7 +359,7 @@ class AbstractSource(object):
     # RQL query api ############################################################
 
     def syntax_tree_search(self, cnx, union,
-                           args=None, cachekey=None, varmap=None, debug=0):
+                           args=None, cachekey=None, debug=0):
         """return result from this source for a rql query (actually from a rql
         syntax tree and a solution dictionary mapping each used variable to a
         possible type). If cachekey is given, the query necessary to fetch the

@@ -51,15 +51,6 @@ def empty_rset(rql, args, rqlst=None):
     """build an empty result set object"""
     return ResultSet([], rql, args, rqlst=rqlst)
 
-def update_varmap(varmap, selected, table):
-    """return a sql schema to store RQL query result"""
-    for i, term in enumerate(selected):
-        key = term.as_string()
-        value = '%s.C%s' % (table, i)
-        if varmap.get(key, value) != value:
-            raise Exception('variable name conflict on %s: got %s / %s'
-                            % (key, value, varmap))
-        varmap[key] = value
 
 # permission utilities ########################################################
 

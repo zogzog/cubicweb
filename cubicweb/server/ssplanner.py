@@ -304,15 +304,6 @@ class SSPlanner(object):
 
 # execution steps and helper functions ########################################
 
-def varmap_test_repr(varmap, tablesinorder):
-    if varmap is None:
-        return varmap
-    maprepr = {}
-    for var, sql in varmap.items():
-        table, col = sql.split('.')
-        maprepr[var] = '%s.%s' % (tablesinorder[table], col)
-    return maprepr
-
 class Step(object):
     """base abstract class for execution step"""
     def __init__(self, plan):
@@ -345,10 +336,9 @@ class OneFetchStep(Step):
     """step consisting in fetching data from sources and directly returning
     results
     """
-    def __init__(self, plan, union, inputmap=None):
+    def __init__(self, plan, union):
         Step.__init__(self, plan)
         self.union = union
-        self.inputmap = inputmap
 
     def execute(self):
         """call .syntax_tree_search with the given syntax tree on each
@@ -357,11 +347,8 @@ class OneFetchStep(Step):
         self.execute_children()
         cnx = self.plan.cnx
         args = self.plan.args
-        inputmap = self.inputmap
         union = self.union
-        # do we have to use a inputmap from a previous step ? If so disable
-        # cachekey
-        if inputmap or self.plan.cache_key is None:
+        if self.plan.cache_key is None:
             cachekey = None
         # union may have been splited into subqueries, in which case we can't
         # use plan.cache_key, rebuild a cache key
@@ -373,20 +360,15 @@ class OneFetchStep(Step):
             cachekey = union.as_string()
         # get results for query
         source = cnx.repo.system_source
-        result = source.syntax_tree_search(cnx, union, args, cachekey, inputmap)
+        result = source.syntax_tree_search(cnx, union, args, cachekey)
         #print 'ONEFETCH RESULT %s' % (result)
         return result
 
     def mytest_repr(self):
         """return a representation of this step suitable for test"""
-        try:
-            inputmap = varmap_test_repr(self.inputmap, self.plan.tablesinorder)
-        except AttributeError:
-            inputmap = self.inputmap
         return (self.__class__.__name__,
                 sorted((r.as_string(kwargs=self.plan.args), r.solutions)
-                       for r in self.union.children),
-                inputmap)
+                       for r in self.union.children))
 
 
 # UPDATE/INSERT/DELETE steps ##################################################

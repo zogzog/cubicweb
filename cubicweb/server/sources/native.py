@@ -532,20 +532,19 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 continue
         raise AuthenticationError()
 
-    def syntax_tree_search(self, cnx, union, args=None, cachekey=None,
-                           varmap=None):
+    def syntax_tree_search(self, cnx, union, args=None, cachekey=None):
         """return result from this source for a rql query (actually from
         a rql syntax tree and a solution dictionary mapping each used
         variable to a possible type). If cachekey is given, the query
         necessary to fetch the results (but not the results themselves)
         may be cached using this key.
         """
-        assert dbg_st_search(self.uri, union, varmap, args, cachekey)
+        assert dbg_st_search(self.uri, union, args, cachekey)
         # remember number of actually selected term (sql generation may append some)
         if cachekey is None:
             self.no_cache += 1
             # generate sql query if we are able to do so (not supported types...)
-            sql, qargs, cbs = self._rql_sqlgen.generate(union, args, varmap)
+            sql, qargs, cbs = self._rql_sqlgen.generate(union, args)
         else:
             # sql may be cached
             try:
@@ -553,7 +552,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 self.cache_hit += 1
             except KeyError:
                 self.cache_miss += 1
-                sql, qargs, cbs = self._rql_sqlgen.generate(union, args, varmap)
+                sql, qargs, cbs = self._rql_sqlgen.generate(union, args)
                 self._cache[cachekey] = sql, qargs, cbs
         args = self.merge_args(args, qargs)
         assert isinstance(sql, string_types), repr(sql)

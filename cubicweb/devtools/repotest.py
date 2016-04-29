@@ -245,7 +245,7 @@ class BaseQuerierTC(TestCase):
         plan = self._prepare_plan(cnx, rql, kwargs, simplify=False)
         plan.preprocess(plan.rqlst)
         rqlst = plan.rqlst.children[0]
-        rqlst.solutions = remove_unused_solutions(rqlst, rqlst.solutions, {}, self.repo.schema)[0]
+        rqlst.solutions = remove_unused_solutions(rqlst, rqlst.solutions, self.repo.schema)[0]
         return rqlst
 
     def user_groups_session(self, *groups):

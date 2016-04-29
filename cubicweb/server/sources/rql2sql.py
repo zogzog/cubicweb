@@ -167,7 +167,7 @@ def _new_solutions(rqlst, solutions):
             newsolutions.append(asol)
     return newsolutions
 
-def remove_unused_solutions(rqlst, solutions, varmap, schema):
+def remove_unused_solutions(rqlst, solutions, schema):
     """cleanup solutions: remove solutions where invariant variables are taking
     different types
     """
@@ -177,7 +177,7 @@ def remove_unused_solutions(rqlst, solutions, varmap, schema):
     invariants = {}
     for vname, var in rqlst.defined_vars.items():
         vtype = newsols[0][vname]
-        if var._q_invariant or vname in varmap:
+        if var._q_invariant:
             # remove invariant variable from solutions to remove duplicates
             # later, then reinserting a type for the variable even later
             for sol in newsols:
@@ -376,7 +376,6 @@ class StateInfo(object):
         self.aliases = {}
         self.restrictions = []
         self._restr_stack = []
-        self.ignore_varmap = False
         self._needs_source_cb = {}
 
     def merge_source_cbs(self, needs_source_cb):
@@ -715,23 +714,18 @@ class SQLGenerator(object):
             attrmap = {}
         self.attr_map = attrmap
 
-    def generate(self, union, args=None, varmap=None):
+    def generate(self, union, args=None):
         """return SQL queries and a variable dictionary from a RQL syntax tree
 
         :partrqls: a list of couple (rqlst, solutions)
         :args: optional dictionary with values of substitutions used in the query
-        :varmap: optional dictionary mapping variable name to a special table
-          name, in case the query as to fetch data from temporary tables
 
         return an sql string and a dictionary with substitutions values
         """
         if args is None:
             args = {}
-        if varmap is None:
-            varmap =  {}
         self._lock.acquire()
         self._args = args
-        self._varmap = varmap
         self._query_attrs = {}
         self._state = None
         # self._not_scope_offset = 0
@@ -803,7 +797,7 @@ class SQLGenerator(object):
         if len(sols) > 1:
             # remove invariant from solutions
             sols, existssols, unstable = remove_unused_solutions(
-                select, sols, self._varmap, self.schema)
+                select, sols, self.schema)
             if len(sols) > 1:
                 # if there is still more than one solution, a UNION will be
                 # generated and so sort terms have to be selected
@@ -1048,15 +1042,8 @@ class SQLGenerator(object):
                     sql = self._visit_attribute_relation(relation)
         elif (rtype == 'is' and isinstance(rhs.children[0], Constant)
               and rhs.children[0].eval(self._args) is None):
-            # special case "C is NULL"
-            if lhs.name in self._varmap:
-                lhssql = self._varmap[lhs.name]
-            else:
-                lhssql = lhs.accept(self)
+            lhssql = lhs.accept(self)
             return '%s%s' % (lhssql, rhs.accept(self))
-        elif '%s.%s' % (lhs, relation.r_type) in self._varmap:
-            # relation has already been processed by a previous step
-            return ''
         elif relation.optional:
             # OPTIONAL relation, generate a left|right outer join
             if rtype == 'identity' or rschema.inlined:
@@ -1088,8 +1075,7 @@ class SQLGenerator(object):
                     lhssql, lhssql, (rhsvar or rhsconst).accept(self))
         elif rhsconst is not None:
             sql = '%s=%s' % (lhssql, rhsconst.accept(self))
-        elif isinstance(rhsvar, Variable) and rhsvar._q_invariant and \
-                 not rhsvar.name in self._varmap:
+        elif isinstance(rhsvar, Variable) and rhsvar._q_invariant:
             # if the rhs variable is only linked to this relation, this mean we
             # only want the relation to exists, eg NOT NULL in case of inlined
             # relation
@@ -1107,10 +1093,6 @@ class SQLGenerator(object):
             termsql = termconst and termconst.accept(self) or termvar.accept(self)
             yield '%s.%s=%s' % (rid, relfield, termsql)
         elif termvar._q_invariant:
-            # if the variable is mapped, generate restriction anyway
-            if termvar.name in self._varmap:
-                termsql = termvar.accept(self)
-                yield '%s.%s=%s' % (rid, relfield, termsql)
             extrajoin = self._extra_join_sql(relation, '%s.%s' % (rid, relfield), termvar)
             if extrajoin is not None:
                 yield extrajoin
@@ -1236,15 +1218,12 @@ class SQLGenerator(object):
         attr = 'eid' if relation.r_type == 'identity' else relation.r_type
         lhsalias = self._var_table(lhsvar)
         rhsalias = rhsvar and self._var_table(rhsvar)
-        try:
-            lhssql = self._varmap['%s.%s' % (lhsvar.name, attr)]
-        except KeyError:
-            if lhsalias is None:
-                lhssql = lhsconst.accept(self)
-            elif attr == 'eid':
-                lhssql = lhsvar.accept(self)
-            else:
-                lhssql = '%s.%s%s' % (lhsalias, SQL_PREFIX, attr)
+        if lhsalias is None:
+            lhssql = lhsconst.accept(self)
+        elif attr == 'eid':
+            lhssql = lhsvar.accept(self)
+        else:
+            lhssql = '%s.%s%s' % (lhsalias, SQL_PREFIX, attr)
         condition = '%s=%s' % (lhssql, (rhsconst or rhsvar).accept(self))
         # this is not a typo, rhs optional variable means lhs outer join and vice-versa
         if relation.optional == 'left':
@@ -1285,9 +1264,6 @@ class SQLGenerator(object):
         ored = relation.ored()
         for vref in rhs_vars:
             var = vref.variable
-            if var.name in self._varmap:
-                # ensure table is added
-                self._var_info(var)
             if isinstance(var, ColumnAlias):
                 # force sql generation whatever the computed principal
                 principal = 1
@@ -1308,11 +1284,7 @@ class SQLGenerator(object):
                     _rel = relation
                 lhssql = self._inlined_var_sql(_rel.children[0].variable,
                                                _rel.r_type)
-                try:
-                    self._state.ignore_varmap = True
-                    sql = lhssql + relation.children[1].accept(self)
-                finally:
-                    self._state.ignore_varmap = False
+                sql = lhssql + relation.children[1].accept(self)
                 if relation.optional == 'right':
                     leftalias = self._var_table(principal.children[0].variable)
                     rightalias = self._var_table(relation.children[0].variable)
@@ -1331,22 +1303,19 @@ class SQLGenerator(object):
             assert rel.r_type == 'eid'
             lhssql = lhs.accept(self)
         else:
-            try:
-                lhssql = self._varmap['%s.%s' % (lhs.name, rel.r_type)]
-            except KeyError:
-                mapkey = '%s.%s' % (self._state.solution[lhs.name], rel.r_type)
-                if mapkey in self.attr_map:
-                    cb, sourcecb = self.attr_map[mapkey]
-                    if sourcecb:
-                        # callback is a source callback, we can't use this
-                        # attribute in restriction
-                        raise QueryError("can't use %s (%s) in restriction"
-                                         % (mapkey, rel.as_string()))
-                    lhssql = cb(self, lhs.variable, rel)
-                elif rel.r_type == 'eid':
-                    lhssql = lhs.variable._q_sql
-                else:
-                    lhssql = '%s.%s%s' % (table, SQL_PREFIX, rel.r_type)
+            mapkey = '%s.%s' % (self._state.solution[lhs.name], rel.r_type)
+            if mapkey in self.attr_map:
+                cb, sourcecb = self.attr_map[mapkey]
+                if sourcecb:
+                    # callback is a source callback, we can't use this
+                    # attribute in restriction
+                    raise QueryError("can't use %s (%s) in restriction"
+                                     % (mapkey, rel.as_string()))
+                lhssql = cb(self, lhs.variable, rel)
+            elif rel.r_type == 'eid':
+                lhssql = lhs.variable._q_sql
+            else:
+                lhssql = '%s.%s%s' % (table, SQL_PREFIX, rel.r_type)
         try:
             if rel._q_needcast == 'TODAY':
                 sql = 'DATE(%s)%s' % (lhssql, rhssql)
@@ -1375,7 +1344,7 @@ class SQLGenerator(object):
             if lhsvar.stinfo['typerel'] is None:
                 # the variable is using the fti table, no join needed
                 jointo = None
-            elif not lhsvar.name in self._varmap:
+            else:
                 # join on entities instead of etype's table to get result for
                 # external entities on multisources configurations
                 ealias = lhsvar._q_sqltable = '_' + lhsvar.name
@@ -1510,13 +1479,9 @@ class SQLGenerator(object):
                 rel._q_needcast = value
             return self.keyword_map[value]()
         if constant.type == 'Substitute':
-            try:
-                # we may found constant from simplified var in varmap
-                return self._mapped_term(constant, '%%(%s)s' % value)[0]
-            except KeyError:
-                _id = value
-                if PY2 and isinstance(_id, unicode):
-                    _id = _id.encode()
+            _id = value
+            if PY2 and isinstance(_id, unicode):
+                _id = _id.encode()
         else:
             _id = str(id(constant)).replace('-', '', 1)
             self._query_attrs[_id] = value
@@ -1529,13 +1494,6 @@ class SQLGenerator(object):
 
     def visit_columnalias(self, colalias):
         """get the sql name for a subquery column alias"""
-        if colalias.name in self._varmap:
-            sql = self._varmap[colalias.name]
-            table = sql.split('.', 1)[0]
-            colalias._q_sqltable = table
-            colalias._q_sql = sql
-            self._state.add_table(table)
-            return sql
         return colalias._q_sql
 
     def visit_variable(self, variable):
@@ -1547,9 +1505,7 @@ class SQLGenerator(object):
             return variable._q_sql
         self._state.done.add(variable.name)
         vtablename = None
-        if not self._state.ignore_varmap and variable.name in self._varmap:
-            sql, vtablename = self._var_info(variable)
-        elif variable.stinfo['attrvar']:
+        if variable.stinfo['attrvar']:
             # attribute variable (systematically used in rhs of final
             # relation(s)), get table name and sql from any rhs relation
             sql = self._linked_var_sql(variable)
@@ -1610,66 +1566,30 @@ class SQLGenerator(object):
             pass
         return None
 
-    def _temp_table_scope(self, select, table):
-        scope = 9999
-        for var, sql in self._varmap.items():
-            # skip "attribute variable" in varmap (such 'T.login')
-            if not '.' in var and table == sql.split('.', 1)[0]:
-                try:
-                    scope = min(scope, self._state.scopes[select.defined_vars[var].scope])
-                except KeyError:
-                    scope = 0 # XXX
-                if scope == 0:
-                    break
-        return scope
-
-    def _mapped_term(self, term, key):
-        """return sql and table alias to the `term`, mapped as `key` or raise
-        KeyError when the key is not found in the varmap
-        """
-        sql = self._varmap[key]
-        tablealias = sql.split('.', 1)[0]
-        scope = self._temp_table_scope(term.stmt, tablealias)
-        self._state.add_table(tablealias, scope=scope)
-        return sql, tablealias
-
     def _var_info(self, var):
-        try:
-            return self._mapped_term(var, var.name)
-        except KeyError:
-            scope = self._state.scopes[var.scope]
-            etype = self._state.solution[var.name]
-            # XXX this check should be moved in rql.stcheck
-            if self.schema.eschema(etype).final:
-                raise BadRQLQuery(var.stmt.root)
-            tablealias = '_' + var.name
-            sql = '%s.%seid' % (tablealias, SQL_PREFIX)
-            self._state.add_table('%s%s AS %s' % (SQL_PREFIX, etype, tablealias),
-                           tablealias, scope=scope)
+        scope = self._state.scopes[var.scope]
+        etype = self._state.solution[var.name]
+        # XXX this check should be moved in rql.stcheck
+        if self.schema.eschema(etype).final:
+            raise BadRQLQuery(var.stmt.root)
+        tablealias = '_' + var.name
+        sql = '%s.%seid' % (tablealias, SQL_PREFIX)
+        self._state.add_table('%s%s AS %s' % (SQL_PREFIX, etype, tablealias),
+                              tablealias, scope=scope)
         return sql, tablealias
 
     def _inlined_var_sql(self, var, rtype):
-        try:
-            sql = self._varmap['%s.%s' % (var.name, rtype)]
-            scope = self._state.scopes[var.scope]
-            self._state.add_table(sql.split('.', 1)[0], scope=scope)
-        except KeyError:
-            # rtype may be an attribute relation when called from
-            # _visit_var_attr_relation.  take care about 'eid' rtype, since in
-            # some case we may use the `entities` table, so in that case we've
-            # to properly use variable'sql
-            if rtype == 'eid':
-                sql = var.accept(self)
-            else:
-                sql = '%s.%s%s' % (self._var_table(var), SQL_PREFIX, rtype)
+        # rtype may be an attribute relation when called from
+        # _visit_var_attr_relation.  take care about 'eid' rtype, since in
+        # some case we may use the `entities` table, so in that case we've
+        # to properly use variable'sql
+        if rtype == 'eid':
+            sql = var.accept(self)
+        else:
+            sql = '%s.%s%s' % (self._var_table(var), SQL_PREFIX, rtype)
         return sql
 
     def _linked_var_sql(self, variable):
-        if not self._state.ignore_varmap:
-            try:
-                return self._varmap[variable.name]
-            except KeyError:
-                pass
         rel = (variable.stinfo.get('principal') or
                next(iter(variable.stinfo['rhsrelations'])))
         linkedvar = rel.children[0].variable
@@ -1678,23 +1598,19 @@ class SQLGenerator(object):
         if isinstance(linkedvar, ColumnAlias):
             raise BadRQLQuery('variable %s should be selected by the subquery'
                               % variable.name)
-        try:
-            sql = self._varmap['%s.%s' % (linkedvar.name, rel.r_type)]
-        except KeyError:
-            mapkey = '%s.%s' % (self._state.solution[linkedvar.name], rel.r_type)
-            if mapkey in self.attr_map:
-                cb, sourcecb = self.attr_map[mapkey]
-                if not sourcecb:
-                    return cb(self, linkedvar, rel)
-                # attribute mapped at the source level (bfss for instance)
-                stmt = rel.stmt
-                for selectidx, vref in iter_mapped_var_sels(stmt, variable):
-                    stack = [cb]
-                    update_source_cb_stack(self._state, stmt, vref, stack)
-                    self._state._needs_source_cb[selectidx] = stack
-            linkedvar.accept(self)
-            sql = '%s.%s%s' % (linkedvar._q_sqltable, SQL_PREFIX, rel.r_type)
-        return sql
+        mapkey = '%s.%s' % (self._state.solution[linkedvar.name], rel.r_type)
+        if mapkey in self.attr_map:
+            cb, sourcecb = self.attr_map[mapkey]
+            if not sourcecb:
+                return cb(self, linkedvar, rel)
+            # attribute mapped at the source level (bfss for instance)
+            stmt = rel.stmt
+            for selectidx, vref in iter_mapped_var_sels(stmt, variable):
+                stack = [cb]
+                update_source_cb_stack(self._state, stmt, vref, stack)
+                self._state._needs_source_cb[selectidx] = stack
+        linkedvar.accept(self)
+        return '%s.%s%s' % (linkedvar._q_sqltable, SQL_PREFIX, rel.r_type)
 
     # tables handling #########################################################
 

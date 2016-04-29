@@ -1235,13 +1235,12 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
     def _norm_sql(self, sql):
         return sql.strip()
 
-    def _check(self, rql, sql, varmap=None, args=None):
+    def _check(self, rql, sql, args=None):
         if args is None:
             args = {'text': 'hip hop momo', 'eid': 12345}
         try:
             union = self._prepare(rql)
-            r, nargs, cbs = self.o.generate(union, args,
-                                            varmap=varmap)
+            r, nargs, cbs = self.o.generate(union, args)
             args.update(nargs)
             self.assertMultiLineEqual(strip(r % args), self._norm_sql(sql))
         except Exception as ex:
@@ -1302,26 +1301,6 @@ WHERE rel_in_basket0.eid_to=12''')
                     '''SELECT rel_in_basket0.eid_from
 FROM in_basket_relation AS rel_in_basket0
 WHERE rel_in_basket0.eid_to=12''')
-
-    def test_varmap1(self):
-        self._check('Any X,L WHERE X is CWUser, X in_group G, X login L, G name "users"',
-                    '''SELECT T00.x, T00.l
-FROM T00, cw_CWGroup AS _G, in_group_relation AS rel_in_group0
-WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=_G.cw_eid AND _G.cw_name=users''',
-                    varmap={'X': 'T00.x', 'X.login': 'T00.l'})
-
-    def test_varmap2(self):
-        self._check('Any X,L,GN WHERE X is CWUser, X in_group G, X login L, G name GN',
-                    '''SELECT T00.x, T00.l, _G.cw_name
-FROM T00, cw_CWGroup AS _G, in_group_relation AS rel_in_group0
-WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=_G.cw_eid''',
-                    varmap={'X': 'T00.x', 'X.login': 'T00.l'})
-
-    def test_varmap3(self):
-        self._check('Any %(x)s,D WHERE F data D, F is File',
-                    'SELECT 728, _TDF0.C0\nFROM _TDF0',
-                    args={'x': 728},
-                    varmap={'F.data': '_TDF0.C0', 'D': '_TDF0.C0'})
 
     def test_is_null_transform(self):
         union = self._prepare('Any X WHERE X login %(login)s')
@@ -2231,7 +2210,7 @@ class removeUnsusedSolutionsTC(TestCase):
         rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
         rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
         self.assertEqual(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
-                                                          {'A': 'FootGroup', 'B': 'FootTeam'}], {}, None),
+                                                          {'A': 'FootGroup', 'B': 'FootTeam'}], None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
                             {'A': 'FootGroup', 'B': 'FootTeam'}],
                            {}, set('B'))
@@ -2242,7 +2221,7 @@ class removeUnsusedSolutionsTC(TestCase):
         rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
         rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
         self.assertEqual(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
-                                                          {'A': 'FootGroup', 'B': 'RugbyTeam'}], {}, None),
+                                                          {'A': 'FootGroup', 'B': 'RugbyTeam'}], None),
                           ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'}], {}, set())
                           )
 
