@@ -5,7 +5,8 @@
 Dataimport
 ==========
 
-*CubicWeb* is designed to manipulate huge of amount of data, and provides utilities to do so.
+*CubicWeb* is designed to easily manipulate large amounts of data, and provides
+utilities to make imports simple.
 
 The main entry point is :mod:`cubicweb.dataimport.importer` which defines an
 :class:`ExtEntitiesImporter` class responsible for importing data from an external source in the
