@@ -293,6 +293,7 @@ class RQLSuggestionsBuilderTC(CubicWebTC):
                               'Any X WHERE X is Personne, X test A',
                               'Any X WHERE X is Personne, X titre A',
                               'Any X WHERE X is Personne, X travaille A',
+                              'Any X WHERE X is Personne, X tzdatenaiss A',
                               'Any X WHERE X is Personne, X web A',
                               ],
                              self.suggestions('Any X WHERE X is Personne, X '))
@@ -300,6 +301,7 @@ class RQLSuggestionsBuilderTC(CubicWebTC):
                               'Any X WHERE X is Personne, X test A',
                               'Any X WHERE X is Personne, X titre A',
                               'Any X WHERE X is Personne, X travaille A',
+                              'Any X WHERE X is Personne, X tzdatenaiss A',
                               ],
                              self.suggestions('Any X WHERE X is Personne, X t'))
         # try completion on selected
@@ -307,6 +309,7 @@ class RQLSuggestionsBuilderTC(CubicWebTC):
                               'Any X WHERE X is Personne, Y is Societe, X test A',
                               'Any X WHERE X is Personne, Y is Societe, X titre A',
                               'Any X WHERE X is Personne, Y is Societe, X travaille Y',
+                              'Any X WHERE X is Personne, Y is Societe, X tzdatenaiss A',
                               ],
                              self.suggestions('Any X WHERE X is Personne, Y is Societe, X t'))
         # invalid relation should not break

@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+from datetime import datetime
+import pytz
 
 from xml.etree.ElementTree import fromstring
 from lxml import html
@@ -30,7 +32,8 @@ from cubicweb.mttransforms import HAS_TAL
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      PasswordField, DateTimeField,
-                                     FileField, EditableFileField)
+                                     FileField, EditableFileField,
+                                     TZDatetimeField)
 from cubicweb.web.formwidgets import PasswordInput, Input, DateTimePicker
 from cubicweb.web.views.forms import EntityFieldsForm, FieldsForm
 from cubicweb.web.views.workflow import ChangeStateForm
@@ -260,6 +263,31 @@ detach attached file
 <p><b>You can either submit a new file using the browse button above, or choose to remove already uploaded file by checking the "detach attached file" check-box, or edit file content online with the widget below.</b></p>
 <textarea cols="80" name="data-subject:%(eid)s" onkeyup="autogrow(this)" rows="3" tabindex="4">new widgets system</textarea>''' % {'eid': file.eid})
 
+    def _modified_tzdatenaiss(self, eid, datestr, timestr):
+        ctx = {'tzdatenaiss-subjectdate:%d' % eid: datestr,
+               'tzdatenaiss-subjecttime:%d' % eid: timestr}
+        with self.admin_access.web_request(**ctx) as req:
+            form = EntityFieldsForm(req, None, entity=req.entity_from_eid(eid))
+            field = TZDatetimeField(name='tzdatenaiss', eidparam=True,
+                                    role='subject')
+            form.append_field(field)
+            form.build_context({})
+            return field.has_been_modified(form)
+
+    def test_tzdatetimefield(self):
+        """ Comparison of the tz-aware database-stored value and the posted data
+        should not crash, and the posted data should be considered UTC """
+        tzd = datetime.now(pytz.utc).replace(second=0, microsecond=0)
+        datestr, timestr = tzd.strftime('%Y/%m/%d %H:%M').split()
+        with self.admin_access.web_request() as req:
+            eid = req.create_entity('Personne', nom=u'Flo', tzdatenaiss=tzd).eid
+            req.cnx.commit()
+
+        modified = self._modified_tzdatenaiss(eid, datestr, timestr)
+        self.assertFalse(modified)
+
+        modified = self._modified_tzdatenaiss(eid, '2016/05/04', '15:07')
+        self.assertTrue(modified)
 
     def test_passwordfield(self):
         class PFForm(EntityFieldsForm):

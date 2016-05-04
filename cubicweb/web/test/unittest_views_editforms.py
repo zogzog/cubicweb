@@ -121,6 +121,7 @@ class AutomaticEntityFormTC(CubicWebTC):
                                    ('tel', 'subject'),
                                    ('fax', 'subject'),
                                    ('datenaiss', 'subject'),
+                                   ('tzdatenaiss', 'subject'),
                                    ('test', 'subject'),
                                    ('description', 'subject'),
                                    ('salary', 'subject'),

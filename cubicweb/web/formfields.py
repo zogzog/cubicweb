@@ -42,6 +42,7 @@ Basic fields
 .. autoclass:: cubicweb.web.formfields.BooleanField()
 .. autoclass:: cubicweb.web.formfields.DateField()
 .. autoclass:: cubicweb.web.formfields.DateTimeField()
+.. autoclass:: cubicweb.web.formfields.TZDatetimeField()
 .. autoclass:: cubicweb.web.formfields.TimeField()
 .. autoclass:: cubicweb.web.formfields.TimeIntervalField()
 
@@ -64,6 +65,8 @@ Entity specific fields and function
 __docformat__ = "restructuredtext en"
 
 from datetime import datetime, timedelta
+
+import pytz
 
 from six import PY2, text_type, string_types
 
@@ -1015,6 +1018,18 @@ class DateTimeField(DateField):
     etype = 'Datetime'
 
 
+class TZDatetimeField(DateTimeField):
+    """ Use this field to edit a timezone-aware datetime (`TZDatetime` yams
+    type). Note the posted values are interpreted as UTC, so you may need to
+    convert them client-side, using some javascript in the corresponding widget.
+    """
+
+    def _ensure_correctly_typed(self, form, value):
+        tz_naive = super(TZDatetimeField, self)._ensure_correctly_typed(
+            form, value)
+        return tz_naive.replace(tzinfo=pytz.utc)
+
+
 class TimeField(DateField):
     """Use this field to edit time (`Time` yams type).
 
@@ -1267,7 +1282,7 @@ FIELDS = {
 
     'Date':       DateField,
     'Datetime':   DateTimeField,
-    'TZDatetime': DateTimeField,
+    'TZDatetime': TZDatetimeField,
     'Time':       TimeField,
     'TZTime':     TimeField,
     'Interval':   TimeIntervalField,

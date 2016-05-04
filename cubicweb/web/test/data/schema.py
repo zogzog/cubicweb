@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from yams.buildobjs import (EntityType, RelationDefinition, SubjectRelation,
-                            String, Int, Datetime, Boolean, Float)
+                            String, Int, Datetime, Boolean, Float, TZDatetime)
 from yams.constraints import IntervalBoundConstraint
 
 from cubicweb import _
@@ -58,6 +58,7 @@ class Personne(EntityType):
     tel    = Int()
     fax    = Int()
     datenaiss = Datetime()
+    tzdatenaiss = TZDatetime()
     test   = Boolean()
     description = String()
     salary = Float()
