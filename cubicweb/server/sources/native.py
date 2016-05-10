@@ -944,8 +944,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         * remove record from the `entities` table
         """
         self.fti_unindex_entities(cnx, entities)
-        attrs = {'eid': '(%s)' % ','.join([str(_e.eid) for _e in entities])}
-        self.doexec(cnx, self.sqlgen.delete_many('entities', attrs), attrs)
+
+        # sqlserver is limited on the array size, the limit can occur starting
+        # from > 10000 item, so we process by batch of 10000
+        count = len(entities)
+        batch_size = 10000
+        for i in range(0, count, batch_size):
+            in_eid = ",".join(str(entities[index].eid)
+                              for index in range(i, min(i + batch_size, count)))
+            attrs = {'eid': '(%s)' % (in_eid,)}
+            self.doexec(cnx, self.sqlgen.delete_many('entities', attrs), attrs)
 
     # undo support #############################################################
 
