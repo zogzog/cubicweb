@@ -43,6 +43,12 @@ config directory (near the ``all-in-one.conf`` file):
 
 See the documentation of `Pyramid Cubicweb`_ for more details.
 
+.. Warning:: If you want to be able to log in a CubicWeb application
+             served by pyramid on a unsecured stream (typically when
+             you start an instance in dev mode using a simple
+             ``cubicweb-ctl pyramid -D -linfo myinstance``), you
+             **must** set ``cubicweb.auth.authtkt.session.secure`` to
+             ``no``.
 
 Secrets
 ~~~~~~~
