@@ -6,32 +6,9 @@ Settings
 Cubicweb Settings
 -----------------
 
-Pyramid CubicWeb will make use of the following configuration entries if found
-in the cubicweb configuration (a.k.a. `all-in-one.conf`):
-
-.. warning::
-
-    These settings requires the `pyramid` cube to be enabled on the instance.
-
-.. confval:: pyramid-session-secret
-
-    Secret phrase to sign the session cookie
-    
-    Used by :func:`pyramid_cubicweb.session.includeme` to configure the default session factory.
-
-    .. code-block:: ini
-
-        pyramid-session-secret = <some very secret passphrase>
-
-.. confval:: pyramid-auth-secret
-
-    Secret phrase to sign the authentication cookie
-    
-    Used by :func:`pyramid_cubicweb.auth.includeme` to configure the default authentication policy.
-
-    .. code-block:: ini
-
-        pyramid-auth-secret = <some other very secret passphrase>
+Pyramid CubicWeb will **not** make use of the configuration entries
+found in the cubicweb configuration (a.k.a. `all-in-one.conf`) for any
+pyramid related configuration value.
 
 
 .. _pyramid_settings:
