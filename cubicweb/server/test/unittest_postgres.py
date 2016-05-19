@@ -50,15 +50,7 @@ class PostgresTimeoutConfiguration(PostgresApptestConfiguration):
 
 
 class PostgresFTITC(CubicWebTC):
-    configcls = PostgresTimeoutConfiguration
-
-    @classmethod
-    def setUpClass(cls):
-        cls.orig_connect_hooks = lgdb.SQL_CONNECT_HOOKS['postgres'][:]
-
-    @classmethod
-    def tearDownClass(cls):
-        lgdb.SQL_CONNECT_HOOKS['postgres'] = cls.orig_connect_hooks
+    configcls = PostgresApptestConfiguration
 
     def test_eid_range(self):
         # concurrent allocation of eid ranges
@@ -154,6 +146,18 @@ class PostgresFTITC(CubicWebTC):
                 self.assertEqual(cm.exception.msgargs,
                         {'type-subject-value': u'"nogood"',
                          'type-subject-choices': u'"todo", "a", "b", "T", "lalala"'})
+
+
+class PostgresStatementTimeoutTC(CubicWebTC):
+    configcls = PostgresTimeoutConfiguration
+
+    @classmethod
+    def setUpClass(cls):
+        cls.orig_connect_hooks = lgdb.SQL_CONNECT_HOOKS['postgres'][:]
+
+    @classmethod
+    def tearDownClass(cls):
+        lgdb.SQL_CONNECT_HOOKS['postgres'] = cls.orig_connect_hooks
 
     def test_statement_timeout(self):
         with self.admin_access.repo_cnx() as cnx:
