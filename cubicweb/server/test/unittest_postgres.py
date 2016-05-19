@@ -158,8 +158,9 @@ class PostgresFTITC(CubicWebTC):
     def test_statement_timeout(self):
         with self.admin_access.repo_cnx() as cnx:
             cnx.system_sql('select pg_sleep(0.1)')
-            with self.assertRaises(Exception):
+            with self.assertRaises(Exception) as cm:
                 cnx.system_sql('select pg_sleep(0.3)')
+        self.assertIn('statement timeout', str(cm.exception))
 
 
 class PostgresLimitSizeTC(CubicWebTC):
@@ -182,5 +183,5 @@ class PostgresLimitSizeTC(CubicWebTC):
 
 
 if __name__ == '__main__':
-    from logilab.common.testlib import unittest_main
-    unittest_main()
+    import unittest
+    unittest.main()
