@@ -31,11 +31,9 @@ from functools import reduce
 from six import text_type, binary_type
 
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.deprecation import deprecated, class_deprecated
+from logilab.common.deprecation import class_deprecated
 from logilab.common.modutils import cleanup_sys_modules
-from logilab.common.registry import (
-    RegistryStore, Registry, obj_registries,
-    ObjectNotFound, RegistryNotFound)
+from logilab.common.registry import RegistryStore, Registry, ObjectNotFound, RegistryNotFound
 
 from rql import RQLHelper
 from yams.constraints import BASE_CONVERTERS

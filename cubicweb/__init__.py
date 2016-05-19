@@ -20,34 +20,37 @@ relations between entitites.
 """
 __docformat__ = "restructuredtext en"
 
-# ignore the pygments UserWarnings
+import logging
+import os
+import sys
 import warnings
 import zlib
-warnings.filterwarnings('ignore', category=UserWarning,
-                        message='.*was already imported',
-                        module='.*pygments')
-
-
-from six import PY2, binary_type, text_type
-from six.moves import builtins
-
-CW_SOFTWARE_ROOT = __path__[0]
-
-import sys, os, logging
 if (2, 7) <= sys.version_info < (2, 7, 4):
     # http://bugs.python.org/issue10211
     from StringIO import StringIO as BytesIO
 else:
     from io import BytesIO
 
-from six.moves import cPickle as pickle
+from six import PY2, binary_type, text_type
+from six.moves import builtins, cPickle as pickle
 
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 from yams.constraints import BASE_CONVERTERS, BASE_CHECKERS
 
+# ignore the pygments UserWarnings
+warnings.filterwarnings('ignore', category=UserWarning,
+                        message='.*was already imported',
+                        module='.*pygments')
+
 # pre python 2.7.2 safety
 logging.basicConfig()
+
+# this is necessary for i18n devtools test where chdir is done while __path__ is relative, which
+# breaks later imports
+__path__[0] = os.path.abspath(__path__[0])
+CW_SOFTWARE_ROOT = __path__[0]
+
 
 from cubicweb.__pkginfo__ import version as __version__
 
