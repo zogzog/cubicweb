@@ -4,7 +4,7 @@
 # copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
-# This file is part of a CubicWeb cube.
+# This file is part of a %(distname)s.
 #
 # CubicWeb is free software: you can redistribute it and/or modify it under the
 # terms of the GNU Lesser General Public License as published by the Free
@@ -31,39 +31,40 @@ from setuptools import setup
 from setuptools.command import install_lib
 from distutils.command import install_data
 
+here = dirname(__file__)
 
 # load metadata from the __pkginfo__.py file so there is no risk of conflict
 # see https://packaging.python.org/en/latest/single_source_version.html
-base_dir = dirname(__file__)
-pkginfo = {}
-with open(join(base_dir, "__pkginfo__.py")) as f:
-    exec(f.read(), pkginfo)
+pkginfo = join(here, 'cubicweb_%(cubename)s', '__pkginfo__.py')
+__pkginfo__ = {}
+with open(pkginfo) as f:
+    exec(f.read(), __pkginfo__)
 
 # get required metadatas
-modname = pkginfo['modname']
-version = pkginfo['version']
-license = pkginfo['license']
-description = pkginfo['description']
-web = pkginfo['web']
-author = pkginfo['author']
-author_email = pkginfo['author_email']
-classifiers = pkginfo['classifiers']
+modname = __pkginfo__['modname']
+version = __pkginfo__['version']
+license = __pkginfo__['license']
+description = __pkginfo__['description']
+web = __pkginfo__['web']
+author = __pkginfo__['author']
+author_email = __pkginfo__['author_email']
+classifiers = __pkginfo__['classifiers']
 
-with open(join(base_dir, 'README')) as f:
+with open(join(here, 'README')) as f:
     long_description = f.read()
 
 # get optional metadatas
-distname = pkginfo.get('distname', modname)
-scripts = pkginfo.get('scripts', ())
-include_dirs = pkginfo.get('include_dirs', ())
-data_files = pkginfo.get('data_files', None)
-ext_modules = pkginfo.get('ext_modules', None)
-dependency_links = pkginfo.get('dependency_links', ())
+distname = __pkginfo__.get('distname', modname)
+scripts = __pkginfo__.get('scripts', ())
+include_dirs = __pkginfo__.get('include_dirs', ())
+data_files = __pkginfo__.get('data_files', None)
+ext_modules = __pkginfo__.get('ext_modules', None)
+dependency_links = __pkginfo__.get('dependency_links', ())
 
 requires = {}
 for entry in ("__depends__",):  # "__recommends__"):
-    requires.update(pkginfo.get(entry, {}))
-install_requires = [("%s %s" % (d, v and v or "")).strip()
+    requires.update(__pkginfo__.get(entry, {}))
+install_requires = ["{0} {1}".format(d, v and v or "").strip()
                     for d, v in requires.items()]
 
 BASE_BLACKLIST = ('CVS', '.svn', '.hg', '.git', 'debian', 'dist', 'build')
@@ -115,7 +116,7 @@ def export(from_dir, to_dir,
             if exists(dest):
                 os.remove(dest)
             if verbose:
-                sys.stderr.write('%s -> %s\n' % (src, dest))
+                sys.stderr.write('{0} -> {1}\n'.format(src, dest))
             shutil.copy2(src, dest)
 
 

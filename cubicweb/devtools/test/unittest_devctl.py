@@ -78,6 +78,22 @@ class DevCtlTC(TestCase):
         self.assertEqual(retcode, 0,
                          msg=to_unicode(proc.stdout.read()))
 
+    def test_newcube_sdist(self):
+        """Ensure sdist can be built from a new cube"""
+        tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube-sdist")
+        try:
+            newcube(tmpdir, 'foo')
+            projectdir = osp.join(tmpdir, 'cubicweb-foo')
+            cmd = [sys.executable, 'setup.py', 'sdist']
+            proc = Popen(cmd, stdout=PIPE, stderr=STDOUT, cwd=projectdir)
+            retcode = proc.wait()
+            stdout = to_unicode(proc.stdout.read())
+            self.assertEqual(retcode, 0, stdout)
+            distfpath = osp.join(projectdir, 'dist', 'cubicweb-foo-0.1.0.tar.gz')
+            self.assertTrue(osp.isfile(distfpath))
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
 
 if __name__ == '__main__':
     from unittest import main
