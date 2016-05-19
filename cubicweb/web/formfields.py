@@ -140,7 +140,7 @@ class Field(object):
        class which may be overriden per instance.
     :attr:`value`
        field value. May be an actual value or a callable which should take the
-       form as argument and return a value.
+       form and the field as argument and return a value.
     :attr:`choices`
        static vocabulary for this field. May be a list of values, a list of
        (label, value) tuples or a callable which should take the form and field
