@@ -131,6 +131,9 @@ def copy_skeleton(skeldir, targetdir, context,
     targetdir = normpath(targetdir)
     for dirpath, dirnames, filenames in walk(skeldir):
         tdirpath = dirpath.replace(skeldir, targetdir)
+        if 'cubicweb_CUBENAME' in tdirpath:
+            tdirpath = tdirpath.replace('cubicweb_CUBENAME',
+                                        'cubicweb_' + context['cubename'])
         create_dir(tdirpath)
         for fname in filenames:
             if any(fnmatch(fname, pat) for pat in exclude):

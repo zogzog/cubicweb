@@ -44,25 +44,33 @@ class DevCtlTC(TestCase):
         assertItemsEqual = TestCase.assertCountEqual
 
     def test_newcube(self):
-        expected = ['i18n', 'hooks.py', 'setup.py', 'views.py', 'test',
-                    'migration', 'entities.py', 'MANIFEST.in', 'schema.py',
-                    'cubicweb-foo.spec', '__init__.py', 'debian', 'data',
-                    '__pkginfo__.py', 'README', 'tox.ini']
+        expected_project_content = ['setup.py', 'test', 'MANIFEST.in',
+                                    'cubicweb_foo',
+                                    'cubicweb-foo.spec', 'debian', 'README',
+                                    'tox.ini']
+        expected_package_content = ['i18n', 'hooks.py', 'views.py',
+                                    'migration', 'entities.py', 'schema.py',
+                                    '__init__.py', 'data', '__pkginfo__.py']
         tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube")
         try:
             retcode, stdout = newcube(tmpdir, 'foo')
             self.assertEqual(retcode, 0, msg=to_unicode(stdout))
-            self.assertItemsEqual(os.listdir(osp.join(tmpdir, 'foo')), expected)
+            project_dir = osp.join(tmpdir, 'cubicweb-foo')
+            project_content = os.listdir(project_dir)
+            package_dir = osp.join(project_dir, 'cubicweb_foo')
+            package_content = os.listdir(package_dir)
+            self.assertItemsEqual(project_content, expected_project_content)
+            self.assertItemsEqual(package_content, expected_package_content)
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
-        self.assertEqual(retcode, 0, msg=stdout)
 
     def test_flake8(self):
         """Ensure newcube built from skeleton is flake8-compliant"""
         tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube-flake8")
         try:
             newcube(tmpdir, 'foo')
-            cmd = [sys.executable, '-m', 'flake8', osp.join(tmpdir, 'foo')]
+            cmd = [sys.executable, '-m', 'flake8',
+                   osp.join(tmpdir, 'cubicweb-foo', 'cubicweb_foo')]
             proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
             retcode = proc.wait()
         finally:

@@ -619,29 +619,25 @@ layout, and a full featured cube with "full" layout.',
             raise BadCommandUsage(
                 'cube name must be a valid python module name')
         verbose = self.get('verbose')
-        cubesdir = self.get('directory')
-        if not cubesdir:
+        destdir = self.get('directory')
+        if not destdir:
             cubespath = ServerConfiguration.cubes_search_path()
             if len(cubespath) > 1:
                 raise BadCommandUsage(
                     "can't guess directory where to put the new cube."
                     " Please specify it using the --directory option")
-            cubesdir = cubespath[0]
-        if not osp.isdir(cubesdir):
-            print("-> creating cubes directory", cubesdir)
+            destdir = cubespath[0]
+        if not osp.isdir(destdir):
+            print("-> creating cubes directory", destdir)
             try:
-                mkdir(cubesdir)
+                mkdir(destdir)
             except OSError as err:
                 self.fail("failed to create directory %r\n(%s)"
-                          % (cubesdir, err))
-        cubedir = osp.join(cubesdir, cubename)
-        if osp.exists(cubedir):
-            self.fail("%s already exists!" % cubedir)
-        skeldir = osp.join(BASEDIR, 'skeleton')
+                          % (destdir, err))
         default_name = 'cubicweb-%s' % cubename.lower().replace('_', '-')
         if verbose:
             distname = input('Debian name for your cube ? [%s]): '
-                                 % default_name).strip()
+                             % default_name).strip()
             if not distname:
                 distname = default_name
             elif not distname.startswith('cubicweb-'):
@@ -652,13 +648,19 @@ layout, and a full featured cube with "full" layout.',
         if not re.match('[a-z][-a-z0-9]*$', distname):
             raise BadCommandUsage(
                 'cube distname should be a valid debian package name')
+        cubedir = osp.join(destdir, distname)
+        if osp.exists(cubedir):
+            self.fail("%s already exists!" % cubedir)
+        skeldir = osp.join(BASEDIR, 'skeleton')
         longdesc = shortdesc = input(
             'Enter a short description for your cube: ')
         if verbose:
             longdesc = input(
                 'Enter a long description (leave empty to reuse the short one): ')
-        dependencies = {'cubicweb': '>= %s' % cubicwebversion,
-                        'six': '>= 1.4.0',}
+        dependencies = {
+            'six': '>= 1.4.0',
+            'cubicweb': '>= %s' % cubicwebversion,
+        }
         if verbose:
             dependencies.update(self._ask_for_dependencies())
         context = {'cubename' : cubename,
