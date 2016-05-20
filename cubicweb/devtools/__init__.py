@@ -886,15 +886,3 @@ def get_test_db_handler(config, init_config=None):
         return handler
     else:
         raise ValueError('no initialization function for driver %r' % driver)
-
-### compatibility layer ##############################################
-from logilab.common.deprecation import deprecated
-
-@deprecated("please use the new DatabaseHandler mecanism")
-def init_test_database(config=None, configdir='data', apphome=None):
-    """init a test database for a specific driver"""
-    if config is None:
-        config = TestServerConfiguration(apphome=apphome)
-    handler = get_test_db_handler(config)
-    handler.build_db_cache()
-    return handler.get_repo_and_cnx()
