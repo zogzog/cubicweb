@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import sys
 import re
+import warnings
 from os.path import dirname, join, abspath
 from math import log
 from contextlib import contextmanager
@@ -57,6 +58,9 @@ if sys.version_info[:2] < (3, 4):
         raise ImportError('no subTest support in available unittest2')
 else:
     from unittest import TestCase
+
+# in python 2.7, DeprecationWarning are not shown anymore by default
+warnings.filterwarnings('default', category=DeprecationWarning)
 
 
 # provide a data directory for the test class ##################################
