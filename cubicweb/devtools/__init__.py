@@ -189,33 +189,24 @@ class TestServerConfiguration(ServerConfiguration):
             # no cubes
             self.init_cubes(())
 
-    sourcefile = None
-    def sources_file(self):
-        """define in subclasses self.sourcefile if necessary"""
-        if self.sourcefile:
-            print('Reading sources from', self.sourcefile)
-            sourcefile = self.sourcefile
-            if not isabs(sourcefile):
-                sourcefile = join(self.apphome, sourcefile)
-        else:
-            sourcefile = super(TestServerConfiguration, self).sources_file()
-        return sourcefile
-
     def read_sources_file(self):
         """By default, we run tests with the sqlite DB backend.  One may use its
         own configuration by just creating a 'sources' file in the test
         directory from which tests are launched or by specifying an alternative
         sources file using self.sourcefile.
         """
+        if getattr(self, 'sourcefile', None):
+            raise Exception('sourcefile isn\'t supported anymore, specify your database '
+                            'configuration using proper configuration class (e.g. '
+                            'PostgresApptestConfiguration)')
         try:
-            sources = super(TestServerConfiguration, self).read_sources_file()
+            super(TestServerConfiguration, self).read_sources_file()
+            raise Exception('test configuration shouldn\'t provide a sources file, specify your '
+                            'database configuration using proper configuration class (e.g. '
+                            'PostgresApptestConfiguration)')
         except ExecutionError:
-            sources = {}
-        if not sources:
-            sources = self.default_sources
-        if 'admin' not in sources:
-            sources['admin'] = self.default_sources['admin']
-        return sources
+            pass
+        return self.default_sources
 
     # web config methods needed here for cases when we use this config as a web
     # config
