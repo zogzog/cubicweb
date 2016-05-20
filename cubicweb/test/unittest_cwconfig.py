@@ -43,7 +43,7 @@ CUSTOM_CUBES_DIR = abspath(join(dirname(__file__), 'data', 'cubes'))
 class CubicWebConfigurationTC(TestCase):
     def setUp(self):
         cleanup_sys_modules([CUSTOM_CUBES_DIR, ApptestConfiguration.CUBES_DIR])
-        self.config = ApptestConfiguration('data', apphome=self.datadir)
+        self.config = ApptestConfiguration('data', __file__)
         self.config._cubes = ('email', 'file')
 
     def tearDown(self):

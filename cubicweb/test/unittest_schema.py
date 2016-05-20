@@ -143,7 +143,7 @@ class CubicWebSchemaTC(TestCase):
         self.assertEqual(str(expr), 'Any O,U WHERE U has_update_permission O, O eid %(o)s, U eid %(u)s')
 
 loader = CubicWebSchemaLoader()
-config = TestConfiguration('data', apphome=DATADIR)
+config = TestConfiguration('data', __file__)
 config.bootstrap_cubes()
 
 class SchemaReaderClassTest(TestCase):
@@ -269,7 +269,7 @@ class SchemaReaderClassTest(TestCase):
 
     def test_relation_perm_overriding(self):
         loader = CubicWebSchemaLoader()
-        config = TestConfiguration('data', apphome=join(dirname(__file__), 'data_schemareader'))
+        config = TestConfiguration('data_schemareader', __file__)
         config.bootstrap_cubes()
         schema = loader.load(config)
         rdef = next(iter(schema['in_group'].rdefs.values()))

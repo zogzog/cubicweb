@@ -31,7 +31,7 @@ from cubicweb.devtools import repotest, TestServerConfiguration, BaseApptestConf
 
 def setUpModule(*args):
     global rqlhelper, schema
-    config = TestServerConfiguration(RQLRewriteTC.datapath('rewrite'))
+    config = TestServerConfiguration('data-rewrite', __file__)
     config.bootstrap_cubes()
     schema = config.load_schema()
     schema.add_relation_def(RelationDefinition(subject='Card', name='in_state',
@@ -498,12 +498,9 @@ class RQLRewriteTC(TestCase):
                          'EXISTS(NOT S in_group A, A name "guests", A is CWGroup)')
 
 from cubicweb.devtools.testlib import CubicWebTC
-from logilab.common.decorators import classproperty
 
 class RewriteFullTC(CubicWebTC):
-    @classproperty
-    def config(cls):
-        return BaseApptestConfiguration(apphome=cls.datapath('rewrite'))
+    appid = 'data-rewrite'
 
     def process(self, rql, args=None):
         if args is None:
@@ -784,7 +781,7 @@ class RQLRelationRewriterTC(TestCase):
 
 class RQLRelationRewriterTC(CubicWebTC):
 
-    appid = 'data/rewrite'
+    appid = 'data-rewrite'
 
     def test_base_rule(self):
         with self.admin_access.client_cnx() as cnx:

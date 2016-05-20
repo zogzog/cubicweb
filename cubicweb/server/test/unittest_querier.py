@@ -66,7 +66,7 @@ SQL_CONNECT_HOOKS['sqlite'].append(init_sqlite_connexion)
 
 def setUpClass(cls, *args):
     global repo, cnx
-    config = TestServerConfiguration(apphome=UtilsTC.datadir)
+    config = TestServerConfiguration('data', __file__)
     handler = get_test_db_handler(config)
     handler.build_db_cache()
     repo, cnx = handler.get_repo_and_cnx()

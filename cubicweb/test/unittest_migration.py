@@ -43,7 +43,7 @@ class MigrTestConfig(TestServerConfiguration):
 
 class MigrationToolsTC(TestCase):
     def setUp(self):
-        self.config = MigrTestConfig('data')
+        self.config = MigrTestConfig('data', __file__)
         from yams.schema import Schema
         self.config.load_schema = lambda expand_cubes=False: Schema('test')
         self.config.__class__.cubicweb_appobject_path = frozenset()
@@ -74,7 +74,7 @@ class MigrationToolsTC(TestCase):
                                ((0, 0, 4), TMIGRDIR+'0.0.4_Any.py')])
 
     def test_filter_scripts_for_mode(self):
-        config = CubicWebConfiguration('data')
+        config = CubicWebConfiguration('data', __file__)
         config.verbosity = 0
         config = self.config
         config.__class__.name = 'repository'
@@ -100,7 +100,7 @@ class BaseCreationTC(TestCase):
 
     def test_db_creation(self):
         """make sure database can be created"""
-        config = ApptestConfiguration('data', apphome=self.datadir)
+        config = ApptestConfiguration('data', __file__)
         source = config.system_source_config
         self.assertEqual(source['db-driver'], 'sqlite')
         handler = get_test_db_handler(config)

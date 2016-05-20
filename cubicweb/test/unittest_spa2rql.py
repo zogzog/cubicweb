@@ -33,7 +33,7 @@ xy.add_equivalence('Project name', 'doap:Project doap:name')
 xy.add_equivalence('Project name', 'doap:Project dc:title')
 
 
-config = TestServerConfiguration('data')
+config = TestServerConfiguration('data', __file__)
 config.bootstrap_cubes()
 schema = config.load_schema()
 

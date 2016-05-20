@@ -38,7 +38,7 @@ WEBVIEWSDIR = join(BASE, 'web', 'views')
 class VRegistryTC(TestCase):
 
     def setUp(self):
-        config = TestServerConfiguration('data')
+        config = TestServerConfiguration('data', __file__)
         self.vreg = CWRegistryStore(config)
         config.bootstrap_cubes()
         self.vreg.schema = config.load_schema()

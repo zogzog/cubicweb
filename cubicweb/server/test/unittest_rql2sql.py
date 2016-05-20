@@ -61,7 +61,7 @@ def monkey_patch_import_driver_module(driver, drivers, quiet=True):
 
 def setUpModule():
     global config, schema
-    config = TestServerConfiguration('data', apphome=CWRQLTC.datadir)
+    config = TestServerConfiguration('data', __file__)
     config.bootstrap_cubes()
     schema = config.load_schema()
     schema['in_state'].inlined = True

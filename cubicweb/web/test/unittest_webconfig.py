@@ -27,7 +27,7 @@ class WebconfigTC(TestCase):
     def setUp(self):
         # need explicit None if dirname(__file__) is empty, see
         # ApptestConfiguration.__init__
-        self.config = ApptestConfiguration('data', apphome=os.path.dirname(__file__) or None)
+        self.config = ApptestConfiguration('data', __file__)
         self.config._cubes = ['file']
         self.config.load_configuration()
 

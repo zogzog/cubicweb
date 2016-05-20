@@ -33,7 +33,7 @@ from cubicweb.server.checkintegrity import check, reindex_entities
 class CheckIntegrityTC(TestCase):
 
     def setUp(self):
-        handler = get_test_db_handler(TestServerConfiguration(apphome=self.datadir))
+        handler = get_test_db_handler(TestServerConfiguration('data', __file__))
         handler.build_db_cache()
         self.repo, _cnx = handler.get_repo_and_cnx()
         sys.stderr = sys.stdout = StringIO()

@@ -30,7 +30,7 @@ import subprocess
 import tempfile
 import getpass
 from hashlib import sha1  # pylint: disable=E0611
-from os.path import abspath, join, exists, split, isabs, isdir
+from os.path import abspath, join, exists, split, isdir, dirname
 from functools import partial
 
 from six import text_type
@@ -140,18 +140,15 @@ class TestServerConfiguration(ServerConfiguration):
     skip_db_create_and_restore = False
     default_sources = DEFAULT_SOURCES
 
-    def __init__(self, appid='data', apphome=None, log_threshold=logging.CRITICAL+10):
+    def __init__(self, appid, test_module_file, log_threshold=logging.CRITICAL + 10):
         # must be set before calling parent __init__
-        if apphome is None:
-            if exists(appid):
-                apphome = abspath(appid)
-            else: # cube test
-                apphome = abspath('..')
+        apphome = abspath(join(dirname(test_module_file), appid))
         self._apphome = apphome
         super(TestServerConfiguration, self).__init__(appid)
         self.init_log(log_threshold, force=True)
         # need this, usually triggered by cubicweb-ctl
         self.load_cwctl_plugins()
+        self.test_module_file = test_module_file
 
     # By default anonymous login are allow but some test need to deny of to
     # change the default user. Set it to None to prevent anonymous login.
@@ -235,13 +232,6 @@ class ApptestConfiguration(BaseApptestConfiguration):
     # steps are completely skipped, the database is used as is and is
     # considered initialized
     skip_db_create_and_restore = False
-
-    def __init__(self, appid, apphome=None,
-                 log_threshold=logging.WARNING, sourcefile=None):
-        BaseApptestConfiguration.__init__(self, appid, apphome,
-                                          log_threshold=log_threshold)
-        self.init_repository = sourcefile is None
-        self.sourcefile = sourcefile
 
 
 class PostgresApptestConfiguration(ApptestConfiguration):

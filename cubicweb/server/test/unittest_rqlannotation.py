@@ -24,8 +24,7 @@ from cubicweb.devtools.repotest import BaseQuerierTC
 class SQLGenAnnotatorTC(BaseQuerierTC):
 
     def setUp(self):
-        handler = get_test_db_handler(TestServerConfiguration(
-            'data2', apphome=SQLGenAnnotatorTC.datadir))
+        handler = get_test_db_handler(TestServerConfiguration('data', __file__))
         handler.build_db_cache()
         repo, _cnx = handler.get_repo_and_cnx()
         self.__class__.repo = repo

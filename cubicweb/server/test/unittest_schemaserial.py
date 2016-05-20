@@ -38,8 +38,7 @@ def setUpModule(*args):
 
     global schema, config
     loader = CubicWebSchemaLoader()
-    apphome = Schema2RQLTC.datadir + '-schemaserial'
-    config = TestServerConfiguration('data', apphome=apphome)
+    config = TestServerConfiguration('data-schemaserial', __file__)
     config.bootstrap_cubes()
     schema = loader.load(config)
 

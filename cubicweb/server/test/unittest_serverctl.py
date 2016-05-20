@@ -9,7 +9,7 @@ class ServerCTLTC(testlib.CubicWebTC):
     def setUp(self):
         super(ServerCTLTC, self).setUp()
         self.orig_config_for = ServerConfiguration.config_for
-        config_for = lambda appid: ApptestConfiguration(appid, apphome=self.datadir)
+        config_for = lambda appid: ApptestConfiguration(appid, __file__)
         ServerConfiguration.config_for = staticmethod(config_for)
 
     def tearDown(self):

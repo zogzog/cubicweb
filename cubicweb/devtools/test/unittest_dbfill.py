@@ -56,7 +56,7 @@ class ValueGeneratorTC(TestCase):
         return [f.strip() for f in io.open(osp.join(DATADIR, 'firstnames.txt'), encoding='latin1')]
 
     def setUp(self):
-        config = ApptestConfiguration('data', apphome=DATADIR)
+        config = ApptestConfiguration('data', __file__)
         config.bootstrap_cubes()
         schema = config.load_schema()
         e_schema = schema.eschema('Person')

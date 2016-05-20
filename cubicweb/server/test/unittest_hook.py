@@ -57,7 +57,7 @@ class OperationsTC(CubicWebTC):
 
 class HookCalled(Exception): pass
 
-config = TestServerConfiguration('data')
+config = TestServerConfiguration('data', __file__)
 config.bootstrap_cubes()
 schema = config.load_schema()
 
