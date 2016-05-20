@@ -97,6 +97,9 @@ DEFAULT_PSQL_SOURCES['system'] = DEFAULT_SOURCES['system'].copy()
 DEFAULT_PSQL_SOURCES['system']['db-driver'] = 'postgres'
 DEFAULT_PSQL_SOURCES['system']['db-user'] = text_type(getpass.getuser())
 DEFAULT_PSQL_SOURCES['system']['db-password'] = None
+# insert a dumb value as db-host to avoid unexpected connection to local server
+DEFAULT_PSQL_SOURCES['system']['db-host'] = 'REPLACEME'
+
 
 def turn_repo_off(repo):
     """ Idea: this is less costly than a full re-creation of the repo object.
