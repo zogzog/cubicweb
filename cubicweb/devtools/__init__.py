@@ -1,4 +1,4 @@
-# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,21 +27,18 @@ import logging
 import shutil
 import glob
 import subprocess
-import warnings
 import tempfile
 import getpass
 from hashlib import sha1  # pylint: disable=E0611
-from datetime import timedelta
 from os.path import abspath, join, exists, split, isabs, isdir
 from functools import partial
 
 from six import text_type
 from six.moves import cPickle as pickle
 
-from logilab.common.date import strptime
 from logilab.common.decorators import cached, clear_cache
 
-from cubicweb import ExecutionError, BadConnectionId
+from cubicweb import ExecutionError
 from cubicweb import schema, cwconfig
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.etwist.twconfig import WebConfigurationBase
@@ -60,7 +57,7 @@ SYSTEM_RELATIONS = (schema.META_RTYPES
                     | schema.WORKFLOW_DEF_RTYPES
                     | schema.SYSTEM_RTYPES
                     | schema.SCHEMA_TYPES
-                    | set(('primary_email', # deducted from other relations
+                    | set(('primary_email',  # deducted from other relations
                            ))
                     )
 
@@ -80,18 +77,21 @@ VIEW_VALIDATORS = {}
 
 BASE_URL = 'http://testing.fr/cubicweb/'
 
-DEFAULT_SOURCES = {'system': {'adapter' : 'native',
-                              'db-encoding' : 'UTF-8', #'ISO-8859-1',
-                              'db-user' : u'admin',
-                              'db-password' : 'gingkow',
-                              'db-name' : 'tmpdb',
-                              'db-driver' : 'sqlite',
-                              'db-host' : None,
-                              },
-                   'admin' : {'login': u'admin',
-                              'password': u'gingkow',
-                              },
-                   }
+DEFAULT_SOURCES = {
+    'system': {
+        'adapter': 'native',
+        'db-encoding': 'UTF-8',
+        'db-user': u'admin',
+        'db-password': 'gingkow',
+        'db-name': 'tmpdb',
+        'db-driver': 'sqlite',
+        'db-host': None,
+    },
+    'admin': {
+        'login': u'admin',
+        'password': u'gingkow',
+    },
+}
 DEFAULT_PSQL_SOURCES = DEFAULT_SOURCES.copy()
 DEFAULT_PSQL_SOURCES['system'] = DEFAULT_SOURCES['system'].copy()
 DEFAULT_PSQL_SOURCES['system']['db-driver'] = 'postgres'
@@ -184,7 +184,7 @@ class TestServerConfiguration(ServerConfiguration):
             super(TestServerConfiguration, self).bootstrap_cubes()
         except IOError:
             # no cubes
-            self.init_cubes( () )
+            self.init_cubes(())
 
     sourcefile = None
     def sources_file(self):
@@ -222,11 +222,13 @@ class TestServerConfiguration(ServerConfiguration):
 
 
 class BaseApptestConfiguration(TestServerConfiguration, WebConfigurationBase):
-    name = 'all-in-one' # so it search for all-in-one.conf, not repository.conf
+    name = 'all-in-one'  # so it search for all-in-one.conf, not repository.conf
     options = cwconfig.merge_options(TestServerConfiguration.options
                                      + WebConfigurationBase.options)
-    cubicweb_appobject_path = TestServerConfiguration.cubicweb_appobject_path | WebConfigurationBase.cubicweb_appobject_path
-    cube_appobject_path = TestServerConfiguration.cube_appobject_path | WebConfigurationBase.cube_appobject_path
+    cubicweb_appobject_path = (TestServerConfiguration.cubicweb_appobject_path
+                               | WebConfigurationBase.cubicweb_appobject_path)
+    cube_appobject_path = (TestServerConfiguration.cube_appobject_path
+                           | WebConfigurationBase.cube_appobject_path)
 
     def available_languages(self, *args):
         return self.cw_languages()
@@ -274,11 +276,13 @@ class RealDatabaseConfiguration(ApptestConfiguration):
 
     """
     skip_db_create_and_restore = True
-    read_instance_schema = True # read schema from database
+    read_instance_schema = True  # read schema from database
+
 
 # test database handling #######################################################
 
 DEFAULT_EMPTY_DB_ID = '__default_empty_db__'
+
 
 class TestDataBaseHandler(object):
     DRIVER = None
@@ -346,7 +350,8 @@ class TestDataBaseHandler(object):
         # XXX we dump a dict of the config
         # This is an experimental to help config dependant setup (like BFSS) to
         # be propertly restored
-        with tempfile.NamedTemporaryFile(dir=os.path.dirname(config_path), delete=False) as conf_file:
+        pdir = os.path.dirname(config_path)
+        with tempfile.NamedTemporaryFile(dir=pdir, delete=False) as conf_file:
             conf_file.write(pickle.dumps(dict(self.config)))
         os.rename(conf_file.name, config_path)
         self.db_cache[self.db_cache_key(db_id)] = (backup_data, config_path)
@@ -412,7 +417,7 @@ class TestDataBaseHandler(object):
         from cubicweb.repoapi import connect
         repo = self.get_repo()
         sources = self.config.read_sources_file()
-        login  = text_type(sources['admin']['login'])
+        login = text_type(sources['admin']['login'])
         password = sources['admin']['password'] or 'xxx'
         cnx = connect(repo, login, password=password)
         return cnx
@@ -427,7 +432,7 @@ class TestDataBaseHandler(object):
 
         self.restore_database(db_id)
         repo = self.get_repo(startup=True)
-        cnx  = self.get_cnx()
+        cnx = self.get_cnx()
         return repo, cnx
 
     @property
@@ -453,7 +458,7 @@ class TestDataBaseHandler(object):
         """Search available db_if for the current config"""
         cache_glob = self.absolute_backup_file('*', '*')
         directory = os.path.dirname(cache_glob)
-        entries={}
+        entries = {}
         candidates = glob.glob(cache_glob)
         for filepath in candidates:
             data = os.path.basename(filepath)
@@ -465,8 +470,7 @@ class TestDataBaseHandler(object):
             # apply necessary transformation from the driver
             value = self.process_cache_entry(directory, dbname, db_id, entry)
             assert 'config' in entry
-            if value is not None: # None value means "not handled by this driver
-                                  # XXX Ignored value are shadowed to other Handler if cache are common.
+            if value is not None:  # None value means "not handled by this driver"
                 key = self.db_cache_key(db_id, dbname=dbname)
                 self.db_cache[key] = value, entry['config']
         self.explored_glob.add(cache_glob)
@@ -487,14 +491,14 @@ class TestDataBaseHandler(object):
 
         This function backup any database it build"""
         if self.has_cache(test_db_id):
-            return #test_db_id, 'already in cache'
+            return  # test_db_id, 'already in cache'
         if test_db_id is DEFAULT_EMPTY_DB_ID:
             self.init_test_database()
         else:
             print('Building %s for database %s' % (test_db_id, self.dbname))
             self.build_db_cache(DEFAULT_EMPTY_DB_ID)
             self.restore_database(DEFAULT_EMPTY_DB_ID)
-            repo = self.get_repo(startup=True)
+            self.get_repo(startup=True)
             cnx = self.get_cnx()
             with cnx:
                 pre_setup_func(cnx, self.config)
@@ -667,7 +671,6 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
             if self.dbcnx is not None:
                 self.dbcnx.rollback()
             sys.stderr.write('building %s failed\n' % self.dbname)
-            #self._drop(self.dbname)
             raise
 
     def helper_clear_cache(self):
@@ -685,7 +688,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
     def _config_id(self):
         return sha1(self.config.apphome.encode('utf-8')).hexdigest()[:10]
 
-    def _backup_name(self, db_id): # merge me with parent
+    def _backup_name(self, db_id):  # merge me with parent
         backup_name = '_'.join(('cache', self._config_id, self.dbname, db_id))
         return backup_name.lower()
 
@@ -708,7 +711,8 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
             if self._repo:
                 self._repo.turn_repo_off()
             try:
-                createdb(self.helper, self.system_source, self.dbcnx, self.cursor, template=orig_name)
+                createdb(self.helper, self.system_source, self.dbcnx, self.cursor,
+                         template=orig_name)
                 self.dbcnx.commit()
             finally:
                 if self._repo:
@@ -728,8 +732,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         self.dbcnx.commit()
 
 
-
-### sqlserver2005 test database handling #######################################
+# sqlserver2005 test database handling #########################################
 
 class SQLServerTestDataBaseHandler(TestDataBaseHandler):
     DRIVER = 'sqlserver'
@@ -743,7 +746,8 @@ class SQLServerTestDataBaseHandler(TestDataBaseHandler):
             init_repository(self.config, interactive=False, drop=True,
                             init_config=self.init_config)
 
-### sqlite test database handling ##############################################
+
+# sqlite test database handling ################################################
 
 class SQLiteTestDataBaseHandler(TestDataBaseHandler):
     DRIVER = 'sqlite'
@@ -755,8 +759,6 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         for dbpath in cls.__TMPDB:
             cls._cleanup_database(dbpath)
 
-
-
     def __init__(self, *args, **kwargs):
         super(SQLiteTestDataBaseHandler, self).__init__(*args, **kwargs)
         # use a dedicated base for each process.
@@ -764,7 +766,7 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
             self.system_source['global-db-name'] = self.system_source['db-name']
             process_db = self.system_source['db-name'] + str(os.getpid())
             self.system_source['db-name'] = process_db
-        process_db = self.absolute_dbfile() # update db-name to absolute path
+        process_db = self.absolute_dbfile()  # update db-name to absolute path
         self.__TMPDB.add(process_db)
 
     @staticmethod
@@ -794,11 +796,6 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         dbfile = self.absolute_dbfile()
         backup_file = self.absolute_backup_file(db_id, 'sqlite')
         shutil.copy(dbfile, backup_file)
-        # Useful to debug WHO writes a database
-        # backup_stack = self.absolute_backup_file(db_id, '.stack')
-        #with open(backup_stack, 'w') as backup_stack_file:
-        #    import traceback
-        #    traceback.print_stack(file=backup_stack_file)
         return backup_file
 
     def _restore_database(self, backup_coordinates, _config):
@@ -821,6 +818,7 @@ atexit.register(SQLiteTestDataBaseHandler._cleanup_all_tmpdb)
 
 
 HANDLERS = {}
+
 
 def register_handler(handlerkls, overwrite=False):
     assert handlerkls is not None
@@ -863,10 +861,10 @@ class HCache(object):
 
 HCACHE = HCache()
 
-
 # XXX a class method on Test ?
-
 _CONFIG = None
+
+
 def get_test_db_handler(config, init_config=None):
     global _CONFIG
     if _CONFIG is not None and config is not _CONFIG:
@@ -874,7 +872,7 @@ def get_test_db_handler(config, init_config=None):
         # cleanup all dynamically loaded modules and everything in the instance
         # directory
         apphome = _CONFIG.apphome
-        if apphome: # may be unset in tests
+        if apphome:  # may be unset in tests
             cleanup_sys_modules([apphome])
         # also cleanup sys.path
         if apphome in sys.path:
@@ -885,7 +883,6 @@ def get_test_db_handler(config, init_config=None):
     if handler is not None:
         return handler
     driver = config.system_source_config['db-driver']
-    key = (driver, config)
     handlerkls = HANDLERS.get(driver, None)
     if handlerkls is not None:
         handler = handlerkls(config, init_config)
