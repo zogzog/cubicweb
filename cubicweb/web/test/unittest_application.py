@@ -146,14 +146,10 @@ class UtilsTC(TestCase):
 
 class ApplicationTC(CubicWebTC):
 
-    @classproperty
-    def config(cls):
-        try:
-            return cls.__dict__['_config']
-        except KeyError:
-            config = super(ApplicationTC, cls).config
-            config.global_set_option('allow-email-login', True)
-            return config
+    @classmethod
+    def setUpClass(cls):
+        super(ApplicationTC, cls).setUpClass()
+        cls.config.global_set_option('allow-email-login', True)
 
     def test_cnx_user_groups_sync(self):
         with self.admin_access.client_cnx() as cnx:

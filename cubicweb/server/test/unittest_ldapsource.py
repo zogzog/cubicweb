@@ -108,6 +108,10 @@ def terminate_slapd(cls):
             sys.stdout.write(stdout)
             sys.stderr.write(stderr)
         config.info('DONE')
+    try:
+        shutil.rmtree(cls._tmpdir)
+    except:
+        pass
 
 
 class LDAPFeedTestBase(CubicWebTC):
@@ -116,6 +120,15 @@ class LDAPFeedTestBase(CubicWebTC):
 
     @classmethod
     def setUpClass(cls):
+        super(LDAPFeedTestBase, cls).setUpClass()
+        cls.init_slapd()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.terminate_slapd()
+
+    @classmethod
+    def init_slapd(cls):
         for path in ('/usr/sbin/slapd',
                      '/usr/sbin/slapadd',
                      '/usr/bin/ldapmodify'):
@@ -126,12 +139,8 @@ class LDAPFeedTestBase(CubicWebTC):
         cls._tmpdir = create_slapd_configuration(cls)
 
     @classmethod
-    def tearDownClass(cls):
+    def terminate_slapd(cls):
         terminate_slapd(cls)
-        try:
-            shutil.rmtree(cls._tmpdir)
-        except:
-            pass
 
     @classmethod
     def pre_setup_database(cls, cnx, config):
@@ -461,8 +470,8 @@ class LDAPFeedGroupTC(LDAPFeedTestBase):
 
         finally:
             # back to normal ldap setup
-            self.tearDownClass()
-            self.setUpClass()
+            self.terminate_slapd()
+            self.init_slapd()
 
     def test_group_member_deleted(self):
         with self.repo.internal_cnx() as cnx:
@@ -485,8 +494,8 @@ class LDAPFeedGroupTC(LDAPFeedTestBase):
                 self.assertEqual(len(rset), 0, rset.rows)
         finally:
             # back to normal ldap setup
-            self.tearDownClass()
-            self.setUpClass()
+            self.terminate_slapd()
+            self.init_slapd()
 
 
 if __name__ == '__main__':

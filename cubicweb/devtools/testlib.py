@@ -313,6 +313,15 @@ class CubicWebTC(BaseTestCase):
     # anonymous is logged by default in cubicweb test cases
     anonymous_allowed = True
 
+    @classmethod
+    def setUpClass(cls):
+        test_module_file = sys.modules[cls.__module__].__file__
+        assert 'config' not in cls.__dict__, (
+            '%s has a config class attribute before entering setUpClass. '
+            'Let CubicWebTC.setUpClass instantiate it and modify it afterwards.' % cls)
+        cls.config = cls.configcls(cls.appid, test_module_file)
+        cls.config.mode = 'test'
+
     def __init__(self, *args, **kwargs):
         self._admin_session = None
         self.repo = None
@@ -364,24 +373,6 @@ class CubicWebTC(BaseTestCase):
         self._admin_session = self.admin_access._session
 
     # config management ########################################################
-
-    @classproperty
-    def config(cls):
-        """return the configuration object
-
-        Configuration is cached on the test class.
-        """
-        if cls is CubicWebTC:
-            # Prevent direct use of CubicWebTC directly to avoid database
-            # caching issues
-            return None
-        try:
-            return cls.__dict__['_config']
-        except KeyError:
-            test_module_file = sys.modules[cls.__module__].__file__
-            config = cls._config = cls.configcls(cls.appid, test_module_file)
-            config.mode = 'test'
-            return config
 
     @classmethod  # XXX could be turned into a regular method
     def init_config(cls, config):
@@ -441,6 +432,9 @@ class CubicWebTC(BaseTestCase):
     # default test setup and teardown #########################################
 
     def setUp(self):
+        assert hasattr(self, 'config'), (
+            'It seems that CubicWebTC.setUpClass has not been called. '
+            'Missing super() call in %s?' % self.setUpClass)
         # monkey patch send mail operation so emails are sent synchronously
         self._patch_SendMailOp()
         previous_failure = self.__class__.__dict__.get('_repo_init_failed')

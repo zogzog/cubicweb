@@ -153,6 +153,7 @@ class PostgresStatementTimeoutTC(CubicWebTC):
 
     @classmethod
     def setUpClass(cls):
+        super(PostgresStatementTimeoutTC, cls).setUpClass()
         cls.orig_connect_hooks = lgdb.SQL_CONNECT_HOOKS['postgres'][:]
 
     @classmethod
