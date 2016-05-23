@@ -303,6 +303,9 @@ class AutoClickAndEditFormView(EntityView):
                         button = copy.deepcopy(button)
                         button.cwaction = None
                         button.onclick = cancelclick
+                        if 'class' in button.attrs:
+                            new_class = button.attrs['class'].replace('cwjs-edition-cancel', '')
+                            button.attrs['class'] = new_class
                     form_buttons.append(button)
             form.form_buttons = form_buttons
         else: # base
