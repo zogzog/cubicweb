@@ -1,8 +1,8 @@
-\.svn
 ^build$
 ^dist$
 \.egg-info$
 ^.tox$
+^.cache$
 \.pyc$
 \.pyo$
 \.bak$
