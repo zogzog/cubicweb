@@ -284,26 +284,27 @@ You can set multiple groups by separating them by a comma.',
         else:
             # user specified, we want to check user/password, no need to return
             # the connection which will be thrown out
-            self._authenticate(conn, user, userpwd)
+            if not self._authenticate(conn, user, userpwd):
+                raise AuthenticationError()
         return conn
 
     def _auth_simple(self, conn, user, userpwd):
         conn.authentication = ldap3.AUTH_SIMPLE
         conn.user = user['dn']
         conn.password = userpwd
-        conn.bind()
+        return conn.bind()
 
     def _auth_digest_md5(self, conn, user, userpwd):
         conn.authentication = ldap3.AUTH_SASL
         conn.sasl_mechanism = 'DIGEST-MD5'
         # realm, user, password, authz-id
         conn.sasl_credentials = (None, user['dn'], userpwd, None)
-        conn.bind()
+        return conn.bind()
 
     def _auth_gssapi(self, conn, user, userpwd):
         conn.authentication = ldap3.AUTH_SASL
         conn.sasl_mechanism = 'GSSAPI'
-        conn.bind()
+        return conn.bind()
 
     def _search(self, cnx, base, scope,
                 searchstr='(objectClass=*)', attrs=()):
