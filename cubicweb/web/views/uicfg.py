@@ -141,7 +141,7 @@ class DisplayCtrlRelationTags(NoTargetRelationTagsDict):
             if role == 'subject':
                 self.tag_subject_of((etype, rtype, '*'), {'order': index})
             else:
-                self.tag_object_of((etype, rtype, '*'), {'order': index})
+                self.tag_object_of(('*', rtype, etype), {'order': index})
 
 
 primaryview_display_ctrl = DisplayCtrlRelationTags()
