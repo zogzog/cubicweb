@@ -234,7 +234,12 @@ class Repository(object):
                 # set eids on entities schema
                 with self.internal_cnx() as cnx:
                     for etype, eid in cnx.execute('Any XN,X WHERE X is CWEType, X name XN'):
-                        self.schema.eschema(etype).eid = eid
+                        try:
+                            self.schema.eschema(etype).eid = eid
+                        except KeyError:
+                            # etype in the database doesn't exist in the fs schema, this may occur
+                            # during dev and we shouldn't crash
+                            self.warning('No %s entity type in the file system schema', etype)
         else:
             # normal start: load the instance schema from the database
             self.info('loading schema from the repository')
