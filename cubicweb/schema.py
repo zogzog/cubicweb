@@ -203,6 +203,17 @@ class RQLExpression(object):
     # to be defined in concrete classes
     predefined_variables = None
 
+    # Internal cache for parsed expressions
+    _rql_cache = {}
+
+    @classmethod
+    def _cached_parse(cls, rql):
+        try:
+            return cls._rql_cache[rql]
+        except KeyError:
+            cls._rql_cache[rql] = parse(rql, print_errors=False).children[0]
+            return cls._rql_cache[rql]
+
     def __init__(self, expression, mainvars, eid):
         """
         :type mainvars: sequence of RQL variables' names. Can be provided as a
@@ -220,7 +231,7 @@ class RQLExpression(object):
         self.expression = normalize_expression(expression)
         try:
             # syntax tree used by read security (inserted in queries when necessary)
-            self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
+            self.snippet_rqlst = self._cached_parse(self.minimal_rql)
         except RQLSyntaxError:
             raise RQLSyntaxError(expression)
         for mainvar in mainvars:
@@ -263,6 +274,7 @@ class RQLExpression(object):
 
     @cachedproperty
     def rqlst(self):
+        # Don't use _cached_parse here because the rqlst is modified
         select = parse(self.minimal_rql, print_errors=False).children[0]
         defined = set(split_expression(self.expression))
         for varname in self.predefined_variables:
