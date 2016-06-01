@@ -137,17 +137,18 @@ class ErrorView(AnyRsetView):
         # if excinfo is not None, it's probably not a bug
         if excinfo is None:
             return
-        vcconf = self._cw.cnx.repo.get_versions()
-        w(u"<div>")
-        eversion = vcconf.get('cubicweb', self._cw._('no version information'))
-        # NOTE: tuple wrapping needed since eversion is itself a tuple
-        w(u"<b>CubicWeb version:</b> %s<br/>\n" % (eversion,))
-        cversions = []
-        for cube in self._cw.vreg.config.cubes():
-            cubeversion = vcconf.get(cube, self._cw._('no version information'))
-            w(u"<b>Cube %s version:</b> %s<br/>\n" % (cube, cubeversion))
-            cversions.append((cube, cubeversion))
-        w(u"</div>")
+        if self._cw.cnx:
+            vcconf = self._cw.cnx.repo.get_versions()
+            w(u"<div>")
+            eversion = vcconf.get('cubicweb', self._cw._('no version information'))
+            # NOTE: tuple wrapping needed since eversion is itself a tuple
+            w(u"<b>CubicWeb version:</b> %s<br/>\n" % (eversion,))
+            cversions = []
+            for cube in self._cw.vreg.config.cubes():
+                cubeversion = vcconf.get(cube, self._cw._('no version information'))
+                w(u"<b>Cube %s version:</b> %s<br/>\n" % (cube, cubeversion))
+                cversions.append((cube, cubeversion))
+            w(u"</div>")
         # creates a bug submission link if submit-mail is set
         if self._cw.vreg.config['submit-mail']:
             form = self._cw.vreg['forms'].select('base', self._cw, rset=None,
