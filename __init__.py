@@ -33,8 +33,9 @@ from six.moves import builtins
 
 CW_SOFTWARE_ROOT = __path__[0]
 
-import sys, os, logging
-if (2, 7) <= sys.version_info < (2, 7, 4):
+import sys
+import logging
+if PY2:
     # http://bugs.python.org/issue10211
     from StringIO import StringIO as BytesIO
 else:
