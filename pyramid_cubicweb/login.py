@@ -51,6 +51,7 @@ def login_password_login(request):
             "Authentication failed. Please check your credentials."))
         request.cw_request.post = dict(request.params)
         del request.cw_request.post['__password']
+        request.response.status_code = 403
         return login_form(request)
 
     headers = security.remember(

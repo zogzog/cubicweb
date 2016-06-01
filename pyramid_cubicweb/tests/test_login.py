@@ -40,6 +40,11 @@ class LoginTest(PyramidCWTest):
         self.assertIn('pauth_tkt', cookies)
         self.assertIsNotNone(cookies['pauth_tkt'].expires)
 
+    def test_login_bad_password(self):
+        res = self.webapp.post('/login', {
+            '__login': self.admlogin, '__password': 'empty'}, status=403)
+        self.assertIn('Authentication failed', res.text)
+
 
 if __name__ == '__main__':
     from unittest import main
