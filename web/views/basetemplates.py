@@ -46,6 +46,8 @@ class LogInOutTemplate(MainTemplate):
         w(u'</body>')
 
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
+        self._cw.html_headers.define_var('BASE_URL', self._cw.base_url())
+        self._cw.html_headers.define_var('DATA_URL', self._cw.datadir_url)
         w = self.whead
         # explictly close the <base> tag to avoid IE 6 bugs while browsing DOM
         w(u'<base href="%s"></base>' % xml_escape(self._cw.base_url()))
