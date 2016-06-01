@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -33,6 +33,12 @@ class LogFormTemplateTC(CubicWebTC):
         self.assertEqual(self._login_labels(), ['login or email', 'password'])
         self.set_option('allow-email-login', 'no')
         self.assertEqual(self._login_labels(), ['login', 'password'])
+
+    def test_display_message(self):
+        with self.admin_access.web_request() as req:
+            req.set_message(u'houla hop')
+            page = self.view('logform', req=req, id='loginBox', klass='', template=None)
+            self.assertIn(u'houla hop', page.raw_text)
 
 
 class MainNoTopTemplateTC(CubicWebTC):

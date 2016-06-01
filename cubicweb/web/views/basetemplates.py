@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -508,8 +508,9 @@ class LogFormView(View):
                 stitle = u'&#160;'
             w(u'<div class="loginTitle">%s</div>' % stitle)
         w(u'<div class="loginContent">\n')
-        if showmessage and self._cw.message:
-            w(u'<div class="loginMessage">%s</div>\n' % self._cw.message)
+        message = self._cw.message  # don't call self._cw.message twice
+        if showmessage and message:
+            w(u'<div class="loginMessage">%s</div>\n' % message)
         config = self._cw.vreg.config
         if config['auth-mode'] != 'http':
             self.login_form(id) # Cookie authentication
