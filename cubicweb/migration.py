@@ -269,10 +269,7 @@ class MigrationHelper(object):
         banner = """entering the migration python shell
 just type migration commands or arbitrary python code and type ENTER to execute it
 type "exit" or Ctrl-D to quit the shell and resume operation"""
-        # give custom readfunc to avoid http://bugs.python.org/issue1288615
-        def unicode_raw_input(prompt):
-            return unicode(raw_input(prompt), sys.stdin.encoding)
-        interact(banner, readfunc=unicode_raw_input, local=local_ctx)
+        interact(banner, local=local_ctx)
         try:
             readline.write_history_file(histfile)
         except IOError:
