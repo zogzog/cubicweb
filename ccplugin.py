@@ -271,7 +271,7 @@ class PyramidStartHandler(InstanceCommand):
         mon_thread.start()
 
     def configfiles(self, cwconfig):
-        """Generate instance configuration files"""
+        """Generate instance configuration filenames"""
         yield cwconfig.main_config_file()
         for f in (
                 'sources', 'logging.conf', 'pyramid.ini', 'pyramid-debug.ini'):
