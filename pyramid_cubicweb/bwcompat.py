@@ -1,4 +1,5 @@
 import sys
+import logging
 
 from pyramid import security
 from pyramid import tweens
@@ -14,6 +15,9 @@ from cubicweb.web.application import CubicWebPublisher
 from cubicweb.web import LogOut, PublishException
 
 from pyramid_cubicweb.core import cw_to_pyramid
+
+
+log = logging.getLogger(__name__)
 
 
 class PyramidSessionHandler(object):
@@ -145,6 +149,7 @@ class CubicWebPyramidHandler(object):
                 content = vreg['views'].main_template(req, template, view=errview)
             except Exception:
                 content = vreg['views'].main_template(req, 'error-template')
+        log.exception(exc)
         request.response.body = content
         return request.response
 
