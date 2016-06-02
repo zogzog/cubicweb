@@ -1,0 +1,3 @@
+pytest
+hg+https://hg.logilab.org/master/yams@20b43fb67201#egg=yams
+hg+https://hg.logilab.org/master/logilab/common@7ebacaa38380#egg=logilab-common
