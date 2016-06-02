@@ -30,6 +30,7 @@ MAXFD = 1024
 DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE')
 LOG_LEVELS = ('debug', 'info', 'warning', 'error')
 
+
 class PyramidStartHandler(InstanceCommand):
     """Start an interactive pyramid server.
 
@@ -61,7 +62,8 @@ class PyramidStartHandler(InstanceCommand):
         ('loglevel',
          {'short': 'l', 'type': 'choice', 'metavar': '<log level>',
           'default': None, 'choices': LOG_LEVELS,
-          'help': 'debug if -D is set, error otherwise; one of %s' % (LOG_LEVELS,),
+          'help': 'debug if -D is set, error otherwise; '
+                  'one of %s' % (LOG_LEVELS,),
           }),
         ('dbglevel',
          {'type': 'multiple_choice', 'metavar': '<dbg level>',
@@ -87,11 +89,13 @@ class PyramidStartHandler(InstanceCommand):
     )
     if cwversion >= (3, 21, 0):
         options = options + (
-        ('param',
-         {'short': 'p', 'type': 'named', 'metavar': 'key1:value1,key2:value2',
-          'default': {},
-          'help': 'override <key> configuration file option with <value>.',
-         }),
+            ('param',
+             {'short': 'p',
+              'type': 'named',
+              'metavar': 'key1:value1,key2:value2',
+              'default': {},
+              'help': 'override <key> configuration file option with <value>.',
+              }),
         )
 
     _reloader_environ_key = 'CW_RELOADER_SHOULD_RUN'
@@ -318,7 +322,7 @@ class PyramidStartHandler(InstanceCommand):
 
         if self['dbglevel']:
             self['loglevel'] = 'debug'
-            set_debug('|'.join('DBG_'+ x.upper() for x in self['dbglevel']))
+            set_debug('|'.join('DBG_' + x.upper() for x in self['dbglevel']))
         init_cmdline_log_threshold(cwconfig, self['loglevel'])
 
         app = wsgi_application_from_cwconfig(
@@ -372,9 +376,7 @@ def read_pidfile(filename):
 
 
 def _turn_sigterm_into_systemexit():
-    """
-    Attempts to turn a SIGTERM exception into a SystemExit exception.
-    """
+    """Attempts to turn a SIGTERM exception into a SystemExit exception."""
     try:
         import signal
     except ImportError:
@@ -386,14 +388,14 @@ def _turn_sigterm_into_systemexit():
 
 
 class Monitor(object):
-    """
-    A file monitor and server stopper.
+    """A file monitor and server stopper.
 
     It is a simplified version of pyramid pserve.Monitor, with little changes:
 
     -   The constructor takes extra_files, atexit, nomodules and filelist_path
     -   The process is stopped by auto-kill with signal SIGTERM
     """
+
     def __init__(self, poll_interval=1, extra_files=[], atexit=None,
                  nomodules=False, filelist_path=None):
         self.module_mtimes = {}
@@ -439,7 +441,7 @@ class Monitor(object):
                 continue
             if filename.endswith('.pyc') and os.path.exists(filename[:-1]):
                 mtime = max(os.stat(filename[:-1]).st_mtime, mtime)
-            if not filename in self.module_mtimes:
+            if filename not in self.module_mtimes:
                 self.module_mtimes[filename] = mtime
             elif self.module_mtimes[filename] < mtime:
                 print('%s changed; reloading...' % filename)
