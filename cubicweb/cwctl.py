@@ -382,7 +382,7 @@ class CreateInstanceCommand(Command):
         if not self.config.automatic:
             sections = set(sect.lower() for sect, opt, odict in config.all_options()
                            if 'type' in odict
-                           and odict.get('level') <= self.config.config_level)
+                           and odict.get('level', 0) <= self.config.config_level)
             for section in sections:
                 if section not in ('main', 'email', 'web'):
                     print('\n' + underline_title('%s options' % section))
