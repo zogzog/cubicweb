@@ -96,8 +96,9 @@ def CWSessionFactory(
                 return
 
             with self.repo.internal_cnx() as cnx:
-                session = cnx.find('CWSession', eid=self.sessioneid).one()
-                value = session.cwsessiondata
+                value_rset = cnx.execute('Any D WHERE X eid %(x)s, X cwsessiondata D',
+                                         {'x': self.sessioneid})
+                value = value_rset[0][0]
                 if value:
                     # Use directly dict.update to avoir _set_accessed to be
                     # recursively called
