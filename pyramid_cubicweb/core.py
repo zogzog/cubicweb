@@ -341,7 +341,7 @@ def get_principals(login, request):
 
     .. note::
 
-        It the default authentication policy is not used, make sure this
+        If the default authentication policy is not used, make sure this
         function gets called by the active authentication policy.
 
     :param login: A cubicweb user eid
