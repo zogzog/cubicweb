@@ -348,7 +348,11 @@ def get_principals(login, request):
         log.exception("Failed")
         raise
 
-    return session.user.groups
+    with session.new_cnx() as cnx:
+        with cnx.security_enabled(read=False):
+            return set(group for group, in cnx.execute(
+                'Any GN WHERE U in_group G, G name GN, U eid %(userid)s',
+                {'userid': login}))
 
 
 def includeme(config):

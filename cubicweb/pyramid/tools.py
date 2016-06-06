@@ -27,10 +27,7 @@ def clone_user(repo, user):
         None,
         rset=user.cw_rset.copy(),
         row=user.cw_row,
-        col=user.cw_col,
-        groups=set(user._groups) if hasattr(user, '_groups') else None,
-        properties=dict(user._properties)
-        if hasattr(user, '_properties') else None)
+        col=user.cw_col)
     clone.cw_attr_cache = dict(user.cw_attr_cache)
     return clone
 
