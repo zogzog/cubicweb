@@ -19,6 +19,11 @@
 """cubicweb global packaging information for the cubicweb knowledge management
 software
 """
+import sys
+from os import listdir
+from os.path import join, isdir
+import glob
+
 
 modname = distname = "cubicweb"
 
@@ -32,10 +37,10 @@ web = 'https://www.cubicweb.org'
 license = 'LGPL'
 
 classifiers = [
-           'Environment :: Web Environment',
-           'Framework :: CubicWeb',
-           'Programming Language :: Python',
-           'Programming Language :: JavaScript',
+    'Environment :: Web Environment',
+    'Framework :: CubicWeb',
+    'Programming Language :: Python',
+    'Programming Language :: JavaScript',
 ]
 
 __depends__ = {
@@ -67,12 +72,7 @@ __recommends__ = {
     'Twisted': '< 16.0.0',
     #'Products.FCKeditor':'',
     #'SimpleTAL':'>= 4.1.6',
-    }
-
-import sys
-from os import listdir, environ
-from os.path import join, isdir
-import glob
+}
 
 scripts = [s for s in glob.glob(join('bin', 'cubicweb-*'))
            if not s.endswith('.bat')]
@@ -101,8 +101,8 @@ else:
 
 # data files that shall be copied into the main package directory
 package_data = {
-    'cubicweb.web.views':['*.pt'],
-    }
+    'cubicweb.web.views': ['*.pt'],
+}
 
 try:
     # data files that shall be copied outside the main package directory
