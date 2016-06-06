@@ -26,8 +26,9 @@ from cubicweb.server import hook
 from cubicweb.entities.authobjs import user_session_cache_key
 
 
-def get_user_sessions(repo, ueid):
-    for session in repo._sessions.values():
+# take cnx and not repo because it's needed for other sessions implementation (e.g. pyramid)
+def get_user_sessions(cnx, ueid):
+    for session in cnx.repo._sessions.values():
         if ueid == session.user.eid:
             yield session
 
@@ -107,7 +108,7 @@ class SyncInGroupHook(SyncSessionHook):
             opcls = _DeleteGroupOp
         else:
             opcls = _AddGroupOp
-        for session in get_user_sessions(self._cw.repo, self.eidfrom):
+        for session in get_user_sessions(self._cw, self.eidfrom):
             opcls(self._cw, session=session, group_eid=self.eidto)
 
 
@@ -131,7 +132,7 @@ class UserDeletedHook(SyncSessionHook):
     events = ('after_delete_entity',)
 
     def __call__(self):
-        for session in get_user_sessions(self._cw.repo, self.entity.eid):
+        for session in get_user_sessions(self._cw, self.entity.eid):
             _CloseSessionOp(self._cw, session=session)
 
 
@@ -228,7 +229,7 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
         except ValueError as ex:
             raise validation_error(entity, {('value', 'subject'): str(ex)})
         if entity.for_user:
-            for session in get_user_sessions(cnx.repo, entity.for_user[0].eid):
+            for session in get_user_sessions(cnx, entity.for_user[0].eid):
                 _ChangeUserCWPropertyOp(cnx, session=session, key=key, value=value)
         else:
             _ChangeSiteWideCWPropertyOp(cnx, cwprop=self.entity)
@@ -263,7 +264,7 @@ class AddForUserRelationHook(SyncSessionHook):
         if cnx.vreg.property_info(key)['sitewide']:
             msg = _("site-wide property can't be set for user")
             raise validation_error(eidfrom, {('for_user', 'subject'): msg})
-        for session in get_user_sessions(cnx.repo, self.eidto):
+        for session in get_user_sessions(cnx, self.eidto):
             _ChangeUserCWPropertyOp(cnx, session=session, key=key, value=value)
 
 
@@ -276,5 +277,5 @@ class DelForUserRelationHook(AddForUserRelationHook):
         key = cnx.execute('Any K WHERE P eid %(x)s, P pkey K', {'x': self.eidfrom})[0][0]
         cnx.transaction_data.setdefault('pendingrelations', []).append(
             (self.eidfrom, self.rtype, self.eidto))
-        for session in get_user_sessions(cnx.repo, self.eidto):
+        for session in get_user_sessions(cnx, self.eidto):
             _DelUserCWPropertyOp(cnx, session=session, key=key)
