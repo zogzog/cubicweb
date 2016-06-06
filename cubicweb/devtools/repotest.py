@@ -252,10 +252,10 @@ class BaseQuerierTC(TestCase):
         """lightweight session using the current user with hi-jacked groups"""
         # use self.session.user.eid to get correct owned_by relation, unless explicit eid
         with self.session.new_cnx() as cnx:
-            u = self.repo._build_user(cnx, self.session.user.eid)
-            u._groups = set(groups)
-            s = Session(u, self.repo)
-            return s
+            user_eid = self.session.user.eid
+            session = Session(self.repo._build_user(cnx, user_eid), self.repo)
+            session.data['%s-groups' % user_eid] = set(groups)
+            return session
 
     def qexecute(self, rql, args=None, build_descr=True):
         with self.session.new_cnx() as cnx:

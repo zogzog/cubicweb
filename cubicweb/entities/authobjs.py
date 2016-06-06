@@ -26,6 +26,11 @@ from logilab.common.decorators import cached
 from cubicweb import Unauthorized
 from cubicweb.entities import AnyEntity, fetch_config
 
+
+def user_session_cache_key(user_eid, data_name):
+    return '{0}-{1}'.format(user_eid, data_name)
+
+
 class CWGroup(AnyEntity):
     __regid__ = 'CWGroup'
     fetch_attrs, cw_fetch_order = fetch_config(['name'])
@@ -54,34 +59,32 @@ class CWUser(AnyEntity):
     AUTHENTICABLE_STATES = ('activated',)
 
     # low level utilities #####################################################
-    def __init__(self, *args, **kwargs):
-        groups = kwargs.pop('groups', None)
-        properties = kwargs.pop('properties', None)
-        super(CWUser, self).__init__(*args, **kwargs)
-        if groups is not None:
-            self._groups = groups
-        if properties is not None:
-            self._properties = properties
 
     @property
     def groups(self):
+        key = user_session_cache_key(self.eid, 'groups')
         try:
-            return self._groups
-        except AttributeError:
-            self._groups = set(g.name for g in self.in_group)
-            return self._groups
+            return self._cw.data[key]
+        except KeyError:
+            with self._cw.security_enabled(read=False):
+                groups = set(group for group, in self._cw.execute(
+                    'Any GN WHERE U in_group G, G name GN, U eid %(userid)s',
+                    {'userid': self.eid}))
+            self._cw.data[key] = groups
+            return groups
 
     @property
     def properties(self):
+        key = user_session_cache_key(self.eid, 'properties')
         try:
-            return self._properties
-        except AttributeError:
-            self._properties = dict(
-                self._cw.execute(
+            return self._cw.data[key]
+        except KeyError:
+            with self._cw.security_enabled(read=False):
+                properties = dict(self._cw.execute(
                     'Any K, V WHERE P for_user U, U eid %(userid)s, '
-                    'P pkey K, P value V',
-                    {'userid': self.eid}))
-            return self._properties
+                    'P pkey K, P value V', {'userid': self.eid}))
+            self._cw.data[key] = properties
+            return properties
 
     def prefered_language(self, language=None):
         """return language used by this user, if explicitly defined (eg not

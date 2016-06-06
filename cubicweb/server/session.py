@@ -305,7 +305,6 @@ class Connection(RequestSessionBase):
         # other session utility
         if session.user.login == '__internal_manager__':
             self.user = session.user
-            self.set_language(self.user.prefered_language())
         else:
             self._set_user(session.user)
 

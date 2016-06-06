@@ -138,10 +138,12 @@ class ServerMigrationHelper(MigrationHelper):
         while True:
             try:
                 self.cnx = repoapi.connect(self.repo, login, password=pwd)
-                if not 'managers' in self.cnx.user.groups:
-                    print('migration need an account in the managers group')
-                else:
-                    break
+                with self.cnx:  # needed to retrieve user's groups
+                    if 'managers' not in self.cnx.user.groups:
+                        print('migration need an account in the managers group')
+                    else:
+                        break
+                self.cnx._open = None  # XXX needed to reuse it later
             except AuthenticationError:
                 print('wrong user/password')
             except (KeyboardInterrupt, EOFError):

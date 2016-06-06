@@ -136,6 +136,8 @@ class MoreFieldsTC(CubicWebTC):
             req.cnx.create_entity('CWProperty', pkey=u"ui.default-text-format", value=u"text/rest",
                                   for_user=req.user.eid)
             req.cnx.commit()
+        with self.admin_access.web_request() as req:
+            form = EntityFieldsForm(req, entity=e)
             self.assertEqual(description_format_field.value(form), 'text/rest')
 
     def test_property_key_field(self):

@@ -51,9 +51,9 @@ SESSION_MANAGER = None
 def anonymized_request(req):
     orig_cnx = req.cnx
     anon_cnx = anonymous_cnx(orig_cnx.session.repo)
-    req.set_cnx(anon_cnx)
     try:
         with anon_cnx:
+            req.set_cnx(anon_cnx)
             yield req
     finally:
         req.set_cnx(orig_cnx)
@@ -262,9 +262,10 @@ class CubicWebPublisher(object):
         try:
             try:
                 session = self.get_session(req)
-                from  cubicweb import repoapi
-                cnx = repoapi.Connection(session)
-                req.set_cnx(cnx)
+                cnx = session.new_cnx()
+                with cnx:  # may need an open connection to access to e.g. properties
+                    req.set_cnx(cnx)
+                cnx._open = None  # XXX needed to reuse it a few line later :'(
             except AuthenticationError:
                 # Keep the dummy session set at initialisation.  such session will work to some
                 # extend but raise an AuthenticationError on any database access.

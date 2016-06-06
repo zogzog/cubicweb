@@ -48,6 +48,8 @@ class FieldsFormTC(CubicWebTC):
             self.assertEqual(StringField().format(form), 'text/plain')
             req.cnx.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
             req.cnx.commit()
+        with self.admin_access.web_request() as req:
+            form = FieldsForm(req, None)
             self.assertEqual(StringField().format(form), 'text/rest')
 
 

@@ -23,12 +23,34 @@ from cubicweb import _
 from cubicweb import UnknownProperty, BadConnectionId, validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.server import hook
+from cubicweb.entities.authobjs import user_session_cache_key
 
 
 def get_user_sessions(repo, ueid):
     for session in repo._sessions.values():
         if ueid == session.user.eid:
             yield session
+
+
+class CachedValueMixin(object):
+    """Mixin class providing methods to retrieve some value, specified through
+    `value_name` attribute, in session data.
+    """
+    value_name = None
+    session = None  # make pylint happy
+
+    @property
+    def cached_value(self):
+        """Return cached value for the user, or None"""
+        key = user_session_cache_key(self.session.user.eid, self.value_name)
+        return self.session.data.get(key, None)
+
+    def update_cached_value(self, value):
+        """Update cached value for the user (modifying the set returned by cached_value may not be
+        necessary depending on session data implementation, e.g. redis)
+        """
+        key = user_session_cache_key(self.session.user.eid, self.value_name)
+        self.session.data[key] = value
 
 
 class SyncSessionHook(hook.Hook):
@@ -38,18 +60,18 @@ class SyncSessionHook(hook.Hook):
 
 # user/groups synchronisation #################################################
 
-class _GroupOperation(hook.Operation):
-    """base class for group operation"""
-    cnxuser = None # make pylint happy
+class _GroupOperation(CachedValueMixin, hook.Operation):
+    """Base class for group operation"""
+    value_name = 'groups'
 
     def __init__(self, cnx, *args, **kwargs):
-        """override to get the group name before actual groups manipulation:
+        """Override to get the group name before actual groups manipulation
 
         we may temporarily loose right access during a commit event, so
         no query should be emitted while comitting
         """
         rql = 'Any N WHERE G eid %(x)s, G name N'
-        result = cnx.execute(rql, {'x': kwargs['geid']}, build_descr=False)
+        result = cnx.execute(rql, {'x': kwargs['group_eid']}, build_descr=False)
         hook.Operation.__init__(self, cnx, *args, **kwargs)
         self.group = result[0][0]
 
@@ -58,25 +80,20 @@ class _DeleteGroupOp(_GroupOperation):
     """Synchronize user when a in_group relation has been deleted"""
 
     def postcommit_event(self):
-        """the observed connections set has been commited"""
-        groups = self.cnxuser.groups
-        try:
-            groups.remove(self.group)
-        except KeyError:
-            self.error('user %s not in group %s',  self.cnxuser, self.group)
+        cached_groups = self.cached_value
+        if cached_groups is not None:
+            cached_groups.remove(self.group)
+            self.update_cached_value(cached_groups)
 
 
 class _AddGroupOp(_GroupOperation):
     """Synchronize user when a in_group relation has been added"""
 
     def postcommit_event(self):
-        """the observed connections set has been commited"""
-        groups = self.cnxuser.groups
-        if self.group in groups:
-            self.warning('user %s already in group %s', self.cnxuser,
-                         self.group)
-        else:
-            groups.add(self.group)
+        cached_groups = self.cached_value
+        if cached_groups is not None:
+            cached_groups.add(self.group)
+            self.update_cached_value(cached_groups)
 
 
 class SyncInGroupHook(SyncSessionHook):
@@ -91,66 +108,81 @@ class SyncInGroupHook(SyncSessionHook):
         else:
             opcls = _AddGroupOp
         for session in get_user_sessions(self._cw.repo, self.eidfrom):
-            opcls(self._cw, cnxuser=session.user, geid=self.eidto)
+            opcls(self._cw, session=session, group_eid=self.eidto)
 
 
-class _DelUserOp(hook.Operation):
-    """close associated user's session when it is deleted"""
-    def __init__(self, cnx, sessionid):
-        self.sessionid = sessionid
-        hook.Operation.__init__(self, cnx)
+class _CloseSessionOp(hook.Operation):
+    """Close user's session when it has been deleted"""
 
     def postcommit_event(self):
         try:
-            self.cnx.repo.close(self.sessionid)
+            # remove cached groups for the user
+            key = user_session_cache_key(self.session.user.eid, 'groups')
+            self.session.data.pop(key, None)
+            self.session.repo.close(self.session.sessionid)
         except BadConnectionId:
             pass  # already closed
 
 
-class CloseDeletedUserSessionsHook(SyncSessionHook):
+class UserDeletedHook(SyncSessionHook):
+    """Watch deletion of user to close its opened session"""
     __regid__ = 'closession'
     __select__ = SyncSessionHook.__select__ & is_instance('CWUser')
     events = ('after_delete_entity',)
 
     def __call__(self):
         for session in get_user_sessions(self._cw.repo, self.entity.eid):
-            _DelUserOp(self._cw, session.sessionid)
+            _CloseSessionOp(self._cw, session=session)
 
 
 # CWProperty hooks #############################################################
 
-class _DelCWPropertyOp(hook.Operation):
-    """a user's custom properties has been deleted"""
-    cwpropdict = key = None # make pylint happy
+
+class _UserPropertyOperation(CachedValueMixin, hook.Operation):
+    """Base class for property operation"""
+    value_name = 'properties'
+    key = None  # make pylint happy
+
+
+class _ChangeUserCWPropertyOp(_UserPropertyOperation):
+    """Synchronize cached user's properties when one has been added/updated"""
+    value = None  # make pylint happy
 
     def postcommit_event(self):
-        """the observed connections set has been commited"""
-        try:
-            del self.cwpropdict[self.key]
-        except KeyError:
-            self.error('%s has no associated value', self.key)
+        cached_props = self.cached_value
+        if cached_props is not None:
+            cached_props[self.key] = self.value
+            self.update_cached_value(cached_props)
 
 
-class _ChangeCWPropertyOp(hook.Operation):
-    """a user's custom properties has been added/changed"""
-    cwpropdict = key = value = None # make pylint happy
+class _DelUserCWPropertyOp(_UserPropertyOperation):
+    """Synchronize cached user's properties when one has been deleted"""
 
     def postcommit_event(self):
-        """the observed connections set has been commited"""
-        self.cwpropdict[self.key] = self.value
+        cached_props = self.cached_value
+        if cached_props is not None:
+            cached_props.pop(self.key, None)
+            self.update_cached_value(cached_props)
 
 
-class _AddCWPropertyOp(hook.Operation):
-    """a user's custom properties has been added/changed"""
-    cwprop = None # make pylint happy
+class _ChangeSiteWideCWPropertyOp(hook.Operation):
+    """Synchronize site wide properties when one has been added/updated"""
+    cwprop = None  # make pylint happy
 
     def postcommit_event(self):
-        """the observed connections set has been commited"""
         cwprop = self.cwprop
         if not cwprop.for_user:
             self.cnx.vreg['propertyvalues'][cwprop.pkey] = \
                 self.cnx.vreg.typed_value(cwprop.pkey, cwprop.value)
-        # if for_user is set, update is handled by a ChangeCWPropertyOp operation
+        # if for_user is set, update is handled by a ChangeUserCWPropertyOp operation
+
+
+class _DelSiteWideCWPropertyOp(hook.Operation):
+    """Synchronize site wide properties when one has been deleted"""
+    key = None  # make pylint happy
+
+    def postcommit_event(self):
+        self.cnx.vreg['propertyvalues'].pop(self.key, None)
 
 
 class AddCWPropertyHook(SyncSessionHook):
@@ -169,12 +201,11 @@ class AddCWPropertyHook(SyncSessionHook):
             msg = _('unknown property key %s')
             raise validation_error(self.entity, {('pkey', 'subject'): msg}, (key,))
         except ValueError as ex:
-            raise validation_error(self.entity,
-                                  {('value', 'subject'): str(ex)})
-        if not cnx.user.matching_groups('managers'):
-            cnx.add_relation(self.entity.eid, 'for_user', cnx.user.eid)
+            raise validation_error(self.entity, {('value', 'subject'): str(ex)})
+        if cnx.user.matching_groups('managers'):
+            _ChangeSiteWideCWPropertyOp(cnx, cwprop=self.entity)
         else:
-            _AddCWPropertyOp(cnx, cwprop=self.entity)
+            cnx.add_relation(self.entity.eid, 'for_user', cnx.user.eid)
 
 
 class UpdateCWPropertyHook(AddCWPropertyHook):
@@ -198,12 +229,9 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
             raise validation_error(entity, {('value', 'subject'): str(ex)})
         if entity.for_user:
             for session in get_user_sessions(cnx.repo, entity.for_user[0].eid):
-                _ChangeCWPropertyOp(cnx, cwpropdict=session.user.properties,
-                                    key=key, value=value)
+                _ChangeUserCWPropertyOp(cnx, session=session, key=key, value=value)
         else:
-            # site wide properties
-            _ChangeCWPropertyOp(cnx, cwpropdict=cnx.vreg['propertyvalues'],
-                              key=key, value=value)
+            _ChangeSiteWideCWPropertyOp(cnx, cwprop=self.entity)
 
 
 class DeleteCWPropertyHook(AddCWPropertyHook):
@@ -217,8 +245,7 @@ class DeleteCWPropertyHook(AddCWPropertyHook):
                 # if for_user was set, delete already handled by hook on for_user deletion
                 break
         else:
-            _DelCWPropertyOp(cnx, cwpropdict=cnx.vreg['propertyvalues'],
-                             key=self.entity.pkey)
+            _DelSiteWideCWPropertyOp(cnx, key=self.entity.pkey)
 
 
 class AddForUserRelationHook(SyncSessionHook):
@@ -237,8 +264,7 @@ class AddForUserRelationHook(SyncSessionHook):
             msg = _("site-wide property can't be set for user")
             raise validation_error(eidfrom, {('for_user', 'subject'): msg})
         for session in get_user_sessions(cnx.repo, self.eidto):
-            _ChangeCWPropertyOp(cnx, cwpropdict=session.user.properties,
-                              key=key, value=value)
+            _ChangeUserCWPropertyOp(cnx, session=session, key=key, value=value)
 
 
 class DelForUserRelationHook(AddForUserRelationHook):
@@ -251,4 +277,4 @@ class DelForUserRelationHook(AddForUserRelationHook):
         cnx.transaction_data.setdefault('pendingrelations', []).append(
             (self.eidfrom, self.rtype, self.eidto))
         for session in get_user_sessions(cnx.repo, self.eidto):
-            _DelCWPropertyOp(cnx, cwpropdict=session.user.properties, key=key)
+            _DelUserCWPropertyOp(cnx, session=session, key=key)

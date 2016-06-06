@@ -480,13 +480,7 @@ class Repository(object):
         st.add_eid_restriction(st.get_variable('X'), 'x', 'Substitute')
         rset = cnx.execute(st.as_string(), {'x': eid})
         assert len(rset) == 1, rset
-        cwuser = rset.get_entity(0, 0)
-        # pylint: disable=W0104
-        # prefetch / cache cwuser's groups and properties. This is especially
-        # useful for internal sessions to avoid security insertions
-        cwuser.groups
-        cwuser.properties
-        return cwuser
+        return rset.get_entity(0, 0)
 
     # public (dbapi) interface ################################################
 

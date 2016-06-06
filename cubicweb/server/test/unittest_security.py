@@ -113,6 +113,7 @@ class SecurityRewritingTC(BaseSecurityTC):
 
     def test_not_relation_read_security(self):
         with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
+            cnx.user.groups  # fill the cache before screwing syntax_tree_search
             self.hijack_source_execute()
             cnx.execute('Any U WHERE NOT A todo_by U, A is Affaire')
             self.assertEqual(self.query[0][1].as_string(),
