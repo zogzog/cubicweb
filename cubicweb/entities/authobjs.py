@@ -19,7 +19,7 @@
 
 __docformat__ = "restructuredtext en"
 
-from six import string_types
+from six import string_types, text_type
 
 from logilab.common.decorators import cached
 
@@ -109,7 +109,7 @@ class CWUser(AnyEntity):
         return self._cw.vreg.property_value(key)
 
     def set_property(self, pkey, value):
-        value = unicode(value)
+        value = text_type(value)
         try:
             prop = self._cw.execute(
                 'CWProperty X WHERE X pkey %(k)s, X for_user U, U eid %(u)s',
