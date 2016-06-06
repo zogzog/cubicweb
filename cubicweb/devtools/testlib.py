@@ -69,7 +69,7 @@ class BaseTestCase(TestCase):
 
     @classproperty
     @cached
-    def datadir(cls): # pylint: disable=E0213
+    def datadir(cls):  # pylint: disable=E0213
         """helper attribute holding the standard test's data directory
         """
         mod = sys.modules[cls.__module__]
@@ -889,7 +889,6 @@ class CubicWebTC(BaseTestCase):
         return req, self.session
 
     def assertAuthSuccess(self, req, origsession, nbsessions=1):
-        sh = self.app.session_handler
         session = self.app.get_session(req)
         cnx = repoapi.Connection(session)
         req.set_cnx(cnx)
@@ -927,7 +926,7 @@ class CubicWebTC(BaseTestCase):
         'text/x-vcard': None,
         'text/calendar': None,
         'image/png': None,
-        }
+    }
     # maps vid : validator name (override content_type_validators)
     vid_validators = dict((vid, htmlparser.VALMAP[valkey])
                           for vid, valkey in VIEW_VALIDATORS.items())
@@ -1055,7 +1054,7 @@ class CubicWebTC(BaseTestCase):
                     # the line number
                     content = u'\n'.join(line_template % (idx + 1, line)
                                          for idx, line in enumerate(content)
-                                         if line_context_filter(idx+1, position))
+                                         if line_context_filter(idx + 1, position))
                     msg += u'\nfor content:\n%s' % content
             exc = AssertionError(msg)
             exc.__traceback__ = tcbk

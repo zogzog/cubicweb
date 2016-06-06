@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,8 +18,8 @@
 """Core hooks: synchronize living session on persistent data changes"""
 
 __docformat__ = "restructuredtext en"
-from cubicweb import _
 
+from cubicweb import _
 from cubicweb import UnknownProperty, BadConnectionId, validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.server import hook
@@ -55,7 +55,7 @@ class _GroupOperation(hook.Operation):
 
 
 class _DeleteGroupOp(_GroupOperation):
-    """synchronize user when a in_group relation has been deleted"""
+    """Synchronize user when a in_group relation has been deleted"""
 
     def postcommit_event(self):
         """the observed connections set has been commited"""
@@ -67,7 +67,8 @@ class _DeleteGroupOp(_GroupOperation):
 
 
 class _AddGroupOp(_GroupOperation):
-    """synchronize user when a in_group relation has been added"""
+    """Synchronize user when a in_group relation has been added"""
+
     def postcommit_event(self):
         """the observed connections set has been commited"""
         groups = self.cnxuser.groups
@@ -79,6 +80,7 @@ class _AddGroupOp(_GroupOperation):
 
 
 class SyncInGroupHook(SyncSessionHook):
+    """Watch addition/removal of in_group relation to synchronize living sessions accordingly"""
     __regid__ = 'syncingroup'
     __select__ = SyncSessionHook.__select__ & hook.match_rtype('in_group')
     events = ('after_delete_relation', 'after_add_relation')
@@ -99,11 +101,10 @@ class _DelUserOp(hook.Operation):
         hook.Operation.__init__(self, cnx)
 
     def postcommit_event(self):
-        """the observed connections set has been commited"""
         try:
             self.cnx.repo.close(self.sessionid)
         except BadConnectionId:
-            pass # already closed
+            pass  # already closed
 
 
 class CloseDeletedUserSessionsHook(SyncSessionHook):
@@ -112,7 +113,6 @@ class CloseDeletedUserSessionsHook(SyncSessionHook):
     events = ('after_delete_entity',)
 
     def __call__(self):
-        """modify user permission, need to update users"""
         for session in get_user_sessions(self._cw.repo, self.entity.eid):
             _DelUserOp(self._cw, session.sessionid)
 
@@ -211,11 +211,10 @@ class DeleteCWPropertyHook(AddCWPropertyHook):
     events = ('before_delete_entity',)
 
     def __call__(self):
-        eid = self.entity.eid
         cnx = self._cw
         for eidfrom, rtype, eidto in cnx.transaction_data.get('pendingrelations', ()):
             if rtype == 'for_user' and eidfrom == self.entity.eid:
-                # if for_user was set, delete has already been handled
+                # if for_user was set, delete already handled by hook on for_user deletion
                 break
         else:
             _DelCWPropertyOp(cnx, cwpropdict=cnx.vreg['propertyvalues'],
@@ -233,7 +232,7 @@ class AddForUserRelationHook(SyncSessionHook):
         if not cnx.entity_metas(eidfrom)['type'] == 'CWProperty':
             return
         key, value = cnx.execute('Any K,V WHERE P eid %(x)s,P pkey K,P value V',
-                                     {'x': eidfrom})[0]
+                                 {'x': eidfrom})[0]
         if cnx.vreg.property_info(key)['sitewide']:
             msg = _("site-wide property can't be set for user")
             raise validation_error(eidfrom, {('for_user', 'subject'): msg})
@@ -248,8 +247,7 @@ class DelForUserRelationHook(AddForUserRelationHook):
 
     def __call__(self):
         cnx = self._cw
-        key = cnx.execute('Any K WHERE P eid %(x)s, P pkey K',
-                              {'x': self.eidfrom})[0][0]
+        key = cnx.execute('Any K WHERE P eid %(x)s, P pkey K', {'x': self.eidfrom})[0][0]
         cnx.transaction_data.setdefault('pendingrelations', []).append(
             (self.eidfrom, self.rtype, self.eidto))
         for session in get_user_sessions(cnx.repo, self.eidto):

@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,30 +19,27 @@
 
 __docformat__ = "restructuredtext en"
 
+import contextlib
+import json
 import sys
 from time import clock, time
 from contextlib import contextmanager
 from warnings import warn
-import json
 
 from six import text_type, binary_type
 from six.moves import http_client
 
-from logilab.common.deprecation import deprecated
-
 from rql import BadRQLQuery
 
-from cubicweb import set_log_methods, cwvreg
+from cubicweb import set_log_methods
 from cubicweb import (
-    ValidationError, Unauthorized, Forbidden,
-    AuthenticationError, NoSelectableObject,
-    CW_EVENT_MANAGER)
+    CW_EVENT_MANAGER, ValidationError, Unauthorized, Forbidden,
+    AuthenticationError, NoSelectableObject)
 from cubicweb.repoapi import anonymous_cnx
-from cubicweb.web import LOGGER, component, cors
+from cubicweb.web import cors
 from cubicweb.web import (
-    StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
+    LOGGER, StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
     RemoteCallFailed, InvalidSession, RequestError, PublishException)
-
 from cubicweb.web.request import CubicWebRequestBase
 
 # make session manager available through a global variable so the debug view can
@@ -60,7 +57,6 @@ def anonymized_request(req):
             yield req
     finally:
         req.set_cnx(orig_cnx)
-
 
 
 class CookieSessionHandler(object):
@@ -122,7 +118,7 @@ class CookieSessionHandler(object):
         try:
             sessionid = str(cookie[sessioncookie].value)
             session = self.get_session_by_id(req, sessionid)
-        except (KeyError, InvalidSession): # no valid session cookie
+        except (KeyError, InvalidSession):  # no valid session cookie
             session = self.open_session(req)
         return session
 
@@ -151,7 +147,8 @@ class CookieSessionHandler(object):
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
+
 
 class CubicWebPublisher(object):
     """the publisher is a singleton hold by the web frontend, and is responsible
@@ -206,19 +203,25 @@ class CubicWebPublisher(object):
         accessed path
         """
         def wrap_set_cnx(func):
+
             def wrap_execute(cnx):
                 orig_execute = cnx.execute
+
                 def execute(rql, kwargs=None, build_descr=True):
                     tstart, cstart = time(), clock()
                     rset = orig_execute(rql, kwargs, build_descr=build_descr)
                     cnx.executed_queries.append((rql, kwargs, time() - tstart, clock() - cstart))
                     return rset
+
                 return execute
+
             def set_cnx(cnx):
                 func(cnx)
                 cnx.execute = wrap_execute(cnx)
                 cnx.executed_queries = []
+
             return set_cnx
+
         req.set_cnx = wrap_set_cnx(req.set_cnx)
         try:
             return self.main_handle_request(req, path)
@@ -227,7 +230,7 @@ class CubicWebPublisher(object):
             if cnx:
                 with self._logfile_lock:
                     try:
-                        result = ['\n'+'*'*80]
+                        result = ['\n' + '*' * 80]
                         result.append(req.url())
                         result += ['%s %s -- (%.3f sec, %.3f CPU sec)' % q
                                    for q in cnx.executed_queries]
@@ -236,7 +239,6 @@ class CubicWebPublisher(object):
                         self._query_log.flush()
                     except Exception:
                         self.exception('error while logging queries')
-
 
     def main_handle_request(self, req, path):
         """Process an http request
@@ -255,7 +257,7 @@ class CubicWebPublisher(object):
         if req.authmode == 'http':
             # activate realm-based auth
             realm = self.vreg.config['realm']
-            req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
+            req.set_header('WWW-Authenticate', [('Basic', {'realm': realm})], raw=False)
         content = b''
         try:
             try:
@@ -264,22 +266,18 @@ class CubicWebPublisher(object):
                 cnx = repoapi.Connection(session)
                 req.set_cnx(cnx)
             except AuthenticationError:
-                # Keep the dummy session set at initialisation.
-                # such session with work to an some extend but raise an
-                # AuthenticationError on any database access.
-                import contextlib
+                # Keep the dummy session set at initialisation.  such session will work to some
+                # extend but raise an AuthenticationError on any database access.
+                # XXX We want to clean up this approach in the future. But several cubes like
+                # registration or forgotten password rely on this principle.
                 @contextlib.contextmanager
                 def dummy():
                     yield
                 cnx = dummy()
-                # XXX We want to clean up this approach in the future. But
-                # several cubes like registration or forgotten password rely on
-                # this principle.
-
             # nested try to allow LogOut to delegate logic to AuthenticationError
             # handler
             try:
-                ### Try to generate the actual request content
+                # Try to generate the actual request content
                 with cnx:
                     content = self.core_handle(req, path)
             # Handle user log-out
@@ -330,7 +328,6 @@ class CubicWebPublisher(object):
         assert isinstance(content, binary_type)
         return content
 
-
     def core_handle(self, req, path):
         """method called by the main publisher to process <path>
 
@@ -354,7 +351,7 @@ class CubicWebPublisher(object):
         tstart = clock()
         commited = False
         try:
-            ### standard processing of the request
+            # standard processing of the request
             try:
                 # apply CORS sanity checks
                 cors.process_request(req, self.vreg.config)
@@ -384,7 +381,7 @@ class CubicWebPublisher(object):
                 commited = True
                 if txuuid is not None:
                     req.data['last_undoable_transaction'] = txuuid
-        ### error case
+        # error case
         except NotFound as ex:
             result = self.notfound_content(req)
             req.status_out = ex.status
@@ -393,18 +390,20 @@ class CubicWebPublisher(object):
         except RemoteCallFailed as ex:
             result = self.ajax_error_handler(req, ex)
         except Unauthorized as ex:
-            req.data['errmsg'] = req._('You\'re not authorized to access this page. '
-                                       'If you think you should, please contact the site administrator.')
+            req.data['errmsg'] = req._(
+                'You\'re not authorized to access this page. '
+                'If you think you should, please contact the site administrator.')
             req.status_out = http_client.FORBIDDEN
             result = self.error_handler(req, ex, tb=False)
         except Forbidden as ex:
-            req.data['errmsg'] = req._('This action is forbidden. '
-                                       'If you think it should be allowed, please contact the site administrator.')
+            req.data['errmsg'] = req._(
+                'This action is forbidden. '
+                'If you think it should be allowed, please contact the site administrator.')
             req.status_out = http_client.FORBIDDEN
             result = self.error_handler(req, ex, tb=False)
         except (BadRQLQuery, RequestError) as ex:
             result = self.error_handler(req, ex, tb=False)
-        ### pass through exception
+        # pass through exception
         except DirectResponse:
             if req.cnx:
                 req.cnx.commit()
@@ -412,7 +411,7 @@ class CubicWebPublisher(object):
         except (AuthenticationError, LogOut):
             # the rollback is handled in the finally
             raise
-        ### Last defense line
+        # Last defense line
         except BaseException as ex:
             req.status_out = http_client.INTERNAL_SERVER_ERROR
             result = self.error_handler(req, ex, tb=True)
@@ -421,7 +420,7 @@ class CubicWebPublisher(object):
                 try:
                     req.cnx.rollback()
                 except Exception:
-                    pass # ignore rollback error at this point
+                    pass  # ignore rollback error at this point
         self.add_undo_link_to_msg(req)
         self.debug('query %s executed in %s sec', req.relative_path(), clock() - tstart)
         return result
@@ -441,7 +440,7 @@ class CubicWebPublisher(object):
         return b''
 
     def validation_error_handler(self, req, ex):
-        ex.translate(req._) # translate messages using ui language
+        ex.translate(req._)  # translate messages using ui language
         if '__errorurl' in req.form:
             forminfo = {'error': ex,
                         'values': req.form,
@@ -486,8 +485,8 @@ class CubicWebPublisher(object):
     def add_undo_link_to_msg(self, req):
         txuuid = req.data.get('last_undoable_transaction')
         if txuuid is not None:
-            msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' %(
-            req.build_url('undo', txuuid=txuuid), req._('undo'))
+            msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' % (
+                req.build_url('undo', txuuid=txuuid), req._('undo'))
             req.append_to_redirect_message(msg)
 
     def ajax_error_handler(self, req, ex):
@@ -498,7 +497,7 @@ class CubicWebPublisher(object):
         if req.status_out < 400:
             # don't overwrite it if it's already set
             req.status_out = status
-        json_dumper = getattr(ex, 'dumps', lambda : json.dumps({'reason': text_type(ex)}))
+        json_dumper = getattr(ex, 'dumps', lambda: json.dumps({'reason': text_type(ex)}))
         return json_dumper().encode('utf-8')
 
     # special case handling
@@ -525,7 +524,8 @@ class CubicWebPublisher(object):
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
+
 
 set_log_methods(CubicWebPublisher, LOGGER)
 set_log_methods(CookieSessionHandler, LOGGER)

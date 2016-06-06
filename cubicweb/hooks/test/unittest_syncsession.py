@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,6 +26,7 @@ from six import text_type
 
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
+
 
 class CWPropertyHooksTC(CubicWebTC):
 

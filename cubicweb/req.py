@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,7 +23,9 @@ from warnings import warn
 from datetime import time, datetime, timedelta
 
 from six import PY2, PY3, text_type
-from six.moves.urllib.parse import parse_qs, parse_qsl, quote as urlquote, unquote as urlunquote, urlsplit, urlunsplit
+from six.moves.urllib.parse import (parse_qs, parse_qsl,
+                                    quote as urlquote, unquote as urlunquote,
+                                    urlsplit, urlunsplit)
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
@@ -38,8 +40,10 @@ from cubicweb.rset import ResultSet
 ONESECOND = timedelta(0, 1, 0)
 CACHE_REGISTRY = {}
 
+
 class FindEntityError(Exception):
     """raised when find_one_entity() can not return one and only one entity"""
+
 
 class Cache(dict):
     def __init__(self):
@@ -59,13 +63,13 @@ class RequestSessionBase(object):
     :attribute vreg.schema: the instance's schema
     :attribute vreg.config: the instance's configuration
     """
-    is_request = True # False for repository session
+    is_request = True  # False for repository session
 
     def __init__(self, vreg):
         self.vreg = vreg
         try:
             encoding = vreg.property_value('ui.encoding')
-        except Exception: # no vreg or property not registered
+        except Exception:  # no vreg or property not registered
             encoding = 'utf-8'
         self.encoding = encoding
         # cache result of execution for (rql expr / eids),
@@ -117,10 +121,12 @@ class RequestSessionBase(object):
 
     def etype_rset(self, etype, size=1):
         """return a fake result set for a particular entity type"""
-        rset = ResultSet([('A',)]*size, '%s X' % etype,
-                         description=[(etype,)]*size)
+        rset = ResultSet([('A',)] * size, '%s X' % etype,
+                         description=[(etype,)] * size)
+
         def get_entity(row, col=0, etype=etype, req=self, rset=rset):
             return req.vreg['etypes'].etype_class(etype)(req, rset, row, col)
+
         rset.get_entity = get_entity
         rset.req = self
         return rset
@@ -255,7 +261,7 @@ class RequestSessionBase(object):
         if _now > cache.latest_cache_lookup + ONESECOND:
             ecache = self.execute(
                 'Any C,T WHERE C is CWCache, C name %(name)s, C timestamp T',
-                {'name':cachename}).get_entity(0,0)
+                {'name': cachename}).get_entity(0, 0)
             cache.latest_cache_lookup = _now
             if not ecache.valid(cache.cache_creation_date):
                 cache.clear()
@@ -330,7 +336,7 @@ class RequestSessionBase(object):
             quoted = quoted.encode(self.encoding)
         try:
             return unicode(urlunquote(quoted), self.encoding)
-        except UnicodeDecodeError: # might occurs on manually typed URLs
+        except UnicodeDecodeError:  # might occurs on manually typed URLs
             return unicode(urlunquote(quoted), 'iso-8859-1')
 
     def url_parse_qsl(self, querystring):
@@ -344,9 +350,8 @@ class RequestSessionBase(object):
         for key, val in parse_qsl(querystring):
             try:
                 yield unicode(key, self.encoding), unicode(val, self.encoding)
-            except UnicodeDecodeError: # might occurs on manually typed URLs
+            except UnicodeDecodeError:  # might occurs on manually typed URLs
                 yield unicode(key, 'iso-8859-1'), unicode(val, 'iso-8859-1')
-
 
     def rebuild_url(self, url, **newparams):
         """return the given url with newparams inserted. If any new params
@@ -410,12 +415,11 @@ class RequestSessionBase(object):
         else:
             initargs.update(kwargs)
         try:
-            view =  self.vreg[__registry].select(__vid, self, rset=rset, **initargs)
+            view = self.vreg[__registry].select(__vid, self, rset=rset, **initargs)
         except NoSelectableObject:
             if __fallback_oid is None:
                 raise
-            view =  self.vreg[__registry].select(__fallback_oid, self,
-                                                 rset=rset, **initargs)
+            view = self.vreg[__registry].select(__fallback_oid, self, rset=rset, **initargs)
         return view.render(w=w, **kwargs)
 
     def printable_value(self, attrtype, value, props=None, displaytime=True,
@@ -474,8 +478,8 @@ class RequestSessionBase(object):
         elif etype == 'Time':
             format = self.property_value('ui.time-format')
             try:
-                # (adim) I can't find a way to parse a Time with a custom format
-                date = strptime(value, format) # this returns a DateTime
+                # (adim) I can't find a way to parse a time with a custom format
+                date = strptime(value, format)  # this returns a datetime
                 return time(date.hour, date.minute, date.second)
             except ValueError:
                 raise ValueError(self._('can\'t parse %(value)r (expected %(format)s)')

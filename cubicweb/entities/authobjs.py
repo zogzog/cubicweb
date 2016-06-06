@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -132,7 +132,7 @@ class CWUser(AnyEntity):
             groups = frozenset((groups,))
         elif isinstance(groups, (tuple, list)):
             groups = frozenset(groups)
-        return len(groups & self.groups) # XXX return the resulting set instead of its size
+        return len(groups & self.groups)  # XXX return the resulting set instead of its size
 
     def is_in_group(self, group):
         """convience / shortcut method to test if the user belongs to `group`
@@ -141,9 +141,8 @@ class CWUser(AnyEntity):
 
     def is_anonymous(self):
         """ checks if user is an anonymous user"""
-        #FIXME on the web-side anonymous user is detected according
-        # to config['anonymous-user'], we don't have this info on
-        # the server side.
+        # FIXME on the web-side anonymous user is detected according to config['anonymous-user'],
+        # we don't have this info on the server side.
         return self.groups == frozenset(('guests', ))
 
     def owns(self, eid):
@@ -162,7 +161,7 @@ class CWUser(AnyEntity):
 
         if self.firstname and self.surname:
             return self._cw._('%(firstname)s %(surname)s') % {
-                'firstname': self.firstname, 'surname' : self.surname}
+                'firstname': self.firstname, 'surname': self.surname}
         if self.firstname:
             return self.firstname
         return self.login

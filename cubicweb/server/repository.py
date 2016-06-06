@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,7 +29,6 @@ from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
-import threading
 from warnings import warn
 from itertools import chain
 from time import time, localtime, strftime
@@ -51,10 +50,13 @@ from cubicweb import cwvreg, schema, server
 from cubicweb.server import ShuttingDown, utils, hook, querier, sources
 from cubicweb.server.session import Session, InternalManager
 
-NO_CACHE_RELATIONS = set( [('owned_by', 'object'),
-                           ('created_by', 'object'),
-                           ('cw_source', 'object'),
-                           ])
+
+NO_CACHE_RELATIONS = set([
+    ('owned_by', 'object'),
+    ('created_by', 'object'),
+    ('cw_source', 'object'),
+])
+
 
 def prefill_entity_caches(entity):
     cnx = entity._cw
@@ -73,6 +75,7 @@ def prefill_entity_caches(entity):
         if rtype in schema.VIRTUAL_RTYPES or (rtype, 'object') in NO_CACHE_RELATIONS:
             continue
         entity.cw_set_relation_cache(rtype, 'object', cnx.empty_rset())
+
 
 def del_existing_rel_if_needed(cnx, eidfrom, rtype, eidto):
     """delete existing relation when adding a new one if card is 1 or ?
@@ -120,7 +123,7 @@ def preprocess_inlined_relations(cnx, entity):
     eschema = entity.e_schema
     for attr in entity.cw_edited:
         rschema = eschema.subjrels[attr]
-        if not rschema.final: # inlined relation
+        if not rschema.final:  # inlined relation
             value = entity.cw_edited[attr]
             relations.append((attr, value))
             cnx.update_rel_cache_add(entity.eid, attr, value)
@@ -128,7 +131,7 @@ def preprocess_inlined_relations(cnx, entity):
             if rdef.cardinality[1] in '1?' and activeintegrity:
                 with cnx.security_enabled(read=False):
                     cnx.execute('DELETE X %s Y WHERE Y eid %%(y)s' % attr,
-                                    {'x': entity.eid, 'y': value})
+                                {'x': entity.eid, 'y': value})
     return relations
 
 
@@ -168,7 +171,7 @@ class Repository(object):
         self._running_threads = []
         # initial schema, should be build or replaced latter
         self.schema = schema.CubicWebSchema(config.appid)
-        self.vreg.schema = self.schema # until actual schema is loaded...
+        self.vreg.schema = self.schema  # until actual schema is loaded...
         # shutdown flag
         self.shutting_down = False
         # sources (additional sources info in the system database)
@@ -186,6 +189,7 @@ class Repository(object):
             self.init_cnxset_pool()
         # the hooks manager
         self.hm = hook.HooksManager(self.vreg)
+
         # registry hook to fix user class on registry reload
         @onevent('after-registry-reload', self)
         def fix_user_classes(self):
@@ -247,7 +251,8 @@ class Repository(object):
         # 4. close initialization connection set and reopen fresh ones for
         #    proper initialization
         self._get_cnxset().close(True)
-        self.cnxsets = [] # list of available cnxsets (can't iterate on a Queue)
+        # list of available cnxsets (can't iterate on a Queue)
+        self.cnxsets = []
         for i in range(config['connections-pool-size']):
             self.cnxsets.append(self.system_source.wrapped_connection())
             self._cnxsets_pool.put_nowait(self.cnxsets[-1])
@@ -256,15 +261,14 @@ class Repository(object):
 
     def init_sources_from_database(self):
         self.sources_by_eid = {}
-        if self.config.quick_start \
-               or not 'CWSource' in self.schema: # # 3.10 migration
+        if self.config.quick_start or 'CWSource' not in self.schema:  # 3.10 migration
             self.system_source.init_creating()
             return
         with self.internal_cnx() as cnx:
             # FIXME: sources should be ordered (add_entity priority)
             for sourceent in cnx.execute(
-                'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
-                'S name SN, S type SA, S config SC').entities():
+                    'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
+                    'S name SN, S type SA, S config SC').entities():
                 if sourceent.name == 'system':
                     self.system_source.eid = sourceent.eid
                     self.sources_by_eid[sourceent.eid] = self.system_source
@@ -349,8 +353,9 @@ class Repository(object):
             # register a task to cleanup expired session
             self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
             assert self.cleanup_session_time > 0
-            cleanup_session_interval = min(60*60, self.cleanup_session_time / 3)
-            assert self._tasks_manager is not None, "This Repository is not intended to be used as a server"
+            cleanup_session_interval = min(60 * 60, self.cleanup_session_time / 3)
+            assert self._tasks_manager is not None, \
+                "This Repository is not intended to be used as a server"
             self._tasks_manager.add_looping_task(cleanup_session_interval,
                                                  self.clean_sessions)
 
@@ -365,7 +370,8 @@ class Repository(object):
         XXX __init__ or in external codes (various server managers).
         """
         self._prepare_startup()
-        assert self._tasks_manager is not None, "This Repository is not intended to be used as a server"
+        assert self._tasks_manager is not None,\
+            "This Repository is not intended to be used as a server"
         self._tasks_manager.start()
 
     def looping_task(self, interval, func, *args):
@@ -374,14 +380,14 @@ class Repository(object):
         looping tasks can only be registered during repository initialization,
         once done this method will fail.
         """
-        assert self._tasks_manager is not None, "This Repository is not intended to be used as a server"
+        assert self._tasks_manager is not None,\
+            "This Repository is not intended to be used as a server"
         self._tasks_manager.add_looping_task(interval, func, *args)
 
     def threaded_task(self, func):
         """start function in a separated thread"""
         utils.RepoThread(func, self._running_threads).start()
 
-    #@locked
     def _get_cnxset(self):
         try:
             return self._cnxsets_pool.get(True, timeout=5)
@@ -430,8 +436,8 @@ class Repository(object):
             hits, misses = self.system_source.cache_hit, self.system_source.cache_miss
             self.info('sql cache hit/miss: %s/%s (%s%% hits)', hits, misses,
                       (hits * 100) / (hits + misses))
-            nocache  = self.system_source.no_cache
-            self.info('sql cache usage: %s/%s (%s%%)', hits+ misses, nocache,
+            nocache = self.system_source.no_cache
+            self.info('sql cache usage: %s/%s (%s%%)', hits + misses, nocache,
                       ((hits + misses) * 100) / (hits + misses + nocache))
         except ZeroDivisionError:
             pass
@@ -458,7 +464,7 @@ class Repository(object):
         eid = self.check_auth_info(cnx, login, authinfo)
         cwuser = self._build_user(cnx, eid)
         if self.config.consider_user_state and \
-               not cwuser.cw_adapt_to('IWorkflowable').state in cwuser.AUTHENTICABLE_STATES:
+           not cwuser.cw_adapt_to('IWorkflowable').state in cwuser.AUTHENTICABLE_STATES:
             raise AuthenticationError('user is not in authenticable state')
         return cwuser
 
@@ -480,7 +486,7 @@ class Repository(object):
     # public (dbapi) interface ################################################
 
     @deprecated("[3.19] use _cw.call_service('repo_stats')")
-    def stats(self): # XXX restrict to managers session?
+    def stats(self):  # XXX restrict to managers session?
         """Return a dictionary containing some statistics about the repository
         resources usage.
 
@@ -548,8 +554,8 @@ class Repository(object):
         vcconf = {}
         with self.internal_cnx() as cnx:
             for pk, version in cnx.execute(
-                'Any K,V WHERE P is CWProperty, P value V, P pkey K, '
-                'P pkey ~="system.version.%"', build_descr=False):
+                    'Any K,V WHERE P is CWProperty, P value V, P pkey K, '
+                    'P pkey ~="system.version.%"', build_descr=False):
                 cube = pk.split('.')[-1]
                 # XXX cubicweb migration
                 if cube in CW_MIGRATION_MAP:
@@ -692,8 +698,7 @@ class Repository(object):
         connections have all hooks beside security enabled.
         """
         with Session(InternalManager(), self).new_cnx() as cnx:
-            cnx.user._cw = cnx  # XXX remove when "vreg = user._cw.vreg"
-                                # hack in entity.py is gone
+            cnx.user._cw = cnx  # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
             with cnx.security_enabled(read=False, write=False):
                 yield cnx
 
@@ -732,12 +737,12 @@ class Repository(object):
         rqlcache = self.querier._rql_cache
         for eid in eids:
             try:
-                etype, extid, auri = etcache.pop(int(eid)) # may be a string in some cases
-                rqlcache.pop( ('%s X WHERE X eid %s' % (etype, eid),), None)
+                etype, extid, auri = etcache.pop(int(eid))  # may be a string in some cases
+                rqlcache.pop(('%s X WHERE X eid %s' % (etype, eid),), None)
                 extidcache.pop(extid, None)
             except KeyError:
                 etype = None
-            rqlcache.pop( ('Any X WHERE X eid %s' % eid,), None)
+            rqlcache.pop(('Any X WHERE X eid %s' % eid,), None)
             self.system_source.clear_eid_cache(eid, etype)
 
     def type_from_eid(self, eid, cnx):
@@ -846,7 +851,7 @@ class Repository(object):
             with cnx.running_hooks_ops():
                 for rschema, _, role in entities[0].e_schema.relation_definitions():
                     if rschema.rule:
-                        continue # computed relation
+                        continue  # computed relation
                     rtype = rschema.type
                     if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
                         continue
@@ -861,9 +866,10 @@ class Repository(object):
                     except ValidationError:
                         raise
                     except Unauthorized:
-                        self.exception('Unauthorized exception while cascading delete for entity %s. '
-                                       'RQL: %s.\nThis should not happen since security is disabled here.',
-                                       entities, rql)
+                        self.exception(
+                            'Unauthorized exception while cascading delete for entity %s. '
+                            'RQL: %s.\nThis should not happen since security is disabled here.',
+                            entities, rql)
                         raise
                     except Exception:
                         if self.config.mode == 'test':
@@ -891,7 +897,7 @@ class Repository(object):
         the entity instance
         """
         entity = edited.entity
-        entity._cw_is_saved = False # entity has an eid but is not yet saved
+        entity._cw_is_saved = False  # entity has an eid but is not yet saved
         # init edited_attributes before calling before_add_entity hooks
         entity.cw_edited = edited
         source = self.system_source
@@ -920,9 +926,9 @@ class Repository(object):
         # call hooks for inlined relations
         for attr, value in relations:
             self.hm.call_hooks('before_add_relation', cnx,
-                                eidfrom=entity.eid, rtype=attr, eidto=value)
+                               eidfrom=entity.eid, rtype=attr, eidto=value)
             self.hm.call_hooks('after_add_relation', cnx,
-                                eidfrom=entity.eid, rtype=attr, eidto=value)
+                               eidfrom=entity.eid, rtype=attr, eidto=value)
         return entity.eid
 
     def glob_update_entity(self, cnx, edited):
@@ -954,7 +960,7 @@ class Repository(object):
                     # inlined relation
                     previous_value = entity.related(attr) or None
                     if previous_value is not None:
-                        previous_value = previous_value[0][0] # got a result set
+                        previous_value = previous_value[0][0]  # got a result set
                         if previous_value == entity.cw_attr_cache[attr]:
                             previous_value = None
                         else:
@@ -996,7 +1002,6 @@ class Repository(object):
             if orig_edited is not None:
                 entity.cw_edited = orig_edited
 
-
     def glob_delete_entities(self, cnx, eids):
         """delete a list of  entities and all related entities from the repository"""
         # mark eids as being deleted in cnx info and setup cache update
@@ -1009,7 +1014,7 @@ class Repository(object):
             eids = frozenset(eids)
         eids = eids - op._container
         op._container |= eids
-        data_by_etype = {} # values are [list of entities]
+        data_by_etype = {}  # values are [list of entities]
         #
         # WARNING: the way this dictionary is populated is heavily optimized
         # and does not use setdefault on purpose. Unless a new release
@@ -1026,7 +1031,7 @@ class Repository(object):
         source = self.system_source
         for etype, entities in data_by_etype.items():
             if server.DEBUG & server.DBG_REPO:
-                print('DELETE entities', etype, [entity.eid for entity in entities])
+                print('DELETE entities', etype, [e.eid for e in entities])
             self.hm.call_hooks('before_delete_entity', cnx, entities=entities)
             self._delete_cascade_multi(cnx, entities)
             source.delete_entities(cnx, entities)
@@ -1111,12 +1116,10 @@ class Repository(object):
         self.hm.call_hooks('after_delete_relation', cnx,
                            eidfrom=subject, rtype=rtype, eidto=object)
 
-
-
-
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
+
 
 from logging import getLogger
 from cubicweb import set_log_methods

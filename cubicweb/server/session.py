@@ -1,4 +1,4 @@
-# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,12 +20,13 @@ from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
+import functools
 import sys
 from time import time
 from uuid import uuid4
 from warnings import warn
-import functools
 from contextlib import contextmanager
+from logging import getLogger
 
 from six import text_type
 
@@ -33,7 +34,8 @@ from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
 from logilab.common.registry import objectify_predicate
 
-from cubicweb import QueryError, schema, server, ProgrammingError
+from cubicweb import QueryError, ProgrammingError, schema, server
+from cubicweb import set_log_methods
 from cubicweb.req import RequestSessionBase
 from cubicweb.utils import make_uid
 from cubicweb.rqlrewrite import RQLRewriter
@@ -50,6 +52,7 @@ NO_UNDO_TYPES.add('is_instance_of')
 NO_UNDO_TYPES.add('cw_source')
 # XXX rememberme,forgotpwd,apycot,vcsfile
 
+
 @objectify_predicate
 def is_user_session(cls, req, **kwargs):
     """return 1 when session is not internal.
@@ -57,12 +60,14 @@ def is_user_session(cls, req, **kwargs):
     This predicate can only be used repository side only. """
     return not req.is_internal_session
 
+
 @objectify_predicate
 def is_internal_session(cls, req, **kwargs):
     """return 1 when session is not internal.
 
     This predicate can only be used repository side only. """
     return req.is_internal_session
+
 
 @objectify_predicate
 def repairing(cls, req, **kwargs):
@@ -72,7 +77,7 @@ def repairing(cls, req, **kwargs):
 
 @deprecated('[3.17] use <object>.allow/deny_all_hooks_but instead')
 def hooks_control(obj, mode, *categories):
-    assert mode in  (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
+    assert mode in (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
     if mode == HOOKS_ALLOW_ALL:
         return obj.allow_all_hooks_but(*categories)
     elif mode == HOOKS_DENY_ALL:
@@ -132,6 +137,7 @@ class _hooks_control(object):
 def security_enabled(obj, *args, **kwargs):
     return obj.security_enabled(*args, **kwargs)
 
+
 class _security_enabled(object):
     """context manager to control security w/ session.execute,
 
@@ -165,7 +171,8 @@ class _security_enabled(object):
 
 HOOKS_ALLOW_ALL = object()
 HOOKS_DENY_ALL = object()
-DEFAULT_SECURITY = object() # evaluated to true by design
+DEFAULT_SECURITY = object()  # evaluated to true by design
+
 
 class SessionClosedError(RuntimeError):
     pass
@@ -177,7 +184,7 @@ def _open_only(func):
     def check_open(cnx, *args, **kwargs):
         if not cnx._open:
             raise ProgrammingError('Closed Connection: %s'
-                                    % cnx.connectionid)
+                                   % cnx.connectionid)
         return func(cnx, *args, **kwargs)
     return check_open
 
@@ -275,15 +282,14 @@ class Connection(RequestSessionBase):
         #: (None, 'precommit', 'postcommit', 'uncommitable')
         self.commit_state = None
 
-        ### hook control attribute
+        # hook control attribute
         self.hooks_mode = HOOKS_ALLOW_ALL
         self.disabled_hook_cats = set()
         self.enabled_hook_cats = set()
         self.pruned_hooks_cache = {}
 
-
-        ### security control attributes
-        self._read_security = DEFAULT_SECURITY # handled by a property
+        # security control attributes
+        self._read_security = DEFAULT_SECURITY  # handled by a property
         self.write_security = DEFAULT_SECURITY
 
         # undo control
@@ -302,11 +308,6 @@ class Connection(RequestSessionBase):
             self.set_language(self.user.prefered_language())
         else:
             self._set_user(session.user)
-
-    @_open_only
-    def source_defs(self):
-        """Return the definition of sources used by the repository."""
-        return self.session.repo.source_defs()
 
     @_open_only
     def get_schema(self):
@@ -381,13 +382,13 @@ class Connection(RequestSessionBase):
     # life cycle handling ####################################################
 
     def __enter__(self):
-        assert self._open is None # first opening
+        assert self._open is None  # first opening
         self._open = True
         self.cnxset = self.repo._get_cnxset()
         return self
 
     def __exit__(self, exctype=None, excvalue=None, tb=None):
-        assert self._open # actually already open
+        assert self._open  # actually already open
         self.rollback()
         self._open = False
         self.cnxset.cnxset_freed()
@@ -487,8 +488,7 @@ class Connection(RequestSessionBase):
         # XXX not using _open_only because before at creation time. _set_user
         # call this function to cache the Connection user.
         if entity.cw_etype != 'CWUser' and not self._open:
-            raise ProgrammingError('Closed Connection: %s'
-                                    % self.connectionid)
+            raise ProgrammingError('Closed Connection: %s' % self.connectionid)
         ecache = self.transaction_data.setdefault('ecache', {})
         ecache.setdefault(entity.eid, entity)
 
@@ -526,7 +526,7 @@ class Connection(RequestSessionBase):
         You may use this in hooks when you know both eids of the relation you
         want to add.
         """
-        self.add_relations([(rtype, [(fromeid,  toeid)])])
+        self.add_relations([(rtype, [(fromeid, toeid)])])
 
     @_open_only
     def add_relations(self, relations):
@@ -554,7 +554,6 @@ class Connection(RequestSessionBase):
             self.repo.glob_add_relations(self, relations_dict)
             for edited in edited_entities.values():
                 self.repo.glob_update_entity(self, edited)
-
 
     @_open_only
     def delete_relation(self, fromeid, rtype, toeid):
@@ -606,7 +605,7 @@ class Connection(RequestSessionBase):
             rset = rset.copy()
             entities = list(entities)
             rset.rows.append([targeteid])
-            if not isinstance(rset.description, list): # else description not set
+            if not isinstance(rset.description, list):  # else description not set
                 rset.description = list(rset.description)
             rset.description.append([self.entity_metas(targeteid)['type']])
             targetentity = self.entity_from_eid(targeteid)
@@ -640,7 +639,7 @@ class Connection(RequestSessionBase):
             rset = rset.copy()
             entities = list(entities)
             del rset.rows[idx]
-            if isinstance(rset.description, list): # else description not set
+            if isinstance(rset.description, list):  # else description not set
                 del rset.description[idx]
             del entities[idx]
             rset.rowcount -= 1
@@ -696,11 +695,11 @@ class Connection(RequestSessionBase):
         if self.hooks_mode is HOOKS_DENY_ALL:
             enabledcats = self.enabled_hook_cats
             changes = enabledcats & categories
-            enabledcats -= changes # changes is small hence faster
+            enabledcats -= changes  # changes is small hence faster
         else:
             disabledcats = self.disabled_hook_cats
             changes = categories - disabledcats
-            disabledcats |= changes # changes is small hence faster
+            disabledcats |= changes  # changes is small hence faster
         return tuple(changes)
 
     @_open_only
@@ -716,11 +715,11 @@ class Connection(RequestSessionBase):
         if self.hooks_mode is HOOKS_DENY_ALL:
             enabledcats = self.enabled_hook_cats
             changes = categories - enabledcats
-            enabledcats |= changes # changes is small hence faster
+            enabledcats |= changes  # changes is small hence faster
         else:
             disabledcats = self.disabled_hook_cats
             changes = disabledcats & categories
-            disabledcats -= changes # changes is small hence faster
+            disabledcats -= changes  # changes is small hence faster
         return tuple(changes)
 
     @_open_only
@@ -788,7 +787,7 @@ class Connection(RequestSessionBase):
         etype, extid, source = self.repo.type_and_source_from_eid(eid, self)
         metas = {'type': etype, 'source': source, 'extid': extid}
         if asdict:
-            metas['asource'] = metas['source'] # XXX pre 3.19 client compat
+            metas['asource'] = metas['source']  # XXX pre 3.19 client compat
             return metas
         return etype, source, extid
 
@@ -966,9 +965,11 @@ def cnx_attr(attr_name, writable=False):
 
     This is to be used by session"""
     args = {}
+
     @deprecated('[3.19] use a Connection object instead')
     def attr_from_cnx(session):
         return getattr(session._cnx, attr_name)
+
     args['fget'] = attr_from_cnx
     if writable:
         @deprecated('[3.19] use a Connection object instead')
@@ -1001,7 +1002,7 @@ class Session(object):
 
     def __init__(self, user, repo, _id=None):
         self.sessionid = _id or make_uid(unormalize(user.login))
-        self.user = user # XXX repoapi: deprecated and store only a login.
+        self.user = user  # XXX repoapi: deprecated and store only a login.
         self.repo = repo
         self._timestamp = Timestamp()
         self.data = {}
@@ -1054,9 +1055,10 @@ class Session(object):
         self._timestamp.touch()
 
     local_perm_cache = cnx_attr('local_perm_cache')
+
     @local_perm_cache.setter
     def local_perm_cache(self, value):
-        #base class assign an empty dict:-(
+        # base class assign an empty dict:-(
         assert value == {}
         pass
 
@@ -1078,8 +1080,7 @@ class Session(object):
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
-
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
 
 class InternalManager(object):
@@ -1128,7 +1129,6 @@ class InternalManager(object):
             return self._IEmailable
         return None
 
-from logging import getLogger
-from cubicweb import set_log_methods
+
 set_log_methods(Session, getLogger('cubicweb.session'))
 set_log_methods(Connection, getLogger('cubicweb.session'))

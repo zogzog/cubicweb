@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -36,6 +36,7 @@ class BaseSecurityTC(CubicWebTC):
             self.create_user(cnx, u'iaminusersgrouponly')
             hash = _CRYPTO_CTX.encrypt('oldpassword', scheme='des_crypt')
             self.create_user(cnx, u'oldpassword', password=Binary(hash.encode('ascii')))
+
 
 class LowLevelSecurityFunctionTC(BaseSecurityTC):
 
@@ -82,7 +83,7 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
         """
         with self.repo.internal_cnx() as cnx:
             oldhash = cnx.system_sql("SELECT cw_upassword FROM cw_CWUser "
-                                         "WHERE cw_login = 'oldpassword'").fetchone()[0]
+                                     "WHERE cw_login = 'oldpassword'").fetchone()[0]
             oldhash = self.repo.system_source.binary_to_str(oldhash)
             session = self.repo.new_session('oldpassword', password='oldpassword')
             session.close()
@@ -115,10 +116,11 @@ class SecurityRewritingTC(BaseSecurityTC):
             self.hijack_source_execute()
             cnx.execute('Any U WHERE NOT A todo_by U, A is Affaire')
             self.assertEqual(self.query[0][1].as_string(),
-                              'Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
+                             'Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
             cnx.execute('Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
             self.assertEqual(self.query[0][1].as_string(),
-                              'Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
+                             'Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
+
 
 class SecurityTC(BaseSecurityTC):
 

@@ -338,7 +338,6 @@ class Entity(AppObject):
             return
         else:
             visited.add(eschema.type)
-        _fetchattrs = []
         for attr in sorted(fetchattrs):
             try:
                 rschema = eschema.subjrels[attr]
@@ -366,7 +365,7 @@ class Entity(AppObject):
                 # later information here, systematically add it.
                 rel.change_optional('right')
                 targettypes = rschema.objects(eschema.type)
-                vreg = user._cw.vreg # XXX user._cw.vreg iiiirk
+                vreg = user._cw.vreg  # XXX user._cw.vreg iiiirk
                 etypecls = vreg['etypes'].etype_class(targettypes[0])
                 if len(targettypes) > 1:
                     # find fetch_attrs common to all destination types

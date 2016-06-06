@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,23 +17,21 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.schema"""
 
-import sys
-from os.path import join, isabs, basename, dirname
+from os.path import join, dirname
 
 from logilab.common.testlib import TestCase, unittest_main
 
 from rql import RQLSyntaxError
 
 from yams import ValidationError, BadSchemaDefinition
-from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 from yams.buildobjs import (RelationDefinition, EntityType, RelationType,
-                            Int, String, SubjectRelation, ComputedRelation)
+                            Int, String, ComputedRelation)
 from yams.reader import fill_schema
 
 from cubicweb.schema import (
-    CubicWebSchema, CubicWebEntitySchema, CubicWebSchemaLoader,
+    CubicWebSchema, CubicWebSchemaLoader,
     RQLConstraint, RQLUniqueConstraint, RQLVocabularyConstraint,
-    RQLExpression, ERQLExpression, RRQLExpression,
+    ERQLExpression, RRQLExpression,
     normalize_expression, order_eschemas, guess_rrqlexpr_mainvars,
     build_schema_from_namespace)
 from cubicweb.devtools import TestServerConfiguration as TestConfiguration
@@ -44,18 +42,18 @@ DATADIR = join(dirname(__file__), 'data')
 # build a dummy schema ########################################################
 
 
-PERSONNE_PERMISSIONS =  {
-    'read':   ('managers', 'users', 'guests'),
+PERSONNE_PERMISSIONS = {
+    'read': ('managers', 'users', 'guests'),
     'update': ('managers', 'owners'),
-    'add':    ('managers', ERQLExpression('X travaille S, S owned_by U')),
+    'add': ('managers', ERQLExpression('X travaille S, S owned_by U')),
     'delete': ('managers', 'owners',),
-    }
+}
 
 CONCERNE_PERMISSIONS = {
-    'read':   ('managers', 'users', 'guests'),
-    'add':    ('managers', RRQLExpression('U has_update_permission S')),
+    'read': ('managers', 'users', 'guests'),
+    'add': ('managers', RRQLExpression('U has_update_permission S')),
     'delete': ('managers', RRQLExpression('O owned_by U')),
-    }
+}
 
 schema = CubicWebSchema('Test Schema')
 enote = schema.add_entity_type(EntityType('Note'))
@@ -83,7 +81,7 @@ RELS = (
     ('Personne  concerne  Affaire'),
     ('Personne  concerne  Societe'),
     ('Affaire concerne  Societe'),
-    )
+)
 done = {}
 for rel in RELS:
     _from, _type, _to = rel.split()
@@ -95,6 +93,7 @@ for rel in RELS:
                                                    __permissions__=CONCERNE_PERMISSIONS))
     else:
         schema.add_relation_def(RelationDefinition(_from, _type, _to))
+
 
 class CubicWebSchemaTC(TestCase):
 
@@ -132,94 +131,111 @@ class CubicWebSchemaTC(TestCase):
     def test_erqlexpression(self):
         self.assertRaises(RQLSyntaxError, ERQLExpression, '1')
         expr = ERQLExpression('X travaille S, S owned_by U')
-        self.assertEqual(str(expr), 'Any X WHERE X travaille S, S owned_by U, X eid %(x)s, U eid %(u)s')
+        self.assertEqual(
+            str(expr),
+            'Any X WHERE X travaille S, S owned_by U, X eid %(x)s, U eid %(u)s')
         expr = ERQLExpression('X foo S, S bar U, X baz XE, S quux SE HAVING XE > SE')
-        self.assertEqual(str(expr), 'Any X WHERE X foo S, S bar U, X baz XE, S quux SE, X eid %(x)s, U eid %(u)s HAVING XE > SE')
+        self.assertEqual(
+            str(expr),
+            'Any X WHERE X foo S, S bar U, X baz XE, S quux SE, X eid %(x)s, '
+            'U eid %(u)s HAVING XE > SE')
 
     def test_rrqlexpression(self):
         self.assertRaises(Exception, RRQLExpression, '1')
         self.assertRaises(RQLSyntaxError, RRQLExpression, 'O X Y')
         expr = RRQLExpression('U has_update_permission O')
-        self.assertEqual(str(expr), 'Any O,U WHERE U has_update_permission O, O eid %(o)s, U eid %(u)s')
+        self.assertEqual(
+            str(expr),
+            'Any O,U WHERE U has_update_permission O, O eid %(o)s, U eid %(u)s')
+
 
 loader = CubicWebSchemaLoader()
 config = TestConfiguration('data', __file__)
 config.bootstrap_cubes()
+
 
 class SchemaReaderClassTest(TestCase):
 
     def test_order_eschemas(self):
         schema = loader.load(config)
         self.assertEqual(order_eschemas([schema['Note'], schema['SubNote']]),
-                                         [schema['Note'], schema['SubNote']])
+                         [schema['Note'], schema['SubNote']])
         self.assertEqual(order_eschemas([schema['SubNote'], schema['Note']]),
-                                         [schema['Note'], schema['SubNote']])
+                         [schema['Note'], schema['SubNote']])
 
     def test_knownValues_load_schema(self):
         schema = loader.load(config)
         self.assertIsInstance(schema, CubicWebSchema)
         self.assertEqual(schema.name, 'data')
         entities = sorted([str(e) for e in schema.entities()])
-        expected_entities = ['Ami', 'BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
-                             'Date', 'Datetime', 'Decimal',
-                             'CWCache', 'CWComputedRType', 'CWConstraint',
-                             'CWConstraintType', 'CWDataImport', 'CWEType',
-                             'CWAttribute', 'CWGroup', 'EmailAddress',
-                             'CWRelation', 'CWPermission', 'CWProperty', 'CWRType',
-                             'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
-                             'CWUniqueTogetherConstraint', 'CWUser',
-                             'ExternalUri', 'FakeFile', 'Float', 'Int', 'Interval', 'Note',
-                             'Password', 'Personne', 'Produit',
-                             'RQLExpression', 'Reference',
-                             'Service', 'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
-                             'Tag', 'TZDatetime', 'TZTime', 'Time', 'Transition', 'TrInfo',
-                             'Usine',
-                             'Workflow', 'WorkflowTransition']
+        expected_entities = [
+            'Ami', 'BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
+            'Date', 'Datetime', 'Decimal',
+            'CWCache', 'CWComputedRType', 'CWConstraint',
+            'CWConstraintType', 'CWDataImport', 'CWEType',
+            'CWAttribute', 'CWGroup', 'EmailAddress',
+            'CWRelation', 'CWPermission', 'CWProperty', 'CWRType',
+            'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
+            'CWUniqueTogetherConstraint', 'CWUser',
+            'ExternalUri', 'FakeFile', 'Float', 'Int', 'Interval', 'Note',
+            'Password', 'Personne', 'Produit',
+            'RQLExpression', 'Reference',
+            'Service', 'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
+            'Tag', 'TZDatetime', 'TZTime', 'Time', 'Transition', 'TrInfo',
+            'Usine',
+            'Workflow', 'WorkflowTransition',
+        ]
         self.assertListEqual(sorted(expected_entities), entities)
         relations = sorted([str(r) for r in schema.relations()])
-        expected_relations = ['actionnaire', 'add_permission', 'address', 'alias', 'allowed_transition', 'associe',
-                              'bookmarked_by', 'by_transition', 'buddies',
+        expected_relations = [
+            'actionnaire', 'add_permission', 'address', 'alias', 'allowed_transition', 'associe',
+            'bookmarked_by', 'by_transition', 'buddies',
 
-                              'cardinality', 'comment', 'comment_format',
-                              'composite', 'condition', 'config', 'connait',
-                              'constrained_by', 'constraint_of',
-                              'content', 'content_format', 'contrat_exclusif',
-                              'created_by', 'creation_date', 'cstrtype', 'custom_workflow',
-                              'cwuri', 'cw_for_source', 'cw_import_of', 'cw_host_config_of', 'cw_schema', 'cw_source',
+            'cardinality', 'comment', 'comment_format',
+            'composite', 'condition', 'config', 'connait',
+            'constrained_by', 'constraint_of',
+            'content', 'content_format', 'contrat_exclusif',
+            'created_by', 'creation_date', 'cstrtype', 'custom_workflow',
+            'cwuri', 'cw_for_source', 'cw_import_of', 'cw_host_config_of', 'cw_schema', 'cw_source',
 
-                              'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
-                              'description', 'description_format', 'destination_state', 'dirige',
+            'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval',
+            'delete_permission', 'description', 'description_format', 'destination_state',
+            'dirige',
 
-                              'ean', 'ecrit_par', 'eid', 'end_timestamp', 'evaluee', 'expression', 'exprtype', 'extra_props',
+            'ean', 'ecrit_par', 'eid', 'end_timestamp', 'evaluee', 'expression', 'exprtype',
+            'extra_props',
 
-                              'fabrique_par', 'final', 'firstname', 'for_user', 'formula', 'fournit',
-                              'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
+            'fabrique_par', 'final', 'firstname', 'for_user', 'formula', 'fournit',
+            'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
 
-                              'has_group_permission', 'has_text',
-                              'identity', 'in_group', 'in_state', 'in_synchronization', 'indexed',
-                              'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
+            'has_group_permission', 'has_text',
+            'identity', 'in_group', 'in_state', 'in_synchronization', 'indexed',
+            'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
-                              'label', 'last_login_time', 'latest_retrieval', 'lieu', 'log', 'login',
+            'label', 'last_login_time', 'latest_retrieval', 'lieu', 'log', 'login',
 
-                              'mainvars', 'match_host', 'modification_date',
+            'mainvars', 'match_host', 'modification_date',
 
-                              'name', 'nom',
+            'name', 'nom',
 
-                              'options', 'ordernum', 'owned_by',
+            'options', 'ordernum', 'owned_by',
 
-                              'parser', 'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
+            'parser', 'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
 
-                              'read_permission', 'relation_type', 'relations', 'require_group', 'rule',
+            'read_permission', 'relation_type', 'relations', 'require_group', 'rule',
 
-                              'specializes', 'start_timestamp', 'state_of', 'status', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
+            'specializes', 'start_timestamp', 'state_of', 'status', 'subworkflow',
+            'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
 
-                              'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille', 'type',
+            'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille',
+            'type',
 
-                              'upassword', 'update_permission', 'url', 'uri', 'use_email',
+            'upassword', 'update_permission', 'url', 'uri', 'use_email',
 
-                              'value',
+            'value',
 
-                              'wf_info_for', 'wikiid', 'workflow_of', 'tr_count']
+            'wf_info_for', 'wikiid', 'workflow_of', 'tr_count',
+        ]
 
         self.assertListEqual(sorted(expected_relations), relations)
 
@@ -236,7 +252,7 @@ class SchemaReaderClassTest(TestCase):
                                     'use_email'])
         rels = sorted(r.type for r in eschema.object_relations())
         self.assertListEqual(rels, ['bookmarked_by', 'buddies', 'created_by', 'for_user',
-                                     'identity', 'owned_by', 'wf_info_for'])
+                                    'identity', 'owned_by', 'wf_info_for'])
         rschema = schema.rschema('relation_type')
         properties = rschema.rdef('CWAttribute', 'CWRType')
         self.assertEqual(properties.cardinality, '1*')
@@ -255,13 +271,13 @@ class SchemaReaderClassTest(TestCase):
         schema = loader.load(config)
         aschema = schema['TrInfo'].rdef('comment')
         self.assertEqual(aschema.get_groups('read'),
-                          set(('managers', 'users', 'guests')))
+                         set(('managers', 'users', 'guests')))
         self.assertEqual(aschema.get_rqlexprs('read'),
-                          ())
+                         ())
         self.assertEqual(aschema.get_groups('update'),
-                          set(('managers',)))
+                         set(('managers',)))
         self.assertEqual([x.expression for x in aschema.get_rqlexprs('update')],
-                          ['U has_update_permission X'])
+                         ['U has_update_permission X'])
 
     def test_nonregr_allowed_type_names(self):
         schema = CubicWebSchema('Test Schema')
@@ -290,12 +306,12 @@ class SchemaReaderClassTest(TestCase):
 
         class works_for(RelationDefinition):
             subject = 'Person'
-            object  = 'Company'
+            object = 'Company'
             cardinality = '?*'
 
         class Company(EntityType):
-            total_salary = Int(formula='Any SUM(SA) GROUPBY X WHERE '
-                                       'P works_for X, P salary SA')
+            total_salary = Int(formula='Any SUM(SA) GROUPBY X WHERE P works_for X, P salary SA')
+
         good_schema = build_schema_from_namespace(vars().items())
         rdef = good_schema['Company'].rdef('total_salary')
         # ensure 'X is Company' is added to the rqlst to avoid ambiguities, see #4901163
@@ -306,12 +322,12 @@ class SchemaReaderClassTest(TestCase):
                          {'add': (), 'update': (),
                           'read': ('managers', 'users', 'guests')})
 
-        class Company(EntityType):
+        class Company(EntityType):  # noqa
             total_salary = String(formula='Any SUM(SA) GROUPBY X WHERE '
                                           'P works_for X, P salary SA')
 
         with self.assertRaises(BadSchemaDefinition) as exc:
-            bad_schema = build_schema_from_namespace(vars().items())
+            build_schema_from_namespace(vars().items())
 
         self.assertEqual(str(exc.exception),
                          'computed attribute total_salary on Company: '
@@ -326,7 +342,7 @@ class SchemaReaderComputedRelationAndAttributesTest(TestCase):
             name = String()
 
         class Company(EntityType):
-            name  = String()
+            name = String()
 
         class Service(EntityType):
             name = String()
@@ -355,14 +371,14 @@ class SchemaReaderComputedRelationAndAttributesTest(TestCase):
         schema = build_schema_from_namespace(vars().items())
 
         # check object/subject type
-        self.assertEqual([('Person','Service')],
+        self.assertEqual([('Person', 'Service')],
                          list(schema['produces_and_buys'].rdefs.keys()))
-        self.assertEqual([('Person','Service')],
+        self.assertEqual([('Person', 'Service')],
                          list(schema['produces_and_buys2'].rdefs.keys()))
         self.assertCountEqual([('Company', 'Service'), ('Person', 'Service')],
                               list(schema['reproduce'].rdefs.keys()))
         # check relation definitions are marked infered
-        rdef = schema['produces_and_buys'].rdefs[('Person','Service')]
+        rdef = schema['produces_and_buys'].rdefs[('Person', 'Service')]
         self.assertTrue(rdef.infered)
         # and have no add/delete permissions
         self.assertEqual(rdef.permissions,
@@ -419,30 +435,32 @@ class BadSchemaTC(TestCase):
                    "can't use RRQLExpression on attribute ToTo.attr[String], use an ERQLExpression")
 
     def test_rqlexpr_on_computedrel(self):
-        self._test('rqlexpr_on_computedrel.py',
-                   "can't use rql expression for read permission of relation Subject computed Object")
+        self._test(
+            'rqlexpr_on_computedrel.py',
+            "can't use rql expression for read permission of relation Subject computed Object")
 
 
 class NormalizeExpressionTC(TestCase):
 
     def test(self):
         self.assertEqual(normalize_expression('X  bla Y,Y blur Z  ,  Z zigoulou   X '),
-                                              'X bla Y, Y blur Z, Z zigoulou X')
+                         'X bla Y, Y blur Z, Z zigoulou X')
         self.assertEqual(normalize_expression('X bla Y, Y name "x,y"'),
-                                              'X bla Y, Y name "x,y"')
+                         'X bla Y, Y name "x,y"')
 
 
 class RQLExpressionTC(TestCase):
     def test_comparison(self):
         self.assertEqual(ERQLExpression('X is CWUser', 'X', 0),
-                          ERQLExpression('X is CWUser', 'X', 0))
+                         ERQLExpression('X is CWUser', 'X', 0))
         self.assertNotEqual(ERQLExpression('X is CWUser', 'X', 0),
-                             ERQLExpression('X is CWGroup', 'X', 0))
+                            ERQLExpression('X is CWGroup', 'X', 0))
 
 
 class GuessRrqlExprMainVarsTC(TestCase):
     def test_exists(self):
-        mainvars = guess_rrqlexpr_mainvars(normalize_expression('NOT EXISTS(O team_competition C, C level < 3, C concerns S)'))
+        mainvars = guess_rrqlexpr_mainvars(normalize_expression(
+            'NOT EXISTS(O team_competition C, C level < 3, C concerns S)'))
         self.assertEqual(mainvars, set(['S', 'O']))
 
 
@@ -454,7 +472,7 @@ class RQLConstraintTC(CubicWebTC):
             self.assertRaises(ValidationError,
                               cstr.repo_check, cnx, 1, 'rel', anoneid)
             self.assertEqual(cstr.repo_check(cnx, 1, cnx.user.eid),
-                             None) # no validation error, constraint checked
+                             None)  # no validation error, constraint checked
 
 
 class WorkflowShemaTC(CubicWebTC):
@@ -543,8 +561,10 @@ class CompositeSchemaTC(CubicWebTC):
                      ('transition_of', 'BaseTransition', 'Workflow', 'object'),
                      ('transition_of', 'Transition', 'Workflow', 'object'),
                      ('transition_of', 'WorkflowTransition', 'Workflow', 'object')],
-        'WorkflowTransition': [('condition', 'WorkflowTransition', 'RQLExpression', 'subject'),
-                               ('subworkflow_exit', 'WorkflowTransition', 'SubWorkflowExitPoint', 'subject')]
+        'WorkflowTransition': [
+            ('condition', 'WorkflowTransition', 'RQLExpression', 'subject'),
+            ('subworkflow_exit', 'WorkflowTransition', 'SubWorkflowExitPoint', 'subject')
+        ]
     }
 
     def test_composite_entities(self):

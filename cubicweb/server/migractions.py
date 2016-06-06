@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -39,7 +39,6 @@ import os.path as osp
 from datetime import datetime
 from glob import glob
 from copy import copy
-from warnings import warn
 from contextlib import contextmanager
 
 from six import PY2, text_type
@@ -69,6 +68,7 @@ class ClearGroupMap(hook.Hook):
     __regid__ = 'cw.migration.clear_group_mapping'
     __select__ = hook.Hook.__select__ & is_instance('CWGroup')
     events = ('after_add_entity', 'after_update_entity',)
+
     def __call__(self):
         clear_cache(self.mih, 'group_mapping')
         self.mih._synchronized.clear()
@@ -77,7 +77,7 @@ class ClearGroupMap(hook.Hook):
     def mih_register(cls, repo):
         # may be already registered in tests (e.g. unittest_migractions at
         # least)
-        if not cls.__regid__ in repo.vreg['after_add_entity_hooks']:
+        if cls.__regid__ not in repo.vreg['after_add_entity_hooks']:
             repo.vreg.register(ClearGroupMap)
 
 
@@ -176,7 +176,7 @@ class ServerMigrationHelper(MigrationHelper):
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
         try:
             return super(ServerMigrationHelper, self).cmd_process_script(
-                  migrscript, funcname, *args, **kwargs)
+                migrscript, funcname, *args, **kwargs)
         except ExecutionError as err:
             sys.stderr.write("-> %s\n" % err)
         except BaseException:
@@ -206,7 +206,7 @@ class ServerMigrationHelper(MigrationHelper):
         elif askconfirm and not self.confirm('Backup %s database?' % config.appid):
             print('-> no backup done.')
             return
-        open(backupfile,'w').close() # kinda lock
+        open(backupfile,'w').close()  # kinda lock
         os.chmod(backupfile, 0o600)
         # backup
         source = repo.system_source
@@ -235,7 +235,7 @@ class ServerMigrationHelper(MigrationHelper):
                 # call hooks
                 repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
                 # done
-                print('-> backup file',  backupfile)
+                print('-> backup file', backupfile)
         finally:
             shutil.rmtree(tmpdir)
 
@@ -257,7 +257,7 @@ class ServerMigrationHelper(MigrationHelper):
             for name in bkup.getnames():
                 if name[0] in '/.':
                     raise ExecutionError('Security check failed, path starts with "/" or "."')
-            bkup.close() # XXX seek error if not close+open !?!
+            bkup.close()  # XXX seek error if not close+open !?!
             bkup = tarfile.open(backupfile, 'r|gz')
             bkup.extractall(path=tmpdir)
             bkup.close()
@@ -303,8 +303,8 @@ class ServerMigrationHelper(MigrationHelper):
                         'schema': self.repo.get_schema(),
                         'cnx': self.cnx,
                         'fsschema': self.fs_schema,
-                        'session' : self.cnx,
-                        'repo' : self.repo,
+                        'session': self.cnx,
+                        'repo': self.repo,
                         })
         return context
 
@@ -391,7 +391,7 @@ class ServerMigrationHelper(MigrationHelper):
             for geid, gname in self.rqlexec('Any G, GN WHERE T %s G, G name GN, '
                                             'T eid %%(x)s' % perm, {'x': teid},
                                             ask_confirm=False):
-                if not gname in newgroups:
+                if gname not in newgroups:
                     if not confirm or self.confirm('Remove %s permission of %s to %s?'
                                                    % (action, erschema, gname)):
                         self.rqlexec('DELETE T %s G WHERE G eid %%(x)s, T eid %s'
@@ -414,7 +414,7 @@ class ServerMigrationHelper(MigrationHelper):
             for expreid, expression in self.rqlexec('Any E, EX WHERE T %s E, E expression EX, '
                                                     'T eid %s' % (perm, teid),
                                                     ask_confirm=False):
-                if not expression in newexprs:
+                if expression not in newexprs:
                     if not confirm or self.confirm('Remove %s expression for %s permission of %s?'
                                                    % (expression, action, erschema)):
                         # deleting the relation will delete the expression entity
@@ -458,7 +458,7 @@ class ServerMigrationHelper(MigrationHelper):
         if syncprops:
             assert reporschema.eid, reporschema
             self.rqlexecall(ss.updaterschema2rql(rschema, reporschema.eid),
-                            ask_confirm=self.verbosity>=2)
+                            ask_confirm=self.verbosity >= 2)
         if rschema.rule:
             if syncperms:
                 self._synchronize_permissions(rschema, reporschema.eid)
@@ -492,7 +492,7 @@ class ServerMigrationHelper(MigrationHelper):
         try:
             eschema = self.fs_schema.eschema(etype)
         except KeyError:
-            return # XXX somewhat unexpected, no?...
+            return  # XXX somewhat unexpected, no?...
         if syncprops:
             repospschema = repoeschema.specializes()
             espschema = eschema.specializes()
@@ -513,17 +513,17 @@ class ServerMigrationHelper(MigrationHelper):
                 if rschema in VIRTUAL_RTYPES:
                     continue
                 if role == 'subject':
-                    if not rschema in repoeschema.subject_relations():
+                    if rschema not in repoeschema.subject_relations():
                         continue
                     subjtypes, objtypes = [etype], targettypes
-                else: # role == 'object'
-                    if not rschema in repoeschema.object_relations():
+                else:  # role == 'object'
+                    if rschema not in repoeschema.object_relations():
                         continue
                     subjtypes, objtypes = targettypes, [etype]
                 self._synchronize_rschema(rschema, syncrdefs=False,
                                           syncprops=syncprops, syncperms=syncperms)
-                if rschema.rule: # rdef for computed rtype are infered hence should not be
-                                 # synchronized
+                if rschema.rule:  # rdef for computed rtype are infered hence should not be
+                                  # synchronized
                     continue
                 reporschema = self.repo.schema.rschema(rschema)
                 for subj in subjtypes:
@@ -532,7 +532,7 @@ class ServerMigrationHelper(MigrationHelper):
                             continue
                         self._synchronize_rdef_schema(subj, rschema, obj,
                                                       syncprops=syncprops, syncperms=syncperms)
-        if syncprops: # need to process __unique_together__ after rdefs were processed
+        if syncprops:  # need to process __unique_together__ after rdefs were processed
             # mappings from constraint name to columns
             # filesystem (fs) and repository (repo) wise
             fs = {}
@@ -592,7 +592,7 @@ class ServerMigrationHelper(MigrationHelper):
                 self._synchronized.add((objtype, rschema, subjtype))
         rdef = rschema.rdef(subjtype, objtype)
         if rdef.infered:
-            return # don't try to synchronize infered relation defs
+            return  # don't try to synchronize infered relation defs
         repordef = reporschema.rdef(subjtype, objtype)
         confirm = self.verbosity >= 2
         if syncprops:
@@ -619,7 +619,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.rqlexecall(ss.constraints2rql(cstrtype_map, newconstraints,
                                                repordef.eid),
                             ask_confirm=confirm)
-        if syncperms and not rschema in VIRTUAL_RTYPES:
+        if syncperms and rschema not in VIRTUAL_RTYPES:
             self._synchronize_permissions(rdef, repordef.eid)
 
     # base actions ############################################################
@@ -630,7 +630,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
 
     def cmd_add_cube(self, cube, update_database=True):
-        self.cmd_add_cubes( (cube,), update_database)
+        self.cmd_add_cubes((cube,), update_database)
 
     def cmd_add_cubes(self, cubes, update_database=True):
         """update_database is telling if the database schema should be updated
@@ -642,11 +642,11 @@ class ServerMigrationHelper(MigrationHelper):
         if not newcubes:
             return
         for cube in newcubes:
-            self.cmd_set_property('system.version.'+cube,
+            self.cmd_set_property('system.version.' + cube,
                                   self.config.cube_version(cube))
             # ensure added cube is in config cubes
             # XXX worth restoring on error?
-            if not cube in self.config._cubes:
+            if cube not in self.config._cubes:
                 self.config._cubes += (cube,)
         if not update_database:
             self.commit()
@@ -658,17 +658,16 @@ class ServerMigrationHelper(MigrationHelper):
         self.update_context('fsschema', self.fs_schema)
         new = set()
         # execute pre-create files
-        driver = self.repo.system_source.dbdriver
         for cube in reversed(newcubes):
             self.cmd_install_custom_sql_scripts(cube)
             self.cmd_exec_event_script('precreate', cube)
         # add new entity and relation types
         for rschema in newcubes_schema.relations():
-            if not rschema in self.repo.schema:
+            if rschema not in self.repo.schema:
                 self.cmd_add_relation_type(rschema.type)
                 new.add(rschema.type)
         toadd = [eschema for eschema in newcubes_schema.entities()
-                 if not eschema in self.repo.schema]
+                 if eschema not in self.repo.schema]
         for eschema in order_eschemas(toadd):
             self.cmd_add_entity_type(eschema.type)
             new.add(eschema.type)
@@ -705,11 +704,10 @@ class ServerMigrationHelper(MigrationHelper):
             self.cmd_exec_event_script('preremove', cube)
         # remove cubes'entity and relation types
         for rschema in fsschema.relations():
-            if not rschema in removedcubes_schema and rschema in reposchema:
+            if rschema not in removedcubes_schema and rschema in reposchema:
                 self.cmd_drop_relation_type(rschema.type)
         toremove = [eschema for eschema in fsschema.entities()
-                    if not eschema in removedcubes_schema
-                    and eschema in reposchema]
+                    if eschema not in removedcubes_schema and eschema in reposchema]
         for eschema in reversed(order_eschemas(toremove)):
             self.cmd_drop_entity_type(eschema.type)
         for rschema in fsschema.relations():
@@ -718,14 +716,14 @@ class ServerMigrationHelper(MigrationHelper):
                 # other cubes
                 for fromtype, totype in rschema.rdefs:
                     if (fromtype, totype) not in removedcubes_schema[rschema.type].rdefs and \
-                           (fromtype, totype) in reposchema[rschema.type].rdefs:
+                       (fromtype, totype) in reposchema[rschema.type].rdefs:
                         self.cmd_drop_relation_definition(
                             str(fromtype), rschema.type, str(totype))
         # execute post-remove files
         for cube in reversed(removedcubes):
             self.cmd_exec_event_script('postremove', cube)
             self.rqlexec('DELETE CWProperty X WHERE X pkey %(pk)s',
-                         {'pk': u'system.version.'+cube}, ask_confirm=False)
+                         {'pk': u'system.version.' + cube}, ask_confirm=False)
             self.commit()
 
     # schema migration actions ################################################
@@ -768,7 +766,7 @@ class ServerMigrationHelper(MigrationHelper):
         card = eschema.rdef(newname).cardinality[0]
         if card == '1':
             rql += ', NOT X %s NULL' % oldname
-        self.rqlexec(rql, ask_confirm=self.verbosity>=2)
+        self.rqlexec(rql, ask_confirm=self.verbosity >= 2)
         # XXX if both attributes fulltext indexed, should skip fti rebuild
         # XXX if old attribute was fti indexed but not the new one old value
         # won't be removed from the index (this occurs on other kind of
@@ -811,9 +809,9 @@ class ServerMigrationHelper(MigrationHelper):
             # ignore those meta relations, they will be automatically added
             if rschema.type in META_RTYPES:
                 continue
-            if not attrschema.type in instschema:
+            if attrschema.type not in instschema:
                 self.cmd_add_entity_type(attrschema.type, False, False)
-            if not rschema.type in instschema:
+            if rschema.type not in instschema:
                 # need to add the relation type and to commit to get it
                 # actually in the schema
                 self.cmd_add_relation_type(rschema.type, False, commit=True)
@@ -834,7 +832,7 @@ class ServerMigrationHelper(MigrationHelper):
                              ask_confirm=confirm)
                 for rschema, tschemas, role in spschema.relation_definitions(True):
                     for tschema in tschemas:
-                        if not tschema in instschema:
+                        if tschema not in instschema:
                             continue
                         if role == 'subject':
                             subjschema = spschema
@@ -867,7 +865,7 @@ class ServerMigrationHelper(MigrationHelper):
                     # ignore relations where the targeted type is not in the
                     # current instance schema
                     targettype = targetschema.type
-                    if not targettype in instschema and targettype != etype:
+                    if targettype not in instschema and targettype != etype:
                         continue
                     if not rtypeadded:
                         # need to add the relation type and to commit to get it
@@ -892,7 +890,7 @@ class ServerMigrationHelper(MigrationHelper):
                     targettype = targetschema.type
                     # don't check targettype != etype since in this case the
                     # relation has already been added as a subject relation
-                    if not targettype in instschema:
+                    if targettype not in instschema:
                         continue
                     if not rtypeadded:
                         # need to add the relation type and to commit to get it
@@ -918,7 +916,7 @@ class ServerMigrationHelper(MigrationHelper):
         # XXX what if we delete an entity type which is specialized by other types
         # unregister the entity from CWEType
         self.rqlexec('DELETE CWEType X WHERE X name %(etype)s', {'etype': etype},
-                     ask_confirm=self.verbosity>=2)
+                     ask_confirm=self.verbosity >= 2)
         if commit:
             self.commit()
 
@@ -935,13 +933,12 @@ class ServerMigrationHelper(MigrationHelper):
         # if merging two existing entity types
         if newname in schema:
             assert oldname in ETYPE_NAME_MAP, \
-                   '%s should be mapped to %s in ETYPE_NAME_MAP' % (oldname,
-                                                                    newname)
+                '%s should be mapped to %s in ETYPE_NAME_MAP' % (oldname, newname)
             if attrs is None:
                 attrs = ','.join(SQL_PREFIX + rschema.type
                                  for rschema in schema[newname].subject_relations()
                                  if (rschema.final or rschema.inlined)
-                                 and not rschema in PURE_VIRTUAL_RTYPES)
+                                 and rschema not in PURE_VIRTUAL_RTYPES)
             else:
                 attrs += ('eid', 'creation_date', 'modification_date', 'cwuri')
                 attrs = ','.join(SQL_PREFIX + attr for attr in attrs)
@@ -968,10 +965,10 @@ class ServerMigrationHelper(MigrationHelper):
             # delete relations using SQL to avoid relations content removal
             # triggered by schema synchronization hooks.
             for rdeftype in ('CWRelation', 'CWAttribute'):
-                thispending = set( (eid for eid, in self.sqlexec(
+                thispending = set((eid for eid, in self.sqlexec(
                     'SELECT cw_eid FROM cw_%s WHERE cw_from_entity=%%(eid)s OR '
                     ' cw_to_entity=%%(eid)s' % rdeftype,
-                    {'eid': oldeid}, ask_confirm=False)) )
+                    {'eid': oldeid}, ask_confirm=False)))
                 # we should add deleted eids into pending eids else we may
                 # get some validation error on commit since integrity hooks
                 # may think some required relation is missing... This also ensure
@@ -1009,7 +1006,7 @@ class ServerMigrationHelper(MigrationHelper):
         # elif simply renaming an entity type
         else:
             self.rqlexec('SET ET name %(newname)s WHERE ET is CWEType, ET name %(on)s',
-                         {'newname' : text_type(newname), 'on' : oldname},
+                         {'newname': text_type(newname), 'on': oldname},
                          ask_confirm=False)
         if commit:
             self.commit()
@@ -1050,14 +1047,14 @@ class ServerMigrationHelper(MigrationHelper):
                 # symmetric relations appears twice
                 if (subj, obj) in done:
                     continue
-                done.add( (subj, obj) )
+                done.add((subj, obj))
                 self.cmd_add_relation_definition(subj, rtype, obj)
             if rtype in META_RTYPES:
                 # if the relation is in META_RTYPES, ensure we're adding it for
                 # all entity types *in the persistent schema*, not only those in
                 # the fs schema
                 for etype in self.repo.schema.entities():
-                    if not etype in self.fs_schema:
+                    if etype not in self.fs_schema:
                         # get sample object type and rproperties
                         objtypes = rschema.objects()
                         assert len(objtypes) == 1, objtypes
@@ -1078,9 +1075,9 @@ class ServerMigrationHelper(MigrationHelper):
         any hooks called.
         """
         self.rqlexec('DELETE CWRType X WHERE X name %r' % rtype,
-                     ask_confirm=self.verbosity>=2)
+                     ask_confirm=self.verbosity >= 2)
         self.rqlexec('DELETE CWComputedRType X WHERE X name %r' % rtype,
-                     ask_confirm=self.verbosity>=2)
+                     ask_confirm=self.verbosity >= 2)
         if commit:
             self.commit()
 
@@ -1100,7 +1097,7 @@ class ServerMigrationHelper(MigrationHelper):
         self.cmd_add_relation_type(newname, commit=True)
         if not self.repo.schema[oldname].rule:
             self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
-                         ask_confirm=self.verbosity>=2)
+                         ask_confirm=self.verbosity >= 2)
         self.cmd_drop_relation_type(oldname, commit=commit)
 
     def cmd_add_relation_definition(self, subjtype, rtype, objtype, commit=True):
@@ -1111,7 +1108,7 @@ class ServerMigrationHelper(MigrationHelper):
         if rschema.rule:
             raise ExecutionError('Cannot add a relation definition for a '
                                  'computed relation (%s)' % rschema)
-        if not rtype in self.repo.schema:
+        if rtype not in self.repo.schema:
             self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
         if (subjtype, objtype) in self.repo.schema.rschema(rtype).rdefs:
             print('warning: relation %s %s %s is already known, skip addition' % (
@@ -1131,7 +1128,7 @@ class ServerMigrationHelper(MigrationHelper):
         for attr in ('rtype', 'subject', 'object'):
             schemaobj = getattr(rdef, attr)
             if getattr(schemaobj, 'eid', None) is None:
-                schemaobj.eid =  self.repo.schema[schemaobj].eid
+                schemaobj.eid = self.repo.schema[schemaobj].eid
                 assert schemaobj.eid is not None, schemaobj
         return rdef
 
@@ -1153,7 +1150,7 @@ class ServerMigrationHelper(MigrationHelper):
         rql = ('DELETE %s X WHERE X from_entity FE, FE name "%s",'
                'X relation_type RT, RT name "%s", X to_entity TE, TE name "%s"')
         self.rqlexec(rql % (etype, subjtype, rtype, objtype),
-                     ask_confirm=self.verbosity>=2)
+                     ask_confirm=self.verbosity >= 2)
         if commit:
             self.commit()
 
@@ -1194,8 +1191,8 @@ class ServerMigrationHelper(MigrationHelper):
         else:
             for etype in self.repo.schema.entities():
                 if etype.eid is None:
-                     # not yet added final etype (thing to BigInt defined in
-                     # yams though 3.13 migration not done yet)
+                    # not yet added final etype (thing to BigInt defined in
+                    # yams though 3.13 migration not done yet)
                     continue
                 self._synchronize_eschema(etype, syncrdefs=syncrdefs,
                                           syncprops=syncprops, syncperms=syncperms)
@@ -1223,7 +1220,7 @@ class ServerMigrationHelper(MigrationHelper):
             if PY2 and isinstance(v, str):
                 kwargs[k] = unicode(v)
         rql = 'SET %s WHERE %s' % (','.join(values), ','.join(restriction))
-        self.rqlexec(rql, kwargs, ask_confirm=self.verbosity>=2)
+        self.rqlexec(rql, kwargs, ask_confirm=self.verbosity >= 2)
         if commit:
             self.commit()
 
@@ -1240,26 +1237,26 @@ class ServerMigrationHelper(MigrationHelper):
                 oldvalue = constr.max
         if oldvalue == size:
             return
-        if oldvalue is None and not size is None:
+        if oldvalue is None and size is not None:
             ceid = self.rqlexec('INSERT CWConstraint C: C value %(v)s, C cstrtype CT '
                                 'WHERE CT name "SizeConstraint"',
                                 {'v': SizeConstraint(size).serialize()},
-                                ask_confirm=self.verbosity>=2)[0][0]
+                                ask_confirm=self.verbosity >= 2)[0][0]
             self.rqlexec('SET X constrained_by C WHERE X from_entity S, X relation_type R, '
                          'S name "%s", R name "%s", C eid %s' % (etype, rtype, ceid),
-                         ask_confirm=self.verbosity>=2)
-        elif not oldvalue is None:
-            if not size is None:
+                         ask_confirm=self.verbosity >= 2)
+        elif oldvalue is not None:
+            if size is not None:
                 self.rqlexec('SET C value %%(v)s WHERE X from_entity S, X relation_type R,'
                              'X constrained_by C, C cstrtype CT, CT name "SizeConstraint",'
                              'S name "%s", R name "%s"' % (etype, rtype),
                              {'v': text_type(SizeConstraint(size).serialize())},
-                             ask_confirm=self.verbosity>=2)
+                             ask_confirm=self.verbosity >= 2)
             else:
                 self.rqlexec('DELETE X constrained_by C WHERE X from_entity S, X relation_type R,'
                              'X constrained_by C, C cstrtype CT, CT name "SizeConstraint",'
                              'S name "%s", R name "%s"' % (etype, rtype),
-                             ask_confirm=self.verbosity>=2)
+                             ask_confirm=self.verbosity >= 2)
                 # cleanup unused constraints
                 self.rqlexec('DELETE CWConstraint C WHERE NOT X constrained_by C')
         if commit:
@@ -1294,8 +1291,10 @@ class ServerMigrationHelper(MigrationHelper):
                                     **kwargs)
         if not isinstance(wfof, (list, tuple)):
             wfof = (wfof,)
+
         def _missing_wf_rel(etype):
             return 'missing workflow relations, see make_workflowable(%s)' % etype
+
         for etype in wfof:
             eschema = self.repo.schema[etype]
             etype = text_type(etype)
@@ -1472,7 +1471,7 @@ class ServerMigrationHelper(MigrationHelper):
                 ask_confirm=False):
         """rql action"""
         if not isinstance(rql, (tuple, list)):
-            rql = ( (rql, kwargs), )
+            rql = ((rql, kwargs),)
         res = None
         execute = self.cnx.execute
         for rql, kwargs in rql:
