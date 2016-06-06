@@ -187,7 +187,8 @@ def remove_unused_solutions(rqlst, solutions, varmap, schema):
             try:
                 thisexistssols, thisexistsvars = existssols[var.scope]
             except KeyError:
-                thisexistssols = [newsols[0]]
+                # copy to avoid shared dict in newsols and exists sols
+                thisexistssols = [newsols[0].copy()]
                 thisexistsvars = set()
                 existssols[var.scope] = thisexistssols, thisexistsvars
             for i in range(len(newsols)-1, 0, -1):
@@ -199,6 +200,13 @@ def remove_unused_solutions(rqlst, solutions, varmap, schema):
             for i in range(1, len(newsols)):
                 if vtype != newsols[i][vname]:
                     unstable.add(vname)
+    # remove unstable variables from exists solutions: the possible types of these variables are not
+    # properly represented in exists solutions, so we have to remove and reinject them later
+    # according to the outer solution (see `iter_exists_sols`)
+    for sols, _ in existssols.values():
+        for vname in unstable:
+            for sol in sols:
+                sol.pop(vname, None)
     if invariants:
         # filter out duplicates
         newsols_ = []
@@ -400,24 +408,30 @@ class StateInfo(object):
         thisexistssols, thisexistsvars = self.existssols[exists]
         notdone_outside_vars = set()
         # when iterating other solutions inner to an EXISTS subquery, we should
-        # reset variables which have this exists node as scope at each iteration
+        # reset variables which have this EXISTS node as scope at each iteration
         for var in exists.stmt.defined_vars.values():
             if var.scope is exists:
                 thisexistsvars.add(var.name)
             elif var.name not in self.done:
                 notdone_outside_vars.add(var)
-        origsol = self.solution
+        # make a copy of the outer statement's solution for later restore
+        origsol = self.solution.copy()
         origtables = self.tables
         done = self.done
         for thisexistssol in thisexistssols:
             for vname in self.unstablevars:
-                if thisexistssol[vname] != origsol[vname] and vname in thisexistsvars:
+                # check first if variable belong to the EXISTS's scope, else it may be missing from
+                # `thisexistssol`
+                if vname in thisexistsvars and thisexistssol[vname] != origsol[vname]:
                     break
             else:
                 self.tables = origtables.copy()
-                self.solution = thisexistssol
+                # overwrite current outer solution by EXISTS solution (the later will be missing
+                # unstable outer variables)
+                self.solution.update(thisexistssol)
                 yield 1
-                # cleanup self.done from stuff specific to exists
+                # cleanup self.done from stuff specific to EXISTS, so they will be reconsidered in
+                # the next round
                 for var in thisexistsvars:
                     if var in done:
                         done.remove(var)
@@ -428,6 +442,7 @@ class StateInfo(object):
                 for rel in exists.iget_nodes(Relation):
                     if rel in done:
                         done.remove(rel)
+        # restore original solution
         self.solution = origsol
         self.tables = origtables
 
