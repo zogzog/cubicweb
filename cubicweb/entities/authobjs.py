@@ -181,7 +181,3 @@ class CWUser(AnyEntity):
 
         XXX Deprecate me ASAP"""
         return self
-
-from logilab.common.deprecation import class_renamed
-EUser = class_renamed('EUser', CWUser)
-EGroup = class_renamed('EGroup', CWGroup)
