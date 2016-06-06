@@ -71,7 +71,6 @@ distname = __pkginfo__.get('distname', modname)
 scripts = __pkginfo__.get('scripts', ())
 include_dirs = __pkginfo__.get('include_dirs', ())
 data_files = __pkginfo__.get('data_files', None)
-subpackage_of = __pkginfo__.get('subpackage_of', None)
 ext_modules = __pkginfo__.get('ext_modules', None)
 package_data = __pkginfo__.get('package_data', {})
 
@@ -152,21 +151,10 @@ class MyInstallLib(install_lib.install_lib):
         """overridden from install_lib class"""
         install_lib.install_lib.run(self)
         # create Products.__init__.py if needed
-        if subpackage_of:
-            product_init = join(self.install_dir, subpackage_of, '__init__.py')
-            if not exists(product_init):
-                self.announce('creating %s' % product_init)
-                stream = open(product_init, 'w')
-                stream.write(EMPTY_FILE)
-                stream.close()
         # manually install included directories if any
         if include_dirs:
-            if subpackage_of:
-                base = join(subpackage_of, modname)
-            else:
-                base = modname
             for directory in include_dirs:
-                dest = join(self.install_dir, base, directory)
+                dest = join(self.install_dir, modname, directory)
                 export(directory, dest, verbose=False)
 
 # write required share/cubicweb/cubes/__init__.py
@@ -217,14 +205,7 @@ def install(**kwargs):
     # install-layout option was introduced in 2.5.3-1~exp1
     elif sys.version_info < (2, 5, 4) and '--install-layout=deb' in sys.argv:
         sys.argv.remove('--install-layout=deb')
-    if subpackage_of:
-        package = subpackage_of + '.' + modname
-        kwargs['package_dir'] = {package : '.'}
-        packages = [package] + get_packages(os.getcwd(), package)
-        if USE_SETUPTOOLS:
-            kwargs['namespace_packages'] = [subpackage_of]
-    else:
-        packages = [modname] + get_packages(join(here, modname), modname)
+    packages = [modname] + get_packages(join(here, modname), modname)
     if USE_SETUPTOOLS:
         kwargs['install_requires'] = install_requires
         kwargs['zip_safe'] = False
