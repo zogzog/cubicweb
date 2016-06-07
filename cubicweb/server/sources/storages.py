@@ -157,12 +157,13 @@ class BytesFileSystemStorage(Storage):
             entity._cw_dont_cache_attribute(attr, repo_side=True)
         else:
             binary = entity.cw_edited.pop(attr)
-            fd, fpath = self.new_fs_path(entity, attr)
-            # bytes storage used to store file's path
-            binary_obj = Binary(fpath if PY2 else fpath.encode('utf-8'))
-            entity.cw_edited.edited_attribute(attr, binary_obj)
-            self._writecontent(fd, binary)
-            AddFileOp.get_instance(entity._cw).add_data(fpath)
+            if binary is not None:
+                fd, fpath = self.new_fs_path(entity, attr)
+                # bytes storage used to store file's path
+                binary_obj = Binary(fpath if PY2 else fpath.encode('utf-8'))
+                entity.cw_edited.edited_attribute(attr, binary_obj)
+                self._writecontent(fd, binary)
+                AddFileOp.get_instance(entity._cw).add_data(fpath)
         return binary
 
     def entity_updated(self, entity, attr):
@@ -259,13 +260,14 @@ class BytesFileSystemStorage(Storage):
     def migrate_entity(self, entity, attribute):
         """migrate an entity attribute to the storage"""
         entity.cw_edited = EditedEntity(entity, **entity.cw_attr_cache)
-        self.entity_added(entity, attribute)
-        cnx = entity._cw
-        source = cnx.repo.system_source
-        attrs = source.preprocess_entity(entity)
-        sql = source.sqlgen.update('cw_' + entity.cw_etype, attrs,
-                                   ['cw_eid'])
-        source.doexec(cnx, sql, attrs)
+        binary = self.entity_added(entity, attribute)
+        if binary is not None:
+            cnx = entity._cw
+            source = cnx.repo.system_source
+            attrs = source.preprocess_entity(entity)
+            sql = source.sqlgen.update('cw_' + entity.cw_etype, attrs,
+                                       ['cw_eid'])
+            source.doexec(cnx, sql, attrs)
         entity.cw_edited = None
 
 

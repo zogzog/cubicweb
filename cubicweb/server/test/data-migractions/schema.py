@@ -150,6 +150,7 @@ class Personne(EntityType):
         })
     description = String()
     firstname = String(fulltextindexed=True, maxsize=64)
+    photo = Bytes()
 
     concerne = SubjectRelation('Affaire')
     connait = SubjectRelation('Personne')

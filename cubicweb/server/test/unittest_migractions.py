@@ -20,17 +20,20 @@
 from datetime import date
 import os, os.path as osp
 from contextlib import contextmanager
+import tempfile
 
-from logilab.common.testlib import unittest_main, Tags, tag
+from logilab.common.testlib import unittest_main, Tags, tag, with_tempdir
 from logilab.common import tempattr
 
 from yams.constraints import UniqueConstraint
 
-from cubicweb import ConfigurationError, ValidationError, ExecutionError
+from cubicweb import (ConfigurationError, ValidationError,
+                      ExecutionError, Binary)
 from cubicweb.devtools import startpgcluster, stoppgcluster
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import ServerMigrationHelper
+from cubicweb.server.sources import storages
 
 import cubicweb.devtools
 
@@ -488,7 +491,7 @@ class MigrationCommandsTC(MigrationTC):
                 'X ordernum O')]
             expected = [u'nom', u'prenom', u'sexe', u'promo', u'ass', u'adel', u'titre',
                         u'web', u'tel', u'fax', u'datenaiss', u'test', u'tzdatenaiss',
-                        u'description', u'firstname',
+                        u'description', u'firstname', u'photo',
                         u'creation_date', u'cwuri', u'modification_date']
             self.assertEqual(expected, rinorder)
 
@@ -754,6 +757,29 @@ class MigrationCommandsTC(MigrationTC):
             mh.commit()
             mh.drop_relation_definition('Note', 'ecrit_par', 'CWUser')
             self.assertFalse(mh.sqlexec('SELECT * FROM cw_Note WHERE cw_ecrit_par IS NOT NULL'))
+
+    @with_tempdir
+    def test_storage_changed(self):
+        with self.mh() as (cnx, mh):
+            john = mh.cmd_create_entity('Personne', nom=u'john',
+                                        photo=Binary(b'something'))
+            bill = mh.cmd_create_entity('Personne', nom=u'bill')
+            mh.commit()
+            bfs_storage = storages.BytesFileSystemStorage(tempfile.tempdir)
+            storages.set_attribute_storage(self.repo, 'Personne', 'photo', bfs_storage)
+            mh.cmd_storage_changed('Personne', 'photo')
+            bob = mh.cmd_create_entity('Personne', nom=u'bob')
+            bffss_dir_content = os.listdir(tempfile.tempdir)
+            self.assertEqual(len(bffss_dir_content), 1)
+            john.cw_clear_all_caches()
+            self.assertEqual(john.photo.getvalue(),
+                             osp.join(tempfile.tempdir, bffss_dir_content[0]))
+            bob.cw_clear_all_caches()
+            self.assertIsNone(bob.photo)
+            bill.cw_clear_all_caches()
+            self.assertIsNone(bill.photo)
+            storages.unset_attribute_storage(self.repo, 'Personne', 'photo')
+
 
 class MigrationCommandsComputedTC(MigrationTC):
     """ Unit tests for computed relations and attributes
