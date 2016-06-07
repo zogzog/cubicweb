@@ -181,11 +181,13 @@ from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
+import importlib
 import logging
 import logging.config
 import os
 from os.path import (exists, join, expanduser, abspath, normpath,
                      basename, isdir, dirname, splitext)
+import pkgutil
 from smtplib import SMTP
 import stat
 import sys
@@ -261,6 +263,7 @@ def _find_prefix(start_path=None):
         old_prefix = prefix
         prefix = dirname(prefix)
     return prefix
+
 
 # persistent options definition
 PERSISTENT_OPTIONS = (
@@ -444,6 +447,7 @@ this option is set to yes",
 
     @classmethod
     def available_cubes(cls):
+        cls.warning('only listing "legacy" cubes found in cubes path')
         import re
         cubes = set()
         for directory in cls.cubes_search_path():
@@ -483,12 +487,18 @@ this option is set to yes",
         """return the cube directory for the given cube id, raise
         `ConfigurationError` if it doesn't exist
         """
+        loader = pkgutil.find_loader('cubicweb_%s' % cube)
+        if loader:
+            return dirname(loader.get_filename())
+        # Legacy cubes.
         for directory in cls.cubes_search_path():
             cubedir = join(directory, cube)
             if exists(cubedir):
                 return cubedir
-        raise ConfigurationError('no cube %r in %s' % (
-            cube, cls.cubes_search_path()))
+        msg = ('no module cubicweb_%(cube)s in search path '
+               'nor cube %(cube)r in %(path)s')
+        raise ConfigurationError(msg % {'cube': cube,
+                                        'path': cls.cubes_search_path()})
 
     @classmethod
     def cube_migration_scripts_dir(cls, cube):
@@ -498,14 +508,17 @@ this option is set to yes",
     @classmethod
     def cube_pkginfo(cls, cube):
         """return the information module for the given cube"""
-        cube = CW_MIGRATION_MAP.get(cube, cube)
         try:
-            parent = __import__('cubes.%s.__pkginfo__' % cube)
-            return getattr(parent, cube).__pkginfo__
-        except Exception as ex:
-            raise ConfigurationError(
-                'unable to find packaging information for cube %s (%s: %s)'
-                % (cube, ex.__class__.__name__, ex))
+            return importlib.import_module('cubicweb_%s.__pkginfo__' % cube)
+        except ImportError:
+            cube = CW_MIGRATION_MAP.get(cube, cube)
+            try:
+                parent = __import__('cubes.%s.__pkginfo__' % cube)
+                return getattr(parent, cube).__pkginfo__
+            except Exception as ex:
+                raise ConfigurationError(
+                    'unable to find packaging information for cube %s (%s: %s)'
+                    % (cube, ex.__class__.__name__, ex))
 
     @classmethod
     def cube_version(cls, cube):
@@ -827,7 +840,11 @@ this option is set to yes",
         self._cubes = self.reorder_cubes(cubes)
         # load cubes'__init__.py file first
         for cube in cubes:
-            __import__('cubes.%s' % cube)
+            try:
+                importlib.import_module('cubicweb_%s' % cube)
+            except ImportError:
+                # Legacy cube.
+                __import__('cubes.%s' % cube)
         self.load_site_cubicweb()
 
     def cubes(self):

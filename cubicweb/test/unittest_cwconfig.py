@@ -23,6 +23,8 @@ import tempfile
 from os.path import dirname, join, abspath
 import unittest
 
+from six import PY3
+
 from logilab.common.modutils import cleanup_sys_modules
 from logilab.common.testlib import with_tempdir
 from logilab.common.changelog import Version
@@ -30,20 +32,28 @@ from logilab.common.changelog import Version
 from cubicweb.devtools import ApptestConfiguration, testlib
 from cubicweb.cwconfig import _find_prefix
 
+
 def unabsolutize(path):
     parts = path.split(os.sep)
     for i, part in reversed(tuple(enumerate(parts))):
-        if part.startswith('cubicweb') or part == 'cubes':
-            return '/'.join(parts[i+1:])
+        if part.startswith('cubicweb_'):
+            return os.sep.join([part[len('cubicweb_'):]] + parts[i+1:])
+        if part.startswith('cubicweb') or part == 'legacy_cubes':
+            return os.sep.join(parts[i+1:])
     raise Exception('duh? %s' % path)
-
-CUSTOM_CUBES_DIR = abspath(join(dirname(__file__), 'data', 'cubes'))
 
 
 class CubicWebConfigurationTC(testlib.BaseTestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        sys.path.append(cls.datapath('libpython'))
+
+    @classmethod
+    def tearDownClass(cls):
+        sys.path.remove(cls.datapath('libpython'))
+
     def setUp(self):
-        cleanup_sys_modules([CUSTOM_CUBES_DIR, ApptestConfiguration.CUBES_DIR])
         self.config = ApptestConfiguration('data', __file__)
         self.config._cubes = ('email', 'file')
 
@@ -51,8 +61,6 @@ class CubicWebConfigurationTC(testlib.BaseTestCase):
         ApptestConfiguration.CUBES_PATH = []
 
     def test_reorder_cubes(self):
-        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
-        self.config.adjust_sys_path()
         # forge depends on email and file and comment
         # email depends on file
         self.assertEqual(self.config.reorder_cubes(['file', 'email', 'forge']),
@@ -69,9 +77,10 @@ class CubicWebConfigurationTC(testlib.BaseTestCase):
                           ('forge', 'email', 'file'))
 
     def test_reorder_cubes_recommends(self):
-        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
-        self.config.adjust_sys_path()
-        from cubes.comment import __pkginfo__ as comment_pkginfo
+        from cubicweb_comment import __pkginfo__ as comment_pkginfo
+        self._test_reorder_cubes_recommends(comment_pkginfo)
+
+    def _test_reorder_cubes_recommends(self, comment_pkginfo):
         comment_pkginfo.__recommends_cubes__ = {'file': None}
         try:
             # email recommends comment
@@ -88,35 +97,58 @@ class CubicWebConfigurationTC(testlib.BaseTestCase):
             comment_pkginfo.__recommends_cubes__ = {}
 
     def test_expand_cubes(self):
-        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
-        self.config.adjust_sys_path()
         self.assertEqual(self.config.expand_cubes(('email', 'comment')),
                           ['email', 'comment', 'file'])
 
     def test_appobjects_path(self):
-        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
-        self.config.adjust_sys_path()
         path = [unabsolutize(p) for p in self.config.appobjects_path()]
         self.assertEqual(path[0], 'entities')
         self.assertCountEqual(path[1:4], ['web/views', 'sobjects', 'hooks'])
         self.assertEqual(path[4], 'file/entities')
-        self.assertCountEqual(path[5:7], ['file/views.py', 'file/hooks'])
+        self.assertCountEqual(path[5:7],
+                              ['file/views.py', 'file/hooks'])
         self.assertEqual(path[7], 'email/entities.py')
-        self.assertCountEqual(path[8:10], ['email/views', 'email/hooks.py'])
+        self.assertCountEqual(path[8:10],
+                              ['email/views', 'email/hooks.py'])
         self.assertEqual(path[10:], ['test/data/entities.py', 'test/data/views.py'])
+
+
+class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
+
+    @classmethod
+    def setUpClass(cls):
+        pass
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
+    def setUp(self):
+        self.custom_cubes_dir = self.datapath('legacy_cubes')
+        cleanup_sys_modules([self.custom_cubes_dir, ApptestConfiguration.CUBES_DIR])
+        super(CubicWebConfigurationWithLegacyCubesTC, self).setUp()
+        self.config.__class__.CUBES_PATH = [self.custom_cubes_dir]
+        self.config.adjust_sys_path()
+
+    def tearDown(self):
+        ApptestConfiguration.CUBES_PATH = []
+
+    def test_reorder_cubes_recommends(self):
+        from cubes.comment import __pkginfo__ as comment_pkginfo
+        self._test_reorder_cubes_recommends(comment_pkginfo)
 
     def test_cubes_path(self):
         # make sure we don't import the email cube, but the stdlib email package
         import email
         self.assertNotEqual(dirname(email.__file__), self.config.CUBES_DIR)
-        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
+        self.config.__class__.CUBES_PATH = [self.custom_cubes_dir]
         self.assertEqual(self.config.cubes_search_path(),
-                          [CUSTOM_CUBES_DIR, self.config.CUBES_DIR])
-        self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR,
+                          [self.custom_cubes_dir, self.config.CUBES_DIR])
+        self.config.__class__.CUBES_PATH = [self.custom_cubes_dir,
                                             self.config.CUBES_DIR, 'unexistant']
         # filter out unexistant and duplicates
         self.assertEqual(self.config.cubes_search_path(),
-                          [CUSTOM_CUBES_DIR,
+                          [self.custom_cubes_dir,
                            self.config.CUBES_DIR])
         self.assertIn('mycube', self.config.available_cubes())
         # test cubes python path
@@ -125,12 +157,13 @@ class CubicWebConfigurationTC(testlib.BaseTestCase):
         self.assertEqual(cubes.__path__, self.config.cubes_search_path())
         # this import should succeed once path is adjusted
         from cubes import mycube
-        self.assertEqual(mycube.__path__, [join(CUSTOM_CUBES_DIR, 'mycube')])
+        self.assertEqual(mycube.__path__, [join(self.custom_cubes_dir, 'mycube')])
         # file cube should be overriden by the one found in data/cubes
         sys.modules.pop('cubes.file', None)
-        del cubes.file
+        if PY3:
+            del cubes.file
         from cubes import file
-        self.assertEqual(file.__path__, [join(CUSTOM_CUBES_DIR, 'file')])
+        self.assertEqual(file.__path__, [join(self.custom_cubes_dir, 'file')])
 
 
 class FindPrefixTC(unittest.TestCase):
