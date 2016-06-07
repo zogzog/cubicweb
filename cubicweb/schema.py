@@ -201,9 +201,7 @@ class RQLExpression(object):
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
     # to be defined in concrete classes
-    rqlst = None
     predefined_variables = None
-    full_rql = None
 
     def __init__(self, expression, mainvars, eid):
         """
@@ -221,30 +219,24 @@ class RQLExpression(object):
         self.mainvars = mainvars
         self.expression = normalize_expression(expression)
         try:
-            self.full_rql = self.rqlst.as_string()
+            # syntax tree used by read security (inserted in queries when necessary)
+            self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
         except RQLSyntaxError:
             raise RQLSyntaxError(expression)
         for mainvar in mainvars:
-            # if variable is predefined, an extra reference is inserted
-            # automatically (`VAR eid %(v)s`)
-            if mainvar in self.predefined_variables:
-                min_refs = 3
-            else:
-                min_refs = 2
-            if len(self.rqlst.defined_vars[mainvar].references()) < min_refs:
+            if len(self.snippet_rqlst.defined_vars[mainvar].references()) < 2:
                 _LOGGER.warn('You did not use the %s variable in your RQL '
                              'expression %s', mainvar, self)
-        # syntax tree used by read security (inserted in queries when necessary)
-        self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
         # graph of links between variables, used by rql rewriter
-        self.vargraph = vargraph(self.rqlst)
+        self.vargraph = vargraph(self.snippet_rqlst)
         # useful for some instrumentation, e.g. localperms permcheck command
         self.package = ybo.PACKAGE
 
     def __str__(self):
-        return self.full_rql
+        return self.rqlst.as_string()
+
     def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, self.full_rql)
+        return '%s(%s)' % (self.__class__.__name__, self.expression)
 
     def __lt__(self, other):
         if hasattr(other, 'expression'):
@@ -339,7 +331,7 @@ class RQLExpression(object):
                 pass
         rql, has_perm_defs, keyarg = self.transform_has_permission()
         # when creating an entity, expression related to X satisfied
-        if creating and 'X' in self.rqlst.defined_vars:
+        if creating and 'X' in self.snippet_rqlst.defined_vars:
             return True
         if keyarg is None:
             kwargs.setdefault('u', _cw.user.eid)
@@ -404,7 +396,7 @@ class ERQLExpression(RQLExpression):
         RQLExpression.__init__(self, expression, mainvars or 'X', eid)
 
     def check(self, _cw, eid=None, creating=False, **kwargs):
-        if 'X' in self.rqlst.defined_vars:
+        if 'X' in self.snippet_rqlst.defined_vars:
             if eid is None:
                 if creating:
                     return self._check(_cw, creating=True, **kwargs)
@@ -479,11 +471,11 @@ class RRQLExpression(RQLExpression):
 
     def check(self, _cw, fromeid=None, toeid=None):
         kwargs = {}
-        if 'S' in self.rqlst.defined_vars:
+        if 'S' in self.snippet_rqlst.defined_vars:
             if fromeid is None:
                 return False
             kwargs['s'] = fromeid
-        if 'O' in self.rqlst.defined_vars:
+        if 'O' in self.snippet_rqlst.defined_vars:
             if toeid is None:
                 return False
             kwargs['o'] = toeid
@@ -1251,7 +1243,7 @@ class RepoEnforcedRQLConstraintMixIn(object):
         else:
             expression = 'S eid %(s)s, O eid %(o)s, ' + self.expression
             args = {'s': eidfrom, 'o': eidto}
-        if 'U' in self.rqlst.defined_vars:
+        if 'U' in self.snippet_rqlst.defined_vars:
             expression = 'U eid %(u)s, ' + expression
             args['u'] = _cw.user.eid
         rql = 'Any %s WHERE %s' % (','.join(sorted(self.mainvars)), expression)
