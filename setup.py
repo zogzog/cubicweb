@@ -56,12 +56,11 @@ for entry in ("__depends__",): # "__recommends__"):
 install_requires = [("%s %s" % (d, v and v or "")).strip()
                    for d, v in requires.items()]
 
-distname = __pkginfo__.get('distname', modname)
-scripts = __pkginfo__.get('scripts', ())
-include_dirs = __pkginfo__.get('include_dirs', ())
-data_files = __pkginfo__.get('data_files', None)
-ext_modules = __pkginfo__.get('ext_modules', None)
-package_data = __pkginfo__.get('package_data', {})
+distname = __pkginfo__['distname']
+scripts = __pkginfo__['scripts']
+include_dirs = __pkginfo__['include_dirs']
+data_files = __pkginfo__['data_files']
+package_data = __pkginfo__['package_data']
 
 BASE_BLACKLIST = ('CVS', 'dist', 'build', '__buildlog')
 IGNORED_EXTENSIONS = ('.pyc', '.pyo', '.elc')
@@ -211,7 +210,6 @@ def install(**kwargs):
                  description=description, long_description=long_description,
                  author=author, author_email=author_email,
                  scripts=ensure_scripts(scripts), data_files=data_files,
-                 ext_modules=ext_modules,
                  cmdclass={'install_lib': MyInstallLib,
                            'install_data': MyInstallData},
                  **kwargs
