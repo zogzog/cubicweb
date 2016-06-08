@@ -57,19 +57,33 @@ class cubePotGeneratorTC(TestCase):
 
     def test_i18ncube(self):
         env = os.environ.copy()
+        if 'PYTHONPATH' in env:
+            env['PYTHONPATH'] += os.pathsep
+        else:
+            env['PYTHONPATH'] = ''
+        env['PYTHONPATH'] += osp.join(DATADIR, 'libpython')
+        cubedir = osp.join(DATADIR, 'libpython', 'cubicweb_i18ntestcube')
+        self._check(cubedir, env)
+
+    def test_i18ncube_legacy_layout(self):
+        env = os.environ.copy()
         env['CW_CUBES_PATH'] = osp.join(DATADIR, 'cubes')
         if 'PYTHONPATH' in env:
             env['PYTHONPATH'] += os.pathsep
         else:
             env['PYTHONPATH'] = ''
         env['PYTHONPATH'] += DATADIR
+        cubedir = osp.join(DATADIR, 'cubes', 'i18ntestcube')
+        self._check(cubedir, env)
+
+    def _check(self, cubedir, env):
         cmd = [sys.executable, '-m', 'cubicweb', 'i18ncube', 'i18ntestcube']
         proc = Popen(cmd, env=env, stdout=PIPE, stderr=STDOUT)
         stdout, _ = proc.communicate()
-        self.assertEqual(proc.returncode, 0, msg=stdout)
-        cube = osp.join(DATADIR, 'cubes', 'i18ntestcube')
-        msgs = load_po(osp.join(cube, 'i18n', 'en.po.ref'))
-        newmsgs = load_po(osp.join(cube, 'i18n', 'en.po'))
+        msg = stdout.decode(sys.getdefaultencoding(), errors='replace')
+        self.assertEqual(proc.returncode, 0, msg=msg)
+        msgs = load_po(osp.join(cubedir, 'i18n', 'en.po.ref'))
+        newmsgs = load_po(osp.join(cubedir, 'i18n', 'en.po'))
         self.assertEqual(msgs, newmsgs)
 
 

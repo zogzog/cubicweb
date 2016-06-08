@@ -115,6 +115,8 @@ def generate_schema_pot(w, cubedir=None):
     from cubicweb.cwvreg import CWRegistryStore
     if cubedir:
         cube = osp.split(cubedir)[-1]
+        if cube.startswith('cubicweb_'):
+            cube = cube[len('cubicweb_'):]
         config = DevConfiguration(cube)
         depcubes = list(config._cubes)
         depcubes.remove(cube)
