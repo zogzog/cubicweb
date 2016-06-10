@@ -773,7 +773,8 @@ class MigrationCommandsTC(MigrationTC):
             self.assertEqual(len(bffss_dir_content), 1)
             john.cw_clear_all_caches()
             self.assertEqual(john.photo.getvalue(),
-                             osp.join(tempfile.tempdir, bffss_dir_content[0]))
+                             osp.join(tempfile.tempdir,
+                                      bffss_dir_content[0]).encode('utf8'))
             bob.cw_clear_all_caches()
             self.assertIsNone(bob.photo)
             bill.cw_clear_all_caches()
