@@ -52,7 +52,8 @@ class DeleteConfForm(forms.CompositeForm):
     domid = 'deleteconf'
     copy_nav_params = True
     form_buttons = [fw.Button(stdmsgs.BUTTON_DELETE, cwaction='delete'),
-                    fw.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
+                    fw.Button(stdmsgs.BUTTON_CANCEL,
+                              {'class': fw.Button.css_class + ' cwjs-edition-cancel'})]
 
     def __init__(self, *args, **kwargs):
         super(DeleteConfForm, self).__init__(*args, **kwargs)
