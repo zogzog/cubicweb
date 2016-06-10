@@ -21,6 +21,7 @@
 """Generic Setup script, takes package info from __pkginfo__.py file
 """
 
+import io
 import os
 import sys
 import shutil
@@ -53,7 +54,8 @@ web = __pkginfo__['web']
 author = __pkginfo__['author']
 author_email = __pkginfo__['author_email']
 
-long_description = open('README').read()
+with io.open('README', encoding='utf-8') as f:
+    long_description = f.read()
 
 # import optional features
 if USE_SETUPTOOLS:
