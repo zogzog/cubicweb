@@ -20,25 +20,21 @@ or a list of entities of the same type
 """
 
 __docformat__ = "restructuredtext en"
-from cubicweb import _
 
 from copy import copy
 
 from six.moves import range
 
-from logilab.mtconverter import xml_escape
-from logilab.common.decorators import cached
 from logilab.common.registry import yes
 from logilab.common.deprecation import class_moved
 
+from cubicweb import _
 from cubicweb import tags
-from cubicweb.predicates import (match_kwargs, one_line_rset, non_final_entity,
-                                specified_etype_implements, is_instance)
+from cubicweb.predicates import (one_line_rset, non_final_entity,
+                                 specified_etype_implements, is_instance)
 from cubicweb.view import EntityView
-from cubicweb.schema import display_name
-from cubicweb.web import stdmsgs, eid_param, \
-     formfields as ff, formwidgets as fw
-from cubicweb.web.form import FormViewMixIn, FieldNotFound
+from cubicweb.web import stdmsgs, eid_param, formwidgets as fw
+from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.views import uicfg, forms, reledit
 
 _pvdc = uicfg.primaryview_display_ctrl
