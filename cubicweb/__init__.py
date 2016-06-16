@@ -22,6 +22,7 @@ __docformat__ = "restructuredtext en"
 
 import logging
 import os
+import pickle
 import sys
 import warnings
 import zlib
