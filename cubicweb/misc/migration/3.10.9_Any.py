@@ -14,7 +14,7 @@ if confirm('fix existing cwuri?'):
     enabled = interactive_mode
     with progress(title=title, nbops=nbops, size=30, enabled=enabled) as pb:
         for i,  row in enumerate(rset):
-            with hooks_control(session, session.HOOKS_DENY_ALL, 'integrity'):
+            with session.deny_all_hooks_but('integrity'):
                 data = {'eid': row[0], 'cwuri': row[1].replace(u'/eid', u'')}
                 rql('SET X cwuri %(cwuri)s WHERE X eid %(eid)s', data)
             if not i % 100: # commit every 100 entities to limit memory consumption

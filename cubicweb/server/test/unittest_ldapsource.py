@@ -246,6 +246,8 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
             # ensure we won't be logged against
             self.assertRaises(AuthenticationError,
                               source.authenticate, cnx, 'toto', 'toto')
+            self.assertRaises(AuthenticationError,
+                              source.authenticate, cnx, 'syt', 'toto')
             self.assertTrue(source.authenticate(cnx, 'syt', 'syt'))
         session = self.repo.new_session('syt', password='syt')
         self.assertTrue(session)

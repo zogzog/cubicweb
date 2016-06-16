@@ -138,6 +138,22 @@ class EntityTC(CubicWebTC):
             e.cw_clear_relation_cache('in_state', 'subject')
             self.assertEqual(e.cw_adapt_to('IWorkflowable').state, 'activated')
 
+    def test_copy_exclude_computed_relations(self):
+        """The `CWUser buddies CWUser` (computed) relation should not be copied.
+        """
+        with self.admin_access.cnx() as cnx:
+            friends = cnx.create_entity('CWGroup', name=u'friends')
+            bob = self.create_user(cnx, u'bob', groups=('friends',))
+            cnx.create_entity('EmailAddress', address=u'bob@cubicweb.org',
+                              reverse_use_email=bob)
+            alice = self.create_user(cnx, u'alices', groups=('friends',))
+            cnx.commit()
+            charles = self.create_user(cnx, u'charles')
+            cnx.commit()
+            # Just ensure this does not crash (it would if computed relation
+            # attempted to be copied).
+            charles.copy_relations(bob.eid)
+
     def test_related_cache_both(self):
         with self.admin_access.web_request() as req:
             user = req.execute('Any X WHERE X eid %(x)s', {'x':req.user.eid}).get_entity(0, 0)

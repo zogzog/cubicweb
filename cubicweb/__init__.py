@@ -25,14 +25,20 @@ import os
 import sys
 import warnings
 import zlib
-if (2, 7) <= sys.version_info < (2, 7, 4):
+
+warnings.filterwarnings('ignore', category=UserWarning,
+                        message='.*was already imported',
+                        module='.*pygments')
+
+
+from six import PY2, binary_type, text_type
+from six.moves import builtins
+
+if PY2:
     # http://bugs.python.org/issue10211
     from StringIO import StringIO as BytesIO
 else:
     from io import BytesIO
-
-from six import PY2, binary_type, text_type
-from six.moves import builtins, cPickle as pickle
 
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods

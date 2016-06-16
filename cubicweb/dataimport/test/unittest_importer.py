@@ -124,6 +124,19 @@ class ExtEntitiesImporterTC(CubicWebTC):
             self.assertEqual(entity.nom, u'Richelieu')
             self.assertEqual(len(entity.connait), 0)
 
+    def test_import_order(self):
+        """Check import of ext entity in both order"""
+        with self.admin_access.repo_cnx() as cnx:
+            importer = self.importer(cnx)
+            richelieu = ExtEntity('Personne', 3, {'nom': set([u'Richelieu']),
+                                                  'enfant': set([4])})
+            athos = ExtEntity('Personne', 4, {'nom': set([u'Athos'])})
+            importer.import_entities([richelieu, athos])
+            cnx.commit()
+            rset = cnx.execute('Any X WHERE X is Personne, X nom "Richelieu"')
+            entity = rset.get_entity(0, 0)
+            self.assertEqual(entity.enfant[0].nom, 'Athos')
+
     def test_update(self):
         """Check update of ext entity"""
         with self.admin_access.repo_cnx() as cnx:

@@ -319,6 +319,7 @@ class ExtEntitiesImporter(object):
         """
         schema = self.schema
         extid2eid = self.extid2eid
+        order_hint = list(self.etypes_order_hint)
         for ext_entity in ext_entities:
             # check data in the transitional representation and prepare it for
             # later insertion in the database
@@ -328,12 +329,17 @@ class ExtEntitiesImporter(object):
                 queue.setdefault(ext_entity.etype, []).append(ext_entity)
                 continue
             yield ext_entity
+            if not queue:
+                continue
             # check for some entities in the queue that may now be ready. We'll have to restart
             # search for ready entities until no one is generated
+            for etype in queue:
+                if etype not in order_hint:
+                    order_hint.append(etype)
             new = True
             while new:
                 new = False
-                for etype in self.etypes_order_hint:
+                for etype in order_hint:
                     if etype in queue:
                         new_queue = []
                         for ext_entity in queue[etype]:
@@ -377,8 +383,8 @@ class ExtEntitiesImporter(object):
                 try:
                     subject_eid = extid2eid[subject_uri]
                     object_eid = extid2eid[object_uri]
-                except KeyError:
-                    missing_relations.append((subject_uri, rtype, object_uri))
+                except KeyError as exc:
+                    missing_relations.append((subject_uri, rtype, object_uri, exc))
                     continue
                 if (subject_eid, object_eid) not in existing:
                     prepare_insert_relation(subject_eid, rtype, object_eid)
@@ -400,8 +406,9 @@ class ExtEntitiesImporter(object):
                 raise Exception('\n'.join(msgs))
         if missing_relations:
             msgs = ["can't create some relations, is there missing data?"]
-            for subject_uri, rtype, object_uri in missing_relations:
-                msgs.append("%s %s %s" % (subject_uri, rtype, object_uri))
+            for subject_uri, rtype, object_uri, exc in missing_relations:
+                msgs.append("Could not find %s when trying to insert (%s, %s, %s)"
+                            % (exc, subject_uri, rtype, object_uri))
             map(error, msgs)
             if self.raise_on_error:
                 raise Exception('\n'.join(msgs))
