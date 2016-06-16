@@ -122,7 +122,7 @@ CREATE UNIQUE INDEX unique_98da0f9de8588baa8966f0b1a6f850a3 ON Salaried(nom,pren
 CREATE TABLE Societe(
  nom varchar(64),
  web varchar(128),
- tel integer,
+ tel integer UNIQUE,
  fax integer,
  rncs varchar(32),
  ad1 varchar(128),

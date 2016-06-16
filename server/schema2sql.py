@@ -226,15 +226,15 @@ def type_from_rdef(dbhelper, rdef, creating=True):
     """return a sql type string corresponding to the relation definition"""
     constraints = list(rdef.constraints)
     unique, sqltype = False, None
-    if rdef.object.type == 'String':
-        for constraint in constraints:
-            if isinstance(constraint, SizeConstraint):
-                if constraint.max is not None:
-                    size_constrained_string = dbhelper.TYPE_MAPPING.get(
-                        'SizeConstrainedString', 'varchar(%s)')
-                    sqltype = size_constrained_string % constraint.max
-            elif isinstance(constraint, UniqueConstraint):
-                unique = True
+    for constraint in constraints:
+        if isinstance(constraint, UniqueConstraint):
+            unique = True
+        elif (isinstance(constraint, SizeConstraint)
+              and rdef.object.type == 'String'
+              and constraint.max is not None):
+            size_constrained_string = dbhelper.TYPE_MAPPING.get(
+                'SizeConstrainedString', 'varchar(%s)')
+            sqltype = size_constrained_string % constraint.max
     if sqltype is None:
         sqltype = sql_type(dbhelper, rdef)
     if creating and unique:
