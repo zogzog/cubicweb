@@ -1,4 +1,4 @@
-# copyright 2004-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2004-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of cubicweb.
@@ -30,6 +30,7 @@ from yams.constraints import (SizeConstraint, UniqueConstraint, Attribute,
 # default are usually not handled at the sql level. If you want them, set
 # SET_DEFAULT to True
 SET_DEFAULT = False
+
 
 def rschema_has_table(rschema, skip_relations):
     """Return True if the given schema should have a table in the database"""
@@ -82,14 +83,17 @@ def eschema_attrs(eschema, skip_relations):
               if not rschema.final and rschema.inlined]
     return attrs
 
+
 def unique_index_name(eschema, columns):
     return u'unique_%s' % md5((eschema.type +
-                              ',' +
-                              ','.join(sorted(columns))).encode('ascii')).hexdigest()
+                               ',' +
+                               ','.join(sorted(columns))).encode('ascii')).hexdigest()
+
 
 def iter_unique_index_names(eschema):
     for columns in eschema._unique_together or ():
         yield columns, unique_index_name(eschema, columns)
+
 
 def dropeschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
     """return sql to drop an entity type's table"""
@@ -100,7 +104,7 @@ def dropeschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
     tablename = prefix + eschema.type
     if eschema._unique_together is not None:
         for columns, index_name in iter_unique_index_names(eschema):
-            cols  = ['%s%s' % (prefix, col) for col in columns]
+            cols = ['%s%s' % (prefix, col) for col in columns]
             sqls = dbhelper.sqls_drop_multicol_unique_index(tablename, cols, index_name)
             statements += sqls
     statements += ['DROP TABLE %s;' % (tablename)]
@@ -120,7 +124,7 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
         if attrschema is not None:
             sqltype = aschema2sql(dbhelper, eschema, rschema, attrschema,
                                   indent=' ')
-        else: # inline relation
+        else:  # inline relation
             sqltype = 'integer REFERENCES entities (eid)'
         if i == len(attrs) - 1:
             w(' %s%s %s' % (prefix, rschema.type, sqltype))
@@ -132,7 +136,8 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
         attr = rschema.type
         rdef = rschema.rdef(eschema.type, aschema.type)
         for constraint in rdef.constraints:
-            cstrname, check = check_constraint(eschema, aschema, attr, constraint, dbhelper, prefix=prefix)
+            cstrname, check = check_constraint(eschema, aschema, attr, constraint, dbhelper,
+                                               prefix=prefix)
             if cstrname is not None:
                 w(', CONSTRAINT %s CHECK(%s)' % (cstrname, check))
     w(');')
@@ -142,12 +147,13 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
         if attrschema is None or eschema.rdef(rschema).indexed:
             w(dbhelper.sql_create_index(table, prefix + rschema.type))
     for columns, index_name in iter_unique_index_names(eschema):
-        cols  = ['%s%s' % (prefix, col) for col in columns]
+        cols = ['%s%s' % (prefix, col) for col in columns]
         sqls = dbhelper.sqls_create_multicol_unique_index(table, cols, index_name)
         for sql in sqls:
             w(sql)
     w('')
     return '\n'.join(output)
+
 
 def as_sql(value, dbhelper, prefix):
     if isinstance(value, Attribute):
@@ -159,6 +165,7 @@ def as_sql(value, dbhelper, prefix):
     else:
         # XXX more quoting for literals?
         return value
+
 
 def check_constraint(eschema, aschema, attr, constraint, dbhelper, prefix=''):
     # XXX should find a better name
@@ -185,6 +192,7 @@ def check_constraint(eschema, aschema, attr, constraint, dbhelper, prefix=''):
             values = ', '.join("'%s'" % word.replace("'", "''") for word in constraint.vocabulary())
         return cstrname, '%s%s IN (%s)' % (prefix, attr, values)
     return None, None
+
 
 def aschema2sql(dbhelper, eschema, rschema, aschema, creating=True, indent=''):
     """write an attribute schema as SQL statements to stdout"""
