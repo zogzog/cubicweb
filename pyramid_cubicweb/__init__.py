@@ -21,33 +21,43 @@ def make_cubicweb_application(cwconfig, settings=None):
     :param cwconfig: A CubicWeb configuration
     :returns: A Pyramid config object
     """
-    settings_filenames = [os.path.join(cwconfig.apphome, 'pyramid.ini')]
-
     settings = dict(settings) if settings else {}
+    settings.update(settings_from_cwconfig(cwconfig))
+    config = Configurator(settings=settings)
+    config.registry['cubicweb.config'] = cwconfig
+    config.include('pyramid_cubicweb')
+    return config
 
+def settings_from_cwconfig(cwconfig):
+    '''
+    Extract settings from pyramid.ini and pyramid-debug.ini (if in debug)
+
+    Can be used to configure middleware WSGI with settings from pyramid.ini files
+
+    :param cwconfig: A CubicWeb configuration
+    :returns: A settings dictionnary
+    '''
+    settings_filenames = [os.path.join(cwconfig.apphome, 'pyramid.ini')]
+    settings = {}
     if cwconfig.debugmode:
         settings_filenames.insert(
             0, os.path.join(cwconfig.apphome, 'pyramid-debug.ini'))
-
+    
         settings.update({
             'pyramid.debug_authorization': True,
             'pyramid.debug_notfound': True,
             'pyramid.debug_routematch': True,
             'pyramid.reload_templates': True,
         })
-
+    
     for fname in settings_filenames:
         if os.path.exists(fname):
             cp = SafeConfigParser()
             cp.read(fname)
             settings.update(cp.items('main'))
             break
-
-    config = Configurator(settings=settings)
-    config.registry['cubicweb.config'] = cwconfig
-    config.include('pyramid_cubicweb')
-
-    return config
+    
+    return settings
 
 
 def wsgi_application_from_cwconfig(
