@@ -17,8 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.migractions"""
 
+import os.path as osp
 from datetime import date
-import os, os.path as osp
 from contextlib import contextmanager
 
 from logilab.common.testlib import unittest_main, Tags, tag
@@ -36,13 +36,13 @@ import cubicweb.devtools
 
 
 HERE = osp.dirname(osp.abspath(__file__))
+migrschema = None
 
 
 def setUpModule():
     startpgcluster(__file__)
 
 
-migrschema = None
 def tearDownModule(*args):
     global migrschema
     del migrschema

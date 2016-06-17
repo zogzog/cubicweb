@@ -30,8 +30,7 @@ import json
 from copy import copy
 from hashlib import md5
 
-from yams.schema import (BASE_TYPES, BadSchemaDefinition,
-                         RelationSchema, RelationDefinitionSchema)
+from yams.schema import BASE_TYPES, BadSchemaDefinition, RelationDefinitionSchema
 from yams import buildobjs as ybo, convert_default_value
 
 from logilab.common.decorators import clear_cache
@@ -58,12 +57,14 @@ def get_constraints(cnx, entity):
         constraints.append(cstr)
     return constraints
 
+
 def group_mapping(cw):
     try:
         return cw.transaction_data['groupmap']
     except KeyError:
         cw.transaction_data['groupmap'] = gmap = ss.group_mapping(cw)
         return gmap
+
 
 def add_inline_relation_column(cnx, etype, rtype):
     """add necessary column and index for an inlined relation"""
@@ -123,7 +124,7 @@ def check_valid_changes(cnx, entity, ro_attrs=('name', 'final')):
         raise validation_error(entity, errors)
 
 
-class _MockEntity(object): # XXX use a named tuple with python 2.6
+class _MockEntity(object):  # XXX use a named tuple with python 2.6
     def __init__(self, eid):
         self.eid = eid
 
@@ -140,12 +141,12 @@ class SyncSchemaHook(hook.Hook):
 
 class DropTable(hook.Operation):
     """actually remove a database from the instance's schema"""
-    table = None # make pylint happy
+    table = None  # make pylint happy
+
     def precommit_event(self):
-        dropped = self.cnx.transaction_data.setdefault('droppedtables',
-                                                           set())
+        dropped = self.cnx.transaction_data.setdefault('droppedtables', set())
         if self.table in dropped:
-            return # already processed
+            return  # already processed
         dropped.add(self.table)
         self.cnx.system_sql('DROP TABLE %s' % self.table)
         self.info('dropped table %s', self.table)
@@ -286,7 +287,8 @@ class CWETypeAddOp(MemSchemaOperation):
 
 class CWETypeRenameOp(MemSchemaOperation):
     """this operation updates physical storage accordingly"""
-    oldname = newname = None # make pylint happy
+
+    oldname = newname = None  # make pylint happy
 
     def rename(self, oldname, newname):
         self.cnx.vreg.schema.rename_entity_type(oldname, newname)
@@ -313,13 +315,14 @@ class CWETypeRenameOp(MemSchemaOperation):
 
 class CWRTypeUpdateOp(MemSchemaOperation):
     """actually update some properties of a relation definition"""
-    rschema = entity = values = None # make pylint happy
+
+    rschema = entity = values = None  # make pylint happy
     oldvalues = None
 
     def precommit_event(self):
         rschema = self.rschema
         if rschema.final:
-            return # watched changes to final relation type are unexpected
+            return  # watched changes to final relation type are unexpected
         cnx = self.cnx
         if 'fulltext_container' in self.values:
             op = UpdateFTIndexOp.get_instance(cnx)
@@ -497,7 +500,7 @@ class CWAttributeAddOp(MemSchemaOperation):
         if extra_unique_index or entity.indexed:
             try:
                 syssource.create_index(cnx, table, column,
-                                      unique=extra_unique_index)
+                                       unique=extra_unique_index)
             except Exception as ex:
                 self.error('error while creating index for %s.%s: %s',
                            table, column, ex)
