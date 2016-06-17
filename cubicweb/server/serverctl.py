@@ -944,6 +944,25 @@ option is set to "y" or "yes" (may be long for large database).'}
                   self.config.autofix)
 
 
+class DBIndexSanityCheckCommand(Command):
+    """Check database indices of an instance.
+
+    <instance>
+      identifier of the instance to check
+    """
+    arguments = '<instance>'
+    name = 'db-check-index'
+    min_args = 1
+
+    def run(self, args):
+        from cubicweb.server.checkintegrity import check_indexes
+        config = ServerConfiguration.config_for(args[0])
+        repo, cnx = repo_cnx(config)
+        with cnx:
+            status = check_indexes(cnx)
+        sys.exit(status)
+
+
 class RebuildFTICommand(Command):
     """Rebuild the full-text index of the system database of an instance.
 
@@ -1075,7 +1094,7 @@ class SchemaDiffCommand(Command):
 
 for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
                  GrantUserOnInstanceCommand, ResetAdminPasswordCommand,
-                 DBDumpCommand, DBRestoreCommand, DBCopyCommand,
+                 DBDumpCommand, DBRestoreCommand, DBCopyCommand, DBIndexSanityCheckCommand,
                  AddSourceCommand, CheckRepositoryCommand, RebuildFTICommand,
                  SynchronizeSourceCommand, SchemaDiffCommand,
                  ):

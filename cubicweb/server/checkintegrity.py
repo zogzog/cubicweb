@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,13 +29,19 @@ from datetime import datetime
 
 from logilab.common.shellutils import ProgressBar
 
+from yams.constraints import UniqueConstraint
+
+from cubicweb.toolsutils import underline_title
 from cubicweb.schema import PURE_VIRTUAL_RTYPES, VIRTUAL_RTYPES, UNIQUE_CONSTRAINTS
 from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.server.schema2sql import iter_unique_index_names, build_index_name
+
 
 def notify_fixed(fix):
     if fix:
         sys.stderr.write(' [FIXED]')
     sys.stderr.write('\n')
+
 
 def has_eid(cnx, sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
@@ -63,6 +69,7 @@ def has_eid(cnx, sqlcursor, eid, eids):
     eids[eid] = True
     return True
 
+
 # XXX move to yams?
 def etype_fti_containers(eschema, _done=None):
     if _done is None:
@@ -83,6 +90,7 @@ def etype_fti_containers(eschema, _done=None):
                     yield container
     else:
         yield eschema
+
 
 def reindex_entities(schema, cnx, withpb=True, etypes=None):
     """reindex all entities in the repository"""
@@ -149,7 +157,6 @@ def check_schema(schema, cnx, eids, fix=1):
                 count, cstrname, sn, rn, on))
             if fix:
                 print('dunno how to fix, do it yourself')
-
 
 
 def check_text_index(schema, cnx, eids, fix=1):
@@ -249,6 +256,7 @@ def bad_related_msg(rtype, target, eid, fix):
     msg = '  A relation %s with %s eid %s exists but no such entity in sources'
     sys.stderr.write(msg % (rtype, target, eid))
     notify_fixed(fix)
+
 
 def bad_inlined_msg(rtype, parent_eid, eid, fix):
     msg = ('  An inlined relation %s from %s to %s exists but the latter '
@@ -408,3 +416,93 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
         cnx.rollback()
         reindex_entities(repo.schema, cnx, withpb=withpb)
         cnx.commit()
+
+
+SYSTEM_INDICES = {
+    # see cw/server/sources/native.py
+    'entities_type_idx': ('entities', 'type'),
+    'entities_extid_idx': ('entities', 'extid'),
+    'transactions_tx_time_idx': ('transactions', 'tx_time'),
+    'transactions_tx_user_idx': ('transactions', 'tx_user'),
+    'tx_entity_actions_txa_action_idx': ('tx_entity_actions', 'txa_action'),
+    'tx_entity_actions_txa_public_idx': ('tx_entity_actions', 'txa_public'),
+    'tx_entity_actions_eid_idx': ('tx_entity_actions', 'txa_eid'),
+    'tx_entity_actions_etype_idx': ('tx_entity_actions', 'txa_etype'),
+    'tx_entity_actions_tx_uuid_idx': ('tx_entity_actions', 'tx_uuid'),
+    'tx_relation_actions_txa_action_idx': ('tx_relation_actions', 'txa_action'),
+    'tx_relation_actions_txa_public_idx': ('tx_relation_actions', 'txa_public'),
+    'tx_relation_actions_eid_from_idx': ('tx_relation_actions', 'eid_from'),
+    'tx_relation_actions_eid_to_idx': ('tx_relation_actions', 'eid_to'),
+    'tx_relation_actions_tx_uuid_idx': ('tx_relation_actions', 'tx_uuid'),
+}
+
+
+def check_indexes(cnx):
+    """Check indexes of a system database: output missing expected indexes as well as unexpected ones.
+
+    Return 0 if there is no differences, else 1.
+    """
+    source = cnx.repo.system_source
+    dbh = source.dbhelper
+    schema = cnx.repo.schema
+    schema_indices = SYSTEM_INDICES.copy()
+    if source.dbdriver == 'postgres':
+        schema_indices.update({'appears_words_idx': ('appears', 'words'),
+                               'moved_entities_extid_key': ('moved_entities', 'extid')})
+        index_filter = lambda idx: not (idx.startswith('pg_') or idx.endswith('_pkey'))
+    else:
+        schema_indices.update({'appears_uid': ('appears', 'uid'),
+                               'appears_word_id': ('appears', 'word_id')})
+        index_filter = lambda idx: not idx.startswith('sqlite_')
+    db_indices = set(idx for idx in dbh.list_indices(cnx.cnxset.cu)
+                     if index_filter(idx))
+    for rschema in schema.relations():
+        if rschema.rule or rschema in PURE_VIRTUAL_RTYPES:
+            continue  # computed relation
+        if rschema.final or rschema.inlined:
+            for rdef in rschema.rdefs.values():
+                table = 'cw_{0}'.format(rdef.subject)
+                column = 'cw_{0}'.format(rdef.rtype)
+                if any(isinstance(cstr, UniqueConstraint) for cstr in rdef.constraints):
+                    schema_indices[dbh._index_name(table, column, unique=True)] = (
+                        table, [column])
+                if rschema.inlined or rdef.indexed:
+                    schema_indices[dbh._index_name(table, column)] = (table, [column])
+        else:
+            table = '{0}_relation'.format(rschema)
+            if source.dbdriver == 'postgres':
+                # index built after the primary key constraint
+                schema_indices[build_index_name(table, ['eid_from', 'eid_to'], 'key_')] = (
+                    table, ['eid_from', 'eid_to'])
+            schema_indices[build_index_name(table, ['eid_from'], 'idx_')] = (
+                table, ['eid_from'])
+            schema_indices[build_index_name(table, ['eid_to'], 'idx_')] = (
+                table, ['eid_to'])
+    for eschema in schema.entities():
+        if eschema.final:
+            continue
+        table = 'cw_{0}'.format(eschema)
+        for columns, index_name in iter_unique_index_names(eschema):
+            schema_indices[index_name] = (table, columns)
+
+    missing_indices = set(schema_indices) - db_indices
+    if missing_indices:
+        print(underline_title('Missing indices'))
+        print('index expected by the schema but not found in the database:\n')
+        missing = ['{0} ON {1[0]} {1[1]}'.format(idx, schema_indices[idx])
+                   for idx in missing_indices]
+        print('\n'.join(sorted(missing)))
+        print()
+        status = 1
+    additional_indices = db_indices - set(schema_indices)
+    if additional_indices:
+        print(underline_title('Additional indices'))
+        print('index in the database but not expected by the schema:\n')
+        print('\n'.join(sorted(additional_indices)))
+        print()
+        status = 1
+    if not (missing_indices or additional_indices):
+        print('Everything is Ok')
+        status = 0
+
+    return status

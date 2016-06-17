@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+import unittest
 
 from six import PY2
 if PY2:
@@ -24,13 +25,13 @@ if PY2:
 else:
     from io import StringIO
 
-from logilab.common.testlib import TestCase, unittest_main
-from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
+from cubicweb.devtools import (PostgresApptestConfiguration, TestServerConfiguration,
+                               get_test_db_handler, startpgcluster, stoppgcluster)
+from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.server.checkintegrity import check, check_indexes, reindex_entities
 
 
-from cubicweb.server.checkintegrity import check, reindex_entities
-
-class CheckIntegrityTC(TestCase):
+class CheckIntegrityTC(unittest.TestCase):
 
     def setUp(self):
         handler = get_test_db_handler(TestServerConfiguration('data', __file__))
@@ -66,5 +67,32 @@ class CheckIntegrityTC(TestCase):
             self.assertTrue(cnx.execute('Any X WHERE X has_text "tutu"'))
             self.assertTrue(cnx.execute('Any X WHERE X has_text "toto"'))
 
+
+class SqliteCheckIndexesTC(CubicWebTC):
+
+    def test_check_indexes(self):
+        with self.admin_access.repo_cnx() as cnx:
+            sys.stdout = stream = StringIO()
+            try:
+                status = check_indexes(cnx)
+            finally:
+                sys.stdout = sys.__stdout__
+            self.assertEqual(status, 0, stream.getvalue())
+
+
+class PGCheckIndexesTC(SqliteCheckIndexesTC):
+    configcls = PostgresApptestConfiguration
+
+    @classmethod
+    def setUpClass(cls):
+        startpgcluster(__file__)
+        super(PGCheckIndexesTC, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        stoppgcluster(__file__)
+        super(PGCheckIndexesTC, cls).tearDownClass()
+
+
 if __name__ == '__main__':
-    unittest_main()
+    unittest.main()
