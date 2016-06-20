@@ -205,7 +205,7 @@ class filed_under2(RelationDefinition):
 
 # New
 class New(EntityType):
-    new_name = String()
+    new_name = String(indexed=True, unique=True)
 
 # New
 class same_as(RelationDefinition):

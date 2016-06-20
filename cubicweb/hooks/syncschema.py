@@ -1,4 +1,4 @@
-# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,6 +31,7 @@ from copy import copy
 from hashlib import md5
 
 from yams.schema import BASE_TYPES, BadSchemaDefinition, RelationDefinitionSchema
+from yams.constraints import UniqueConstraint
 from yams import buildobjs as ybo, convert_default_value
 
 from logilab.common.decorators import clear_cache
@@ -41,6 +42,7 @@ from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
                              CONSTRAINTS, UNIQUE_CONSTRAINTS, ETYPE_NAME_MAP)
 from cubicweb.server import hook, schemaserial as ss, schema2sql as y2sql
 from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.server.schema2sql import unique_index_name
 from cubicweb.hooks.synccomputed import RecomputeAttributeOperation
 
 # core entity and relation types which can't be removed
@@ -291,19 +293,47 @@ class CWETypeRenameOp(MemSchemaOperation):
     oldname = newname = None  # make pylint happy
 
     def rename(self, oldname, newname):
-        self.cnx.vreg.schema.rename_entity_type(oldname, newname)
+        cnx = self.cnx
+        source = cnx.repo.system_source
+        dbhelper = source.dbhelper
         # we need sql to operate physical changes on the system database
-        sqlexec = self.cnx.system_sql
-        dbhelper = self.cnx.repo.system_source.dbhelper
-        sql = dbhelper.sql_rename_table(SQL_PREFIX+oldname,
-                                        SQL_PREFIX+newname)
+        sqlexec = cnx.system_sql
+        cnx.vreg.schema.rename_entity_type(oldname, newname)
+        old_table = SQL_PREFIX + oldname
+        new_table = SQL_PREFIX + newname
+        eschema = cnx.vreg.schema.eschema(newname)
+        # drop old indexes before the renaming
+        for rschema in eschema.subject_relations():
+            if rschema.inlined or (rschema.final and eschema.rdef(rschema.type).indexed):
+                source.drop_index(cnx, old_table, SQL_PREFIX + rschema.type)
+            if rschema.final and any(isinstance(cstr, UniqueConstraint)
+                                     for cstr in eschema.rdef(rschema.type).constraints):
+                source.drop_index(cnx, old_table, SQL_PREFIX + rschema.type, unique=True)
+        sql = dbhelper.sql_rename_table(old_table, new_table)
         sqlexec(sql)
         self.info('renamed table %s to %s', oldname, newname)
         sqlexec('UPDATE entities SET type=%(newname)s WHERE type=%(oldname)s',
                 {'newname': newname, 'oldname': oldname})
-        for eid, (etype, extid, auri) in self.cnx.repo._type_source_cache.items():
+        for eid, (etype, extid, auri) in cnx.repo._type_source_cache.items():
             if etype == oldname:
-                self.cnx.repo._type_source_cache[eid] = (newname, extid, auri)
+                cnx.repo._type_source_cache[eid] = (newname, extid, auri)
+        # recreate the indexes
+        for rschema in eschema.subject_relations():
+            if rschema.inlined or (rschema.final and eschema.rdef(rschema.type).indexed):
+                source.create_index(cnx, new_table, SQL_PREFIX + rschema.type)
+            if rschema.final and any(isinstance(cstr, UniqueConstraint)
+                                     for cstr in eschema.rdef(rschema.type).constraints):
+                source.create_index(cnx, new_table, SQL_PREFIX + rschema.type, unique=True)
+        for attrs in eschema._unique_together or ():
+            columns = ['%s%s' % (SQL_PREFIX, attr) for attr in attrs]
+            old_index_name = unique_index_name(oldname, columns)
+            for sql in dbhelper.sqls_drop_multicol_unique_index(
+                    new_table, columns, old_index_name):
+                sqlexec(sql)
+            new_index_name = unique_index_name(newname, columns)
+            for sql in dbhelper.sqls_create_multicol_unique_index(
+                    new_table, columns, new_index_name):
+                sqlexec(sql)
         # XXX transaction records
 
     def precommit_event(self):

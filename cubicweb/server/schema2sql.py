@@ -111,8 +111,10 @@ def eschema_attrs(eschema, skip_relations):
 
 
 def unique_index_name(eschema, columns):
+    # keep giving eschema instead of table name for bw compat
+    table = text_type(eschema)
     # unique_index_name is used as name of CWUniqueConstraint, hence it should be unicode
-    return text_type(build_index_name(eschema.type, columns, 'unique_'))
+    return text_type(build_index_name(table, columns, 'unique_'))
 
 
 def iter_unique_index_names(eschema):

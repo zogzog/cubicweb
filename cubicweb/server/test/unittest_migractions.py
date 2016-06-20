@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -35,6 +35,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import ServerMigrationHelper
 from cubicweb.server.sources import storages
+from cubicweb.server.schema2sql import build_index_name
 
 import cubicweb.devtools
 
@@ -340,7 +341,18 @@ class MigrationCommandsTC(MigrationTC):
             entity = mh.create_entity('Old', name=u'old')
             self.repo.type_and_source_from_eid(entity.eid, entity._cw)
             mh.cmd_rename_entity_type('Old', 'New')
+            dbh = self.repo.system_source.dbhelper
+            indices = set(dbh.list_indices(cnx.cnxset.cu, 'cw_New'))
+            self.assertNotIn(build_index_name('cw_Old', ['cw_name']), indices)
+            self.assertIn(build_index_name('cw_New', ['cw_name']), indices)
             mh.cmd_rename_attribute('New', 'name', 'new_name')
+            indices = set(dbh.list_indices(cnx.cnxset.cu, 'cw_New'))
+            # check 'indexed' index
+            self.assertNotIn(build_index_name('cw_New', ['cw_name'], 'idx_'), indices)
+            self.assertIn(build_index_name('cw_New', ['cw_new_name'], 'idx_'), indices)
+            # check 'unique' index
+            self.assertNotIn(build_index_name('cw_New', ['cw_name'], 'key_'), indices)
+            self.assertIn(build_index_name('cw_New', ['cw_new_name'], 'key_'), indices)
 
     def test_add_drop_relation_type(self):
         with self.mh() as (cnx, mh):

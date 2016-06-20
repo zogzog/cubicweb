@@ -162,7 +162,7 @@ class Old(EntityType):
         'read'   : ('managers', 'users', 'guests'),
         'add'    : ('managers', 'users', 'guests'),
         'update' : ()
-    })
+    }, indexed=True, unique=True)
 
 
 class connait(RelationType):
