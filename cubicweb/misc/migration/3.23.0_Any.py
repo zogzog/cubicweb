@@ -60,3 +60,6 @@ for cwconstraint in rql('Any C WHERE R constrained_by C').entities():
     sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s CHECK(%(v)s)' % args)
 
 commit()
+
+if 'identity_relation' in helper.list_tables(cnx.cnxset.cu):
+    sql('DROP TABLE identity_relation')
