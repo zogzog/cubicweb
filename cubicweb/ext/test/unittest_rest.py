@@ -72,7 +72,7 @@ class RestTC(CubicWebTC):
     def test_rql_role_with_vid(self):
         with self.admin_access.web_request() as req:
             context = self.context(req)
-            out = rest_publish(context, ':rql:`Any X WHERE X is CWUser:table`')
+            out = rest_publish(context, ':rql:`Any X ORDERBY XL WHERE X is CWUser, X login XL:table`')
             self.assertTrue(out.endswith('<a href="http://testing.fr/cubicweb/cwuser/anon" '
                                          'title="">anon</a></td></tr>\n</tbody></table>'
                                          '</div></p>\n'))
@@ -96,7 +96,7 @@ class RestTC(CubicWebTC):
     def test_rql_role_without_vid(self):
         with self.admin_access.web_request() as req:
             context = self.context(req)
-            out = rest_publish(context, ':rql:`Any X WHERE X is CWUser`')
+            out = rest_publish(context, ':rql:`Any X,XL ORDERBY XL WHERE X is CWUser, X login XL`')
             self.assertEqual(out, u'<p><h1>CWUser_plural</h1><div class="section">'
                              '<a href="http://testing.fr/cubicweb/cwuser/admin" title="">admin</a>'
                              '</div><div class="section">'
@@ -107,7 +107,7 @@ class RestTC(CubicWebTC):
         with self.admin_access.web_request() as req:
             context = self.context(req)
             rset = req.execute('INSERT Bookmark X: X title "hello", X path '
-                               '"/view?rql=Any X WHERE X is CWUser"')
+                               '"/view?rql=Any X,XL ORDERBY XL WHERE X is CWUser, X login XL"')
             eid = rset[0][0]
             out = rest_publish(context, ':bookmark:`%s`' % eid)
             self.assertEqual(out, u'<p><h1>CWUser_plural</h1><div class="section">'
