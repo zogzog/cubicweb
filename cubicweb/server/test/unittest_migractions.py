@@ -186,7 +186,15 @@ class MigrationCommandsTC(MigrationTC):
             # test default value set on existing entities
             self.assertEqual(cnx.execute('Note X').get_entity(0, 0).shortpara, 'hop')
             # test default value set for next entities
-            self.assertEqual(cnx.create_entity('Note').shortpara, 'hop')
+            self.assertEqual(cnx.create_entity('Note', shortpara=u'hophop').shortpara, u'hophop')
+
+    def test_add_attribute_unique(self):
+        with self.mh() as (cnx, mh):
+            self.assertNotIn('unique_id', self.schema)
+            mh.cmd_add_attribute('Note', 'unique_id')
+            # test unique index creation
+            dbh = self.repo.system_source.dbhelper
+            self.assertTrue(dbh.index_exists(cnx.cnxset.cu, 'cw_Note', 'cw_unique_id', unique=True))
 
     def test_add_datetime_with_default_value_attribute(self):
         with self.mh() as (cnx, mh):

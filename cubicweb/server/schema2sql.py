@@ -26,10 +26,22 @@ from six.moves import range
 
 from yams.constraints import (SizeConstraint, UniqueConstraint, Attribute,
                               NOW, TODAY)
+from logilab import database
+from logilab.common.decorators import monkeypatch
 
 # default are usually not handled at the sql level. If you want them, set
 # SET_DEFAULT to True
 SET_DEFAULT = False
+
+
+# backport fix for lgdb #6662663
+@monkeypatch(database._GenericAdvFuncHelper)
+def sql_create_index(self, table, column, unique=False):
+    idx = self._index_name(table, column, unique)
+    if unique:
+        return 'ALTER TABLE %s ADD CONSTRAINT %s UNIQUE(%s);' % (table, idx, column)
+    else:
+        return 'CREATE INDEX %s ON %s(%s);' % (idx, table, column)
 
 
 def rschema_has_table(rschema, skip_relations):
@@ -146,6 +158,9 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
         rschema, attrschema = attrs[i]
         if attrschema is None or eschema.rdef(rschema).indexed:
             w(dbhelper.sql_create_index(table, prefix + rschema.type))
+        if attrschema and any(isinstance(cstr, UniqueConstraint)
+                              for cstr in eschema.rdef(rschema).constraints):
+            w(dbhelper.sql_create_index(table, prefix + rschema.type, unique=True))
     for columns, index_name in iter_unique_index_names(eschema):
         cols = ['%s%s' % (prefix, col) for col in columns]
         sqls = dbhelper.sqls_create_multicol_unique_index(table, cols, index_name)
@@ -198,7 +213,7 @@ def aschema2sql(dbhelper, eschema, rschema, aschema, creating=True, indent=''):
     """write an attribute schema as SQL statements to stdout"""
     attr = rschema.type
     rdef = rschema.rdef(eschema.type, aschema.type)
-    sqltype = type_from_rdef(dbhelper, rdef, creating)
+    sqltype = type_from_rdef(dbhelper, rdef)
     if SET_DEFAULT:
         default = eschema.default(attr)
         if default is not None:
@@ -222,23 +237,19 @@ def aschema2sql(dbhelper, eschema, rschema, aschema, creating=True, indent=''):
     return sqltype
 
 
-def type_from_rdef(dbhelper, rdef, creating=True):
+def type_from_rdef(dbhelper, rdef):
     """return a sql type string corresponding to the relation definition"""
     constraints = list(rdef.constraints)
-    unique, sqltype = False, None
-    for constraint in constraints:
-        if isinstance(constraint, UniqueConstraint):
-            unique = True
-        elif (isinstance(constraint, SizeConstraint)
-              and rdef.object.type == 'String'
-              and constraint.max is not None):
-            size_constrained_string = dbhelper.TYPE_MAPPING.get(
-                'SizeConstrainedString', 'varchar(%s)')
-            sqltype = size_constrained_string % constraint.max
+    sqltype = None
+    if rdef.object.type == 'String':
+        for constraint in constraints:
+            if isinstance(constraint, SizeConstraint) and constraint.max is not None:
+                size_constrained_string = dbhelper.TYPE_MAPPING.get(
+                    'SizeConstrainedString', 'varchar(%s)')
+                sqltype = size_constrained_string % constraint.max
+                break
     if sqltype is None:
         sqltype = sql_type(dbhelper, rdef)
-    if creating and unique:
-        sqltype += ' UNIQUE'
     return sqltype
 
 

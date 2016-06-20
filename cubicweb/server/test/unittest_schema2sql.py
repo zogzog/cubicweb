@@ -65,13 +65,14 @@ CREATE TABLE EPermission(
 CREATE INDEX epermission_name_idx ON EPermission(name);
 
 CREATE TABLE Eetype(
- name varchar(64) UNIQUE NOT NULL,
+ name varchar(64) NOT NULL,
  description text,
  meta boolean,
  final boolean,
  initial_state integer REFERENCES entities (eid)
 );
 CREATE INDEX eetype_name_idx ON Eetype(name);
+ALTER TABLE Eetype ADD CONSTRAINT eetype_name_key UNIQUE(name);
 CREATE INDEX eetype_initial_state_idx ON Eetype(initial_state);
 
 CREATE TABLE Employee(
@@ -122,7 +123,7 @@ CREATE UNIQUE INDEX unique_98da0f9de8588baa8966f0b1a6f850a3 ON Salaried(nom,pren
 CREATE TABLE Societe(
  nom varchar(64),
  web varchar(128),
- tel integer UNIQUE,
+ tel integer,
  fax integer,
  rncs varchar(32),
  ad1 varchar(128),
@@ -132,6 +133,7 @@ CREATE TABLE Societe(
  ville varchar(32)
 , CONSTRAINT cstra0a1deaa997dcd5f9b83a77654d7c287 CHECK(fax <= tel)
 );
+ALTER TABLE Societe ADD CONSTRAINT societe_tel_key UNIQUE(tel);
 
 CREATE TABLE State(
  eid integer PRIMARY KEY REFERENCES entities (eid),

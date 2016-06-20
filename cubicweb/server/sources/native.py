@@ -121,7 +121,7 @@ def rdef_physical_info(dbhelper, rdef):
     """
     if not rdef.object.final:
         return dbhelper.TYPE_MAPPING['Int']
-    coltype = y2sql.type_from_rdef(dbhelper, rdef, creating=False)
+    coltype = y2sql.type_from_rdef(dbhelper, rdef)
     allownull = rdef.cardinality[0] != '1'
     return coltype, allownull
 

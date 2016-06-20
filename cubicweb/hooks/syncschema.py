@@ -475,14 +475,6 @@ class CWAttributeAddOp(MemSchemaOperation):
         # then make necessary changes to the system source database
         syssource = cnx.repo.system_source
         attrtype = y2sql.type_from_rdef(syssource.dbhelper, rdef)
-        # XXX should be moved somehow into lgdb: sqlite doesn't support to
-        # add a new column with UNIQUE, it should be added after the ALTER TABLE
-        # using ADD INDEX
-        if syssource.dbdriver == 'sqlite' and 'UNIQUE' in attrtype:
-            extra_unique_index = True
-            attrtype = attrtype.replace(' UNIQUE', '')
-        else:
-            extra_unique_index = False
         # added some str() wrapping query since some backend (eg psycopg) don't
         # allow unicode queries
         table = SQL_PREFIX + rdefdef.subject
@@ -497,10 +489,9 @@ class CWAttributeAddOp(MemSchemaOperation):
             # the entity's type has just been added or if the column
             # has not been previously dropped
             self.error('error while altering table %s: %s', table, ex)
-        if extra_unique_index or entity.indexed:
+        if entity.indexed:
             try:
-                syssource.create_index(cnx, table, column,
-                                       unique=extra_unique_index)
+                syssource.create_index(cnx, table, column, unique=False)
             except Exception as ex:
                 self.error('error while creating index for %s.%s: %s',
                            table, column, ex)
@@ -654,7 +645,6 @@ class RDefDelOp(MemSchemaOperation):
             self.cnx.vreg.schema.add_relation_def(rdef)
 
 
-
 class RDefUpdateOp(MemSchemaOperation):
     """actually update some properties of a relation definition"""
     rschema = rdefkey = values = None # make pylint happy
@@ -766,11 +756,6 @@ class CWConstraintAddOp(CWConstraintDelOp):
     def precommit_event(self):
         cnx = self.cnx
         rdefentity = self.entity.reverse_constrained_by[0]
-        # when the relation is added in the same transaction, the constraint
-        # object is created by the operation adding the attribute or relation,
-        # so there is nothing to do here
-        if cnx.added_in_transaction(rdefentity.eid):
-            return
         rdef = self.rdef = cnx.vreg.schema.schema_by_eid(rdefentity.eid)
         cstrtype = self.entity.type
         if cstrtype in UNIQUE_CONSTRAINTS:
