@@ -27,14 +27,17 @@ from cubicweb.devtools.testlib import CubicWebTC
 
 class RQLObjectStoreTC(CubicWebTC):
     store_impl = stores.RQLObjectStore
+    insert_group_attrs = dict(name=u'grp')
+    insert_user_attrs = dict(login=u'lgn', upassword=u'pwd')
+    source_name = 'system'
+    user_extid = None
 
     def test_base(self):
         with self.admin_access.repo_cnx() as cnx:
             store = self.store_impl(cnx)
             # Check data insertion
-            group_eid = store.prepare_insert_entity('CWGroup', name=u'grp')
-            user_eid = store.prepare_insert_entity('CWUser', login=u'lgn',
-                                                   upassword=u'pwd')
+            group_eid = store.prepare_insert_entity('CWGroup', **self.insert_group_attrs)
+            user_eid = store.prepare_insert_entity('CWUser', **self.insert_user_attrs)
             store.prepare_insert_relation(user_eid, 'in_group', group_eid)
             store.commit()
             user = cnx.execute('CWUser X WHERE X login "lgn"').one()
@@ -44,8 +47,8 @@ class RQLObjectStoreTC(CubicWebTC):
             self.assertTrue(user.cwuri)
             self.assertEqual(user.created_by[0].eid, cnx.user.eid)
             self.assertEqual(user.owned_by[0].eid, cnx.user.eid)
-            self.assertEqual(user.cw_source[0].name, 'system')
-            self.assertEqual(cnx.describe(user.eid), ('CWUser', 'system', None))
+            self.assertEqual(user.cw_source[0].name, self.source_name)
+            self.assertEqual(cnx.describe(user.eid), ('CWUser', self.source_name, self.user_extid))
             groups = cnx.execute('CWGroup X WHERE U in_group X, U login "lgn"')
             self.assertEqual(group_eid, groups.one().eid)
             # Check data update
@@ -63,6 +66,21 @@ class RQLObjectStoreTC(CubicWebTC):
 
 class NoHookRQLObjectStoreTC(RQLObjectStoreTC):
     store_impl = stores.NoHookRQLObjectStore
+
+
+class NoHookRQLObjectStoreWithCustomMDGenStoreTC(RQLObjectStoreTC):
+    insert_group_attrs = RQLObjectStoreTC.insert_group_attrs.copy()
+    insert_group_attrs['cwuri'] = u'http://somewhere.com/group/1'
+    insert_user_attrs = RQLObjectStoreTC.insert_user_attrs.copy()
+    insert_user_attrs['cwuri'] = u'http://somewhere.com/user/1'
+    source_name = 'test'
+    user_extid = b'http://somewhere.com/user/1'
+
+    def store_impl(self, cnx):
+        source = cnx.create_entity('CWSource', type=u'datafeed', name=u'test', url=u'test')
+        cnx.commit()
+        metagen = stores.MetadataGenerator(cnx, source=cnx.repo.sources_by_eid[source.eid])
+        return stores.NoHookRQLObjectStore(cnx, metagen)
 
 
 class MetaGeneratorTC(CubicWebTC):
