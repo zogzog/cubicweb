@@ -574,8 +574,18 @@ WHERE _X.cw_eid IN(999998, 999999) AND NOT (EXISTS(SELECT 1 FROM cw_source_relat
     ''', '''SELECT _X.cw_eid
 FROM cw_CWSourceSchemaConfig AS _X LEFT OUTER JOIN owned_by_relation AS rel_owned_by1 ON (rel_owned_by1.eid_from=_X.cw_eid)
 WHERE EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0, cw_CWUser AS _U WHERE rel_created_by0.eid_from=_X.cw_eid AND rel_created_by0.eid_to=_U.cw_eid) AND _X.cw_cw_schema IS NOT NULL
-''')
-    ]
+'''),
+
+    ('Any X WHERE EXISTS(X in_state S, S name "state name"), X is in (Affaire, Note)',
+     '''SELECT _X.cw_eid
+FROM cw_Affaire AS _X
+WHERE EXISTS(SELECT 1 FROM cw_State AS _S WHERE _X.cw_in_state=_S.cw_eid AND _S.cw_name=state name)
+UNION ALL
+SELECT _X.cw_eid
+FROM cw_Note AS _X
+WHERE EXISTS(SELECT 1 FROM cw_State AS _S WHERE _X.cw_in_state=_S.cw_eid AND _S.cw_name=state name)'''),
+
+]
 
 ADVANCED_WITH_GROUP_CONCAT = [
         ("Any X,GROUP_CONCAT(TN) GROUPBY X ORDERBY XN WHERE T tags X, X name XN, T name TN, X is CWGroup",

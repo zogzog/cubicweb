@@ -27,7 +27,7 @@ import glob
 
 modname = distname = "cubicweb"
 
-numversion = (3, 22, 2)
+numversion = (3, 22, 3)
 version = '.'.join(str(num) for num in numversion) + '.dev0'
 
 description = "a repository of entities / relations for knowledge management"
