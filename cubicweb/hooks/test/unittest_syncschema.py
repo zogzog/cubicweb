@@ -398,7 +398,9 @@ class SchemaModificationHooksTC(CubicWebTC):
                         'EDEF constrained_by X WHERE CT name %(ct)s, EDEF eid %(x)s',
                         {'ct': cstr3.__class__.__name__, 'v': cstr3.serialize(), 'x': rdef.eid})
             cnx.commit()
-            self.assertCountEqual(rdef.constraints, [cstr, cstr3])
+            # Do not use assertCountEqual as it does "strange" equality
+            # comparison on Python 2.
+            self.assertEqual(set(rdef.constraints), set([cstr, cstr3]))
 
 
 if __name__ == '__main__':
