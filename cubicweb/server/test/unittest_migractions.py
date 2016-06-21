@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.migractions"""
 
+import os
 import os.path as osp
 from datetime import date
 from contextlib import contextmanager
