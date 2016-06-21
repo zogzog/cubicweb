@@ -26,8 +26,11 @@ from datetime import date, datetime, time
 from collections import defaultdict
 from base64 import b64encode
 
-from six import string_types, integer_types, text_type, binary_type
+from six import (string_types, integer_types, text_type, binary_type,
+                 add_metaclass)
 from six.moves import cPickle as pickle, range
+
+from logilab.common.deprecation import class_deprecated
 
 from cubicweb.utils import make_uid
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -196,6 +199,7 @@ def _create_copyfrom_buffer(data, columns=None, **convert_opts):
     return StringIO('\n'.join(rows))
 
 
+@add_metaclass(class_deprecated)
 class SQLGenObjectStore(NoHookRQLObjectStore):
     """Controller of the data import process. This version is based
     on direct insertions throught SQL command (COPY FROM or execute many).
@@ -204,6 +208,7 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
     >>> store.create_entity('Person', ...)
     >>> store.flush()
     """
+    __deprecation_warning__ = '[3.23] this class is deprecated, use MassiveObjectStore instead'
 
     def __init__(self, cnx, dump_output_dir=None, nb_threads_statement=1):
         """
