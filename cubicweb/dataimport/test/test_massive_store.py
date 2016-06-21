@@ -23,7 +23,7 @@ from cubicweb.devtools import startpgcluster, stoppgcluster
 from cubicweb.dataimport import ucsvreader, stores
 from cubicweb.dataimport.massive_store import MassiveObjectStore, PGHelper
 
-from test_stores import NoHookRQLObjectStoreWithCustomMDGenStoreTC
+import test_stores
 
 
 def setUpModule():
@@ -34,7 +34,8 @@ def tearDownModule(*args):
     stoppgcluster(__file__)
 
 
-class MassiveObjectStoreWithCustomMDGenStoreTC(NoHookRQLObjectStoreWithCustomMDGenStoreTC):
+class MassiveObjectStoreWithCustomMDGenStoreTC(
+        test_stores.NoHookRQLObjectStoreWithCustomMDGenStoreTC):
     configcls = PostgresApptestConfiguration
 
     def store_impl(self, cnx):
