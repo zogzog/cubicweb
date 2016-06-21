@@ -24,6 +24,8 @@ from io import StringIO
 
 from six.moves import range
 
+import pytz
+
 from yams.constraints import SizeConstraint
 
 from psycopg2 import ProgrammingError
@@ -119,7 +121,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._dbh = PGHelper(self._cnx, pg_schema)
         self._data_entities = defaultdict(list)
         self._data_relations = defaultdict(list)
-        self._now = datetime.utcnow()
+        self._now = datetime.now(pytz.utc)
         self._default_cwuri = make_uid('_auto_generated')
         self._count_cwuri = 0
         self.on_commit_callback = on_commit_callback

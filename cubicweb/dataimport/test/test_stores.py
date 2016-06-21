@@ -19,6 +19,8 @@
 
 import datetime as DT
 
+import pytz
+
 from cubicweb.dataimport import stores
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -80,7 +82,7 @@ class MetaGeneratorTC(CubicWebTC):
             metagen = stores.MetaGenerator(cnx)
             # hijack gen_modification_date to ensure we don't go through it
             metagen.gen_modification_date = None
-            md = DT.datetime.utcnow() - DT.timedelta(days=1)
+            md = DT.datetime.now(pytz.utc) - DT.timedelta(days=1)
             entity, rels = metagen.base_etype_dicts('CWUser')
             entity.cw_edited.update(dict(modification_date=md))
             with cnx.ensure_cnx_set:

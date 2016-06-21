@@ -63,6 +63,8 @@ from copy import copy
 
 from six import text_type
 
+import pytz
+
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached
 
@@ -262,7 +264,7 @@ class MetaGenerator(object):
         if source is None:
             source = cnx.repo.system_source
         self.source = source
-        self._now = datetime.utcnow()
+        self._now = datetime.now(pytz.utc)
         # attributes/relations shared by all entities of the same type
         self.etype_attrs = []
         self.etype_rels = []
