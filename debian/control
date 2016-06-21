@@ -10,7 +10,7 @@ Build-Depends:
  python (>= 2.6),
  python-six (>= 1.4.0),
  python-sphinx,
- python-logilab-common (>= 1.2.0),
+ python-logilab-common (>= 1.2.2),
  python-unittest2 (>= 0.7.0),
  python-logilab-mtconverter,
  python-markdown,

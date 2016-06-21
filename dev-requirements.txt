@@ -1,2 +1,1 @@
 pytest
-hg+https://hg.logilab.org/master/logilab/common@7ebacaa38380#egg=logilab-common
