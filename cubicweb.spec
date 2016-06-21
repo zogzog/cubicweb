@@ -26,6 +26,7 @@ Requires:       %{python}-logilab-common >= 0.63.1
 Requires:       %{python}-logilab-mtconverter >= 0.8.0
 Requires:       %{python}-rql >= 0.34.0
 Requires:       %{python}-yams >= 0.42.0
+Requires:       %{python}-yams < 0.43
 Requires:       %{python}-logilab-database >= 1.15.0
 Requires:       %{python}-passlib
 Requires:       %{python}-lxml
