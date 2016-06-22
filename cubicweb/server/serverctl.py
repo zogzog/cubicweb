@@ -969,20 +969,24 @@ class RebuildFTICommand(Command):
 
 
 class SynchronizeSourceCommand(Command):
-    """Force a source synchronization.
+    """Force sources synchronization.
 
     <instance>
       the identifier of the instance
     <source>
-      the name of the source to synchronize.
+      names of the sources to synchronize, if empty all sources will be synced.
     """
     name = 'source-sync'
-    arguments = '<instance> <source>'
-    min_args = max_args = 2
+    arguments = '<instance> [<source> <source> ...]'
+    min_args = 1
     options = (
         ('loglevel',
          {'short': 'l', 'type': 'choice', 'metavar': '<log level>',
           'default': 'info', 'choices': ('debug', 'info', 'warning', 'error')},
+         ),
+        ('force',
+         {'short': 'f', 'action': 'store_true', 'default': False,
+          'help': 'force source synchronization (ignore synchronization interval)'},
          ),
     )
 
@@ -995,25 +999,38 @@ class SynchronizeSourceCommand(Command):
         init_cmdline_log_threshold(config, self['loglevel'])
         repo = repoapi.get_repository(config=config)
         repo.hm.call_hooks('server_maintenance', repo=repo)
-        status = 0
-        try:
-            try:
-                source = repo.sources_by_uri[args[1]]
-            except KeyError:
-                raise ExecutionError('no source named %r' % args[1])
-            with repo.internal_cnx() as cnx:
+        errors = False
+        with repo.internal_cnx() as cnx:
+            sources = []
+            if len(args) >= 2:
+                for name in args[1:]:
+                    try:
+                        source = repo.sources_by_uri[name]
+                    except KeyError:
+                        cnx.error('no source named %r' % name)
+                        errors = True
+                    else:
+                        sources.append(source)
+            else:
+                for uri, source in list(repo.sources_by_uri.items()):
+                    if (uri != 'system' and
+                            repo.config.source_enabled(source) and
+                            source.config['synchronize']):
+                        sources.append(source)
+
+            for source in sources:
                 try:
-                    stats = source.pull_data(cnx, force=True, raise_on_error=True)
-                except SourceException as exc:
-                    print("can't synchronize the source:", exc)
-                    status = 1
-                    stats = {}
-        finally:
-            repo.shutdown()
-        for key, val in stats.items():
-            if val:
-                print(key, ':', val)
-        sys.exit(status)
+                    stats = source.pull_data(cnx, force=self['force'], raise_on_error=True)
+                except Exception:
+                    cnx.exception('while trying to update source %s', source)
+                    errors = True
+                else:
+                    for key, val in stats.items():
+                        if val:
+                            print(key, ':', val)
+
+        if errors:
+            raise ExecutionError('All sources where not synced')
 
 
 def permissionshandler(relation, perms):
