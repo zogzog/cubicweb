@@ -48,6 +48,8 @@ for cwconstraint in rql('Any C WHERE R constrained_by C').entities():
     cwrdef = cwconstraint.reverse_constrained_by[0]
     rdef = cwrdef.yams_schema()
     cstr = rdef.constraint_by_eid(cwconstraint.eid)
+    with cnx.deny_all_hooks_but():
+        cwconstraint.cw_set(value=unicode(cstr.serialize()))
     if cstr.type() not in ('BoundaryConstraint', 'IntervalBoundConstraint',
                            'StaticVocabularyConstraint'):
         # These cannot be translate into backend CHECK.
@@ -58,4 +60,3 @@ for cwconstraint in rql('Any C WHERE R constrained_by C').entities():
     sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s CHECK(%(v)s)' % args)
 
 commit()
-
