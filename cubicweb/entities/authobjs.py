@@ -115,7 +115,7 @@ class CWUser(AnyEntity):
                 'CWProperty X WHERE X pkey %(k)s, X for_user U, U eid %(u)s',
                 {'k': pkey, 'u': self.eid}).get_entity(0, 0)
         except Exception:
-            kwargs = dict(pkey=unicode(pkey), value=value)
+            kwargs = dict(pkey=text_type(pkey), value=value)
             if self.is_in_group('managers'):
                 kwargs['for_user'] = self
             self._cw.create_entity('CWProperty', **kwargs)
