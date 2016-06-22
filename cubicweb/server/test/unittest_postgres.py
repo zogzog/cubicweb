@@ -21,8 +21,6 @@ from threading import Thread
 
 from six.moves import range
 
-from logilab.common.testlib import SkipTest
-
 import logilab.database as lgdb
 from cubicweb import ValidationError
 from cubicweb.devtools import PostgresApptestConfiguration, startpgcluster, stoppgcluster
