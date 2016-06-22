@@ -64,6 +64,16 @@ class ExtEntitiesImporterTC(CubicWebTC):
             self.assertEqual(entity.nom, u'de la lune')
             self.assertEqual(entity.prenom, u'Jean')
 
+    def test_bytes_attribute(self):
+        with self.admin_access.repo_cnx() as cnx:
+            importer = self.importer(cnx)
+            personne = ExtEntity('Personne', 1, {'photo': set([b'poilu']),
+                                                 'nom': set([u'alf'])})
+            importer.import_entities([personne])
+            cnx.commit()
+            entity = cnx.find('Personne').one()
+            self.assertEqual(entity.photo.getvalue(), b'poilu')
+
     def test_import_missing_required_attribute(self):
         """Check import of ext entity with missing required attribute"""
         with self.admin_access.repo_cnx() as cnx:

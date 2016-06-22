@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from yams.buildobjs import EntityType, String, SubjectRelation
+from yams.buildobjs import Bytes, EntityType, String, SubjectRelation
 
 from cubicweb.schema import RQLConstraint
 
@@ -27,3 +27,4 @@ class Personne(EntityType):
     enfant = SubjectRelation('Personne', inlined=True, cardinality='?*')
     connait = SubjectRelation('Personne', symmetric=True,
                               constraints=[RQLConstraint('NOT S identity O')])
+    photo = Bytes()

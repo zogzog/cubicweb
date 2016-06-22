@@ -32,6 +32,8 @@ import logging
 
 from logilab.mtconverter import xml_escape
 
+from cubicweb import Binary
+
 
 def cwuri2eid(cnx, etypes, source_eid=None):
     """Return a dictionary mapping cwuri to eid for entities of the given entity types and / or
@@ -137,7 +139,8 @@ class ExtEntity(object):
       (eg. ``'Person'``, ``'Animal'``, ...),
 
     * ``values``, a dictionary whose keys are attribute or relation names from the schema (eg.
-      ``'first_name'``, ``'friend'``), and whose values are *sets*
+      ``'first_name'``, ``'friend'``), and whose values are *sets*. For
+      attributes of type Bytes, byte strings should be inserted in `values`.
 
     For instance:
 
@@ -213,6 +216,8 @@ class ExtEntity(object):
                     if (rschema.final and eschema.has_metadata(rtype, 'format')
                             and not rtype + '_format' in entity_dict):
                         entity_dict[rtype + '_format'] = u'text/plain'
+                    if rschema.final and rschema.objects()[0].type == 'Bytes':
+                        entity_dict[rtype] = Binary(entity_dict[rtype])
                 else:
                     del entity_dict[key]
             else:
