@@ -274,7 +274,8 @@ class SchemaModificationHooksTC(CubicWebTC):
     def test_unique_change(self):
         with self.admin_access.repo_cnx() as cnx:
             try:
-                eid = cnx.execute('INSERT CWConstraint X: X cstrtype CT, DEF constrained_by X '
+                eid = cnx.execute('INSERT CWConstraint X: X cstrtype CT, X value "{}", '
+                                  '                       DEF constrained_by X '
                                   'WHERE CT name "UniqueConstraint", DEF relation_type RT, '
                                   'DEF from_entity E, RT name "name", '
                                   'E name "Workflow"').rows[0][0]

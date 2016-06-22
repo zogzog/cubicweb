@@ -52,7 +52,7 @@ CREATE TABLE Datetest(
  d2 date,
  t1 time,
  t2 time
-, CONSTRAINT cstr67c656afbcbfadd4be34d75656a2521a CHECK(d1 <= CAST(clock_timestamp() AS DATE))
+, CONSTRAINT cstrf6a3dad792ba13c2cddcf61a2b737c00 CHECK(d1 <= CAST(clock_timestamp() AS DATE))
 );
 
 CREATE TABLE Division(
@@ -97,7 +97,7 @@ CREATE TABLE Person(
  datenaiss date,
  test boolean,
  salary float
-, CONSTRAINT cstrdedefafc86dc831341c33547388c25bb CHECK(promo IN ('bon', 'pasbon'))
+, CONSTRAINT cstr151c2116c0c09de13fded0619d5b4aac CHECK(promo IN ('bon', 'pasbon'))
 );
 CREATE UNIQUE INDEX unique_e6c2d219772dbf1715597f7d9a6b3892 ON Person(nom,prenom);
 
@@ -115,7 +115,7 @@ CREATE TABLE Salaried(
  datenaiss date,
  test boolean,
  salary float
-, CONSTRAINT cstrb62a1623de9e9b92eb552706b6ce0890 CHECK(promo IN ('bon', 'pasbon'))
+, CONSTRAINT cstr069569cf1791dba1a2726197c53aeb44 CHECK(promo IN ('bon', 'pasbon'))
 );
 CREATE UNIQUE INDEX unique_98da0f9de8588baa8966f0b1a6f850a3 ON Salaried(nom,prenom);
 
@@ -130,7 +130,7 @@ CREATE TABLE Societe(
  ad3 varchar(128),
  cp varchar(12),
  ville varchar(32)
-, CONSTRAINT cstraf91cb60287eec6d5c1175075edcccc0 CHECK(fax <= tel)
+, CONSTRAINT cstra0a1deaa997dcd5f9b83a77654d7c287 CHECK(fax <= tel)
 );
 
 CREATE TABLE State(
@@ -159,8 +159,8 @@ CREATE TABLE pkginfo(
  author_email varchar(100) NOT NULL,
  mailinglist varchar(100),
  debian_handler varchar(6)
-, CONSTRAINT cstree063a486aa92d4f721ced56c819f38a CHECK(license IN ('GPL', 'ZPL'))
-, CONSTRAINT cstrafb4b6de5d50b5a2eca60b33b7acf59b CHECK(debian_handler IN ('machin', 'bidule'))
+, CONSTRAINT cstrbffed5ce7306d65a0db51182febd4a7b CHECK(license IN ('GPL', 'ZPL'))
+, CONSTRAINT cstr2238b33d09bf7c441e0888be354c2444 CHECK(debian_handler IN ('machin', 'bidule'))
 );
 
 

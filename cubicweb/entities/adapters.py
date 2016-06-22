@@ -427,5 +427,6 @@ class IUserFriendlyCheckConstraint(IUserFriendlyError):
         # constraint between two attributes). This should be the purpose of an api rework at some
         # point, we currently rely on the fact that such constraint will provide a dedicated user
         # message not relying on the `value` argument
-        msg, args = constraint.failed_message(key, self.entity.cw_edited.get(rschema.type))
+        value = self.entity.cw_edited.get(rschema.type)
+        msg, args = constraint.failed_message(key, value, self.entity)
         raise ValidationError(self.entity.eid, {key: msg}, args)

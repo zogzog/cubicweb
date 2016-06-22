@@ -235,12 +235,12 @@ class Schema2RQLTC(TestCase):
              'WHERE CT eid %(ct)s, EDEF eid %(x)s',
              {'x': None,
               'ct': u'SizeConstraint_eid',
-              'value': u'{"max": 2, "min": null}'}),
+              'value': u'{"max": 2, "min": null, "msg": null}'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
              'WHERE CT eid %(ct)s, EDEF eid %(x)s',
              {'x': None,
               'ct': u'StaticVocabularyConstraint_eid',
-              'value': u'["?1", "11"]'}),
+              'value': u'{"msg": null, "values": ["?1", "11"]}'}),
 
             ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,'
              'X description %(description)s,X formula %(formula)s,X fulltextindexed %(fulltextindexed)s,'
@@ -262,13 +262,13 @@ class Schema2RQLTC(TestCase):
              'WHERE CT eid %(ct)s, EDEF eid %(x)s',
              {'x': None,
               'ct': u'SizeConstraint_eid',
-              'value': u'{"max": 2, "min": null}'}),
+              'value': u'{"max": 2, "min": null, "msg": null}'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
              'WHERE CT eid %(ct)s, EDEF eid %(x)s',
              {'x': None,
               'ct': u'StaticVocabularyConstraint_eid',
-              "value": (u'["?*", "1*", "+*", "**", "?+", "1+", "++", "*+", "?1", '
-                        u'"11", "+1", "*1", "??", "1?", "+?", "*?"]')})],
+              "value": (u'{"msg": null, "values": ["?*", "1*", "+*", "**", "?+", "1+", "++", "*+", "?1", '
+                        u'"11", "+1", "*1", "??", "1?", "+?", "*?"]}')})],
               list(rschema2rql(schema.rschema('cardinality'), cstrtypemap)))
 
     def test_rschema2rql_custom_type(self):
@@ -328,12 +328,13 @@ class Schema2RQLTC(TestCase):
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
              'WHERE CT eid %(ct)s, EDEF eid %(x)s',
              {'x': None,
-              'value': u'None',
+              'value': u'{"msg": null, "values": ["text/rest", "text/markdown", '
+              '"text/html", "text/plain"]}',
               'ct': 'FormatConstraint_eid'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
              'WHERE CT eid %(ct)s, EDEF eid %(x)s',
              {'x': None,
-              'value': u'{"max": 50, "min": null}',
+              'value': u'{"max": 50, "min": null, "msg": null}',
               'ct': 'SizeConstraint_eid'})],
                              list(rdef2rql(schema['description_format'].rdefs[('CWRType', 'String')],
                                            cstrtypemap)))
