@@ -21,6 +21,7 @@ import itertools
 from cubicweb.devtools import testlib, PostgresApptestConfiguration
 from cubicweb.devtools import startpgcluster, stoppgcluster
 from cubicweb.dataimport import ucsvreader, stores
+from cubicweb.server.schema2sql import build_index_name
 from cubicweb.dataimport.massive_store import MassiveObjectStore, PGHelper
 
 import test_stores
@@ -61,7 +62,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
         for code, gmt, dst, raw_offset in ucsvreader(open(self.datapath('timeZones.txt'), 'rb'),
                                                      delimiter='\t'):
             cnx.create_entity('TimeZone', code=code, gmt=float(gmt),
-                                    dst=float(dst), raw_offset=float(raw_offset))
+                              dst=float(dst), raw_offset=float(raw_offset))
         timezone_code = dict(cnx.execute('Any C, X WHERE X is TimeZone, X code C'))
         # Push data
         for ind, infos in enumerate(ucsvreader(open(dumpname, 'rb'),
@@ -139,8 +140,10 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             indexes = [r[0] for r in crs.fetchall()]
         self.assertIn('entities_pkey', indexes)
         self.assertIn('entities_extid_idx', indexes)
-        self.assertIn('owned_by_relation_p_key', indexes)
-        self.assertIn('owned_by_relation_to_idx', indexes)
+        self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
+                      indexes)
+        self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
+                      indexes)
 
     def test_eids_seq_range(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -219,8 +222,10 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             indexes = [r[0] for r in crs.fetchall()]
         self.assertIn('entities_pkey', indexes)
         self.assertIn('entities_extid_idx', indexes)
-        self.assertIn('owned_by_relation_p_key', indexes)
-        self.assertIn('owned_by_relation_to_idx', indexes)
+        self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
+                      indexes)
+        self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
+                      indexes)
 
     def test_slave_mode_exception(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -252,8 +257,10 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             indexes = [r[0] for r in crs.fetchall()]
             self.assertNotIn('entities_pkey', indexes)
             self.assertNotIn('entities_extid_idx', indexes)
-            self.assertNotIn('owned_by_relation_p_key', indexes)
-            self.assertNotIn('owned_by_relation_to_idx', indexes)
+            self.assertNotIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
+                             indexes)
+            self.assertNotIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
+                             indexes)
 
             # Cleanup -> index
             store.finish()
@@ -263,8 +270,10 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             indexes = [r[0] for r in crs.fetchall()]
             self.assertIn('entities_pkey', indexes)
             self.assertIn('entities_extid_idx', indexes)
-            self.assertIn('owned_by_relation_p_key', indexes)
-            self.assertIn('owned_by_relation_to_idx', indexes)
+            self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
+                          indexes)
+            self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
+                          indexes)
 
     def test_multiple_insert(self):
         with self.admin_access.repo_cnx() as cnx:

@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from hashlib import md5
 
-from six import string_types
+from six import string_types, text_type
 from six.moves import range
 
 from yams.constraints import (SizeConstraint, UniqueConstraint, Attribute,
@@ -42,6 +42,20 @@ def sql_create_index(self, table, column, unique=False):
         return 'ALTER TABLE %s ADD CONSTRAINT %s UNIQUE(%s);' % (table, idx, column)
     else:
         return 'CREATE INDEX %s ON %s(%s);' % (idx, table, column)
+
+
+@monkeypatch(database._GenericAdvFuncHelper)
+def _index_name(self, table, column, unique=False):
+    if unique:
+        return build_index_name(table, [column], prefix='key_')
+    else:
+        return build_index_name(table, [column], prefix='idx_')
+
+
+def build_index_name(table, columns, prefix='idx_'):
+    return '%s%s' % (prefix, md5((table +
+                                  ',' +
+                                  ','.join(sorted(columns))).encode('ascii')).hexdigest())
 
 
 def rschema_has_table(rschema, skip_relations):
@@ -97,9 +111,8 @@ def eschema_attrs(eschema, skip_relations):
 
 
 def unique_index_name(eschema, columns):
-    return u'unique_%s' % md5((eschema.type +
-                               ',' +
-                               ','.join(sorted(columns))).encode('ascii')).hexdigest()
+    # unique_index_name is used as name of CWUniqueConstraint, hence it should be unicode
+    return text_type(build_index_name(eschema.type, columns, 'unique_'))
 
 
 def iter_unique_index_names(eschema):
@@ -264,16 +277,20 @@ _SQL_SCHEMA = """
 CREATE TABLE %(table)s (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT %(table)s_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT %(pkey_idx)s PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX %(table)s_from_idx ON %(table)s(eid_from);
-CREATE INDEX %(table)s_to_idx ON %(table)s(eid_to);"""
+CREATE INDEX %(from_idx)s ON %(table)s(eid_from);
+CREATE INDEX %(to_idx)s ON %(table)s(eid_to);"""
 
 
 def rschema2sql(rschema):
     assert not rschema.rule
-    return _SQL_SCHEMA % {'table': '%s_relation' % rschema.type}
+    table = '%s_relation' % rschema.type
+    return _SQL_SCHEMA % {'table': table,
+                          'pkey_idx': build_index_name(table, ['eid_from', 'eid_to'], 'key_'),
+                          'from_idx': build_index_name(table, ['eid_from'], 'idx_'),
+                          'to_idx': build_index_name(table, ['eid_to'], 'idx_')}
 
 
 def droprschema2sql(rschema):

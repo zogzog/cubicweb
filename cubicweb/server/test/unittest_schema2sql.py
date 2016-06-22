@@ -39,7 +39,7 @@ CREATE TABLE Affaire(
  ref varchar(12),
  inline_rel integer REFERENCES entities (eid)
 );
-CREATE INDEX affaire_inline_rel_idx ON Affaire(inline_rel);
+CREATE INDEX idx_444e29ba3bd1f6c7ea89008613345d7b ON Affaire(inline_rel);
 
 CREATE TABLE Company(
  name text
@@ -62,7 +62,7 @@ CREATE TABLE Division(
 CREATE TABLE EPermission(
  name varchar(100) NOT NULL
 );
-CREATE INDEX epermission_name_idx ON EPermission(name);
+CREATE INDEX idx_86fb596553c6f1ebc159422169f76c32 ON EPermission(name);
 
 CREATE TABLE Eetype(
  name varchar(64) NOT NULL,
@@ -71,9 +71,9 @@ CREATE TABLE Eetype(
  final boolean,
  initial_state integer REFERENCES entities (eid)
 );
-CREATE INDEX eetype_name_idx ON Eetype(name);
-ALTER TABLE Eetype ADD CONSTRAINT eetype_name_key UNIQUE(name);
-CREATE INDEX eetype_initial_state_idx ON Eetype(initial_state);
+CREATE INDEX idx_f1f29b77c85f57921df19d2c29044d2d ON Eetype(name);
+ALTER TABLE Eetype ADD CONSTRAINT key_f1f29b77c85f57921df19d2c29044d2d UNIQUE(name);
+CREATE INDEX idx_27be7c0b18181bbdc76f3a54296dd81f ON Eetype(initial_state);
 
 CREATE TABLE Employee(
 );
@@ -133,14 +133,14 @@ CREATE TABLE Societe(
  ville varchar(32)
 , CONSTRAINT cstra0a1deaa997dcd5f9b83a77654d7c287 CHECK(fax <= tel)
 );
-ALTER TABLE Societe ADD CONSTRAINT societe_tel_key UNIQUE(tel);
+ALTER TABLE Societe ADD CONSTRAINT key_abace82c402eba4a37ac54a7872607af UNIQUE(tel);
 
 CREATE TABLE State(
  eid integer PRIMARY KEY REFERENCES entities (eid),
  name varchar(256) NOT NULL,
  description text
 );
-CREATE INDEX state_name_idx ON State(name);
+CREATE INDEX idx_fba3802ef9056558bb9c06b5c6ba9aab ON State(name);
 
 CREATE TABLE Subcompany(
  name text
@@ -169,111 +169,112 @@ CREATE TABLE pkginfo(
 CREATE TABLE concerne_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT concerne_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_19e70eabae35becb48c247bc4a688170 PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX concerne_relation_from_idx ON concerne_relation(eid_from);
-CREATE INDEX concerne_relation_to_idx ON concerne_relation(eid_to);
+CREATE INDEX idx_5ee7db9477832d6e0e847d9d9cd39f5f ON concerne_relation(eid_from);
+CREATE INDEX idx_07f609872b384bb1e598cc355686a53c ON concerne_relation(eid_to);
 
 CREATE TABLE division_of_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT division_of_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_ca129a4cfa4c185c7783654e9e97da5a PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX division_of_relation_from_idx ON division_of_relation(eid_from);
-CREATE INDEX division_of_relation_to_idx ON division_of_relation(eid_to);
+CREATE INDEX idx_78da9d594180fecb68ef1eba0c17a975 ON division_of_relation(eid_from);
+CREATE INDEX idx_0e6bd09d8d25129781928848e2f6d8d5 ON division_of_relation(eid_to);
 
 CREATE TABLE evaluee_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT evaluee_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_61aa7ea90ed7e43818c9865a3a7eb046 PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX evaluee_relation_from_idx ON evaluee_relation(eid_from);
-CREATE INDEX evaluee_relation_to_idx ON evaluee_relation(eid_to);
+CREATE INDEX idx_69358dbe47990b4f8cf22af55b064dc5 ON evaluee_relation(eid_from);
+CREATE INDEX idx_634663371244297334ff655a26d6cce3 ON evaluee_relation(eid_to);
 
 CREATE TABLE next_state_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT next_state_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_24a1275472da1ccc1031f6c463cdaa95 PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX next_state_relation_from_idx ON next_state_relation(eid_from);
-CREATE INDEX next_state_relation_to_idx ON next_state_relation(eid_to);
+CREATE INDEX idx_e5c1a2ddc41a057eaaf6bdf9f5c6b587 ON next_state_relation(eid_from);
+CREATE INDEX idx_a3cf3cb065213186cf825e13037df826 ON next_state_relation(eid_to);
 
 CREATE TABLE obj_wildcard_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT obj_wildcard_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_d252c56177735139c85aee463cd65703 PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX obj_wildcard_relation_from_idx ON obj_wildcard_relation(eid_from);
-CREATE INDEX obj_wildcard_relation_to_idx ON obj_wildcard_relation(eid_to);
+CREATE INDEX idx_efbd9bd98c44bdfe2add479ab6704017 ON obj_wildcard_relation(eid_from);
+CREATE INDEX idx_e8c168c66f9d6057ce14e644b8436808 ON obj_wildcard_relation(eid_to);
 
 CREATE TABLE require_permission_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT require_permission_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_24f38c4edaf84fdcc0f0d093fec3d5c7 PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX require_permission_relation_from_idx ON require_permission_relation(eid_from);
-CREATE INDEX require_permission_relation_to_idx ON require_permission_relation(eid_to);
+CREATE INDEX idx_193987ddfd7c66bf43ded029ea363605 ON require_permission_relation(eid_from);
+CREATE INDEX idx_f6dd784ff5161c4461a753591fe1de94 ON require_permission_relation(eid_to);
 
 CREATE TABLE state_of_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT state_of_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_be6983bc3072230d2e22f7631a0c9e25 PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX state_of_relation_from_idx ON state_of_relation(eid_from);
-CREATE INDEX state_of_relation_to_idx ON state_of_relation(eid_to);
+CREATE INDEX idx_5f17c14443de03bd1ef79750c89c2390 ON state_of_relation(eid_from);
+CREATE INDEX idx_0ee453927e090f6eec01c412278dea9b ON state_of_relation(eid_to);
 
 CREATE TABLE subcompany_of_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT subcompany_of_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_25bee50df3b495a40a02aa39f832377f PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX subcompany_of_relation_from_idx ON subcompany_of_relation(eid_from);
-CREATE INDEX subcompany_of_relation_to_idx ON subcompany_of_relation(eid_to);
+CREATE INDEX idx_1e6ee813030fec8d4439fc186ce752b0 ON subcompany_of_relation(eid_from);
+CREATE INDEX idx_259f9ba242f4cb80b9b2f2f9a754fca7 ON subcompany_of_relation(eid_to);
 
 CREATE TABLE subdivision_of_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT subdivision_of_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_4d6f7368345676ebb66758ab71f60aef PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX subdivision_of_relation_from_idx ON subdivision_of_relation(eid_from);
-CREATE INDEX subdivision_of_relation_to_idx ON subdivision_of_relation(eid_to);
+CREATE INDEX idx_a90a958166c767b50a7294e93858c1a8 ON subdivision_of_relation(eid_from);
+CREATE INDEX idx_0360028629649b26da96044a12735ad4 ON subdivision_of_relation(eid_to);
 
 CREATE TABLE subj_wildcard_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT subj_wildcard_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_712ea3ec0bc1976bddc93ceba0acff06 PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX subj_wildcard_relation_from_idx ON subj_wildcard_relation(eid_from);
-CREATE INDEX subj_wildcard_relation_to_idx ON subj_wildcard_relation(eid_to);
+CREATE INDEX idx_4dbfa4a0d44aaa0f0816560fa8b81c22 ON subj_wildcard_relation(eid_from);
+CREATE INDEX idx_09aa23f8a8b63189d05a63f8d49c7bc0 ON subj_wildcard_relation(eid_to);
 
 CREATE TABLE sym_rel_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT sym_rel_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_c787b80522205c42402530580b0d307b PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX sym_rel_relation_from_idx ON sym_rel_relation(eid_from);
-CREATE INDEX sym_rel_relation_to_idx ON sym_rel_relation(eid_to);
+CREATE INDEX idx_a46ed54f98cc4d91f0df5375d3ef73cb ON sym_rel_relation(eid_from);
+CREATE INDEX idx_0faa43abe25fc83e9400a3b96daed2b2 ON sym_rel_relation(eid_to);
 
 CREATE TABLE travaille_relation (
   eid_from INTEGER NOT NULL REFERENCES entities (eid),
   eid_to INTEGER NOT NULL REFERENCES entities (eid),
-  CONSTRAINT travaille_relation_p_key PRIMARY KEY(eid_from, eid_to)
+  CONSTRAINT key_d7b209a1f84d9cae74a98626ef0aba0b PRIMARY KEY(eid_from, eid_to)
 );
 
-CREATE INDEX travaille_relation_from_idx ON travaille_relation(eid_from);
-CREATE INDEX travaille_relation_to_idx ON travaille_relation(eid_to);
+CREATE INDEX idx_b00e86c772e6577ad7a7901dd0b257b2 ON travaille_relation(eid_from);
+CREATE INDEX idx_970c052363294a9871a4824c9588e220 ON travaille_relation(eid_to);
 """
+
 
 class SQLSchemaTC(TestCase):
 
