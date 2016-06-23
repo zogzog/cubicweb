@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unittest for cubicweb.dbapi"""
+"""unittest for cubicweb user registration service"""
 
 from cubicweb import ValidationError
 from cubicweb.web import Unauthorized
@@ -36,9 +36,14 @@ class RegisterUserTC(CubicWebTC):
                              password=u'bar3', email=u'foo3@bar3.com',
                              firstname=u'Foo3', surname=u'Bar3')
             # same login
-            with self.assertRaises(ValidationError):
+            with self.assertRaises(ValidationError) as cm:
                 cnx.call_service('register_user', login=u'foo3',
                                  password=u'bar3')
+            expected_errors = {
+                '': u'some relations violate a unicity constraint',
+                'login': u'%(KEY-rtype)s is part of violated unicity constraint',
+            }
+            self.assertEqual(cm.exception.errors, expected_errors)
 
     def test_register_user_service_unique_email(self):
         with self.admin_access.cnx() as cnx:
@@ -49,7 +54,8 @@ class RegisterUserTC(CubicWebTC):
                 cnx.call_service('register_user', login=u'foo3@bar3.com',
                                  password=u'bar3')
             expected_errors = {
-                'login-subject': u'the value "foo3@bar3.com" is already used, use another one',
+                '': u'some relations violate a unicity constraint',
+                'address': u'%(KEY-rtype)s is part of violated unicity constraint',
             }
             self.assertEqual(cm.exception.errors, expected_errors)
 

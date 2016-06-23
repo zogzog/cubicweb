@@ -125,15 +125,6 @@ class RegisterUserService(Service):
 
     def call(self, login, password, email=None, groups=None, **cwuserkwargs):
         cnx = self._cw
-        errmsg = cnx._('the value "%s" is already used, use another one')
-
-        if (cnx.execute('CWUser X WHERE X login %(login)s', {'login': login},
-                        build_descr=False)
-            or cnx.execute('CWUser X WHERE X use_email C, C address %(login)s',
-                           {'login': login}, build_descr=False)):
-            qname = role_name('login', 'subject')
-            raise ValidationError(None, {qname: errmsg % login})
-
         if isinstance(password, text_type):
             # password should *always* be utf8 encoded
             password = password.encode('UTF8')
@@ -147,13 +138,8 @@ class RegisterUserService(Service):
         group_names = ', '.join('%r' % group for group in groups)
         cnx.execute('SET X in_group G WHERE X eid %%(x)s, G name IN (%s)' % group_names,
                     {'x': user.eid})
-
         if email or '@' in login:
             d = {'login': login, 'email': email or login}
-            if cnx.execute('EmailAddress X WHERE X address %(email)s', d,
-                           build_descr=False):
-                qname = role_name('address', 'subject')
-                raise ValidationError(None, {qname: errmsg % d['email']})
             cnx.execute('INSERT EmailAddress X: X address %(email)s, '
                         'U primary_email X, U use_email X '
                         'WHERE U login %(login)s', d, build_descr=False)
