@@ -125,15 +125,15 @@ class CoreHooksTC(CubicWebTC):
     def test_metadata_created_by(self):
         with self.admin_access.repo_cnx() as cnx:
             entity = cnx.create_entity('Bookmark', title=u'wf1', path=u'/view')
-            cnx.commit() # fire operations
-            self.assertEqual(len(entity.created_by), 1) # make sure we have only one creator
+            cnx.commit()  # fire operations
+            self.assertEqual(len(entity.created_by), 1)  # make sure we have only one creator
             self.assertEqual(entity.created_by[0].eid, cnx.user.eid)
 
     def test_metadata_owned_by(self):
         with self.admin_access.repo_cnx() as cnx:
             entity = cnx.create_entity('Bookmark', title=u'wf1', path=u'/view')
-            cnx.commit() # fire operations
-            self.assertEqual(len(entity.owned_by), 1) # make sure we have only one owner
+            cnx.commit()  # fire operations
+            self.assertEqual(len(entity.owned_by), 1)  # make sure we have only one owner
             self.assertEqual(entity.owned_by[0].eid, cnx.user.eid)
 
     def test_user_login_stripped(self):
@@ -146,7 +146,6 @@ class CoreHooksTC(CubicWebTC):
             tname = cnx.execute('Any L WHERE E login L, E eid %(e)s',
                                 {'e': u.eid})[0][0]
             self.assertEqual(tname, 'jijoe')
-
 
 
 class UserGroupHooksTC(CubicWebTC):
@@ -169,11 +168,11 @@ class UserGroupHooksTC(CubicWebTC):
             self.create_user(cnx, 'toto').eid
             # composite of euser should be owned by the euser regardless of who created it
             cnx.execute('INSERT EmailAddress X: X address "toto@logilab.fr", U use_email X '
-                         'WHERE U login "toto"')
+                        'WHERE U login "toto"')
             cnx.commit()
             self.assertEqual(cnx.execute('Any A WHERE X owned_by U, U use_email X,'
-                                           'U login "toto", X address A')[0][0],
-                              'toto@logilab.fr')
+                                         'U login "toto", X address A')[0][0],
+                             'toto@logilab.fr')
 
     def test_user_composite_no_owner_on_deleted_entity(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -194,7 +193,6 @@ class UserGroupHooksTC(CubicWebTC):
             self.assertFalse(cnx.execute('Any X WHERE X created_by Y, X eid >= %(x)s', {'x': eid}))
 
 
-
 class SchemaHooksTC(CubicWebTC):
 
     def test_duplicate_etype_error(self):
@@ -210,7 +208,7 @@ class SchemaHooksTC(CubicWebTC):
     def test_validation_unique_constraint(self):
         with self.admin_access.repo_cnx() as cnx:
             with self.assertRaises(ValidationError) as cm:
-                cnx.execute('INSERT CWUser X: X login "admin"')
+                cnx.execute('INSERT CWUser X: X login "admin", X upassword "admin"')
             ex = cm.exception
             ex.translate(text_type)
             self.assertIsInstance(ex.entity, int)
@@ -220,5 +218,5 @@ class SchemaHooksTC(CubicWebTC):
 
 
 if __name__ == '__main__':
-    from logilab.common.testlib import unittest_main
-    unittest_main()
+    import unittest
+    unittest.main()
