@@ -24,20 +24,14 @@ from cubicweb.devtools.testlib import CubicWebTC
 
 class RegisterUserTC(CubicWebTC):
 
-    def test_register_user_service(self):
-        acc = self.admin_access
-        with acc.client_cnx() as cnx:
-            cnx.call_service('register_user', login=u'foo1', password=u'bar1',
-                             email=u'foo1@bar1.com', firstname=u'Foo1',
-                             surname=u'Bar1')
-
-        acc = self.new_access('anon')
-        with acc.client_cnx() as cnx:
+    def test_register_user_service_anon(self):
+        with self.new_access('anon').client_cnx() as cnx:
             self.assertRaises(Unauthorized, cnx.call_service, 'register_user',
                               login=u'foo2', password=u'bar2',
                               email=u'foo2@bar2.com', firstname=u'Foo2', surname=u'Bar2')
 
-        with self.repo.internal_cnx() as cnx:
+    def test_register_user_service_unique(self):
+        with self.admin_access.cnx() as cnx:
             cnx.call_service('register_user', login=u'foo3',
                              password=u'bar3', email=u'foo3@bar3.com',
                              firstname=u'Foo3', surname=u'Bar3')
@@ -47,7 +41,7 @@ class RegisterUserTC(CubicWebTC):
                                  password=u'bar3')
 
     def test_register_user_attributes(self):
-        with self.repo.internal_cnx() as cnx:
+        with self.admin_access.cnx() as cnx:
             cnx.call_service('register_user', login=u'foo3',
                              password=u'bar3', email=u'foo3@bar3.com',
                              firstname=u'Foo3', surname=u'Bar3')
@@ -59,7 +53,7 @@ class RegisterUserTC(CubicWebTC):
             self.assertEqual(user.use_email[0].address, u'foo3@bar3.com')
 
     def test_register_user_groups(self):
-        with self.repo.internal_cnx() as cnx:
+        with self.admin_access.cnx() as cnx:
             # default
             cnx.call_service('register_user', login=u'foo_user',
                              password=u'bar_user', email=u'foo_user@bar_user.com',
