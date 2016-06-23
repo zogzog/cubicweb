@@ -9,6 +9,7 @@ from cubicweb.server.schema2sql import build_index_name, check_constraint
 sql = partial(sql, ask_confirm=False)
 
 source = repo.system_source
+helper = source.dbhelper
 
 for rschema in schema.relations():
     if rschema.rule or rschema in PURE_VIRTUAL_RTYPES:
@@ -19,7 +20,7 @@ for rschema in schema.relations():
             column = 'cw_{0}'.format(rdef.rtype)
             if any(isinstance(cstr, UniqueConstraint) for cstr in rdef.constraints):
                 old_name = '%s_%s_key' % (table.lower(), column.lower())
-                sql('ALTER TABLE %s DROP CONSTRAINT %s' % (table, old_name))
+                sql('ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s' % (table, old_name))
                 source.create_index(cnx, table, column, unique=True)
             if rschema.inlined or rdef.indexed:
                 old_name = '%s_%s_idx' % (table.lower(), column.lower())
@@ -38,12 +39,10 @@ for rschema in schema.relations():
 
 # we changed constraint serialization, which also changes their name
 
-helper = repo.system_source.dbhelper
-
 for table, cstr in sql("""
     SELECT table_name, constraint_name FROM information_schema.constraint_column_usage
     WHERE constraint_name LIKE 'cstr%'"""):
-    sql("ALTER TABLE %(table)s DROP CONSTRAINT %(cstr)s" % locals())
+    sql("ALTER TABLE %(table)s DROP CONSTRAINT IF EXISTS %(cstr)s" % locals())
 
 for cwconstraint in rql('Any C WHERE R constrained_by C').entities():
     cwrdef = cwconstraint.reverse_constrained_by[0]
