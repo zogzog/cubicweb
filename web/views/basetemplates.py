@@ -510,8 +510,10 @@ class LogFormView(View):
                 stitle = u'&#160;'
             w(u'<div class="loginTitle">%s</div>' % stitle)
         w(u'<div class="loginContent">\n')
-        if showmessage and self._cw.message:
-            w(u'<div class="loginMessage">%s</div>\n' % self._cw.message)
+        # don't call self._cw.message twice since it pops the id
+        msg = self._cw.message
+        if showmessage and msg:
+            w(u'<div class="loginMessage">%s</div>\n' % msg)
         config = self._cw.vreg.config
         if config['auth-mode'] != 'http':
             self.login_form(id) # Cookie authentication
