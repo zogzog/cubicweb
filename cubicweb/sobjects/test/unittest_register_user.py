@@ -30,7 +30,7 @@ class RegisterUserTC(CubicWebTC):
                               login=u'foo2', password=u'bar2',
                               email=u'foo2@bar2.com', firstname=u'Foo2', surname=u'Bar2')
 
-    def test_register_user_service_unique(self):
+    def test_register_user_service_unique_login(self):
         with self.admin_access.cnx() as cnx:
             cnx.call_service('register_user', login=u'foo3',
                              password=u'bar3', email=u'foo3@bar3.com',
@@ -39,6 +39,19 @@ class RegisterUserTC(CubicWebTC):
             with self.assertRaises(ValidationError):
                 cnx.call_service('register_user', login=u'foo3',
                                  password=u'bar3')
+
+    def test_register_user_service_unique_email(self):
+        with self.admin_access.cnx() as cnx:
+            cnx.call_service('register_user', login=u'foo3',
+                             password=u'bar3', email=u'foo3@bar3.com',
+                             firstname=u'Foo3', surname=u'Bar3')
+            with self.assertRaises(ValidationError) as cm:
+                cnx.call_service('register_user', login=u'foo3@bar3.com',
+                                 password=u'bar3')
+            expected_errors = {
+                'login-subject': u'the value "foo3@bar3.com" is already used, use another one',
+            }
+            self.assertEqual(cm.exception.errors, expected_errors)
 
     def test_register_user_attributes(self):
         with self.admin_access.cnx() as cnx:
