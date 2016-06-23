@@ -1,2 +1,1 @@
 pytest
-hg+http://hg.logilab.org/master/yams#egg=yams
