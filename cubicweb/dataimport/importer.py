@@ -216,7 +216,7 @@ class ExtEntity(object):
                     if (rschema.final and eschema.has_metadata(rtype, 'format')
                             and not rtype + '_format' in entity_dict):
                         entity_dict[rtype + '_format'] = u'text/plain'
-                    if rschema.final and rschema.objects()[0].type == 'Bytes':
+                    if rschema.final and eschema.rdef(rtype).object.type == 'Bytes':
                         entity_dict[rtype] = Binary(entity_dict[rtype])
                 else:
                     del entity_dict[key]
