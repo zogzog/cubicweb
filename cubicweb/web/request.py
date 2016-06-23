@@ -884,9 +884,15 @@ class _CubicWebRequestBase(RequestSessionBase):
             self.session.data.pop(self.pageid, None)
         else:
             try:
-                del self.session.data[self.pageid][key]
+                page_data = self.session.data[self.pageid]
+                del page_data[key]
             except KeyError:
                 pass
+            else:
+                # make sure we write the session data value in the
+                # self.session.data dict-like object so any session
+                # handler can "detect" and manage the persistency
+                self.session.data[self.pageid] = page_data
 
     # user-agent detection ####################################################
 

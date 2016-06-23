@@ -510,7 +510,8 @@ class LogFormView(View):
                 stitle = u'&#160;'
             w(u'<div class="loginTitle">%s</div>' % stitle)
         w(u'<div class="loginContent">\n')
-        message = self._cw.message  # don't call self._cw.message twice
+        # don't call self._cw.message twice since it pops the id
+        message = self._cw.message
         if showmessage and message:
             w(u'<div class="loginMessage">%s</div>\n' % message)
         config = self._cw.vreg.config

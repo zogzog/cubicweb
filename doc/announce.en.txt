@@ -33,10 +33,10 @@ The hacker will join development at the forge_.
 The impatient will move right away to installation_ and set-up of a CubicWeb
 environment.
 
-.. _cubicweb: http://www.cubicweb.org/
-.. _overview: http://www.cubicweb.org/doc/en/A020-tutorial.en.html#overview
-.. _forge: http://www.cubicweb.org/project?vtitle=All%20cubicweb%20projects
-.. _installation: http://www.cubicweb.org/doc/en/C010-setup.en.html#miseenplaceenv
+.. _cubicweb: https://www.cubicweb.org/
+.. _overview: https://docs.cubicweb.org/tutorials/base/index.html
+.. _forge: https://www.cubicweb.org/project?vtitle=All%20cubicweb%20projects
+.. _installation: https://docs.cubicweb.org/book/admin/setup.html#setupenv
 
 Home page
 ---------

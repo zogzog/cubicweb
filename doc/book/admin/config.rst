@@ -8,7 +8,6 @@ Set-up of a *CubicWeb* environment
 You can `configure the database`_ system of your choice:
 
   - `PostgreSQL configuration`_
-  - `MySql configuration`_
   - `SQLServer configuration`_
   - `SQLite configuration`_
 
@@ -18,7 +17,6 @@ For advanced features, have a look to:
 
 .. _`configure the database`: DatabaseInstallation_
 .. _`PostgreSQL configuration`: PostgresqlConfiguration_
-.. _`MySql configuration`: MySqlConfiguration_
 .. _`SQLServer configuration`: SQLServerConfiguration_
 .. _`SQLite configuration`: SQLiteConfiguration_
 .. _`Cubicweb resources configuration`: RessourcesConfiguration_
@@ -41,7 +39,7 @@ Databases configuration
 Each instance can be configured with its own database connection information,
 that will be stored in the instance's :file:`sources` file. The database to use
 will be chosen when creating the instance. CubicWeb is known to run with
-Postgresql (recommended), SQLServer and SQLite, and may run with MySQL.
+Postgresql (recommended), SQLServer and SQLite.
 
 Other possible sources of data include CubicWeb, Subversion, LDAP and Mercurial,
 but at least one relational database is required for CubicWeb to work. You do
@@ -89,6 +87,10 @@ To initialize a PostgreSQL cluster, use the command ``initdb``::
 
     $ initdb -E UTF8 -D /path/to/pgsql
 
+Note: ``initdb`` might not be in the PATH, so you may have to use its
+absolute path instead (usually something like
+``/usr/lib/postgresql/9.4/bin/initdb``).
+
 Notice the encoding specification. This is necessary since |cubicweb| usually
 want UTF8 encoded database. If you use a cluster with the wrong encoding, you'll
 get error like::
@@ -105,6 +107,7 @@ that your username has write access on the database.  ::
 
   $ chown username /path/to/pgsql
 
+
 Database authentication
 +++++++++++++++++++++++
 
@@ -116,17 +119,29 @@ do as follow to create a user::
 
   $ su
   $ su - postgres
-  $ createuser -s -P username
+  $ createuser -s -P <dbuser>
 
 The option `-P` (for password prompt), will encrypt the password with the
 method set in the configuration file :file:`pg_hba.conf`.  If you do not use this
 option `-P`, then the default value will be null and you will need to set it
 with::
 
-  $ su postgres -c "echo ALTER USER username WITH PASSWORD 'userpasswd' | psql"
+  $ su postgres -c "echo ALTER USER <dbuser> WITH PASSWORD '<dbpassword>' | psql"
 
 The above login/password will be requested when you will create an instance with
 `cubicweb-ctl create` to initialize the database of your instance.
+
+
+Database creation
++++++++++++++++++
+
+If you create the database by hand (instead of using the `cubicweb-ctl
+db-create` tool), you may want to make sure that the local settings are
+properly set. For example, if you need to handle french accents
+properly for indexing and sorting, you may need to create the database
+with something like::
+
+  $ createdb --encoding=UTF-8 --locale=fr_FR.UTF-8 -t template0 -O <owner> <dbname>
 
 Notice that the `cubicweb-ctl db-create` does database initialization that
 may requires a postgres superuser. That's why a login/password is explicitly asked
@@ -134,13 +149,12 @@ at this step, so you can use there a superuser without using this user when runn
 the instance. Things that require special privileges at this step:
 
 * database creation, require the 'create database' permission
-* install the plpython extension language (require superuser)
-* install the tsearch extension for postgres version prior to 8.3 (require superuser)
+* install the `plpython` extension language (require superuser)
 
 To avoid using a super user each time you create an install, a nice trick is to
 install plpython (and tsearch when needed) on the special `template1` database,
 so they will be installed automatically when cubicweb databases are created
-without even with needs for special access rights. To do so, run ::
+without needs for special access rights. To do so, run ::
 
   # Installation of plpythonu language by default ::
   $ createlang -U pgadmin plpythonu template1
@@ -150,29 +164,6 @@ without even with needs for special access rights. To do so, run ::
 Where `pgadmin` is a postgres superuser. The last command is necessary since by
 default plpython is an 'untrusted' language and as such can't be used by non
 superuser. This update fix that problem by making it trusted.
-
-To install the tsearch plain-text index extension on postgres prior to 8.3, run::
-
-    cat /usr/share/postgresql/8.X/contrib/tsearch2.sql | psql -U username template1
-
-
-.. _MySqlConfiguration:
-
-MySql
-~~~~~
-.. warning::
-    CubicWeb's MySQL support is not commonly used, so things may or may not work properly.
-
-You must add the following lines in ``/etc/mysql/my.cnf`` file::
-
-    transaction-isolation=READ-COMMITTED
-    default-storage-engine=INNODB
-    default-character-set=utf8
-    max_allowed_packet = 128M
-
-.. Note::
-    It is unclear whether mysql supports indexed string of arbitrary length or
-    not.
 
 
 .. _SQLServerConfiguration:
@@ -226,4 +217,3 @@ anything for db-user and db-password, they will be ignore anyway.
 .. Note::
   SQLite is great for testing and to play with cubicweb but is not suited for
   production environments.
-
