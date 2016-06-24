@@ -759,6 +759,11 @@ msgstr "Soumettre un rapport de bug"
 msgid "Submit bug report by mail"
 msgstr "Soumettre ce rapport par email"
 
+msgid "Synchronization has been requested, refresh this page in a few minutes."
+msgstr ""
+"La demande de synchronisation a été soumise, rafraichir cette page d'ici "
+"quelques minutes"
+
 msgid "TZDatetime"
 msgstr "Date et heure internationale"
 
@@ -1055,6 +1060,9 @@ msgstr "définition d'attribut"
 
 msgid "add CWAttribute update_permission RQLExpression subject"
 msgstr "permission de mise à jour"
+
+msgid "add CWComputedRType read_permission RQLExpression subject"
+msgstr "permission de lecture"
 
 msgid "add CWEType add_permission RQLExpression subject"
 msgstr "définir une expression RQL d'ajout"
@@ -1824,6 +1832,11 @@ msgstr ""
 "création d'une expression rql pour le droit de mise à jour de %(linkto)s"
 
 msgid ""
+"creating RQLExpression (CWComputedRType %(linkto)s read_permission "
+"RQLExpression)"
+msgstr "creation d'une expression rql pour le droit en lecture de %(linkto)s"
+
+msgid ""
 "creating RQLExpression (CWEType %(linkto)s add_permission RQLExpression)"
 msgstr "création d'une expression RQL pour la permission d'ajout de %(linkto)s"
 
@@ -2482,9 +2495,6 @@ msgstr "télécharger le schéma OWL"
 
 msgid "edit bookmarks"
 msgstr "éditer les signets"
-
-msgid "edit canceled"
-msgstr "édition annulée"
 
 msgid "editable-table"
 msgstr "table éditable"
@@ -3648,6 +3658,10 @@ msgctxt "CWAttribute"
 msgid "read_permission"
 msgstr "permission de lire"
 
+msgctxt "CWComputedRType"
+msgid "read_permission"
+msgstr ""
+
 msgctxt "CWEType"
 msgid "read_permission"
 msgstr "permission de lire"
@@ -4154,6 +4168,9 @@ msgstr "symétrique"
 msgid "synchronization-interval must be greater than 1 minute"
 msgstr "synchronization-interval doit être supérieur à 1 minute"
 
+msgid "synchronize"
+msgstr "synchroniser"
+
 msgid "table"
 msgstr "table"
 
@@ -4186,10 +4203,6 @@ msgstr "l'adresse électronique principale"
 
 msgid "the system source has its configuration stored on the file-system"
 msgstr "la source système a sa configuration stockée sur le système de fichier"
-
-#, python-format
-msgid "the value \"%s\" is already used, use another one"
-msgstr "la valeur \"%s\" est déjà utilisée, veuillez utiliser une autre valeur"
 
 msgid "there is no next page"
 msgstr "Il n'y a pas de page suivante"
@@ -4567,7 +4580,8 @@ msgstr "valeur"
 
 #, python-format
 msgid "value %(KEY-value)s must be < %(KEY-boundary)s"
-msgstr "la valeur %(KEY-value)s doit être strictement inférieure à %(KEY-boundary)s"
+msgstr ""
+"la valeur %(KEY-value)s doit être strictement inférieure à %(KEY-boundary)s"
 
 #, python-format
 msgid "value %(KEY-value)s must be <= %(KEY-boundary)s"
@@ -4576,7 +4590,8 @@ msgstr ""
 
 #, python-format
 msgid "value %(KEY-value)s must be > %(KEY-boundary)s"
-msgstr "la valeur %(KEY-value)s doit être strictement supérieure à %(KEY-boundary)s"
+msgstr ""
+"la valeur %(KEY-value)s doit être strictement supérieure à %(KEY-boundary)s"
 
 #, python-format
 msgid "value %(KEY-value)s must be >= %(KEY-boundary)s"
@@ -4723,3 +4738,10 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
+
+#~ msgid "edit canceled"
+#~ msgstr "édition annulée"
+
+#~ msgid "the value \"%s\" is already used, use another one"
+#~ msgstr ""
+#~ "la valeur \"%s\" est déjà utilisée, veuillez utiliser une autre valeur"

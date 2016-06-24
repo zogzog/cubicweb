@@ -729,6 +729,9 @@ msgstr ""
 msgid "Submit bug report by mail"
 msgstr ""
 
+msgid "Synchronization has been requested, refresh this page in a few minutes."
+msgstr ""
+
 msgid "TZDatetime"
 msgstr "International date and time"
 
@@ -1002,6 +1005,9 @@ msgstr "attribute definition"
 
 msgid "add CWAttribute update_permission RQLExpression subject"
 msgstr "rql expression for update permission"
+
+msgid "add CWComputedRType read_permission RQLExpression subject"
+msgstr "rql expression for read permission"
 
 msgid "add CWEType add_permission RQLExpression subject"
 msgstr "rql expression for add permission"
@@ -1746,6 +1752,11 @@ msgid ""
 msgstr "RQL expression granting update permission on %(linkto)s"
 
 msgid ""
+"creating RQLExpression (CWComputedRType %(linkto)s read_permission "
+"RQLExpression)"
+msgstr "creating rql expression for read permission on %(linkto)s"
+
+msgid ""
 "creating RQLExpression (CWEType %(linkto)s add_permission RQLExpression)"
 msgstr "creating rql expression for add permission on %(linkto)s"
 
@@ -2380,9 +2391,6 @@ msgid "download schema as owl"
 msgstr ""
 
 msgid "edit bookmarks"
-msgstr ""
-
-msgid "edit canceled"
 msgstr ""
 
 msgid "editable-table"
@@ -3513,6 +3521,10 @@ msgctxt "CWAttribute"
 msgid "read_permission"
 msgstr "read permission"
 
+msgctxt "CWComputedRType"
+msgid "read_permission"
+msgstr ""
+
 msgctxt "CWEType"
 msgid "read_permission"
 msgstr "read permission"
@@ -3994,6 +4006,9 @@ msgstr "symmetric"
 msgid "synchronization-interval must be greater than 1 minute"
 msgstr ""
 
+msgid "synchronize"
+msgstr ""
+
 msgid "table"
 msgstr ""
 
@@ -4025,10 +4040,6 @@ msgid "the prefered email"
 msgstr ""
 
 msgid "the system source has its configuration stored on the file-system"
-msgstr ""
-
-#, python-format
-msgid "the value \"%s\" is already used, use another one"
 msgstr ""
 
 msgid "there is no next page"
