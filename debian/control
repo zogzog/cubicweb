@@ -11,7 +11,7 @@ Build-Depends:
  python-six (>= 1.4.0),
  python-sphinx,
  python-logilab-common (>= 1.2.2),
- python-unittest2 (>= 0.7.0),
+ python-unittest2,
  python-logilab-mtconverter,
  python-markdown,
  python-tz,
@@ -207,6 +207,7 @@ Depends:
  cubicweb-server (= ${source:Version}),
  cubicweb-web (= ${source:Version}),
  cubicweb-twisted (= ${source:Version}),
+ python-unittest2 (>= 0.7.0),
  python-pysqlite2
 Suggests:
  w3c-dtd-xhtml,
