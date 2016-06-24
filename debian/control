@@ -160,7 +160,7 @@ Depends:
  python-logilab-mtconverter (>= 0.8.0),
  python-logilab-common (>= 1.2.0),
  python-markdown,
- python-yams (>= 0.43.0),
+ python-yams (>= 0.44.0),
  python-rql (>= 0.34.0),
  python-lxml
 Recommends:
