@@ -9,6 +9,9 @@ Backwards-incompatible changes
   `CubicWebTC` either from the standard library as of Python 3.4 or through
   unittest2 package otherwise).
 
+* `CubicWebTC`'s `set_description` method (comming from
+  `logilab.common.testlib.TestCase`) is no longer available.
+
 Database handling
 -----------------
 
