@@ -584,7 +584,6 @@ sqlite_hooks.append(_init_sqlite_connection)
 def _init_postgres_connection(cnx):
     """Internal function that will be called to init a postgresql connection"""
     cnx.cursor().execute('SET TIME ZONE UTC')
-    cnx.cursor().execute("SET lc_messages to 'C'")
     # commit is needed, else setting are lost if the connection is first
     # rolled back
     cnx.commit()
