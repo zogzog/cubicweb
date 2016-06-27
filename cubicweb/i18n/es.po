@@ -763,6 +763,9 @@ msgstr "Enviar un reporte de error (bug)"
 msgid "Submit bug report by mail"
 msgstr "Enviar este reporte por email"
 
+msgid "Synchronization has been requested, refresh this page in a few minutes."
+msgstr ""
+
 msgid "TZDatetime"
 msgstr "Fecha y hora internacional"
 
@@ -1059,6 +1062,9 @@ msgstr "Definición de atributo"
 
 msgid "add CWAttribute update_permission RQLExpression subject"
 msgstr "Permiso de actualización"
+
+msgid "add CWComputedRType read_permission RQLExpression subject"
+msgstr ""
 
 msgid "add CWEType add_permission RQLExpression subject"
 msgstr "Expresión RQL de agregación"
@@ -1826,6 +1832,11 @@ msgstr ""
 "creación de una expresión RQL por el derecho de actualización de %(linkto)s"
 
 msgid ""
+"creating RQLExpression (CWComputedRType %(linkto)s read_permission "
+"RQLExpression)"
+msgstr ""
+
+msgid ""
 "creating RQLExpression (CWEType %(linkto)s add_permission RQLExpression)"
 msgstr ""
 "Creación de una expresión RQL para la autorización de agregar %(linkto)s"
@@ -2485,9 +2496,6 @@ msgstr "Descargar esquema en formato OWL"
 
 msgid "edit bookmarks"
 msgstr "Editar favoritos"
-
-msgid "edit canceled"
-msgstr "Edición cancelada"
 
 msgid "editable-table"
 msgstr "Tabla modificable"
@@ -3649,6 +3657,10 @@ msgctxt "CWAttribute"
 msgid "read_permission"
 msgstr "Permiso de Lectura"
 
+msgctxt "CWComputedRType"
+msgid "read_permission"
+msgstr ""
+
 msgctxt "CWEType"
 msgid "read_permission"
 msgstr "Permiso de Lectura"
@@ -4155,6 +4167,9 @@ msgstr "Simétrico"
 msgid "synchronization-interval must be greater than 1 minute"
 msgstr "synchronization-interval debe ser mayor a 1 minuto"
 
+msgid "synchronize"
+msgstr ""
+
 msgid "table"
 msgstr "Tabla"
 
@@ -4188,10 +4203,6 @@ msgstr "Dirección principal de email"
 msgid "the system source has its configuration stored on the file-system"
 msgstr ""
 "el sistema fuente tiene su configuración almacenada en el sistema de archivos"
-
-#, python-format
-msgid "the value \"%s\" is already used, use another one"
-msgstr "El valor \"%s\" ya esta en uso, favor de utilizar otro"
 
 msgid "there is no next page"
 msgstr "no existe página siguiente"
@@ -4755,6 +4766,9 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgid "components_etypenavigation_description"
 #~ msgstr "Permite filtrar por tipo de entidad los resultados de una búsqueda"
 
+#~ msgid "edit canceled"
+#~ msgstr "Edición cancelada"
+
 #~ msgid "error while querying source %s, some data may be missing"
 #~ msgstr ""
 #~ "Un error ha ocurrido al interrogar  %s, es posible que los \n"
@@ -4767,6 +4781,9 @@ msgstr "probablamente debería  suprimir esta propriedad"
 
 #~ msgid "no edited fields specified for entity %s"
 #~ msgstr "Ningún campo editable especificado para la entidad %s"
+
+#~ msgid "the value \"%s\" is already used, use another one"
+#~ msgstr "El valor \"%s\" ya esta en uso, favor de utilizar otro"
 
 #~ msgid "timeline"
 #~ msgstr "Escala de Tiempo"

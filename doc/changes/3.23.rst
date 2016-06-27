@@ -1,19 +1,22 @@
-3.23 (UNRELEASED)
-=================
+3.23 (24 June 2016)
+===================
 
-Backwards-incompatible changes
-------------------------------
+New features
+------------
 
-* Generative tests *à la logilab-common* are not supported anymore in
-  `CubicWebTC`. It is advised to use the subtests_ API (available on
-  `CubicWebTC` either from the standard library as of Python 3.4 or through
-  unittest2 package otherwise).
+* Python 3.x support in CubicWeb itself is now complete, except for the
+  twisted package (since Twisted does not completely support Python 3.x
+  itself). The skeleton for new cube should also be Python 3 compatible, in
+  particular its `setup.py` got updated.
 
-* `CubicWebTC`'s `set_description` method (comming from
-  `logilab.common.testlib.TestCase`) is no longer available.
+* The `source-sync` command can now synchronize all sources in the database,
+  if no `<source>` argument is provided.
+
+* Datafeed source synchronization is now asynchronous when requested from user
+  interface.
 
 Database handling
------------------
+~~~~~~~~~~~~~~~~~
 
 * Most indexes and constraints will be rebuilt during the migration, because
   they are now named after a md5 hash to control the name's size.
@@ -30,7 +33,7 @@ Database handling
 
 
 Data-import
------------
+~~~~~~~~~~~
 
 * Deprecated `MetaGenerator` in favor of slightly adapted API in
   `MetadataGenerator` (more consistent, giving more control to sub-classes and
@@ -43,6 +46,20 @@ Data-import
   - refactored / renamed internal methods
   - added support for a metadata generator, the now recommended way to control
     metadata generation
+
+* Deprecated `SQLGenObjectStore`, `MassiveObjectStore` should be used instead.
+
+
+Backwards-incompatible changes
+------------------------------
+
+* Generative tests *à la logilab-common* are not supported anymore in
+  `CubicWebTC`. It is advised to use the subtests_ API (available on
+  `CubicWebTC` either from the standard library as of Python 3.4 or through
+  unittest2 package otherwise).
+
+* `CubicWebTC`'s `set_description` method (comming from
+  `logilab.common.testlib.TestCase`) is no longer available.
 
 
 .. _subtests: https://docs.python.org/3/library/unittest.html#distinguishing-test-iterations-using-subtests

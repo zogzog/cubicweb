@@ -753,6 +753,9 @@ msgstr "Fehlerbericht senden"
 msgid "Submit bug report by mail"
 msgstr "Diesen Bericht als E-Mail senden"
 
+msgid "Synchronization has been requested, refresh this page in a few minutes."
+msgstr ""
+
 msgid "TZDatetime"
 msgstr ""
 
@@ -1040,6 +1043,9 @@ msgstr "Attributdefinition"
 
 msgid "add CWAttribute update_permission RQLExpression subject"
 msgstr "RQL-Ausdruck für Berechtigung zum Aktualisieren"
+
+msgid "add CWComputedRType read_permission RQLExpression subject"
+msgstr ""
 
 msgid "add CWEType add_permission RQLExpression subject"
 msgstr "RQL-Ausdruck für Berechtigung zum Hinzufügen"
@@ -1791,6 +1797,11 @@ msgid ""
 msgstr "RQL Ausdruck für Aktualisierungs-Berechtigung für %(linkto)s"
 
 msgid ""
+"creating RQLExpression (CWComputedRType %(linkto)s read_permission "
+"RQLExpression)"
+msgstr ""
+
+msgid ""
 "creating RQLExpression (CWEType %(linkto)s add_permission RQLExpression)"
 msgstr "Erstelle rql-Ausdruck für Hinzufüge-Berechtigung für %(linkto)s"
 
@@ -2432,9 +2443,6 @@ msgstr "Schema als OWL herunterladen"
 
 msgid "edit bookmarks"
 msgstr "Lesezeichen bearbeiten"
-
-msgid "edit canceled"
-msgstr "Änderungen verwerfen"
 
 msgid "editable-table"
 msgstr "bearbeitbare Tabelle"
@@ -3596,6 +3604,10 @@ msgctxt "CWAttribute"
 msgid "read_permission"
 msgstr "Leseberechtigung"
 
+msgctxt "CWComputedRType"
+msgid "read_permission"
+msgstr ""
+
 msgctxt "CWEType"
 msgid "read_permission"
 msgstr "Leseberechtigung"
@@ -4091,6 +4103,9 @@ msgstr "symmetrisch"
 msgid "synchronization-interval must be greater than 1 minute"
 msgstr ""
 
+msgid "synchronize"
+msgstr ""
+
 msgid "table"
 msgstr "Tabelle"
 
@@ -4123,11 +4138,6 @@ msgstr "primäre E-Mail-Adresse"
 
 msgid "the system source has its configuration stored on the file-system"
 msgstr ""
-
-#, python-format
-msgid "the value \"%s\" is already used, use another one"
-msgstr ""
-"Der Wert \"%s\" wird bereits benutzt, bitte verwenden Sie einen anderen Wert"
 
 msgid "there is no next page"
 msgstr ""
@@ -4678,6 +4688,9 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #~ msgid "components_etypenavigation_description"
 #~ msgstr "Erlaubt die Sortierung von Suchergebnissen nach Entitätstyp"
 
+#~ msgid "edit canceled"
+#~ msgstr "Änderungen verwerfen"
+
 #~ msgid "error while querying source %s, some data may be missing"
 #~ msgstr ""
 #~ "Fehler beim Zugriff auf Quelle %s, möglicherweise sind die Daten "
@@ -4685,6 +4698,11 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 
 #~ msgid "no edited fields specified for entity %s"
 #~ msgstr "kein Eingabefeld spezifiziert Für Entität %s"
+
+#~ msgid "the value \"%s\" is already used, use another one"
+#~ msgstr ""
+#~ "Der Wert \"%s\" wird bereits benutzt, bitte verwenden Sie einen anderen "
+#~ "Wert"
 
 #~ msgid "timeline"
 #~ msgstr "Zeitleiste"
