@@ -9,7 +9,7 @@
 %{!?_python_sitelib: %define _python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           pyramid-cubicweb
-Version:        0.6.1
+Version:        0.7.0
 Release:        1%{?dist}
 Summary:        Integrate CubicWeb with a Pyramid application
 
