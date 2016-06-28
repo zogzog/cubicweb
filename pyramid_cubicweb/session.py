@@ -1,5 +1,6 @@
 import warnings
 import logging
+from contextlib import contextmanager
 
 from pyramid.compat import pickle
 from pyramid.session import SignedCookieSessionFactory
@@ -19,6 +20,22 @@ def logerrors(logger):
                 logger.exception("Error in %s" % fn.__name__)
         return newfn
     return wrap
+
+
+@contextmanager
+def unsafe_cnx_context_manager(request):
+    """Return a connection for use as a context manager, with security disabled
+
+    If request has an attached connection, its security will be deactived in the context manager's
+    scope, else a new internal connection is returned.
+    """
+    cnx = request.cw_cnx
+    if cnx is None:
+        with request.registry['cubicweb.repository'].internal_cnx() as cnx:
+            yield cnx
+    else:
+        with cnx.security_enabled(read=False, write=False):
+            yield cnx
 
 
 def CWSessionFactory(
@@ -95,7 +112,7 @@ def CWSessionFactory(
             if self._loaded:
                 return
 
-            with self.repo.internal_cnx() as cnx:
+            with unsafe_cnx_context_manager(self.request) as cnx:
                 value_rset = cnx.execute('Any D WHERE X eid %(x)s, X cwsessiondata D',
                                          {'x': self.sessioneid})
                 value = value_rset[0][0]
@@ -117,7 +134,7 @@ def CWSessionFactory(
             data = Binary(pickle.dumps(dict(self)))
             sessioneid = self.sessioneid
 
-            with self.repo.internal_cnx() as cnx:
+            with unsafe_cnx_context_manager(self.request) as cnx:
                 if not sessioneid:
                     session = cnx.create_entity(
                         'CWSession', cwsessiondata=data)
