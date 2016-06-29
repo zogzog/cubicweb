@@ -27,16 +27,8 @@ import sys
 import shutil
 from os.path import dirname, exists, isdir, join
 
-try:
-    if os.environ.get('NO_SETUPTOOLS'):
-        raise ImportError() # do as there is no setuptools
-    from setuptools import setup
-    from setuptools.command import install_lib
-    USE_SETUPTOOLS = True
-except ImportError:
-    from distutils.core import setup
-    from distutils.command import install_lib
-    USE_SETUPTOOLS = False
+from setuptools import setup
+from setuptools.command import install_lib
 from distutils.command import install_data
 
 here = dirname(__file__)
@@ -58,14 +50,11 @@ with io.open('README', encoding='utf-8') as f:
     long_description = f.read()
 
 # import optional features
-if USE_SETUPTOOLS:
-    requires = {}
-    for entry in ("__depends__",): # "__recommends__"):
-        requires.update(__pkginfo__.get(entry, {}))
-    install_requires = [("%s %s" % (d, v and v or "")).strip()
-                       for d, v in requires.items()]
-else:
-    install_requires = []
+requires = {}
+for entry in ("__depends__",): # "__recommends__"):
+    requires.update(__pkginfo__.get(entry, {}))
+install_requires = [("%s %s" % (d, v and v or "")).strip()
+                   for d, v in requires.items()]
 
 distname = __pkginfo__.get('distname', modname)
 scripts = __pkginfo__.get('scripts', ())
@@ -169,46 +158,43 @@ class MyInstallData(install_data.install_data):
         ini.close()
 
 # re-enable copying data files in sys.prefix
-if USE_SETUPTOOLS:
-    # overwrite MyInstallData to use sys.prefix instead of the egg directory
-    MyInstallMoreData = MyInstallData
-    class MyInstallData(MyInstallMoreData): # pylint: disable=E0102
-        """A class that manages data files installation"""
-        def run(self):
-            _old_install_dir = self.install_dir
-            if self.install_dir.endswith('egg'):
-                self.install_dir = sys.prefix
-            MyInstallMoreData.run(self)
-            self.install_dir = _old_install_dir
-    try:
-        import setuptools.command.easy_install # only if easy_install available
-        # monkey patch: Crack SandboxViolation verification
-        from setuptools.sandbox import DirectorySandbox as DS
-        old_ok = DS._ok
-        def _ok(self, path):
-            """Return True if ``path`` can be written during installation."""
-            out = old_ok(self, path) # here for side effect from setuptools
-            realpath = os.path.normcase(os.path.realpath(path))
-            allowed_path = os.path.normcase(sys.prefix)
-            if realpath.startswith(allowed_path):
-                out = True
-            return out
-        DS._ok = _ok
-    except ImportError:
-        pass
+# overwrite MyInstallData to use sys.prefix instead of the egg directory
+MyInstallMoreData = MyInstallData
+class MyInstallData(MyInstallMoreData): # pylint: disable=E0102
+    """A class that manages data files installation"""
+    def run(self):
+        _old_install_dir = self.install_dir
+        if self.install_dir.endswith('egg'):
+            self.install_dir = sys.prefix
+        MyInstallMoreData.run(self)
+        self.install_dir = _old_install_dir
+try:
+    import setuptools.command.easy_install # only if easy_install available
+    # monkey patch: Crack SandboxViolation verification
+    from setuptools.sandbox import DirectorySandbox as DS
+    old_ok = DS._ok
+    def _ok(self, path):
+        """Return True if ``path`` can be written during installation."""
+        out = old_ok(self, path) # here for side effect from setuptools
+        realpath = os.path.normcase(os.path.realpath(path))
+        allowed_path = os.path.normcase(sys.prefix)
+        if realpath.startswith(allowed_path):
+            out = True
+        return out
+    DS._ok = _ok
+except ImportError:
+    pass
 
 def install(**kwargs):
     """setup entry point"""
-    if USE_SETUPTOOLS:
-        if '--force-manifest' in sys.argv:
-            sys.argv.remove('--force-manifest')
+    if '--force-manifest' in sys.argv:
+        sys.argv.remove('--force-manifest')
     # install-layout option was introduced in 2.5.3-1~exp1
     elif sys.version_info < (2, 5, 4) and '--install-layout=deb' in sys.argv:
         sys.argv.remove('--install-layout=deb')
     packages = [modname] + get_packages(join(here, modname), modname)
-    if USE_SETUPTOOLS:
-        kwargs['install_requires'] = install_requires
-        kwargs['zip_safe'] = False
+    kwargs['install_requires'] = install_requires
+    kwargs['zip_safe'] = False
     kwargs['packages'] = packages
     kwargs['package_data'] = package_data
     return setup(name=distname, version=version, license=license, url=web,

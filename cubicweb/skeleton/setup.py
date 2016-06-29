@@ -27,16 +27,8 @@ import sys
 import shutil
 from os.path import exists, join, dirname
 
-try:
-    if os.environ.get('NO_SETUPTOOLS'):
-        raise ImportError()  # do as there is no setuptools
-    from setuptools import setup
-    from setuptools.command import install_lib
-    USE_SETUPTOOLS = True
-except ImportError:
-    from distutils.core import setup
-    from distutils.command import install_lib
-    USE_SETUPTOOLS = False
+from setuptools import setup
+from setuptools.command import install_lib
 from distutils.command import install_data
 
 
@@ -68,14 +60,11 @@ data_files = pkginfo.get('data_files', None)
 ext_modules = pkginfo.get('ext_modules', None)
 dependency_links = pkginfo.get('dependency_links', ())
 
-if USE_SETUPTOOLS:
-    requires = {}
-    for entry in ("__depends__",):  # "__recommends__"):
-        requires.update(pkginfo.get(entry, {}))
-    install_requires = [("%s %s" % (d, v and v or "")).strip()
-                        for d, v in requires.items()]
-else:
-    install_requires = []
+requires = {}
+for entry in ("__depends__",):  # "__recommends__"):
+    requires.update(pkginfo.get(entry, {}))
+install_requires = [("%s %s" % (d, v and v or "")).strip()
+                    for d, v in requires.items()]
 
 BASE_BLACKLIST = ('CVS', '.svn', '.hg', '.git', 'debian', 'dist', 'build')
 IGNORED_EXTENSIONS = ('.pyc', '.pyo', '.elc', '~')
@@ -147,50 +136,47 @@ class MyInstallLib(install_lib.install_lib):
 
 # re-enable copying data files in sys.prefix
 old_install_data = install_data.install_data
-if USE_SETUPTOOLS:
-    # overwrite InstallData to use sys.prefix instead of the egg directory
-    class MyInstallData(old_install_data):
-        """A class that manages data files installation"""
-        def run(self):
-            _old_install_dir = self.install_dir
-            if self.install_dir.endswith('egg'):
-                self.install_dir = sys.prefix
-            old_install_data.run(self)
-            self.install_dir = _old_install_dir
-    try:
-        # only if easy_install available
-        import setuptools.command.easy_install  # noqa
-        # monkey patch: Crack SandboxViolation verification
-        from setuptools.sandbox import DirectorySandbox as DS
-        old_ok = DS._ok
+# overwrite InstallData to use sys.prefix instead of the egg directory
+class MyInstallData(old_install_data):
+    """A class that manages data files installation"""
+    def run(self):
+        _old_install_dir = self.install_dir
+        if self.install_dir.endswith('egg'):
+            self.install_dir = sys.prefix
+        old_install_data.run(self)
+        self.install_dir = _old_install_dir
+try:
+    # only if easy_install available
+    import setuptools.command.easy_install  # noqa
+    # monkey patch: Crack SandboxViolation verification
+    from setuptools.sandbox import DirectorySandbox as DS
+    old_ok = DS._ok
 
-        def _ok(self, path):
-            """Return True if ``path`` can be written during installation."""
-            out = old_ok(self, path)  # here for side effect from setuptools
-            realpath = os.path.normcase(os.path.realpath(path))
-            allowed_path = os.path.normcase(sys.prefix)
-            if realpath.startswith(allowed_path):
-                out = True
-            return out
-        DS._ok = _ok
-    except ImportError:
-        pass
+    def _ok(self, path):
+        """Return True if ``path`` can be written during installation."""
+        out = old_ok(self, path)  # here for side effect from setuptools
+        realpath = os.path.normcase(os.path.realpath(path))
+        allowed_path = os.path.normcase(sys.prefix)
+        if realpath.startswith(allowed_path):
+            out = True
+        return out
+    DS._ok = _ok
+except ImportError:
+    pass
 
 
 def install(**kwargs):
     """setup entry point"""
-    if USE_SETUPTOOLS:
-        if '--force-manifest' in sys.argv:
-            sys.argv.remove('--force-manifest')
+    if '--force-manifest' in sys.argv:
+        sys.argv.remove('--force-manifest')
     # install-layout option was introduced in 2.5.3-1~exp1
     elif sys.version_info < (2, 5, 4) and '--install-layout=deb' in sys.argv:
         sys.argv.remove('--install-layout=deb')
     cmdclass = {'install_lib': MyInstallLib}
-    if USE_SETUPTOOLS:
-        kwargs['install_requires'] = install_requires
-        kwargs['dependency_links'] = dependency_links
-        kwargs['zip_safe'] = False
-        cmdclass['install_data'] = MyInstallData
+    kwargs['install_requires'] = install_requires
+    kwargs['dependency_links'] = dependency_links
+    kwargs['zip_safe'] = False
+    cmdclass['install_data'] = MyInstallData
 
     return setup(name=distname,
                  version=version,

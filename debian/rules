@@ -8,7 +8,7 @@
 build: build-stamp
 build-stamp:
 	dh_testdir
-	NO_SETUPTOOLS=1 python setup.py build
+	python setup.py build
 	# cubicweb.foo needs to be importable by sphinx, so create a cubicweb symlink to the source dir
 	mkdir -p debian/pythonpath
 	ln -sf $(CURDIR)/cubicweb debian/pythonpath
@@ -34,7 +34,7 @@ install: build
 	dh_clean
 	dh_installdirs
 
-	NO_SETUPTOOLS=1 python setup.py -q install --no-compile --prefix=debian/tmp/usr
+	python setup.py -q install --no-compile --prefix=debian/tmp/usr
 
 	# Put all the python library and data in cubicweb-common
 	# and scripts in cubicweb-server

@@ -49,7 +49,7 @@ find . -name '*.py' -type f -print0 |  xargs -0 sed -i '1,3s;^#!.*python.*$;#! /
 %endif
 
 %install
-NO_SETUPTOOLS=1 %{__python} setup.py --quiet install --no-compile --prefix=%{_prefix} --root="$RPM_BUILD_ROOT"
+%{__python} setup.py --quiet install --no-compile --prefix=%{_prefix} --root="$RPM_BUILD_ROOT"
 mkdir -p $RPM_BUILD_ROOT/var/log/cubicweb
 
 %clean
