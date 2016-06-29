@@ -18,7 +18,7 @@
 
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb import ValidationError
+from cubicweb import Binary, ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.dataimport import RQLObjectStore, ucsvreader
 from cubicweb.dataimport.importer import (ExtEntity, ExtEntitiesImporter, RelationMapping,
@@ -68,6 +68,18 @@ class ExtEntitiesImporterTC(CubicWebTC):
         with self.admin_access.repo_cnx() as cnx:
             importer = self.importer(cnx)
             personne = ExtEntity('Personne', 1, {'photo': set([b'poilu']),
+                                                 'nom': set([u'alf'])})
+            importer.import_entities([personne])
+            cnx.commit()
+            entity = cnx.find('Personne').one()
+            self.assertEqual(entity.photo.getvalue(), b'poilu')
+
+    def test_binary_in_values(self):
+        with self.admin_access.repo_cnx() as cnx:
+            importer = self.importer(cnx)
+            # Use a list to put a Binary in "values" (since Binary is not
+            # hashable, a set cannot be used).
+            personne = ExtEntity('Personne', 1, {'photo': [Binary(b'poilu')],
                                                  'nom': set([u'alf'])})
             importer.import_entities([personne])
             cnx.commit()
