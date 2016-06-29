@@ -11,7 +11,7 @@ build-stamp:
 	NO_SETUPTOOLS=1 python setup.py build
 	# cubicweb.foo needs to be importable by sphinx, so create a cubicweb symlink to the source dir
 	mkdir -p debian/pythonpath
-	ln -sf $(CURDIR) debian/pythonpath/cubicweb
+	ln -sf $(CURDIR)/cubicweb debian/pythonpath
 	# documentation build is now made optional since it can break for old
 	# distributions and we don't want to block a new release of Cubicweb
 	# because of documentation issues.
