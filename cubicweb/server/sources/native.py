@@ -1468,19 +1468,6 @@ END;;
     return schema
 
 
-def sql_drop_schema(driver):
-    helper = get_db_helper(driver)
-    return """
-%s;
-%s
-DROP TABLE entities;
-DROP TABLE tx_entity_actions;
-DROP TABLE tx_relation_actions;
-DROP TABLE transactions;
-""" % (';'.join(helper.sqls_drop_multicol_unique_index('entities', ['extid'])),
-       helper.sql_drop_numrange('entities_id_seq'))
-
-
 def grant_schema(user, set_owner=True):
     result = ''
     for table in ('entities', 'entities_id_seq',

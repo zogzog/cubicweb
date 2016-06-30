@@ -1,4 +1,4 @@
-# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -155,25 +155,6 @@ def sqlschema(schema, driver, text_index=True,
         w('')
         w(sqlgrants(schema, driver, user, text_index, set_owner,
                     skip_relations, skip_entities).replace(';', ';;'))
-    return '\n'.join(output)
-
-
-def sqldropschema(schema, driver, text_index=True,
-                  skip_relations=PURE_VIRTUAL_RTYPES, skip_entities=()):
-    """return the sql to drop the schema, according to the given parameters"""
-    from cubicweb.server.schema2sql import dropschema2sql
-    from cubicweb.server.sources import native
-    output = []
-    w = output.append
-    if text_index:
-        dbhelper = db.get_db_helper(driver)
-        w(dbhelper.sql_drop_fti())
-        w('')
-    w(dropschema2sql(dbhelper, schema, prefix=SQL_PREFIX,
-                     skip_entities=skip_entities,
-                     skip_relations=skip_relations))
-    w('')
-    w(native.sql_drop_schema(driver))
     return '\n'.join(output)
 
 

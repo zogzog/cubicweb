@@ -84,26 +84,6 @@ def schema2sql(dbhelper, schema, skip_entities=(), skip_relations=(), prefix='')
     return '\n'.join(output)
 
 
-def dropschema2sql(dbhelper, schema, skip_entities=(), skip_relations=(), prefix=''):
-    """write to the output stream a SQL schema to store the objects
-    corresponding to the given schema
-    """
-    output = []
-    w = output.append
-    for etype in sorted(schema.entities()):
-        eschema = schema.eschema(etype)
-        if eschema.final or eschema.type in skip_entities:
-            continue
-        stmts = dropeschema2sql(dbhelper, eschema, skip_relations, prefix=prefix)
-        for stmt in stmts:
-            w(stmt)
-    for rtype in sorted(schema.relations()):
-        rschema = schema.rschema(rtype)
-        if rschema_has_table(rschema, skip_relations):
-            w(droprschema2sql(rschema))
-    return '\n'.join(output)
-
-
 def unique_index_name(eschema, attrs):
     """Return a predictable-but-size-constrained name for a multi-columns unique index on
     given attributes of the entity schema (actually, the later may be a schema or a string).
@@ -120,22 +100,6 @@ def iter_unique_index_names(eschema):
     """
     for attrs in eschema._unique_together or ():
         yield attrs, unique_index_name(eschema, attrs)
-
-
-def dropeschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
-    """return sql to drop an entity type's table"""
-    # not necessary to drop indexes, that's implictly done when
-    # dropping the table, but we need to drop SQLServer views used to
-    # create multicol unique indices
-    statements = []
-    tablename = prefix + eschema.type
-    if eschema._unique_together is not None:
-        for attrs, index_name in iter_unique_index_names(eschema):
-            cols = ['%s%s' % (prefix, attr) for attr in attrs]
-            for sql in dbhelper.sqls_drop_multicol_unique_index(tablename, cols, index_name):
-                yield sql
-    statements += ['DROP TABLE %s;' % (tablename)]
-    return statements
 
 
 def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
@@ -304,13 +268,6 @@ def rschema2sql(rschema):
                           'pkey_idx': build_index_name(table, ['eid_from', 'eid_to'], 'key_'),
                           'from_idx': build_index_name(table, ['eid_from'], 'idx_'),
                           'to_idx': build_index_name(table, ['eid_to'], 'idx_')}
-
-
-def droprschema2sql(rschema):
-    """return sql to drop a relation type's table"""
-    # not necessary to drop indexes, that's implictly done when dropping
-    # the table
-    return 'DROP TABLE %s_relation;' % rschema.type
 
 
 def grant_schema(schema, user, set_owner=True, skip_entities=(), prefix=''):
