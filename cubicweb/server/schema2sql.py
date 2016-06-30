@@ -53,13 +53,16 @@ def _index_name(self, table, column, unique=False):
 
 
 def build_index_name(table, columns, prefix='idx_'):
+    """Return a predictable-but-size-constrained name for an index on `table(*columns)`, using an
+    md5 hash.
+    """
     return '%s%s' % (prefix, md5((table +
                                   ',' +
                                   ','.join(sorted(columns))).encode('ascii')).hexdigest())
 
 
 def rschema_has_table(rschema, skip_relations):
-    """Return True if the given schema should have a table in the database"""
+    """Return True if the given schema should have a table in the database."""
     return not (rschema.final or rschema.inlined or rschema.rule or rschema.type in skip_relations)
 
 
@@ -101,16 +104,22 @@ def dropschema2sql(dbhelper, schema, skip_entities=(), skip_relations=(), prefix
     return '\n'.join(output)
 
 
-def unique_index_name(eschema, columns):
+def unique_index_name(eschema, attrs):
+    """Return a predictable-but-size-constrained name for a multi-columns unique index on
+    given attributes of the entity schema (actually, the later may be a schema or a string).
+    """
     # keep giving eschema instead of table name for bw compat
     table = text_type(eschema)
     # unique_index_name is used as name of CWUniqueConstraint, hence it should be unicode
-    return text_type(build_index_name(table, columns, 'unique_'))
+    return text_type(build_index_name(table, attrs, 'unique_'))
 
 
 def iter_unique_index_names(eschema):
-    for columns in eschema._unique_together or ():
-        yield columns, unique_index_name(eschema, columns)
+    """Yield (attrs, index name) where attrs is a list of entity type's attribute names that should
+    be unique together, and index name the unique index name.
+    """
+    for attrs in eschema._unique_together or ():
+        yield attrs, unique_index_name(eschema, attrs)
 
 
 def dropeschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
@@ -121,10 +130,10 @@ def dropeschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
     statements = []
     tablename = prefix + eschema.type
     if eschema._unique_together is not None:
-        for columns, index_name in iter_unique_index_names(eschema):
-            cols = ['%s%s' % (prefix, col) for col in columns]
-            sqls = dbhelper.sqls_drop_multicol_unique_index(tablename, cols, index_name)
-            statements += sqls
+        for attrs, index_name in iter_unique_index_names(eschema):
+            cols = ['%s%s' % (prefix, attr) for attr in attrs]
+            for sql in dbhelper.sqls_drop_multicol_unique_index(tablename, cols, index_name):
+                yield sql
     statements += ['DROP TABLE %s;' % (tablename)]
     return statements
 
@@ -169,9 +178,9 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
         if attrschema and any(isinstance(cstr, UniqueConstraint)
                               for cstr in eschema.rdef(rschema).constraints):
             w(dbhelper.sql_create_index(table, prefix + rschema.type, unique=True))
-    for columns, index_name in iter_unique_index_names(eschema):
-        cols = ['%s%s' % (prefix, col) for col in columns]
-        sqls = dbhelper.sqls_create_multicol_unique_index(table, cols, index_name)
+    for attrs, index_name in iter_unique_index_names(eschema):
+        columns = ['%s%s' % (prefix, attr) for attr in attrs]
+        sqls = dbhelper.sqls_create_multicol_unique_index(table, columns, index_name)
         for sql in sqls:
             w(sql)
     w('')
@@ -179,6 +188,9 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
 
 
 def as_sql(value, dbhelper, prefix):
+    """Return the SQL value from a Yams constraint's value, handling special cases where it's a
+    `Attribute`, `TODAY` or `NOW` instance instead of a literal value.
+    """
     if isinstance(value, Attribute):
         return prefix + value.attr
     elif isinstance(value, TODAY):
@@ -223,7 +235,7 @@ def check_constraint(rdef, constraint, dbhelper, prefix=''):
 
 
 def aschema2sql(dbhelper, eschema, rschema, aschema, creating=True, indent=''):
-    """write an attribute schema as SQL statements to stdout"""
+    """Return string containing a SQL table's column definition from attribute schema."""
     attr = rschema.type
     rdef = rschema.rdef(eschema.type, aschema.type)
     sqltype = type_from_rdef(dbhelper, rdef)
@@ -251,7 +263,7 @@ def aschema2sql(dbhelper, eschema, rschema, aschema, creating=True, indent=''):
 
 
 def type_from_rdef(dbhelper, rdef):
-    """return a sql type string corresponding to the relation definition"""
+    """Return a string containing SQL type name for the given relation definition."""
     constraints = list(rdef.constraints)
     sqltype = None
     if rdef.object.type == 'String':
@@ -267,6 +279,8 @@ def type_from_rdef(dbhelper, rdef):
 
 
 def sql_type(dbhelper, rdef):
+    """Return a string containing SQL type to use to store values of the given relation definition.
+    """
     sqltype = dbhelper.TYPE_MAPPING[rdef.object]
     if callable(sqltype):
         sqltype = sqltype(rdef)
