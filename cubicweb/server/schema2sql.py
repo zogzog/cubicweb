@@ -39,9 +39,9 @@ SET_DEFAULT = False
 def sql_create_index(self, table, column, unique=False):
     idx = self._index_name(table, column, unique)
     if unique:
-        return 'ALTER TABLE %s ADD CONSTRAINT %s UNIQUE(%s);' % (table, idx, column)
+        return 'ALTER TABLE %s ADD CONSTRAINT %s UNIQUE(%s)' % (table, idx, column)
     else:
-        return 'CREATE INDEX %s ON %s(%s);' % (idx, table, column)
+        return 'CREATE INDEX %s ON %s(%s)' % (idx, table, column)
 
 
 @monkeypatch(database._GenericAdvFuncHelper)
@@ -67,21 +67,21 @@ def rschema_has_table(rschema, skip_relations):
 
 
 def schema2sql(dbhelper, schema, skip_entities=(), skip_relations=(), prefix=''):
-    """write to the output stream a SQL schema to store the objects
-    corresponding to the given schema
+    """Yield SQL statements to create a database schema for the given Yams schema.
+
+    `prefix` may be a string that will be prepended to all table / column names (usually, 'cw_').
     """
-    output = []
-    w = output.append
     for etype in sorted(schema.entities()):
         eschema = schema.eschema(etype)
         if eschema.final or eschema.type in skip_entities:
             continue
-        w(eschema2sql(dbhelper, eschema, skip_relations, prefix=prefix))
+        for sql in eschema2sql(dbhelper, eschema, skip_relations, prefix):
+            yield sql
     for rtype in sorted(schema.relations()):
         rschema = schema.rschema(rtype)
         if rschema_has_table(rschema, skip_relations):
-            w(rschema2sql(rschema))
-    return '\n'.join(output)
+            for sql in rschema2sql(rschema):
+                yield sql
 
 
 def unique_index_name(eschema, attrs):
@@ -103,10 +103,10 @@ def iter_unique_index_names(eschema):
 
 
 def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
-    """write an entity schema as SQL statements to stdout"""
+    """Yield SQL statements to initialize database from an entity schema."""
+    table = prefix + eschema.type
     output = []
     w = output.append
-    table = prefix + eschema.type
     w('CREATE TABLE %s(' % (table))
     attrs = [attrdef for attrdef in eschema.attribute_definitions()
              if not attrdef[0].type in skip_relations]
@@ -132,22 +132,21 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
             cstrname, check = check_constraint(rdef, constraint, dbhelper, prefix=prefix)
             if cstrname is not None:
                 w(', CONSTRAINT %s CHECK(%s)' % (cstrname, check))
-    w(');')
+    w(')')
+    yield '\n'.join(output)
     # create indexes
     for i in range(len(attrs)):
         rschema, attrschema = attrs[i]
         if attrschema is None or eschema.rdef(rschema).indexed:
-            w(dbhelper.sql_create_index(table, prefix + rschema.type))
+            yield dbhelper.sql_create_index(table, prefix + rschema.type)
         if attrschema and any(isinstance(cstr, UniqueConstraint)
                               for cstr in eschema.rdef(rschema).constraints):
-            w(dbhelper.sql_create_index(table, prefix + rschema.type, unique=True))
+            yield dbhelper.sql_create_index(table, prefix + rschema.type, unique=True)
     for attrs, index_name in iter_unique_index_names(eschema):
         columns = ['%s%s' % (prefix, attr) for attr in attrs]
         sqls = dbhelper.sqls_create_multicol_unique_index(table, columns, index_name)
         for sql in sqls:
-            w(sql)
-    w('')
-    return '\n'.join(output)
+            yield sql.rstrip(';')  # remove trailing ';' for consistency
 
 
 def constraint_value_as_sql(value, dbhelper, prefix):
@@ -258,49 +257,54 @@ CREATE TABLE %(table)s (
 );
 
 CREATE INDEX %(from_idx)s ON %(table)s(eid_from);
-CREATE INDEX %(to_idx)s ON %(table)s(eid_to);"""
+CREATE INDEX %(to_idx)s ON %(table)s(eid_to)"""
 
 
 def rschema2sql(rschema):
+    """Yield SQL statements to create database table and indexes for a Yams relation schema."""
     assert not rschema.rule
     table = '%s_relation' % rschema.type
-    return _SQL_SCHEMA % {'table': table,
+    sqls = _SQL_SCHEMA % {'table': table,
                           'pkey_idx': build_index_name(table, ['eid_from', 'eid_to'], 'key_'),
                           'from_idx': build_index_name(table, ['eid_from'], 'idx_'),
                           'to_idx': build_index_name(table, ['eid_to'], 'idx_')}
+    for sql in sqls.split(';'):
+        yield sql.strip()
 
 
 def grant_schema(schema, user, set_owner=True, skip_entities=(), prefix=''):
-    """write to the output stream a SQL schema to store the objects
-    corresponding to the given schema
+    """Yield SQL statements to give all access (and ownership if `set_owner` is True) on the
+    database tables for the given Yams schema to `user`.
+
+    `prefix` may be a string that will be prepended to all table / column names (usually, 'cw_').
     """
-    output = []
-    w = output.append
     for etype in sorted(schema.entities()):
         eschema = schema.eschema(etype)
         if eschema.final or etype in skip_entities:
             continue
-        w(grant_eschema(eschema, user, set_owner, prefix=prefix))
+        for sql in grant_eschema(eschema, user, set_owner, prefix=prefix):
+            yield sql
     for rtype in sorted(schema.relations()):
         rschema = schema.rschema(rtype)
         if rschema_has_table(rschema, skip_relations=()):  # XXX skip_relations should be specified
-            w(grant_rschema(rschema, user, set_owner))
-    return '\n'.join(output)
+            for sql in grant_rschema(rschema, user, set_owner):
+                yield sql
 
 
 def grant_eschema(eschema, user, set_owner=True, prefix=''):
-    output = []
-    w = output.append
+    """Yield SQL statements to give all access (and ownership if `set_owner` is True) on the
+    database tables for the given Yams entity schema to `user`.
+    """
     etype = eschema.type
     if set_owner:
-        w('ALTER TABLE %s%s OWNER TO %s;' % (prefix, etype, user))
-    w('GRANT ALL ON %s%s TO %s;' % (prefix, etype, user))
-    return '\n'.join(output)
+        yield 'ALTER TABLE %s%s OWNER TO %s' % (prefix, etype, user)
+    yield 'GRANT ALL ON %s%s TO %s' % (prefix, etype, user)
 
 
 def grant_rschema(rschema, user, set_owner=True):
-    output = []
+    """Yield SQL statements to give all access (and ownership if `set_owner` is True) on the
+    database tables for the given Yams relation schema to `user`.
+    """
     if set_owner:
-        output.append('ALTER TABLE %s_relation OWNER TO %s;' % (rschema.type, user))
-    output.append('GRANT ALL ON %s_relation TO %s;' % (rschema.type, user))
-    return '\n'.join(output)
+        yield 'ALTER TABLE %s_relation OWNER TO %s' % (rschema.type, user)
+    yield 'GRANT ALL ON %s_relation TO %s' % (rschema.type, user)

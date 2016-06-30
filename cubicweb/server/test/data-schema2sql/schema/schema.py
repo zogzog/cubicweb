@@ -1,4 +1,4 @@
-# copyright 2004-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2004-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of yams.
@@ -38,7 +38,7 @@ class Person(EntityType):
     nom    = String(maxsize=64, fulltextindexed=True, required=True)
     prenom = String(maxsize=64, fulltextindexed=True)
     sexe   = String(maxsize=1, default='M')
-    promo  = String(vocabulary=('bon','pasbon'))
+    promo  = String(vocabulary=('bon','pasbon','pas;bon;;du;;;tout;;;;'))
     titre  = String(maxsize=128, fulltextindexed=True)
     adel   = String(maxsize=128)
     ass    = String(maxsize=128)

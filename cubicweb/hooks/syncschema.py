@@ -251,11 +251,9 @@ class CWETypeAddOp(MemSchemaOperation):
                                description=entity.description)
         eschema = schema.add_entity_type(etype)
         # create the necessary table
-        tablesql = y2sql.eschema2sql(cnx.repo.system_source.dbhelper,
-                                     eschema, prefix=SQL_PREFIX)
-        for sql in tablesql.split(';'):
-            if sql.strip():
-                cnx.system_sql(sql)
+        for sql in y2sql.eschema2sql(cnx.repo.system_source.dbhelper,
+                                     eschema, prefix=SQL_PREFIX):
+            cnx.system_sql(sql)
         # add meta relations
         gmap = group_mapping(cnx)
         cmap = ss.cstrtype_mapping(cnx)
@@ -380,11 +378,9 @@ class CWRTypeUpdateOp(MemSchemaOperation):
             # need to create the relation if it has not been already done by
             # another event of the same transaction
             if not rschema.type in cnx.transaction_data.get('createdtables', ()):
-                tablesql = y2sql.rschema2sql(rschema)
                 # create the necessary table
-                for sql in tablesql.split(';'):
-                    if sql.strip():
-                        sqlexec(sql)
+                for sql in y2sql.rschema2sql(rschema):
+                    sqlexec(sql)
                 cnx.transaction_data.setdefault('createdtables', []).append(
                     rschema.type)
             # copy existant data
@@ -602,9 +598,8 @@ class CWRelationAddOp(CWAttributeAddOp):
                     rtype in cnx.transaction_data.get('createdtables', ())):
                 rschema = schema.rschema(rtype)
                 # create the necessary table
-                for sql in y2sql.rschema2sql(rschema).split(';'):
-                    if sql.strip():
-                        cnx.system_sql(sql)
+                for sql in y2sql.rschema2sql(rschema):
+                    cnx.system_sql(sql)
                 cnx.transaction_data.setdefault('createdtables', []).append(
                     rtype)
 

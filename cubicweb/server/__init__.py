@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -261,9 +261,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
         # they are used sometimes by generated sql. Keeping them empty is much
         # simpler than fixing this...
         schemasql = sqlschema(schema, driver)
-        #skip_entities=[str(e) for e in schema.entities()
-        #               if not repo.system_source.support_entity(str(e))])
-        failed = sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
+        failed = sqlexec(schemasql, execute, pbtitle=_title)
         if failed:
             print('The following SQL statements failed. You should check your schema.')
             print(failed)

@@ -1531,11 +1531,9 @@ class ServerMigrationHelper(MigrationHelper):
         and a sql database
         """
         dbhelper = self.repo.system_source.dbhelper
-        tablesql = eschema2sql(dbhelper, self.repo.schema.eschema(etype),
-                               prefix=SQL_PREFIX)
-        for sql in tablesql.split(';'):
-            if sql.strip():
-                self.sqlexec(sql)
+        for sql in eschema2sql(dbhelper, self.repo.schema.eschema(etype),
+                               prefix=SQL_PREFIX):
+            self.sqlexec(sql)
         if commit:
             self.commit()
 
@@ -1544,10 +1542,8 @@ class ServerMigrationHelper(MigrationHelper):
         This may be useful on accidental desync between the repository schema
         and a sql database
         """
-        tablesql = rschema2sql(self.repo.schema.rschema(rtype))
-        for sql in tablesql.split(';'):
-            if sql.strip():
-                self.sqlexec(sql)
+        for sql in rschema2sql(self.repo.schema.rschema(rtype)):
+            self.sqlexec(sql)
         if commit:
             self.commit()
 

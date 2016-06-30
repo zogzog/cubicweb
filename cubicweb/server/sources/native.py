@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -1392,13 +1392,13 @@ class FTIndexEntityOp(hook.DataOperationMixIn, hook.LateOperation):
         source.fti_index_entities(cnx, to_reindex)
 
 def sql_schema(driver):
+    """Yield SQL statements to create system tables in the database."""
     helper = get_db_helper(driver)
     typemap = helper.TYPE_MAPPING
-    schema = """
-/* Create the repository's system database */
-
-%s
-
+    # XXX should return a list of sql statements rather than ';' joined statements
+    for sql in helper.sql_create_numrange('entities_id_seq').split(';'):
+        yield sql
+    for sql in ("""
 CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
@@ -1447,35 +1447,36 @@ CREATE INDEX tx_relation_actions_txa_action_idx ON tx_relation_actions(txa_actio
 CREATE INDEX tx_relation_actions_txa_public_idx ON tx_relation_actions(txa_public);;
 CREATE INDEX tx_relation_actions_eid_from_idx ON tx_relation_actions(eid_from);;
 CREATE INDEX tx_relation_actions_eid_to_idx ON tx_relation_actions(eid_to);;
-CREATE INDEX tx_relation_actions_tx_uuid_idx ON tx_relation_actions(tx_uuid);;
-""" % (helper.sql_create_numrange('entities_id_seq').replace(';', ';;'),
-       typemap['Datetime'],
-       typemap['Boolean'], typemap['Bytes'], typemap['Boolean'])
+CREATE INDEX tx_relation_actions_tx_uuid_idx ON tx_relation_actions(tx_uuid)
+""" % (typemap['Datetime'],
+       typemap['Boolean'], typemap['Bytes'], typemap['Boolean'])).split(';'):
+        yield sql
     if helper.backend_name == 'sqlite':
         # sqlite support the ON DELETE CASCADE syntax but do nothing
-        schema += '''
+        yield '''
 CREATE TRIGGER fkd_transactions
 BEFORE DELETE ON transactions
 FOR EACH ROW BEGIN
     DELETE FROM tx_entity_actions WHERE tx_uuid=OLD.tx_uuid;
     DELETE FROM tx_relation_actions WHERE tx_uuid=OLD.tx_uuid;
-END;;
+END;
 '''
     # define a multi-columns index on a single index to please sqlserver, which doesn't like several
     # null entries in a UNIQUE column
-    schema += ';;'.join(helper.sqls_create_multicol_unique_index('entities', ['extid'], 'entities_extid_idx'))
-    schema += ';;\n'
-    return schema
+    for sql in helper.sqls_create_multicol_unique_index('entities', ['extid'],
+                                                        'entities_extid_idx'):
+        yield sql
 
 
 def grant_schema(user, set_owner=True):
-    result = ''
+    """Yield SQL statements to give all access (and ownership if `set_owner` is True) on the
+    database system tables to `user`.
+    """
     for table in ('entities', 'entities_id_seq',
                   'transactions', 'tx_entity_actions', 'tx_relation_actions'):
         if set_owner:
-            result = 'ALTER TABLE %s OWNER TO %s;\n' % (table, user)
-        result += 'GRANT ALL ON %s TO %s;\n' % (table, user)
-    return result
+            yield 'ALTER TABLE %s OWNER TO %s;' % (table, user)
+        yield 'GRANT ALL ON %s TO %s;' % (table, user)
 
 
 class BaseAuthentifier(object):

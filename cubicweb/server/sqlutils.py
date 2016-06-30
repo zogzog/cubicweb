@@ -115,47 +115,40 @@ def sqlexec(sqlstmts, cursor_or_execute, withpb=True,
 def sqlgrants(schema, driver, user,
               text_index=True, set_owner=True,
               skip_relations=(), skip_entities=()):
-    """return sql to give all access privileges to the given user on the system
-    schema
+    """Return a list of SQL statements to give all access privileges to the given user on the
+    database.
     """
     from cubicweb.server.schema2sql import grant_schema
     from cubicweb.server.sources import native
-    output = []
-    w = output.append
-    w(native.grant_schema(user, set_owner))
-    w('')
+    stmts = list(native.grant_schema(user, set_owner))
     if text_index:
         dbhelper = db.get_db_helper(driver)
-        w(dbhelper.sql_grant_user_on_fti(user))
-        w('')
-    w(grant_schema(schema, user, set_owner, skip_entities=skip_entities, prefix=SQL_PREFIX))
-    return '\n'.join(output)
+        # XXX should return a list of sql statements rather than ';' joined statements
+        stmts += dbhelper.sql_grant_user_on_fti(user).split(';')
+    stmts += grant_schema(schema, user, set_owner, skip_entities=skip_entities, prefix=SQL_PREFIX)
+    return stmts
 
 
 def sqlschema(schema, driver, text_index=True,
               user=None, set_owner=False,
               skip_relations=PURE_VIRTUAL_RTYPES, skip_entities=()):
-    """return the system sql schema, according to the given parameters"""
+    """Return the database SQL schema as a list of SQL statements, according to the given parameters.
+    """
     from cubicweb.server.schema2sql import schema2sql
     from cubicweb.server.sources import native
     if set_owner:
         assert user, 'user is argument required when set_owner is true'
-    output = []
-    w = output.append
-    w(native.sql_schema(driver))
-    w('')
+    stmts = list(native.sql_schema(driver))
     dbhelper = db.get_db_helper(driver)
     if text_index:
-        w(dbhelper.sql_init_fti().replace(';', ';;'))
-        w('')
-    w(schema2sql(dbhelper, schema, prefix=SQL_PREFIX,
-                 skip_entities=skip_entities,
-                 skip_relations=skip_relations).replace(';', ';;'))
+        stmts += dbhelper.sql_init_fti().split(';')  # XXX
+    stmts += schema2sql(dbhelper, schema, prefix=SQL_PREFIX,
+                        skip_entities=skip_entities,
+                        skip_relations=skip_relations)
     if dbhelper.users_support and user:
-        w('')
-        w(sqlgrants(schema, driver, user, text_index, set_owner,
-                    skip_relations, skip_entities).replace(';', ';;'))
-    return '\n'.join(output)
+        stmts += sqlgrants(schema, driver, user, text_index, set_owner,
+                           skip_relations, skip_entities)
+    return stmts
 
 
 _SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION = re.compile('^(?!(sql|pg)_)').match
