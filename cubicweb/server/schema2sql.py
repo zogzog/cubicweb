@@ -101,15 +101,6 @@ def dropschema2sql(dbhelper, schema, skip_entities=(), skip_relations=(), prefix
     return '\n'.join(output)
 
 
-def eschema_attrs(eschema, skip_relations):
-    attrs = [attrdef for attrdef in eschema.attribute_definitions()
-             if not attrdef[0].type in skip_relations]
-    attrs += [(rschema, None)
-              for rschema in eschema.subject_relations()
-              if not rschema.final and rschema.inlined]
-    return attrs
-
-
 def unique_index_name(eschema, columns):
     # keep giving eschema instead of table name for bw compat
     table = text_type(eschema)
@@ -144,7 +135,11 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
     w = output.append
     table = prefix + eschema.type
     w('CREATE TABLE %s(' % (table))
-    attrs = eschema_attrs(eschema, skip_relations)
+    attrs = [attrdef for attrdef in eschema.attribute_definitions()
+             if not attrdef[0].type in skip_relations]
+    attrs += [(rschema, None)
+              for rschema in eschema.subject_relations()
+              if not rschema.final and rschema.inlined]
     # XXX handle objectinline physical mode
     for i in range(len(attrs)):
         rschema, attrschema = attrs[i]
