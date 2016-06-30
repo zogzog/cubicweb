@@ -42,7 +42,6 @@ from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
                              CONSTRAINTS, UNIQUE_CONSTRAINTS, ETYPE_NAME_MAP)
 from cubicweb.server import hook, schemaserial as ss, schema2sql as y2sql
 from cubicweb.server.sqlutils import SQL_PREFIX
-from cubicweb.server.schema2sql import unique_index_name
 from cubicweb.hooks.synccomputed import RecomputeAttributeOperation
 
 # core entity and relation types which can't be removed
@@ -326,11 +325,11 @@ class CWETypeRenameOp(MemSchemaOperation):
                 source.create_index(cnx, new_table, SQL_PREFIX + rschema.type, unique=True)
         for attrs in eschema._unique_together or ():
             columns = ['%s%s' % (SQL_PREFIX, attr) for attr in attrs]
-            old_index_name = unique_index_name(oldname, columns)
+            old_index_name = y2sql.unique_index_name(oldname, columns)
             for sql in dbhelper.sqls_drop_multicol_unique_index(
                     new_table, columns, old_index_name):
                 sqlexec(sql)
-            new_index_name = unique_index_name(newname, columns)
+            new_index_name = y2sql.unique_index_name(newname, columns)
             for sql in dbhelper.sqls_create_multicol_unique_index(
                     new_table, columns, new_index_name):
                 sqlexec(sql)
