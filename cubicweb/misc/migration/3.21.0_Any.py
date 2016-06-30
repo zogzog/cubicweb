@@ -162,8 +162,7 @@ for cwconstraint in rql('Any C WHERE R constrained_by C').entities():
     cstr = rdef.constraint_by_eid(cwconstraint.eid)
     if cstr.type() not in ('BoundaryConstraint', 'IntervalBoundConstraint', 'StaticVocabularyConstraint'):
         continue
-    cstrname, check = check_constraint(rdef.subject, rdef.object, rdef.rtype.type,
-            cstr, helper, prefix='cw_')
+    cstrname, check = check_constraint(rdef, cstr, helper, prefix='cw_')
     args = {'e': rdef.subject.type, 'c': cstrname, 'v': check}
     if repo.system_source.dbdriver == 'postgres':
         sql('ALTER TABLE cw_%(e)s DROP CONSTRAINT IF EXISTS %(c)s' % args, ask_confirm=False)

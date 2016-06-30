@@ -54,8 +54,7 @@ for cwconstraint in rql('Any C WHERE R constrained_by C').entities():
                            'StaticVocabularyConstraint'):
         # These cannot be translate into backend CHECK.
         continue
-    cstrname, check = check_constraint(rdef.subject, rdef.object, rdef.rtype.type,
-                                       cstr, helper, prefix='cw_')
+    cstrname, check = check_constraint(rdef, cstr, helper, prefix='cw_')
     args = {'e': rdef.subject.type, 'c': cstrname, 'v': check}
     sql('ALTER TABLE cw_%(e)s ADD CONSTRAINT %(c)s CHECK(%(v)s)' % args)
 

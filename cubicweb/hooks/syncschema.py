@@ -815,8 +815,8 @@ class CWConstraintAddOp(CWConstraintDelOp):
                                             (self.oldcstr.serialize() or '')).encode('ascii')).hexdigest()
                 cnx.system_sql('ALTER TABLE %s%s DROP CONSTRAINT %s' %
                                (SQL_PREFIX, rdef.subject.type, oldcstrname))
-            cstrname, check = y2sql.check_constraint(rdef.subject, rdef.object, rdef.rtype.type,
-                    newcstr, syssource.dbhelper, prefix=SQL_PREFIX)
+            cstrname, check = y2sql.check_constraint(rdef, newcstr, syssource.dbhelper,
+                                                     prefix=SQL_PREFIX)
             cnx.system_sql('ALTER TABLE %s%s ADD CONSTRAINT %s CHECK(%s)' %
                            (SQL_PREFIX, rdef.subject.type, cstrname, check))
 

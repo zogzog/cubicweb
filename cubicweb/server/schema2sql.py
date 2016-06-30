@@ -160,11 +160,9 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
     for rschema, aschema in attrs:
         if aschema is None:  # inline relation
             continue
-        attr = rschema.type
         rdef = rschema.rdef(eschema.type, aschema.type)
         for constraint in rdef.constraints:
-            cstrname, check = check_constraint(eschema, aschema, attr, constraint, dbhelper,
-                                               prefix=prefix)
+            cstrname, check = check_constraint(rdef, constraint, dbhelper, prefix=prefix)
             if cstrname is not None:
                 w(', CONSTRAINT %s CHECK(%s)' % (cstrname, check))
     w(');')
@@ -197,7 +195,12 @@ def as_sql(value, dbhelper, prefix):
         return value
 
 
-def check_constraint(eschema, aschema, attr, constraint, dbhelper, prefix=''):
+def check_constraint(rdef, constraint, dbhelper, prefix=''):
+    """Return (constraint name, constraint SQL definition) for the given relation definition's
+    constraint. Maybe (None, None) if the constraint is not handled in the backend.
+    """
+    eschema = rdef.subject
+    attr = rdef.rtype.type
     # XXX should find a better name
     cstrname = 'cstr' + md5((eschema.type + attr + constraint.type() +
                              (constraint.serialize() or '')).encode('ascii')).hexdigest()
