@@ -141,8 +141,6 @@ def export(from_dir, to_dir,
             shutil.copy2(src, dest)
 
 
-EMPTY_FILE = '"""generated file, don\'t modify or your data will be lost"""\n'
-
 class MyInstallLib(install_lib.install_lib):
     """extend install_lib command to handle  package __init__.py and
     include_dirs variable if necessary
