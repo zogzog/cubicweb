@@ -27,8 +27,7 @@ from unittest import TestCase
 
 
 def newcube(directory, name):
-    cmd = [sys.executable, '-m' 'cubicweb', 'newcube',
-           '--directory', directory, name]
+    cmd = ['cubicweb-ctl', 'newcube', '--directory', directory, name]
     proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     stdout, _ = proc.communicate(b'short_desc\n')
     return proc.returncode, stdout

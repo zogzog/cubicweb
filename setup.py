@@ -131,7 +131,8 @@ def export(from_dir, to_dir,
                 if verbose:
                     print('not recursing in %s' % join(dirpath, norecurs))
         for dirname in dirnames:
-            dest = join(to_dir, dirname)
+            src = join(dirpath, dirname)
+            dest = to_dir + src[len(from_dir):]
             if not exists(dest):
                 if verbose:
                     print('creating %s directory' % dest)
@@ -162,8 +163,9 @@ class MyInstallLib(install_lib.install_lib):
         # manually install included directories if any
         if include_dirs:
             for directory in include_dirs:
-                dest = join(self.install_dir, modname, directory)
-                export(directory, dest, verbose=self.verbose)
+                src = join(modname, directory)
+                dest = join(self.install_dir, src)
+                export(src, dest, verbose=self.verbose)
 
 # write required share/cubicweb/cubes/__init__.py
 class MyInstallData(install_data.install_data):
