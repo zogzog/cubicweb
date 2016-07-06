@@ -229,7 +229,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         varmaker = self.get_page_data('rql_varmaker')
         if varmaker is None:
             varmaker = rqlvar_maker()
-            self.set_page_data('rql_varmaker', varmaker)
+        self.set_page_data('rql_varmaker', varmaker)
         return varmaker
 
     # input form parameters management ########################################
