@@ -18,18 +18,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Generic Setup script, takes package info from __pkginfo__.py file
+"""cubicweb_%(cubename)s setup module using data from
+cubicweb_%(cubename)s/__pkginfo__.py file
 """
-__docformat__ = "restructuredtext en"
 
-import os
-import sys
-import shutil
-from os.path import exists, join, dirname
+from os.path import join, dirname
 
-from setuptools import setup
-from setuptools.command import install_lib
-from distutils.command import install_data
+from setuptools import find_packages, setup
+
 
 here = dirname(__file__)
 
@@ -55,10 +51,7 @@ with open(join(here, 'README')) as f:
 
 # get optional metadatas
 distname = __pkginfo__.get('distname', modname)
-scripts = __pkginfo__.get('scripts', ())
-include_dirs = __pkginfo__.get('include_dirs', ())
 data_files = __pkginfo__.get('data_files', None)
-ext_modules = __pkginfo__.get('ext_modules', None)
 dependency_links = __pkginfo__.get('dependency_links', ())
 
 requires = {}
@@ -67,134 +60,18 @@ for entry in ("__depends__",):  # "__recommends__"):
 install_requires = ["{0} {1}".format(d, v and v or "").strip()
                     for d, v in requires.items()]
 
-BASE_BLACKLIST = ('CVS', '.svn', '.hg', '.git', 'debian', 'dist', 'build')
-IGNORED_EXTENSIONS = ('.pyc', '.pyo', '.elc', '~')
 
-
-def ensure_scripts(linux_scripts):
-    """
-    Creates the proper script names required for each platform
-    (taken from 4Suite)
-    """
-    from distutils import util
-    if util.get_platform()[:3] == 'win':
-        scripts_ = [script + '.bat' for script in linux_scripts]
-    else:
-        scripts_ = linux_scripts
-    return scripts_
-
-
-def export(from_dir, to_dir,
-           blacklist=BASE_BLACKLIST,
-           ignore_ext=IGNORED_EXTENSIONS,
-           verbose=True):
-    try:
-        os.mkdir(to_dir)
-    except OSError as ex:
-        # file exists ?
-        import errno
-        if ex.errno != errno.EEXIST:
-            raise
-    for dirpath, dirnames, filenames in os.walk(from_dir):
-        for norecurs in blacklist:
-            try:
-                dirnames.remove(norecurs)
-            except ValueError:
-                pass
-        for dir_name in dirnames:
-            dest = join(to_dir, dir_name)
-            if not exists(dest):
-                os.mkdir(dest)
-        for filename in filenames:
-            # don't include binary files
-            src = join(dirpath, filename)
-            dest = to_dir + src[len(from_dir):]
-            if filename[-4:] in ignore_ext:
-                continue
-            if filename[-1] == '~':
-                continue
-            if exists(dest):
-                os.remove(dest)
-            if verbose:
-                sys.stderr.write('{0} -> {1}\n'.format(src, dest))
-            shutil.copy2(src, dest)
-
-
-class MyInstallLib(install_lib.install_lib):
-    """extend install_lib command to handle  package __init__.py and
-    include_dirs variable if necessary
-    """
-    def run(self):
-        """overridden from install_lib class"""
-        install_lib.install_lib.run(self)
-        # manually install included directories if any
-        if include_dirs:
-            base = modname
-            for directory in include_dirs:
-                dest = join(self.install_dir, base, directory)
-                export(directory, dest, verbose=False)
-
-
-# re-enable copying data files in sys.prefix
-old_install_data = install_data.install_data
-# overwrite InstallData to use sys.prefix instead of the egg directory
-class MyInstallData(old_install_data):
-    """A class that manages data files installation"""
-    def run(self):
-        _old_install_dir = self.install_dir
-        if self.install_dir.endswith('egg'):
-            self.install_dir = sys.prefix
-        old_install_data.run(self)
-        self.install_dir = _old_install_dir
-try:
-    # only if easy_install available
-    import setuptools.command.easy_install  # noqa
-    # monkey patch: Crack SandboxViolation verification
-    from setuptools.sandbox import DirectorySandbox as DS
-    old_ok = DS._ok
-
-    def _ok(self, path):
-        """Return True if ``path`` can be written during installation."""
-        out = old_ok(self, path)  # here for side effect from setuptools
-        realpath = os.path.normcase(os.path.realpath(path))
-        allowed_path = os.path.normcase(sys.prefix)
-        if realpath.startswith(allowed_path):
-            out = True
-        return out
-    DS._ok = _ok
-except ImportError:
-    pass
-
-
-def install(**kwargs):
-    """setup entry point"""
-    if '--force-manifest' in sys.argv:
-        sys.argv.remove('--force-manifest')
-    # install-layout option was introduced in 2.5.3-1~exp1
-    elif sys.version_info < (2, 5, 4) and '--install-layout=deb' in sys.argv:
-        sys.argv.remove('--install-layout=deb')
-    cmdclass = {'install_lib': MyInstallLib}
-    kwargs['install_requires'] = install_requires
-    kwargs['dependency_links'] = dependency_links
-    kwargs['zip_safe'] = False
-    cmdclass['install_data'] = MyInstallData
-
-    return setup(name=distname,
-                 version=version,
-                 license=license,
-                 description=description,
-                 long_description=long_description,
-                 author=author,
-                 author_email=author_email,
-                 url=web,
-                 scripts=ensure_scripts(scripts),
-                 data_files=data_files,
-                 ext_modules=ext_modules,
-                 cmdclass=cmdclass,
-                 classifiers=classifiers,
-                 **kwargs
-                 )
-
-
-if __name__ == '__main__':
-    install()
+setup(
+    name=distname,
+    version=version,
+    license=license,
+    description=description,
+    long_description=long_description,
+    author=author,
+    author_email=author_email,
+    url=web,
+    classifiers=classifiers,
+    packages=find_packages(exclude=['test']),
+    install_requires=install_requires,
+    zip_safe=False,
+)

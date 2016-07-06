@@ -22,7 +22,7 @@ import os.path as osp
 import sys
 import tempfile
 import shutil
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, check_output
 from unittest import TestCase
 
 
@@ -91,6 +91,35 @@ class DevCtlTC(TestCase):
             self.assertEqual(retcode, 0, stdout)
             distfpath = osp.join(projectdir, 'dist', 'cubicweb-foo-0.1.0.tar.gz')
             self.assertTrue(osp.isfile(distfpath))
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_newcube_install(self):
+        """Ensure a new cube can be installed"""
+        tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube-install")
+        try:
+            newcube(tmpdir, 'foo')
+            projectdir = osp.join(tmpdir, 'cubicweb-foo')
+            env = os.environ.copy()
+            env['HOME'] = tmpdir
+            cmd = [sys.executable, 'setup.py', 'install', '--user']
+            proc = Popen(cmd, stdout=PIPE, stderr=STDOUT,
+                         cwd=projectdir, env=env)
+            retcode = proc.wait()
+            stdout = to_unicode(proc.stdout.read())
+            self.assertEqual(retcode, 0, stdout)
+            targetdir = check_output([sys.executable, '-m', 'site', '--user-site'],
+                                     env=env, cwd=projectdir).strip()
+            target_egg = 'cubicweb_foo-0.1.0-py{0}.egg'.format(sys.version[:3]).encode()
+            self.assertTrue(osp.isdir(osp.join(targetdir, target_egg)),
+                            'target directory content: %s' % os.listdir(targetdir))
+            pkgdir = osp.join(targetdir, target_egg, b'cubicweb_foo')
+            self.assertTrue(osp.isdir(pkgdir),
+                            os.listdir(osp.join(targetdir, target_egg)))
+            pkgcontent = [f for f in os.listdir(pkgdir) if f.endswith(b'.py')]
+            self.assertItemsEqual(pkgcontent,
+                                  [b'schema.py', b'entities.py', b'hooks.py', b'__init__.py',
+                                   b'__pkginfo__.py', b'views.py'])
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
