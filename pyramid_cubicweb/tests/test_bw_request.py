@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from StringIO import StringIO
+from io import BytesIO
 
 import webtest
 
@@ -29,9 +29,9 @@ class WSGIAppTest(PyramidCWTest):
             self.make_request('/', {
                 'CONTENT_LENGTH': 12,
                 'CONTENT_TYPE': 'text/plain',
-                'wsgi.input': StringIO('some content')}))
+                'wsgi.input': BytesIO(b'some content')}))
 
-        self.assertEqual('some content', req.content.read())
+        self.assertEqual(b'some content', req.content.read())
 
     def test_http_scheme(self):
         req = CubicWebPyramidRequest(
@@ -49,16 +49,16 @@ class WSGIAppTest(PyramidCWTest):
 
     def test_https_prefix(self):
         r = self.webapp.get('/https/')
-        self.assertIn('https://', r.body)
+        self.assertIn('https://', r.text)
 
     def test_big_content(self):
-        content = 'x'*100001
+        content = b'x'*100001
 
         req = CubicWebPyramidRequest(
             self.make_request('/', {
                 'CONTENT_LENGTH': len(content),
                 'CONTENT_TYPE': 'text/plain',
-                'wsgi.input': StringIO(content)}))
+                'wsgi.input': BytesIO(content)}))
 
         self.assertEqual(content, req.content.read())
 
@@ -81,13 +81,13 @@ class WSGIAppTest(PyramidCWTest):
 
     def test_post_files(self):
         content_type, params = self.webapp.encode_multipart(
-            (), (('filefield', 'aname', 'acontent'),))
+            (), (('filefield', 'aname', b'acontent'),))
         req = CubicWebPyramidRequest(
             self.make_request('/', POST=params, content_type=content_type))
         self.assertIn('filefield', req.form)
         fieldvalue = req.form['filefield']
         self.assertEqual(u'aname', fieldvalue[0])
-        self.assertEqual('acontent', fieldvalue[1].read())
+        self.assertEqual(b'acontent', fieldvalue[1].read())
 
     def test_post_unicode_urlencoded(self):
         params = 'arg=%C3%A9'

@@ -1,8 +1,11 @@
 """ Tools for profiling.
 
 See :ref:`profiling`."""
+from __future__ import print_function
+
 import cProfile
 import itertools
+
 from pyramid.view import view_config
 
 
@@ -53,7 +56,7 @@ def wsgi_profile(app, filename='program.prof', dump_every=50):
         finally:
             profile.disable()
             if not counter.next() % dump_every:
-                print "Dump profile stats to %s" % filename
+                print("Dump profile stats to %s" % filename)
                 profile.create_stats()
                 profile.dump_stats(filename)
 

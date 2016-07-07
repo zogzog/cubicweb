@@ -1,5 +1,6 @@
 """Contains resources classes.
 """
+from six import text_type
 
 from rql import TypeResolverException
 
@@ -41,7 +42,7 @@ class EntityResource(object):
                 # conflicting eid/type
                 raise HTTPNotFound()
         else:
-            rset = req.execute(st.as_string(), {'x': unicode(self.value)})
+            rset = req.execute(st.as_string(), {'x': text_type(self.value)})
         return rset
 
 

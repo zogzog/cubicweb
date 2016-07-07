@@ -27,6 +27,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
+        'six',
         'pyramid >= 1.5.0',
         'waitress >= 0.8.9',
         'cubicweb >= 3.19.3',

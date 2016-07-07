@@ -18,7 +18,7 @@ def put_in_uncommitable_state(request):
         request.cw_cnx.execute('SET U login NULL WHERE U login "anon"')
     except ValidationError:
         pass
-    request.response.body = 'OK'
+    request.response.body = b'OK'
     return request.response
 
 

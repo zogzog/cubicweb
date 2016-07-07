@@ -140,7 +140,7 @@ class CubicWebPyramidRequest(CubicWebRequestBase):
 
     def setup_params(self, params):
         self.form = {}
-        for param, val in params.iteritems():
+        for param, val in params.items():
             if param in self.no_script_form_params and val:
                 val = self.no_script_form_param(param, val)
             if isinstance(val, FieldStorage) and val.file:
