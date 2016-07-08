@@ -32,16 +32,15 @@ from six.moves import range
 from logilab.common import tempattr
 from logilab.common.decorators import cached, clear_cache, monkeypatch, cachedproperty
 from logilab.common.logging_ext import set_log_methods
-from logilab.common.deprecation import deprecated, class_moved, moved
+from logilab.common.deprecation import deprecated
 from logilab.common.textutils import splitstrip
 from logilab.common.graph import get_cycles
 
 import yams
 from yams import BadSchemaDefinition, buildobjs as ybo
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema, \
-     RelationDefinitionSchema, PermissionMixIn, role_name
-from yams.constraints import (BaseConstraint, FormatConstraint, BoundaryConstraint,
-                              IntervalBoundConstraint, StaticVocabularyConstraint,
+    RelationDefinitionSchema, PermissionMixIn, role_name
+from yams.constraints import (BaseConstraint, FormatConstraint,
                               cstr_json_dumps, cstr_json_loads)
 from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
                          cleanup_sys_modules, fill_schema_from_namespace)
@@ -68,7 +67,7 @@ VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
 META_RTYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
     'eid', 'creation_date', 'cw_source', 'modification_date', 'has_text', 'cwuri',
-    ))
+))
 WORKFLOW_RTYPES = set(('custom_workflow', 'in_state', 'wf_info_for'))
 WORKFLOW_DEF_RTYPES = set(('workflow_of', 'state_of', 'transition_of',
                            'initial_state', 'default_workflow',
@@ -98,7 +97,7 @@ SCHEMA_TYPES = set((
     'constraint_of', 'relations',
     'read_permission', 'add_permission',
     'delete_permission', 'update_permission',
-    ))
+))
 
 WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
                       'WorkflowTransition', 'BaseTransition',
@@ -117,10 +116,12 @@ _LOGGER = getLogger('cubicweb.schemaloader')
 ybo.ETYPE_PROPERTIES += ('eid',)
 ybo.RTYPE_PROPERTIES += ('eid',)
 
+
 def build_schema_from_namespace(items):
     schema = CubicWebSchema('noname')
     fill_schema_from_namespace(schema, items, register_base_types=False)
     return schema
+
 
 # Bases for manipulating RQL in schema #########################################
 
@@ -138,12 +139,14 @@ def guess_rrqlexpr_mainvars(expression):
                                   % expression)
     return mainvars
 
+
 def split_expression(rqlstring):
     for expr in rqlstring.split(','):
         for noparen1 in expr.split('('):
             for noparen2 in noparen1.split(')'):
                 for word in noparen2.split():
                     yield word
+
 
 def normalize_expression(rqlstring):
     """normalize an rql expression to ease schema synchronization (avoid
@@ -163,35 +166,35 @@ def _check_valid_formula(rdef, formula_rqlst):
     if len(formula_rqlst.children) != 1:
         raise BadSchemaDefinition('computed attribute %(attr)s on %(etype)s: '
                                   'can not use UNION in formula %(form)r' %
-                                  {'attr' : rdef.rtype,
-                                   'etype' : rdef.subject.type,
-                                   'form' : rdef.formula})
+                                  {'attr': rdef.rtype,
+                                   'etype': rdef.subject.type,
+                                   'form': rdef.formula})
     select = formula_rqlst.children[0]
     if len(select.selection) != 1:
         raise BadSchemaDefinition('computed attribute %(attr)s on %(etype)s: '
                                   'can only select one term in formula %(form)r' %
-                                  {'attr' : rdef.rtype,
-                                   'etype' : rdef.subject.type,
-                                   'form' : rdef.formula})
+                                  {'attr': rdef.rtype,
+                                   'etype': rdef.subject.type,
+                                   'form': rdef.formula})
     term = select.selection[0]
     types = set(term.get_type(sol) for sol in select.solutions)
     if len(types) != 1:
         raise BadSchemaDefinition('computed attribute %(attr)s on %(etype)s: '
                                   'multiple possible types (%(types)s) for formula %(form)r' %
-                                  {'attr' : rdef.rtype,
-                                   'etype' : rdef.subject.type,
-                                   'types' : list(types),
-                                   'form' : rdef.formula})
+                                  {'attr': rdef.rtype,
+                                   'etype': rdef.subject.type,
+                                   'types': list(types),
+                                   'form': rdef.formula})
     computed_type = types.pop()
     expected_type = rdef.object.type
     if computed_type != expected_type:
         raise BadSchemaDefinition('computed attribute %(attr)s on %(etype)s: '
                                   'computed attribute type (%(comp_type)s) mismatch with '
                                   'specified type (%(attr_type)s)' %
-                                  {'attr' : rdef.rtype,
-                                   'etype' : rdef.subject.type,
-                                   'comp_type' : computed_type,
-                                   'attr_type' : expected_type})
+                                  {'attr': rdef.rtype,
+                                   'etype': rdef.subject.type,
+                                   'comp_type': computed_type,
+                                   'attr_type': expected_type})
 
 
 class RQLExpression(object):
@@ -200,7 +203,7 @@ class RQLExpression(object):
     """
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
     # to be defined in concrete classes
     predefined_variables = None
 
@@ -222,7 +225,7 @@ class RQLExpression(object):
         :param mainvars: names of the variables being selected.
 
         """
-        self.eid = eid # eid of the entity representing this rql expression
+        self.eid = eid  # eid of the entity representing this rql expression
         assert mainvars, 'bad mainvars %s' % mainvars
         if isinstance(mainvars, string_types):
             mainvars = set(splitstrip(mainvars))
@@ -268,8 +271,10 @@ class RQLExpression(object):
 
     def __deepcopy__(self, memo):
         return self.__class__(self.expression, self.mainvars)
+
     def __getstate__(self):
         return (self.expression, self.mainvars)
+
     def __setstate__(self, state):
         self.__init__(*state)
 
@@ -280,7 +285,8 @@ class RQLExpression(object):
         defined = set(split_expression(self.expression))
         for varname in self.predefined_variables:
             if varname in defined:
-                select.add_eid_restriction(select.get_variable(varname), varname.lower(), 'Substitute')
+                select.add_eid_restriction(select.get_variable(varname), varname.lower(),
+                                           'Substitute')
         return select
 
     # permission rql expression specific stuff #################################
@@ -298,8 +304,8 @@ class RQLExpression(object):
                     prefix, action, suffix = rel.r_type.split('_')
                 except ValueError:
                     continue
-                if prefix != 'has' or suffix != 'permission' or \
-                       not action in ('add', 'delete', 'update', 'read'):
+                if (prefix != 'has' or suffix != 'permission' or
+                        action not in ('add', 'delete', 'update', 'read')):
                     continue
                 if found is None:
                     found = []
@@ -399,7 +405,6 @@ class RQLExpression(object):
                                     self.expression)
 
 
-
 # rql expressions for use in permission definition #############################
 
 class ERQLExpression(RQLExpression):
@@ -414,7 +419,7 @@ class ERQLExpression(RQLExpression):
                 if creating:
                     return self._check(_cw, creating=True, **kwargs)
                 return False
-            assert creating == False
+            assert not creating
             return self._check(_cw, x=eid, **kwargs)
         return self._check(_cw, **kwargs)
 
@@ -434,11 +439,9 @@ class CubicWebRelationDefinitionSchema(RelationDefinitionSchema):
 
     def check_permission_definitions(self):
         super(CubicWebRelationDefinitionSchema, self).check_permission_definitions()
-        schema = self.subject.schema
         for action, groups in self.permissions.items():
             for group_or_rqlexpr in groups:
-                if action == 'read' and \
-                       isinstance(group_or_rqlexpr, RQLExpression):
+                if action == 'read' and isinstance(group_or_rqlexpr, RQLExpression):
                     msg = "can't use rql expression for read permission of %s"
                     raise BadSchemaDefinition(msg % self)
                 if self.final and isinstance(group_or_rqlexpr, RRQLExpression):
@@ -447,6 +450,7 @@ class CubicWebRelationDefinitionSchema(RelationDefinitionSchema):
                 if not self.final and isinstance(group_or_rqlexpr, ERQLExpression):
                     msg = "can't use ERQLExpression on %s, use a RRQLExpression"
                     raise BadSchemaDefinition(msg % self)
+
 
 def vargraph(rqlst):
     """ builds an adjacency graph of variables from the rql syntax tree, e.g:
@@ -463,7 +467,6 @@ def vargraph(rqlst):
         else:
             vargraph.setdefault(lhsvarname, []).append(rhsvarname)
             vargraph.setdefault(rhsvarname, []).append(lhsvarname)
-            #vargraph[(lhsvarname, rhsvarname)] = relation.r_type
     return vargraph
 
 
@@ -512,31 +515,32 @@ if 'delete' in yams.DEFAULT_COMPUTED_RELPERMS:
 
 
 PUB_SYSTEM_ENTITY_PERMS = {
-    'read':   ('managers', 'users', 'guests',),
-    'add':    ('managers',),
+    'read': ('managers', 'users', 'guests',),
+    'add': ('managers',),
     'delete': ('managers',),
     'update': ('managers',),
-    }
+}
 PUB_SYSTEM_REL_PERMS = {
-    'read':   ('managers', 'users', 'guests',),
-    'add':    ('managers',),
+    'read': ('managers', 'users', 'guests',),
+    'add': ('managers',),
     'delete': ('managers',),
-    }
+}
 PUB_SYSTEM_ATTR_PERMS = {
-    'read':   ('managers', 'users', 'guests',),
+    'read': ('managers', 'users', 'guests',),
     'add': ('managers',),
     'update': ('managers',),
-    }
+}
 RO_REL_PERMS = {
-    'read':   ('managers', 'users', 'guests',),
-    'add':    (),
+    'read': ('managers', 'users', 'guests',),
+    'add': (),
     'delete': (),
-    }
+}
 RO_ATTR_PERMS = {
-    'read':   ('managers', 'users', 'guests',),
+    'read': ('managers', 'users', 'guests',),
     'add': ybo.DEFAULT_ATTRPERMS['add'],
     'update': (),
-    }
+}
+
 
 # XXX same algorithm as in reorder_cubes and probably other place,
 # may probably extract a generic function
@@ -569,6 +573,7 @@ def order_eschemas(eschemas):
                         continue
     return eschemas
 
+
 def bw_normalize_etype(etype):
     if etype in ETYPE_NAME_MAP:
         msg = '%s has been renamed to %s, please update your code' % (
@@ -576,6 +581,7 @@ def bw_normalize_etype(etype):
         warn(msg, DeprecationWarning, stacklevel=4)
         etype = ETYPE_NAME_MAP[etype]
     return etype
+
 
 def display_name(req, key, form='', context=None):
     """return a internationalized string for the key (schema entity or relation
@@ -602,6 +608,7 @@ def ERSchema_display_name(self, req, form='', context=None):
     return display_name(req, self.type, form, context)
 ERSchema.display_name = ERSchema_display_name
 
+
 @cached
 def get_groups(self, action):
     """return the groups authorized to perform <action> on entities of
@@ -614,12 +621,12 @@ def get_groups(self, action):
     :return: names of the groups with the given permission
     """
     assert action in self.ACTIONS, action
-    #assert action in self._groups, '%s %s' % (self, action)
     try:
         return frozenset(g for g in self.permissions[action] if isinstance(g, string_types))
     except KeyError:
         return ()
 PermissionMixIn.get_groups = get_groups
+
 
 @cached
 def get_rqlexprs(self, action):
@@ -633,14 +640,13 @@ def get_rqlexprs(self, action):
     :return: the rql expressions with the given permission
     """
     assert action in self.ACTIONS, action
-    #assert action in self._rqlexprs, '%s %s' % (self, action)
     try:
         return tuple(g for g in self.permissions[action] if not isinstance(g, string_types))
     except KeyError:
         return ()
 PermissionMixIn.get_rqlexprs = get_rqlexprs
 
-orig_set_action_permissions = PermissionMixIn.set_action_permissions
+
 def set_action_permissions(self, action, permissions):
     """set the groups and rql expressions allowing to perform <action> on
     entities of this type
@@ -654,7 +660,9 @@ def set_action_permissions(self, action, permissions):
     orig_set_action_permissions(self, action, tuple(permissions))
     clear_cache(self, 'get_rqlexprs')
     clear_cache(self, 'get_groups')
+orig_set_action_permissions = PermissionMixIn.set_action_permissions
 PermissionMixIn.set_action_permissions = set_action_permissions
+
 
 def has_local_role(self, action):
     """return true if the action *may* be granted locally (i.e. either rql
@@ -671,12 +679,14 @@ def has_local_role(self, action):
     return False
 PermissionMixIn.has_local_role = has_local_role
 
+
 def may_have_permission(self, action, req):
     if action != 'read' and not (self.has_local_role('read') or
                                  self.has_perm(req, 'read')):
         return False
     return self.has_local_role(action) or self.has_perm(req, action)
 PermissionMixIn.may_have_permission = may_have_permission
+
 
 def has_perm(self, _cw, action, **kwargs):
     """return true if the action is granted globally or locally"""
@@ -713,8 +723,8 @@ def check_perm(self, _cw, action, **kwargs):
     # NB: give _cw to user.owns since user is not be bound to a transaction on
     # the repository side
     if 'owners' in groups and (
-          kwargs.get('creating')
-          or ('eid' in kwargs and _cw.user.owns(kwargs['eid']))):
+            kwargs.get('creating')
+            or ('eid' in kwargs and _cw.user.owns(kwargs['eid']))):
         if DBG:
             print('check_perm: %r %r: user is owner or creation time' %
                   (action, _self_str))
@@ -873,7 +883,7 @@ class CubicWebEntitySchema(EntitySchema):
             # avoid deleting the relation type accidentally...
             self.schema['has_text'].del_relation_def(self, self.schema['String'])
 
-    def schema_entity(self): # XXX @property for consistency with meta
+    def schema_entity(self):  # XXX @property for consistency with meta
         """return True if this entity type is used to build the schema"""
         return self.type in SCHEMA_TYPES
 
@@ -911,7 +921,7 @@ class CubicWebRelationSchema(PermissionMixIn, RelationSchema):
     def meta(self):
         return self.type in META_RTYPES
 
-    def schema_relation(self): # XXX @property for consistency with meta
+    def schema_relation(self):  # XXX @property for consistency with meta
         """return True if this relation type is used to build the schema"""
         return self.type in SCHEMA_TYPES
 
@@ -937,7 +947,7 @@ class CubicWebRelationSchema(PermissionMixIn, RelationSchema):
             else:
                 subjtype = objtype = None
         else:
-            assert not 'eid' in kwargs, kwargs
+            assert 'eid' not in kwargs, kwargs
             assert action in ('read', 'add', 'delete')
             if 'fromeid' in kwargs:
                 subjtype = _cw.entity_metas(kwargs['fromeid'])['type']
@@ -1001,6 +1011,7 @@ class CubicWebSchema(Schema):
         rschema.final = False
 
     etype_name_re = r'[A-Z][A-Za-z0-9]*[a-z]+[A-Za-z0-9]*$'
+
     def add_entity_type(self, edef):
         edef.name = str(edef.name)
         edef.name = bw_normalize_etype(edef.name)
@@ -1056,7 +1067,7 @@ class CubicWebSchema(Schema):
             try:
                 self._eid_index[rdef.eid] = rdefs
             except AttributeError:
-                pass # not a serialized schema
+                pass  # not a serialized schema
         return rdefs
 
     def del_relation_type(self, rtype):
@@ -1112,8 +1123,7 @@ class CubicWebSchema(Schema):
             select.add_type_restriction(select.defined_vars['X'], str(rdef.subject))
             analyzer.visit(select)
             _check_valid_formula(rdef, rqlst)
-            rdef.formula_select = select # avoid later recomputation
-
+            rdef.formula_select = select  # avoid later recomputation
 
     def finalize_computed_relations(self):
         """Build relation definitions for computed relations
@@ -1209,7 +1219,7 @@ class RQLVocabularyConstraint(BaseRQLConstraint):
     def repo_check(self, session, eidfrom, rtype, eidto):
         """raise ValidationError if the relation doesn't satisfy the constraint
         """
-        pass # this is a vocabulary constraint, not enforced
+        pass  # this is a vocabulary constraint, not enforced
 
 
 class RepoEnforcedRQLConstraintMixIn(object):
@@ -1304,6 +1314,7 @@ class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
 
 from yams.buildobjs import _add_relation as yams_add_relation
 
+
 class workflowable_definition(ybo.metadefinition):
     """extends default EntityType's metaclass to add workflow relations
     (i.e. in_state, wf_info_for and custom_workflow). This is the default
@@ -1352,7 +1363,8 @@ def make_workflowable(cls, in_state_descr=None):
 CONSTRAINTS['RQLConstraint'] = RQLConstraint
 CONSTRAINTS['RQLUniqueConstraint'] = RQLUniqueConstraint
 CONSTRAINTS['RQLVocabularyConstraint'] = RQLVocabularyConstraint
-CONSTRAINTS.pop('MultipleStaticVocabularyConstraint', None) # don't want this in cw yams schema
+# don't want MultipleStaticVocabularyConstraint in cw yams schema
+CONSTRAINTS.pop('MultipleStaticVocabularyConstraint', None)
 PyFileReader.context.update(CONSTRAINTS)
 
 
@@ -1373,7 +1385,7 @@ class BootstrapSchemaLoader(SchemaLoader):
         # bootstraping, ignore cubes
         filepath = join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'bootstrap.py')
         self.info('loading %s', filepath)
-        with tempattr(ybo, 'PACKAGE', 'cubicweb'): # though we don't care here
+        with tempattr(ybo, 'PACKAGE', 'cubicweb'):  # though we don't care here
             self.handle_file(filepath)
 
     def unhandled_file(self, filepath):
@@ -1382,7 +1394,8 @@ class BootstrapSchemaLoader(SchemaLoader):
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
+
 
 class CubicWebSchemaLoader(BootstrapSchemaLoader):
     """cubicweb specific schema loader, automatically adding metadata to the
@@ -1423,7 +1436,7 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
 
 set_log_methods(CubicWebSchemaLoader, getLogger('cubicweb.schemaloader'))
@@ -1435,6 +1448,7 @@ set_log_methods(RQLExpression, getLogger('cubicweb.schema'))
 MAY_USE_TEMPLATE_FORMAT = set(('managers',))
 NEED_PERM_FORMATS = [_('text/cubicweb-page-template')]
 
+
 @monkeypatch(FormatConstraint)
 def vocabulary(self, entity=None, form=None):
     cw = None
@@ -1443,11 +1457,11 @@ def vocabulary(self, entity=None, form=None):
     elif form is not None:
         cw = form._cw
     if cw is not None:
-        if hasattr(cw, 'write_security'): # test it's a session and not a request
+        if hasattr(cw, 'write_security'):  # test it's a session and not a request
             # cw is a server session
-            hasperm = not cw.write_security or \
-                      not cw.is_hook_category_activated('integrity') or \
-                      cw.user.matching_groups(MAY_USE_TEMPLATE_FORMAT)
+            hasperm = (not cw.write_security or
+                       not cw.is_hook_category_activated('integrity') or
+                       cw.user.matching_groups(MAY_USE_TEMPLATE_FORMAT))
         else:
             hasperm = cw.user.matching_groups(MAY_USE_TEMPLATE_FORMAT)
         if hasperm:
@@ -1456,22 +1470,27 @@ def vocabulary(self, entity=None, form=None):
 
 # XXX itou for some Statement methods
 from rql import stmts
-orig_get_etype = stmts.ScopeNode.get_etype
+
+
 def bw_get_etype(self, name):
     return orig_get_etype(self, bw_normalize_etype(name))
+orig_get_etype = stmts.ScopeNode.get_etype
 stmts.ScopeNode.get_etype = bw_get_etype
 
-orig_add_main_variable_delete = stmts.Delete.add_main_variable
+
 def bw_add_main_variable_delete(self, etype, vref):
     return orig_add_main_variable_delete(self, bw_normalize_etype(etype), vref)
+orig_add_main_variable_delete = stmts.Delete.add_main_variable
 stmts.Delete.add_main_variable = bw_add_main_variable_delete
 
-orig_add_main_variable_insert = stmts.Insert.add_main_variable
+
 def bw_add_main_variable_insert(self, etype, vref):
     return orig_add_main_variable_insert(self, bw_normalize_etype(etype), vref)
+orig_add_main_variable_insert = stmts.Insert.add_main_variable
 stmts.Insert.add_main_variable = bw_add_main_variable_insert
 
-orig_set_statement_type = stmts.Select.set_statement_type
+
 def bw_set_statement_type(self, etype):
     return orig_set_statement_type(self, bw_normalize_etype(etype))
+orig_set_statement_type = stmts.Select.set_statement_type
 stmts.Select.set_statement_type = bw_set_statement_type

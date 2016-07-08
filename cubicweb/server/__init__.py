@@ -24,9 +24,6 @@ from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
-import sys
-from os.path import join, exists
-from glob import glob
 from contextlib import contextmanager
 
 from six import text_type, string_types
@@ -39,8 +36,8 @@ from logilab import database
 
 from yams import BASE_GROUPS
 
-from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb.appobject import AppObject
+
 
 class ShuttingDown(BaseException):
     """raised when trying to access some resources while the repository is
@@ -90,13 +87,14 @@ DBG_SEC = 64
 #: more verbosity
 DBG_MORE = 128
 #: all level enabled
-DBG_ALL  = DBG_RQL + DBG_SQL + DBG_REPO + DBG_MS + DBG_HOOKS + DBG_OPS + DBG_SEC + DBG_MORE
+DBG_ALL = DBG_RQL + DBG_SQL + DBG_REPO + DBG_MS + DBG_HOOKS + DBG_OPS + DBG_SEC + DBG_MORE
 
 _SECURITY_ITEMS = []
 _SECURITY_CAPS = ['read', 'add', 'update', 'delete', 'transition']
 
 #: current debug mode
 DEBUG = 0
+
 
 @contextmanager
 def tunesecurity(items=(), capabilities=()):
@@ -136,6 +134,7 @@ def tunesecurity(items=(), capabilities=()):
     _SECURITY_ITEMS[:] = olditems
     _SECURITY_CAPS[:] = oldactions
 
+
 def set_debug(debugmode):
     """change the repository debugging mode"""
     global DEBUG
@@ -147,6 +146,7 @@ def set_debug(debugmode):
             DEBUG |= globals()[mode]
     else:
         DEBUG |= debugmode
+
 
 class debugged(object):
     """Context manager and decorator to help debug the repository.
@@ -184,13 +184,13 @@ class debugged(object):
     def __call__(self, func):
         """decorate function"""
         def wrapped(*args, **kwargs):
-            _clevel = DEBUG
             set_debug(self.debugmode)
             try:
                 return func(*args, **kwargs)
             finally:
                 set_debug(self._clevel)
         return wrapped
+
 
 # database initialization ######################################################
 
@@ -202,6 +202,7 @@ def create_user(session, login, pwd, *groups):
         session.execute('SET U in_group G WHERE U eid %(u)s, G name %(group)s',
                         {'u': user.eid, 'group': text_type(group)})
     return user
+
 
 def init_repository(config, interactive=True, drop=False, vreg=None,
                     init_config=None):
@@ -289,18 +290,18 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
             cnx.create_entity('CWGroup', name=text_type(group))
         admin = create_user(cnx, login, pwd, u'managers')
         cnx.execute('SET X owned_by U WHERE X is IN (CWGroup,CWSource), U eid %(u)s',
-                        {'u': admin.eid})
+                    {'u': admin.eid})
         cnx.commit()
     repo.shutdown()
     # re-login using the admin user
-    config._cubes = None # avoid assertion error
+    config._cubes = None  # avoid assertion error
     repo = get_repository(config=config)
     # replace previous schema by the new repo's one. This is necessary so that we give the proper
     # schema to `initialize_schema` above since it will initialize .eid attribute of schema elements
     schema = repo.schema
     with connect(repo, login, password=pwd) as cnx:
         with cnx.security_enabled(False, False):
-            repo.system_source.eid = ssource.eid # redo this manually
+            repo.system_source.eid = ssource.eid  # redo this manually
             handler = config.migration_handler(schema, interactive=False,
                                                cnx=cnx, repo=repo)
             # serialize the schema
@@ -348,7 +349,7 @@ def initialize_schema(config, schema, mhandler, event='create'):
 
 
 # sqlite'stored procedures have to be registered at connection opening time
-from logilab.database import SQL_CONNECT_HOOKS
+from logilab.database import SQL_CONNECT_HOOKS  # noqa
 
 # add to this set relations which should have their add security checking done
 # *BEFORE* adding the actual relation (done after by default)

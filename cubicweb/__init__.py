@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -59,14 +59,14 @@ __path__[0] = os.path.abspath(__path__[0])
 CW_SOFTWARE_ROOT = __path__[0]
 
 
-from cubicweb.__pkginfo__ import version as __version__
+from cubicweb.__pkginfo__ import version as __version__   # noqa
 
 
 set_log_methods(sys.modules[__name__], logging.getLogger('cubicweb'))
 
 # make all exceptions accessible from the package
-from cubicweb._exceptions import *
-from logilab.common.registry import ObjectNotFound, NoSelectableObject, RegistryNotFound
+from cubicweb._exceptions import *  # noqa
+from logilab.common.registry import ObjectNotFound, NoSelectableObject, RegistryNotFound  # noqa
 
 
 # '_' is available to mark internationalized string but should not be used to
@@ -81,10 +81,6 @@ if not hasattr(builtins, '_'):
 def typed_eid(eid):
     return int(eid)
 
-#def log_thread(f, w, a):
-#    print f.f_code.co_filename, f.f_code.co_name
-#import threading
-#threading.settrace(log_thread)
 
 class Binary(BytesIO):
     """class to hold binary data. Use BytesIO to prevent use of unicode data"""
@@ -92,13 +88,13 @@ class Binary(BytesIO):
 
     def __init__(self, buf=b''):
         assert isinstance(buf, self._allowed_types), \
-               "Binary objects must use bytes/buffer objects, not %s" % buf.__class__
+            "Binary objects must use bytes/buffer objects, not %s" % buf.__class__
         # don't call super, BytesIO may be an old-style class (on python < 2.7.4)
         BytesIO.__init__(self, buf)
 
     def write(self, data):
         assert isinstance(data, self._allowed_types), \
-               "Binary objects must use bytes/buffer objects, not %s" % data.__class__
+            "Binary objects must use bytes/buffer objects, not %s" % data.__class__
         # don't call super, BytesIO may be an old-style class (on python < 2.7.4)
         BytesIO.write(self, data)
 
@@ -114,7 +110,7 @@ class Binary(BytesIO):
             while True:
                 # the 16kB chunksize comes from the shutil module
                 # in stdlib
-                chunk = self.read(16*1024)
+                chunk = self.read(16 * 1024)
                 if not chunk:
                     break
                 fobj.write(chunk)
@@ -135,7 +131,7 @@ class Binary(BytesIO):
                 while True:
                     # the 16kB chunksize comes from the shutil module
                     # in stdlib
-                    chunk = fobj.read(16*1024)
+                    chunk = fobj.read(16 * 1024)
                     if not chunk:
                         break
                     binary.write(chunk)
@@ -148,7 +144,6 @@ class Binary(BytesIO):
         if not isinstance(other, Binary):
             return False
         return self.getvalue() == other.getvalue()
-
 
     # Binary helpers to store/fetch python objects
 
@@ -168,6 +163,7 @@ def check_password(eschema, value):
     return isinstance(value, (binary_type, Binary))
 BASE_CHECKERS['Password'] = check_password
 
+
 def str_or_binary(value):
     if isinstance(value, Binary):
         return value
@@ -182,16 +178,19 @@ ETYPE_NAME_MAP = {}
 #     to help in cube renaming
 CW_MIGRATION_MAP = {}
 
+
 def neg_role(role):
     if role == 'subject':
         return 'object'
     return 'subject'
+
 
 def role(obj):
     try:
         return obj.role
     except AttributeError:
         return neg_role(obj.target)
+
 
 def target(obj):
     try:
@@ -220,7 +219,7 @@ class CubicWebEventManager(object):
         self.callbacks = {}
 
     def bind(self, event, callback, *args, **kwargs):
-        self.callbacks.setdefault(event, []).append( (callback, args, kwargs) )
+        self.callbacks.setdefault(event, []).append((callback, args, kwargs))
 
     def emit(self, event, context=None):
         for callback, args, kwargs in self.callbacks.get(event, ()):
@@ -230,6 +229,7 @@ class CubicWebEventManager(object):
                 callback(context, *args, **kwargs)
 
 CW_EVENT_MANAGER = CubicWebEventManager()
+
 
 def onevent(event, *args, **kwargs):
     """decorator to ease event / callback binding
@@ -248,6 +248,7 @@ def onevent(event, *args, **kwargs):
 
 
 from yams.schema import role_name as rname
+
 
 def validation_error(entity, errors, substitutions=None, i18nvalues=None):
     """easy way to retrieve a :class:`cubicweb.ValidationError` for an entity or eid.
@@ -272,7 +273,7 @@ def validation_error(entity, errors, substitutions=None, i18nvalues=None):
 
 # exceptions ##################################################################
 
-class ProgrammingError(Exception): #DatabaseError):
+class ProgrammingError(Exception):
     """Exception raised for errors that are related to the database's operation
     and not necessarily under the control of the programmer, e.g. an unexpected
     disconnect occurs, the data source name is not found, a transaction could

@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,9 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.server.hooks.syncschema unit and functional tests"""
 
-from logilab.common.testlib import unittest_main
-
 from yams.constraints import BoundaryConstraint
+
 from cubicweb import ValidationError, Binary
 from cubicweb.schema import META_RTYPES
 from cubicweb.devtools import startpgcluster, stoppgcluster, PostgresApptestConfiguration
@@ -87,7 +86,7 @@ class SchemaModificationHooksTC(CubicWebTC):
             attreid = cnx.execute('INSERT CWAttribute X: X cardinality "11", '
                                   'X defaultval %(default)s, X indexed TRUE, '
                                   'X relation_type RT, X from_entity E, X to_entity F '
-                                   'WHERE RT name "name", E name "Societe2", '
+                                  'WHERE RT name "name", E name "Societe2", '
                                   'F name "String"',
                                    {'default': Binary.zpickle('noname')})[0][0]
             self._set_attr_perms(cnx, attreid)
@@ -111,8 +110,8 @@ class SchemaModificationHooksTC(CubicWebTC):
             self.assertEqual(rset.rows, [[s2eid]])
             # check that when a relation definition is deleted, existing relations are deleted
             rdefeid = cnx.execute('INSERT CWRelation X: X cardinality "**", X relation_type RT, '
-                                   '   X from_entity E, X to_entity E '
-                                   'WHERE RT name "concerne2", E name "CWUser"')[0][0]
+                                  '   X from_entity E, X to_entity E '
+                                  'WHERE RT name "concerne2", E name "CWUser"')[0][0]
             self._set_perms(cnx, rdefeid)
             cnx.commit()
             cnx.execute('DELETE CWRelation X WHERE X eid %(x)s', {'x': concerne2_rdef_eid})
@@ -136,10 +135,10 @@ class SchemaModificationHooksTC(CubicWebTC):
         with self.admin_access.repo_cnx() as cnx:
             META_RTYPES.add('custom_meta')
             cnx.execute('INSERT CWRType X: X name "custom_meta", X description "", '
-                         'X final FALSE, X symmetric FALSE')
+                        'X final FALSE, X symmetric FALSE')
             cnx.commit()
             eeid = cnx.execute('INSERT CWEType X: X name "NEWEtype", '
-                                'X description "", X final FALSE')[0][0]
+                               'X description "", X final FALSE')[0][0]
             self._set_perms(cnx, eeid)
             cnx.commit()
             META_RTYPES.remove('custom_meta')
@@ -148,15 +147,15 @@ class SchemaModificationHooksTC(CubicWebTC):
         with self.admin_access.repo_cnx() as cnx:
             META_RTYPES.add('custom_meta')
             cnx.execute('INSERT CWRType X: X name "custom_meta", X description "", '
-                         'X final FALSE, X symmetric FALSE')
+                        'X final FALSE, X symmetric FALSE')
             cnx.commit()
             rdefeid = cnx.execute('INSERT CWRelation X: X cardinality "**", X relation_type RT, '
-                                   '   X from_entity E, X to_entity E '
-                                   'WHERE RT name "custom_meta", E name "CWUser"')[0][0]
+                                  '   X from_entity E, X to_entity E '
+                                  'WHERE RT name "custom_meta", E name "CWUser"')[0][0]
             self._set_perms(cnx, rdefeid)
             cnx.commit()
             eeid = cnx.execute('INSERT CWEType X: X name "NEWEtype", '
-                                'X description "", X final FALSE')[0][0]
+                               'X description "", X final FALSE')[0][0]
             self._set_perms(cnx, eeid)
             cnx.commit()
             META_RTYPES.remove('custom_meta')
@@ -178,14 +177,14 @@ class SchemaModificationHooksTC(CubicWebTC):
                                                     'S name N')]
             self.assertIn('subdiv', snames)
 
-
     def test_perms_synchronization_1(self):
         with self.admin_access.repo_cnx() as cnx:
             schema = self.repo.schema
             self.assertEqual(schema['CWUser'].get_groups('read'), set(('managers', 'users')))
             self.assertTrue(cnx.execute('Any X, Y WHERE X is CWEType, X name "CWUser", '
                                         'Y is CWGroup, Y name "users"')[0])
-            cnx.execute('DELETE X read_permission Y WHERE X is CWEType, X name "CWUser", Y name "users"')
+            cnx.execute('DELETE X read_permission Y '
+                        'WHERE X is CWEType, X name "CWUser", Y name "users"')
             self.assertEqual(schema['CWUser'].get_groups('read'), set(('managers', 'users', )))
             cnx.commit()
             self.assertEqual(schema['CWUser'].get_groups('read'), set(('managers',)))
@@ -228,7 +227,7 @@ class SchemaModificationHooksTC(CubicWebTC):
             cnx.execute('DELETE X read_permission Y WHERE X eid %s' % eeid)
             cnx.execute('SET X final FALSE WHERE X eid %s' % eeid)
             cnx.execute('SET X read_permission Y WHERE X eid %s, Y eid in (%s, %s)'
-                         % (eeid, groupeids[0], groupeids[1]))
+                        % (eeid, groupeids[0], groupeids[1]))
             cnx.commit()
             cnx.execute('Any X WHERE X is CWEType, X name "CWEType"')
 
@@ -244,7 +243,7 @@ class SchemaModificationHooksTC(CubicWebTC):
                 self.assertFalse(self.schema['state_of'].inlined)
                 self.assertFalse(self.index_exists(cnx, 'State', 'state_of'))
                 rset = cnx.execute('Any X, Y WHERE X state_of Y')
-                self.assertEqual(len(rset), 2) # user states
+                self.assertEqual(len(rset), 2)  # user states
             finally:
                 cnx.execute('SET X inlined TRUE WHERE X name "state_of"')
                 self.assertFalse(self.schema['state_of'].inlined)
@@ -293,8 +292,8 @@ class SchemaModificationHooksTC(CubicWebTC):
     def test_required_change_1(self):
         with self.admin_access.repo_cnx() as cnx:
             cnx.execute('SET DEF cardinality "?1" '
-                         'WHERE DEF relation_type RT, DEF from_entity E,'
-                         'RT name "title", E name "Bookmark"')
+                        'WHERE DEF relation_type RT, DEF from_entity E,'
+                        'RT name "title", E name "Bookmark"')
             cnx.commit()
             # should now be able to add bookmark without title
             cnx.execute('INSERT Bookmark X: X path "/view"')
@@ -303,24 +302,25 @@ class SchemaModificationHooksTC(CubicWebTC):
     def test_required_change_2(self):
         with self.admin_access.repo_cnx() as cnx:
             cnx.execute('SET DEF cardinality "11" '
-                         'WHERE DEF relation_type RT, DEF from_entity E,'
-                         'RT name "surname", E name "CWUser"')
+                        'WHERE DEF relation_type RT, DEF from_entity E,'
+                        'RT name "surname", E name "CWUser"')
             cnx.execute('SET U surname "Doe" WHERE U surname NULL')
             cnx.commit()
             # should not be able anymore to add cwuser without surname
             self.assertRaises(ValidationError, self.create_user, cnx, "toto")
             cnx.rollback()
             cnx.execute('SET DEF cardinality "?1" '
-                         'WHERE DEF relation_type RT, DEF from_entity E,'
-                         'RT name "surname", E name "CWUser"')
+                        'WHERE DEF relation_type RT, DEF from_entity E,'
+                        'RT name "surname", E name "CWUser"')
             cnx.commit()
 
     def test_add_attribute_to_base_class(self):
         with self.admin_access.repo_cnx() as cnx:
-            attreid = cnx.execute('INSERT CWAttribute X: X cardinality "11", X defaultval %(default)s, '
-                                   'X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
-                                   'WHERE RT name "messageid", E name "BaseTransition", F name "String"',
-                                   {'default': Binary.zpickle('noname')})[0][0]
+            attreid = cnx.execute(
+                'INSERT CWAttribute X: X cardinality "11", X defaultval %(default)s, '
+                'X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
+                'WHERE RT name "messageid", E name "BaseTransition", F name "String"',
+                {'default': Binary.zpickle('noname')})[0][0]
             assert cnx.execute('SET X read_permission Y WHERE X eid %(x)s, Y name "managers"',
                                {'x': attreid})
             cnx.commit()
@@ -357,12 +357,12 @@ class SchemaModificationHooksTC(CubicWebTC):
             rset = cnx.execute('Any X WHERE X has_text "rick.roll"')
             self.assertIn(cnx.user.eid, [item[0] for item in rset])
             assert cnx.execute('SET R fulltext_container NULL '
-                                'WHERE R name "use_email"')
+                               'WHERE R name "use_email"')
             cnx.commit()
             rset = cnx.execute('Any X WHERE X has_text "rick.roll"')
             self.assertIn(target.eid, [item[0] for item in rset])
             assert cnx.execute('SET R fulltext_container "subject" '
-                                'WHERE R name "use_email"')
+                               'WHERE R name "use_email"')
             cnx.commit()
             rset = cnx.execute('Any X WHERE X has_text "rick.roll"')
             self.assertIn(cnx.user.eid, [item[0] for item in rset])
@@ -375,10 +375,10 @@ class SchemaModificationHooksTC(CubicWebTC):
                 # bug in schema reloading, constraint's eid not restored
                 self.skipTest('start me alone')
             cnx.execute('SET X value %(v)s WHERE X eid %(x)s',
-                         {'x': cstr.eid, 'v': u"u'normal', u'auto', u'new'"})
+                        {'x': cstr.eid, 'v': u"u'normal', u'auto', u'new'"})
             cnx.execute('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, '
                         'EDEF constrained_by X WHERE CT name %(ct)s, EDEF eid %(x)s',
-                         {'ct': 'SizeConstraint', 'value': u'max=10', 'x': rdef.eid})
+                        {'ct': 'SizeConstraint', 'value': u'max=10', 'x': rdef.eid})
             cnx.commit()
             cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
             self.assertEqual(cstr.values, (u'normal', u'auto', u'new'))
@@ -405,4 +405,5 @@ class SchemaModificationHooksTC(CubicWebTC):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    import unittest
+    unittest.main()

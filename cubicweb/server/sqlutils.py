@@ -152,6 +152,8 @@ def sqlschema(schema, driver, text_index=True,
 
 
 _SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION = re.compile('^(?!(sql|pg)_)').match
+
+
 def sql_drop_all_user_tables(driver_or_helper, sqlcursor):
     """Return ths sql to drop all tables found in the database system."""
     if not getattr(driver_or_helper, 'list_tables', None):
@@ -159,14 +161,16 @@ def sql_drop_all_user_tables(driver_or_helper, sqlcursor):
     else:
         dbhelper = driver_or_helper
 
-    cmds = [dbhelper.sql_drop_sequence('entities_id_seq')]
+    stmts = [dbhelper.sql_drop_sequence('entities_id_seq')]
     # for mssql, we need to drop views before tables
     if hasattr(dbhelper, 'list_views'):
-        cmds += ['DROP VIEW %s;' % name
-                 for name in filter(_SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION, dbhelper.list_views(sqlcursor))]
-    cmds += ['DROP TABLE %s;' % name
-             for name in filter(_SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION, dbhelper.list_tables(sqlcursor))]
-    return '\n'.join(cmds)
+        stmts += ['DROP VIEW %s;' % name
+                  for name in filter(_SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION,
+                                     dbhelper.list_views(sqlcursor))]
+    stmts += ['DROP TABLE %s;' % name
+              for name in filter(_SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION,
+                                 dbhelper.list_tables(sqlcursor))]
+    return stmts
 
 
 class ConnectionWrapper(object):
@@ -199,7 +203,7 @@ class ConnectionWrapper(object):
 
     def close(self, i_know_what_i_do=False):
         """close all connections in the set"""
-        if i_know_what_i_do is not True: # unexpected closing safety belt
+        if i_know_what_i_do is not True:  # unexpected closing safety belt
             raise RuntimeError('connections set shouldn\'t be closed')
         try:
             self.cu.close()
@@ -216,7 +220,7 @@ class ConnectionWrapper(object):
 
     def cnxset_freed(self):
         """connections set is being freed from a session"""
-        pass # no nothing by default
+        pass  # no nothing by default
 
     def reconnect(self):
         """reopen a connection for this source or all sources if none specified
@@ -267,6 +271,7 @@ class SqliteConnectionWrapper(ConnectionWrapper):
             self._cnx = self._source.get_connection()
             self._cu = self._cnx.cursor()
         return self._cnx
+
     @cnx.setter
     def cnx(self, value):
         self._cnx = value
@@ -277,6 +282,7 @@ class SqliteConnectionWrapper(ConnectionWrapper):
             self._cnx = self._source.get_connection()
             self._cu = self._cnx.cursor()
         return self._cu
+
     @cu.setter
     def cu(self, value):
         self._cu = value
@@ -434,7 +440,7 @@ class SQLAdapterMixIn(object):
                     # than add_entity (native) as this behavior
                     # may also be used for update.
                     value = converters[atype](value)
-                elif atype == 'Password': # XXX could be done using a TYPE_CONVERTERS callback
+                elif atype == 'Password':  # XXX could be done using a TYPE_CONVERTERS callback
                     # if value is a Binary instance, this mean we got it
                     # from a query result and so it is already encrypted
                     if isinstance(value, Binary):
@@ -444,13 +450,13 @@ class SQLAdapterMixIn(object):
                     value = self._binary(value)
                 elif isinstance(value, Binary):
                     value = self._binary(value.getvalue())
-            attrs[SQL_PREFIX+str(attr)] = value
-        attrs[SQL_PREFIX+'eid'] = entity.eid
+            attrs[SQL_PREFIX + str(attr)] = value
+        attrs[SQL_PREFIX + 'eid'] = entity.eid
         return attrs
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
 set_log_methods(SQLAdapterMixIn, getLogger('cubicweb.sqladapter'))
 
@@ -510,9 +516,11 @@ def _init_sqlite_connection(cnx):
     class group_concat(object):
         def __init__(self):
             self.values = set()
+
         def step(self, value):
             if value is not None:
                 self.values.add(value)
+
         def finalize(self):
             return ', '.join(text_type(v) for v in self.values)
 
@@ -536,11 +544,12 @@ def _init_sqlite_connection(cnx):
     cnx.create_function("TEXT_LIMIT_SIZE", 2, limit_size2)
 
     from logilab.common.date import strptime
+
     def weekday(ustr):
         try:
             dt = strptime(ustr, '%Y-%m-%d %H:%M:%S')
         except:
-            dt =  strptime(ustr, '%Y-%m-%d')
+            dt = strptime(ustr, '%Y-%m-%d')
         # expect sunday to be 1, saturday 7 while weekday method return 0 for
         # monday
         return (dt.weekday() + 1) % 7

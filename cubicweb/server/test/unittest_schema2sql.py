@@ -24,6 +24,7 @@ from logilab.common.testlib import TestCase, unittest_main
 from logilab.database import get_db_helper
 
 from yams.reader import SchemaLoader
+
 from cubicweb.server import schema2sql
 
 schema2sql.SET_DEFAULT = True
