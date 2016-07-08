@@ -809,14 +809,19 @@ class CWConstraintAddOp(CWConstraintDelOp):
         elif cstrtype == 'UniqueConstraint' and oldcstr is None:
             syssource.update_rdef_unique(cnx, rdef)
             self.unique_changed = True
-        if cstrtype in ('BoundaryConstraint', 'IntervalBoundConstraint', 'StaticVocabularyConstraint'):
+        if cstrtype in ('BoundaryConstraint',
+                        'IntervalBoundConstraint',
+                        'StaticVocabularyConstraint'):
+            cstrname, check = y2sql.check_constraint(rdef.subject, rdef.object, rdef.rtype.type,
+                                                     newcstr, syssource.dbhelper, prefix=SQL_PREFIX)
+            # oldcstr is the new constraint when the attribute is being added in the same
+            # transaction or when constraint value is updated. So we've to take care...
             if oldcstr is not None:
                 oldcstrname = 'cstr' + md5((rdef.subject.type + rdef.rtype.type + cstrtype +
-                                            (self.oldcstr.serialize() or '')).encode('ascii')).hexdigest()
-                cnx.system_sql('ALTER TABLE %s%s DROP CONSTRAINT %s' %
-                               (SQL_PREFIX, rdef.subject.type, oldcstrname))
-            cstrname, check = y2sql.check_constraint(rdef.subject, rdef.object, rdef.rtype.type,
-                    newcstr, syssource.dbhelper, prefix=SQL_PREFIX)
+                                            (self.oldcstr.serialize() or '')).encode('utf-8')).hexdigest()
+                if oldcstrname != cstrname:
+                    cnx.system_sql('ALTER TABLE %s%s DROP CONSTRAINT %s'
+                                   % (SQL_PREFIX, rdef.subject.type, oldcstrname))
             cnx.system_sql('ALTER TABLE %s%s ADD CONSTRAINT %s CHECK(%s)' %
                            (SQL_PREFIX, rdef.subject.type, cstrname, check))
 

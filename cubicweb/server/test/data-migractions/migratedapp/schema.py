@@ -87,7 +87,7 @@ class Note(Para):
     mydate = Date(default='TODAY')
     oldstyledefaultdate = Date(default='2013/01/01')
     newstyledefaultdate = Date(default=dt.date(2013, 1, 1))
-    shortpara = String(maxsize=64, default='hop')
+    shortpara = String(maxsize=11, default='hop', vocabulary=['hop', 'hop hop', 'hop hop hop'])
     ecrit_par = SubjectRelation('Personne', constraints=[RQLConstraint('S concerne A, O concerne A')])
     attachment = SubjectRelation('File')
 
