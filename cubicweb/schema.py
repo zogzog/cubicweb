@@ -51,14 +51,7 @@ from rql.analyze import ETypeResolver
 import cubicweb
 from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized, _
 
-try:
-    from cubicweb import server
-except ImportError:
-    # We need to lookup DEBUG from there,
-    # however a pure dbapi client may not have it.
-    class server(object): pass
-    server.DEBUG = False
-
+from cubicweb import server
 
 PURE_VIRTUAL_RTYPES = set(('identity', 'has_text',))
 VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
