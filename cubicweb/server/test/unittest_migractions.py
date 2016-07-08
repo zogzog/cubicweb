@@ -192,11 +192,14 @@ class MigrationCommandsTC(MigrationTC):
             self.assertEqual(self.schema['shortpara'].objects(), ('String', ))
             # test created column is actually a varchar(64)
             fields = self.table_schema(mh, '%sNote' % SQL_PREFIX)
-            self.assertEqual(fields['%sshortpara' % SQL_PREFIX], ('character varying', 64))
+            self.assertEqual(fields['%sshortpara' % SQL_PREFIX], ('character varying', 11))
             # test default value set on existing entities
             self.assertEqual(cnx.execute('Note X').get_entity(0, 0).shortpara, 'hop')
             # test default value set for next entities
-            self.assertEqual(cnx.create_entity('Note', shortpara=u'hophop').shortpara, u'hophop')
+            self.assertEqual(cnx.create_entity('Note', shortpara=u'hop hop').shortpara, u'hop hop')
+            # serialized constraint added
+            constraints = self.table_constraints(mh, 'cw_Personne')
+            self.assertEqual(len(constraints), 1, constraints)
 
     def test_add_attribute_unique(self):
         with self.mh() as (cnx, mh):
