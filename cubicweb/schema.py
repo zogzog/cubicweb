@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,6 +22,7 @@ __docformat__ = "restructuredtext en"
 
 import re
 from os.path import join, basename
+from hashlib import md5
 from logging import getLogger
 from warnings import warn
 
@@ -1144,6 +1145,16 @@ class CubicWebSchema(Schema):
 
 
 # additional cw specific constraints ###########################################
+
+@monkeypatch(BaseConstraint)
+def name_for(self, rdef):
+    """Return a unique, size controlled, name for this constraint applied to given `rdef`.
+
+    This name may be used as name for the constraint in the database.
+    """
+    return 'cstr' + md5((rdef.subject.type + rdef.rtype.type + self.type() +
+                         (self.serialize() or '')).encode('ascii')).hexdigest()
+
 
 class BaseRQLConstraint(RRQLExpression, BaseConstraint):
     """base class for rql constraints"""

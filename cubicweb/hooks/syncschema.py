@@ -28,7 +28,6 @@ from cubicweb import _
 
 import json
 from copy import copy
-from hashlib import md5
 
 from yams.schema import BASE_TYPES, BadSchemaDefinition, RelationDefinitionSchema
 from yams.constraints import UniqueConstraint
@@ -754,10 +753,11 @@ class CWConstraintDelOp(MemSchemaOperation):
         elif cstrtype == 'UniqueConstraint':
             syssource.update_rdef_unique(cnx, rdef)
             self.unique_changed = True
-        if cstrtype in ('BoundaryConstraint', 'IntervalBoundConstraint', 'StaticVocabularyConstraint'):
-            cstrname = 'cstr' + md5((rdef.subject.type + rdef.rtype.type + cstrtype +
-                                     (self.oldcstr.serialize() or '')).encode('utf-8')).hexdigest()
-            cnx.system_sql('ALTER TABLE %s%s DROP CONSTRAINT %s' % (SQL_PREFIX, rdef.subject.type, cstrname))
+        elif cstrtype in ('BoundaryConstraint',
+                          'IntervalBoundConstraint',
+                          'StaticVocabularyConstraint'):
+            cnx.system_sql('ALTER TABLE %s%s DROP CONSTRAINT %s'
+                           % (SQL_PREFIX, rdef.subject, self.oldcstr.name_for(rdef)))
 
     def revertprecommit_event(self):
         # revert changes on in memory schema
@@ -811,13 +811,12 @@ class CWConstraintAddOp(CWConstraintDelOp):
             # oldcstr is the new constraint when the attribute is being added in the same
             # transaction or when constraint value is updated. So we've to take care...
             if oldcstr is not None:
-                oldcstrname = 'cstr' + md5((rdef.subject.type + rdef.rtype.type + cstrtype +
-                                            (self.oldcstr.serialize() or '')).encode('utf-8')).hexdigest()
+                oldcstrname = self.oldcstr.name_for(rdef)
                 if oldcstrname != cstrname:
                     cnx.system_sql('ALTER TABLE %s%s DROP CONSTRAINT %s'
-                                   % (SQL_PREFIX, rdef.subject.type, oldcstrname))
+                                   % (SQL_PREFIX, rdef.subject, oldcstrname))
             cnx.system_sql('ALTER TABLE %s%s ADD CONSTRAINT %s CHECK(%s)' %
-                           (SQL_PREFIX, rdef.subject.type, cstrname, check))
+                           (SQL_PREFIX, rdef.subject, cstrname, check))
 
 
 class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):

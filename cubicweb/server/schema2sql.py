@@ -168,11 +168,8 @@ def check_constraint(rdef, constraint, dbhelper, prefix=''):
     """Return (constraint name, constraint SQL definition) for the given relation definition's
     constraint. Maybe (None, None) if the constraint is not handled in the backend.
     """
-    eschema = rdef.subject
     attr = rdef.rtype.type
-    # XXX should find a better name
-    cstrname = 'cstr' + md5((eschema.type + attr + constraint.type() +
-                             (constraint.serialize() or '')).encode('ascii')).hexdigest()
+    cstrname = constraint.name_for(rdef)
     if constraint.type() == 'BoundaryConstraint':
         value = constraint_value_as_sql(constraint.boundary, dbhelper, prefix)
         return cstrname, '%s%s %s %s' % (prefix, attr, constraint.operator, value)

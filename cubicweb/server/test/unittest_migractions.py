@@ -602,9 +602,7 @@ class MigrationCommandsTC(MigrationTC):
             self.assertEqual(len(constraints), 1, constraints)
             rdef = migrschema['promo'].rdefs['Personne', 'String']
             cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
-            cstrname = 'cstr' + md5((rdef.subject.type + rdef.rtype.type + cstr.type() +
-                                     (cstr.serialize() or '')).encode('ascii')).hexdigest()
-            self.assertIn(cstrname, constraints)
+            self.assertIn(cstr.name_for(rdef), constraints)
 
     def _erqlexpr_rset(self, cnx, action, ertype):
         rql = 'RQLExpression X WHERE ET is CWEType, ET %s_permission X, ET name %%(name)s' % action

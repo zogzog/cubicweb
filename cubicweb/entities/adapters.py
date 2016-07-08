@@ -21,7 +21,6 @@ framework itself.
 from cubicweb import _
 
 from itertools import chain
-from hashlib import md5
 
 from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
@@ -413,9 +412,7 @@ class IUserFriendlyCheckConstraint(IUserFriendlyError):
         for rschema, attrschema in eschema.attribute_definitions():
             rdef = rschema.rdef(eschema, attrschema)
             for constraint in rdef.constraints:
-                if cstrname == 'cstr' + md5(
-                        (eschema.type + rschema.type + constraint.type() +
-                         (constraint.serialize() or '')).encode('ascii')).hexdigest():
+                if cstrname == constraint.name_for(rdef):
                     break
             else:
                 continue
