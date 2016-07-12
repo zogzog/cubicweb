@@ -181,15 +181,15 @@ from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
-import sys
-import os
-import stat
 import logging
 import logging.config
-from smtplib import SMTP
-from threading import Lock
+import os
 from os.path import (exists, join, expanduser, abspath, normpath,
                      basename, isdir, dirname, splitext)
+from smtplib import SMTP
+import stat
+import sys
+from threading import Lock
 from warnings import warn, filterwarnings
 
 from six import text_type
