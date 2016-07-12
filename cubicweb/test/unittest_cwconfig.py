@@ -21,13 +21,13 @@ import sys
 import os
 import tempfile
 from os.path import dirname, join, abspath
+import unittest
 
 from logilab.common.modutils import cleanup_sys_modules
-from logilab.common.testlib import (TestCase, unittest_main,
-                                    with_tempdir)
+from logilab.common.testlib import with_tempdir
 from logilab.common.changelog import Version
 
-from cubicweb.devtools import ApptestConfiguration
+from cubicweb.devtools import ApptestConfiguration, testlib
 from cubicweb.cwconfig import _find_prefix
 
 def unabsolutize(path):
@@ -40,7 +40,8 @@ def unabsolutize(path):
 CUSTOM_CUBES_DIR = abspath(join(dirname(__file__), 'data', 'cubes'))
 
 
-class CubicWebConfigurationTC(TestCase):
+class CubicWebConfigurationTC(testlib.BaseTestCase):
+
     def setUp(self):
         cleanup_sys_modules([CUSTOM_CUBES_DIR, ApptestConfiguration.CUBES_DIR])
         self.config = ApptestConfiguration('data', __file__)
@@ -132,7 +133,7 @@ class CubicWebConfigurationTC(TestCase):
         self.assertEqual(file.__path__, [join(CUSTOM_CUBES_DIR, 'file')])
 
 
-class FindPrefixTC(TestCase):
+class FindPrefixTC(unittest.TestCase):
     def make_dirs(self, *args):
         path = join(tempfile.tempdir, *args)
         if not os.path.exists(path):
@@ -231,4 +232,4 @@ class FindPrefixTC(TestCase):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    unittest.main()
