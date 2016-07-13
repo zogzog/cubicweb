@@ -186,7 +186,7 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
     return '\n'.join(output)
 
 
-def as_sql(value, dbhelper, prefix):
+def constraint_value_as_sql(value, dbhelper, prefix):
     """Return the SQL value from a Yams constraint's value, handling special cases where it's a
     `Attribute`, `TODAY` or `NOW` instance instead of a literal value.
     """
@@ -211,15 +211,15 @@ def check_constraint(rdef, constraint, dbhelper, prefix=''):
     cstrname = 'cstr' + md5((eschema.type + attr + constraint.type() +
                              (constraint.serialize() or '')).encode('ascii')).hexdigest()
     if constraint.type() == 'BoundaryConstraint':
-        value = as_sql(constraint.boundary, dbhelper, prefix)
+        value = constraint_value_as_sql(constraint.boundary, dbhelper, prefix)
         return cstrname, '%s%s %s %s' % (prefix, attr, constraint.operator, value)
     elif constraint.type() == 'IntervalBoundConstraint':
         condition = []
         if constraint.minvalue is not None:
-            value = as_sql(constraint.minvalue, dbhelper, prefix)
+            value = constraint_value_as_sql(constraint.minvalue, dbhelper, prefix)
             condition.append('%s%s >= %s' % (prefix, attr, value))
         if constraint.maxvalue is not None:
-            value = as_sql(constraint.maxvalue, dbhelper, prefix)
+            value = constraint_value_as_sql(constraint.maxvalue, dbhelper, prefix)
             condition.append('%s%s <= %s' % (prefix, attr, value))
         return cstrname, ' AND '.join(condition)
     elif constraint.type() == 'StaticVocabularyConstraint':
