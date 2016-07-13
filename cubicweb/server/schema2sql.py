@@ -153,8 +153,7 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
     for i in range(len(attrs)):
         rschema, attrschema = attrs[i]
         if attrschema is not None:
-            sqltype = aschema2sql(dbhelper, eschema, rschema, attrschema,
-                                  indent=' ')
+            sqltype = aschema2sql(dbhelper, eschema, rschema, attrschema)
         else:  # inline relation
             sqltype = 'integer REFERENCES entities (eid)'
         if i == len(attrs) - 1:
@@ -234,7 +233,7 @@ def check_constraint(rdef, constraint, dbhelper, prefix=''):
     return None, None
 
 
-def aschema2sql(dbhelper, eschema, rschema, aschema, creating=True, indent=''):
+def aschema2sql(dbhelper, eschema, rschema, aschema, creating=True):
     """Return string containing a SQL table's column definition from attribute schema."""
     attr = rschema.type
     rdef = rschema.rdef(eschema.type, aschema.type)
