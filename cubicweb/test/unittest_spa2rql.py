@@ -33,15 +33,20 @@ xy.add_equivalence('Project name', 'doap:Project doap:name')
 xy.add_equivalence('Project name', 'doap:Project dc:title')
 
 
-config = TestServerConfiguration('data', __file__)
-config.bootstrap_cubes()
-schema = config.load_schema()
-
 
 @unittest.skipIf(SKIPCAUSE, SKIPCAUSE)
 class XYTC(TestCase):
+
+    schema = None
+
+    @classmethod
+    def setUpClass(cls):
+        config = TestServerConfiguration('data', __file__)
+        config.bootstrap_cubes()
+        cls.schema = config.load_schema()
+
     def setUp(self):
-        self.tr = Sparql2rqlTranslator(schema)
+        self.tr = Sparql2rqlTranslator(self.schema)
 
     def _test(self, sparql, rql, args={}):
         qi = self.tr.translate(sparql)
