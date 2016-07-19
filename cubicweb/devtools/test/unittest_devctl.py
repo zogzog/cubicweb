@@ -33,8 +33,12 @@ def newcube(directory, name):
     return proc.returncode, stdout
 
 
-class CubicWebCtlTC(TestCase):
-    """test case for devtools commands"""
+def to_unicode(msg):
+    return msg.decode(sys.getdefaultencoding(), errors='replace')
+
+
+class DevCtlTC(TestCase):
+    """Test case for devtools commands"""
 
     if not hasattr(TestCase, 'assertItemsEqual'):
         assertItemsEqual = TestCase.assertCountEqual
@@ -47,6 +51,7 @@ class CubicWebCtlTC(TestCase):
         tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube")
         try:
             retcode, stdout = newcube(tmpdir, 'foo')
+            self.assertEqual(retcode, 0, msg=to_unicode(stdout))
             self.assertItemsEqual(os.listdir(osp.join(tmpdir, 'foo')), expected)
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
@@ -62,7 +67,8 @@ class CubicWebCtlTC(TestCase):
             retcode = proc.wait()
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
-        self.assertEqual(retcode, 0, proc.stdout.read())
+        self.assertEqual(retcode, 0,
+                         msg=to_unicode(proc.stdout.read()))
 
 
 if __name__ == '__main__':
