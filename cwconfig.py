@@ -1114,7 +1114,15 @@ the repository',
             except OSError as ex:
                 self.warning('error while forcing write permission on %s: %s',
                              path, ex)
-    
+
+    def ensure_uid_directory(self, path, enforce_write=False):
+        self.check_writeable_uid_directory(path)
+
+        def cb(arg, dirname, fnames):
+            for name in fnames:
+                self.ensure_uid(join(dirname, name), enforce_write)
+        os.path.walk(path, cb, None)
+        return path
 
     @cached
     def instance_md5_version(self):
