@@ -355,7 +355,9 @@ have the python imaging library installed to use captcha)',
                 warn('[3.20] cubicweb.old.css has been renamed back to cubicweb.css',
                      DeprecationWarning)
                 rid = 'cubicweb.css'
-            return self.uiprops.process_resource(join(directory, rdirectory), rid), rid
+            return self.ensure_uid_directory(
+                        self.uiprops.process_resource(
+                             join(directory, rdirectory), rid)), rid
         return join(directory, rdirectory), rid
 
     def locate_all_files(self, rid, rdirectory='wdoc'):
@@ -462,13 +464,14 @@ have the python imaging library installed to use captcha)',
         if rdir:
             staticdir = join(staticdir, rdir)
             if not isdir(staticdir) and 'w' in mode:
-                os.makedirs(staticdir)
+                self.check_writeable_uid_directory(staticdir)
         return open(join(staticdir, filename), mode)
 
     def static_file_add(self, rpath, data):
         stream = self.static_file_open(rpath)
         stream.write(data)
         stream.close()
+        self.ensure_uid(rpath)
 
     def static_file_del(self, rpath):
         if self.static_file_exists(rpath):
