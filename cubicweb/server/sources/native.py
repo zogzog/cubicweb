@@ -557,7 +557,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 self._cache[cachekey] = sql, qargs, cbs
         args = self.merge_args(args, qargs)
         assert isinstance(sql, string_types), repr(sql)
-        cursor = self.doexec(cnx, sql, args)
+        cursor = cnx.system_sql(sql, args)
         results = self.process_result(cursor, cnx, cbs)
         assert dbg_results(results)
         return results
