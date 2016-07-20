@@ -93,9 +93,8 @@ def deserialize_schema(schema, cnx):
     dbhelper = repo.system_source.dbhelper
 
     # Computed Rtype
-    with cnx.ensure_cnx_set:
-        tables = set(t.lower() for t in dbhelper.list_tables(cnx.cnxset.cu))
-        has_computed_relations = 'cw_cwcomputedrtype' in tables
+    tables = set(t.lower() for t in dbhelper.list_tables(cnx.cnxset.cu))
+    has_computed_relations = 'cw_cwcomputedrtype' in tables
     # computed attribute
     try:
         cnx.system_sql("SELECT cw_formula FROM cw_CWAttribute")

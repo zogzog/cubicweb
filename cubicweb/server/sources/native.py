@@ -1048,16 +1048,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         sql = self.sqlgen.select('tx_entity_actions', restr,
                                  ('txa_action', 'txa_public', 'txa_order',
                                   'etype', 'eid', 'changes'))
-        with cnx.ensure_cnx_set:
-            cu = self.doexec(cnx, sql, restr)
-            actions = [tx.EntityAction(a, p, o, et, e, c and pickle.loads(self.binary_to_str(c)))
-                       for a, p, o, et, e, c in cu.fetchall()]
+        cu = self.doexec(cnx, sql, restr)
+        actions = [tx.EntityAction(a, p, o, et, e, c and pickle.loads(self.binary_to_str(c)))
+                   for a, p, o, et, e, c in cu.fetchall()]
         sql = self.sqlgen.select('tx_relation_actions', restr,
                                  ('txa_action', 'txa_public', 'txa_order',
                                   'rtype', 'eid_from', 'eid_to'))
-        with cnx.ensure_cnx_set:
-            cu = self.doexec(cnx, sql, restr)
-            actions += [tx.RelationAction(*args) for args in cu.fetchall()]
+        cu = self.doexec(cnx, sql, restr)
+        actions += [tx.RelationAction(*args) for args in cu.fetchall()]
         return sorted(actions, key=lambda x: x.order)
 
     def undo_transaction(self, cnx, txuuid):

@@ -107,8 +107,7 @@ class MetaGeneratorTC(CubicWebTC):
             md = DT.datetime.now(pytz.utc) - DT.timedelta(days=1)
             entity, rels = metagen.base_etype_dicts('CWUser')
             entity.cw_edited.update(dict(modification_date=md))
-            with cnx.ensure_cnx_set:
-                metagen.init_entity(entity)
+            metagen.init_entity(entity)
             self.assertEqual(entity.cw_edited['modification_date'], md)
 
 
@@ -140,8 +139,7 @@ class MetadataGeneratorTC(CubicWebTC):
             md = DT.datetime.now(pytz.utc) - DT.timedelta(days=1)
             attrs = metagen.base_etype_attrs('CWUser')
             attrs.update(dict(modification_date=md))
-            with cnx.ensure_cnx_set:
-                metagen.init_entity_attrs('CWUser', 1, attrs)
+            metagen.init_entity_attrs('CWUser', 1, attrs)
             self.assertEqual(attrs['modification_date'], md)
 
 
