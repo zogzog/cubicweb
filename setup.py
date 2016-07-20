@@ -107,15 +107,24 @@ def export(from_dir, to_dir,
         import errno
         if ex.errno != errno.EEXIST:
             raise
+    else:
+        if verbose:
+            print('created %s directory' % to_dir)
     for dirpath, dirnames, filenames in os.walk(from_dir):
         for norecurs in blacklist:
             try:
                 dirnames.remove(norecurs)
             except ValueError:
                 pass
+            else:
+                if verbose:
+                    print('not recursing in %s' % join(dirpath, norecurs))
         for dirname in dirnames:
-            dest = join(to_dir, dirname)
+            src = join(dirpath, dirname)
+            dest = to_dir + src[len(from_dir):]
             if not exists(dest):
+                if verbose:
+                    print('creating %s directory' % dest)
                 os.mkdir(dest)
         for filename in filenames:
             # don't include binary files
@@ -127,10 +136,10 @@ def export(from_dir, to_dir,
                 continue
             if exists(dest):
                 os.remove(dest)
+            if verbose:
+                print('copying %s to %s' % (src, dest))
             shutil.copy2(src, dest)
 
-
-EMPTY_FILE = '"""generated file, don\'t modify or your data will be lost"""\n'
 
 class MyInstallLib(install_lib.install_lib):
     """extend install_lib command to handle  package __init__.py and
@@ -143,8 +152,9 @@ class MyInstallLib(install_lib.install_lib):
         # manually install included directories if any
         if include_dirs:
             for directory in include_dirs:
-                dest = join(self.install_dir, modname, directory)
-                export(directory, dest, verbose=False)
+                src = join(modname, directory)
+                dest = join(self.install_dir, src)
+                export(src, dest, verbose=self.verbose)
 
 # write required share/cubicweb/cubes/__init__.py
 class MyInstallData(install_data.install_data):

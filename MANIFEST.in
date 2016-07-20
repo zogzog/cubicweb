@@ -2,6 +2,7 @@ include README
 include COPYING
 include COPYING.LESSER
 include pylintrc
+include tox.ini
 include bin/cubicweb-*
 include man/cubicweb-ctl.1
 
@@ -41,7 +42,7 @@ recursive-include cubicweb/etwist/test/data *.py
 recursive-include cubicweb/web/test/jstests *.js *.html *.css *.json
 recursive-include cubicweb/web/test/windmill *.py
 
-recursive-include cubicweb/skeleton *.py *.css *.js *.po compat *.in *.tmpl rules
+recursive-include cubicweb/skeleton *.py *.css *.js *.po compat *.in *.tmpl rules tox.ini
 
 prune doc/book/en/.static
 prune doc/book/fr/.static
