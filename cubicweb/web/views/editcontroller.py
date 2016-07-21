@@ -202,7 +202,7 @@ class EditController(basecontrollers.ViewController):
         except (RequestError, NothingToEdit) as ex:
             if '__linkto' in req.form and 'eid' in req.form:
                 self.execute_linkto()
-            elif not ('__delete' in req.form or '__insert' in req.form):
+            elif '__delete' not in req.form:
                 raise ValidationError(None, {None: text_type(ex)})
         # all pending inlined relations to newly created entities have been
         # treated now (pop to ensure there are no attempt to add new ones)
