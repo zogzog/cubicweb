@@ -62,4 +62,14 @@ Backwards-incompatible changes
   `logilab.common.testlib.TestCase`) is no longer available.
 
 
+Development
+-----------
+
+When installed within a virtualenv, CubicWeb will look for instances data as
+in ``user`` mode by default, that is in ``$HOME/etc/cubicweb.d``, as opposed
+to ``$VIRTUAL_ENV/etc/cubicweb.d`` previously. To restore this behavior,
+explicitly set ``CW_MODE`` to ``system``. Alternatively (and preferably), the
+``CW_INSTANCES_DIR`` environment variables may be used to specify instances
+data location.
+
 .. _subtests: https://docs.python.org/3/library/unittest.html#distinguishing-test-iterations-using-subtests
