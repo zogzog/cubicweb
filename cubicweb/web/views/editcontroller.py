@@ -209,8 +209,10 @@ class EditController(basecontrollers.ViewController):
         pending_inlined = req.data.pop('pending_inlined')
         assert not pending_inlined, pending_inlined
         # handle all other remaining relations now
-        for form_, field in req.data.pop('pending_others'):
+        while req.data['pending_others']:
+            form_, field = req.data['pending_others'].pop()
             self.handle_formfield(form_, field)
+        del req.data['pending_others']
         # then execute rql to set all relations
         for querydef in self.relations_rql:
             self._cw.execute(*querydef)
