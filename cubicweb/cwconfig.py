@@ -357,8 +357,8 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     quick_start = False
 
     if 'VIRTUAL_ENV' in os.environ:
+        mode = _forced_mode or 'user'
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
-        mode = 'user'
     elif CWDEV and _forced_mode != 'system':
         mode = 'user'
         _CUBES_DIR = join(CW_SOFTWARE_ROOT, '../../cubes')
