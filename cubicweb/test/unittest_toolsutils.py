@@ -17,12 +17,12 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from logilab.common.testlib import TestCase, unittest_main
+import unittest
 
 from cubicweb.toolsutils import RQLExecuteMatcher
 
 
-class RQLExecuteMatcherTests(TestCase):
+class RQLExecuteMatcherTests(unittest.TestCase):
     def matched_query(self, text):
         match = RQLExecuteMatcher.match(text)
         if match is None:
@@ -54,4 +54,4 @@ class RQLExecuteMatcherTests(TestCase):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    unittest.main()
