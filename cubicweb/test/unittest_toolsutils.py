@@ -17,9 +17,10 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import tempfile
 import unittest
 
-from cubicweb.toolsutils import RQLExecuteMatcher
+from cubicweb.toolsutils import RQLExecuteMatcher, read_config
 
 
 class RQLExecuteMatcherTests(unittest.TestCase):
@@ -51,6 +52,49 @@ class RQLExecuteMatcherTests(unittest.TestCase):
         for func_expr in ('  rql', '  session.execute'):
             query = self.matched_query('%s("Any X WHERE X is ' % func_expr)
             self.assertEqual(query, 'Any X WHERE X is ')
+
+
+SOURCES_CONTENT = b"""
+[admin]
+
+# cubicweb manager account's login (this user will be created)
+login=admin
+
+# cubicweb manager account's password
+password=admin
+
+[system]
+
+# database driver (postgres, sqlite, sqlserver2005)
+db-driver=postgres
+
+# database host
+db-host=
+
+# database port
+db-port=
+"""
+
+
+class ToolsUtilsTC(unittest.TestCase):
+
+    def test_read_config(self):
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(SOURCES_CONTENT)
+            f.seek(0)
+            config = read_config(f.name)
+        expected = {
+            'admin': {
+                'password': 'admin',
+                'login': 'admin',
+            },
+            'system': {
+                'db-port': None,
+                'db-driver': 'postgres',
+                'db-host': None,
+            },
+        }
+        self.assertEqual(config, expected)
 
 
 if __name__ == '__main__':
