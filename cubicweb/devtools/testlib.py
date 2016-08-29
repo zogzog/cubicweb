@@ -942,10 +942,8 @@ class CubicWebTC(BaseTestCase):
                   encapsulation the generated HTML
         """
         if req is None:
-            if rset is None:
-                req = self.request()
-            else:
-                req = rset.req
+            assert rset is not None, 'you must supply at least one of rset or req'
+            req = rset.req
         req.form['vid'] = vid
         viewsreg = self.vreg['views']
         view = viewsreg.select(vid, req, rset=rset, **kwargs)
