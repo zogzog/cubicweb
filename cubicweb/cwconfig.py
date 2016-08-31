@@ -605,6 +605,8 @@ this option is set to yes",
     @classmethod
     def cls_adjust_sys_path(cls):
         """update python path if necessary"""
+        from cubicweb import _CubesImporter
+        _CubesImporter.install()
         cubes_parent_dir = normpath(join(cls.CUBES_DIR, '..'))
         if not cubes_parent_dir in sys.path:
             sys.path.insert(0, cubes_parent_dir)

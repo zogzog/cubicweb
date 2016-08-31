@@ -20,6 +20,7 @@ relations between entitites.
 """
 __docformat__ = "restructuredtext en"
 
+import imp
 import logging
 import os
 import pickle
@@ -280,3 +281,41 @@ class ProgrammingError(Exception):
     not be processed, a memory allocation error occurred during processing,
     etc.
     """
+
+
+# Import hook for "legacy" cubes ##############################################
+
+class _CubesImporter(object):
+    """Module finder handling redirection of import of "cubes.<name>"
+    to "cubicweb_<name>".
+    """
+
+    @classmethod
+    def install(cls):
+        if not any(isinstance(x, cls) for x in sys.meta_path):
+            self = cls()
+            sys.meta_path.append(self)
+
+    def find_module(self, fullname, path=None):
+        if fullname.startswith('cubes.'):
+            modname = 'cubicweb_' + fullname.split('.', 1)[1]
+            try:
+                modinfo = imp.find_module(modname)
+            except ImportError:
+                return None
+            else:
+                return _CubesLoader(modinfo)
+
+
+class _CubesLoader(object):
+    """Module loader handling redirection of import of "cubes.<name>"
+    to "cubicweb_<name>".
+    """
+
+    def __init__(self, modinfo):
+        self.modinfo = modinfo
+
+    def load_module(self, fullname):
+        if fullname not in sys.modules:  # Otherwise, it's a reload.
+            sys.modules[fullname] = imp.load_module(fullname, *self.modinfo)
+        return sys.modules[fullname]
