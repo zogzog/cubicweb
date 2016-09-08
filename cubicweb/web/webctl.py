@@ -78,6 +78,7 @@ class GenStaticDataDirMixIn(object):
             for dirpath, dirnames, filenames in os.walk(datadir):
                 rel_dirpath = dirpath[len(datadir)+1:]
                 resources.update(osp.join(rel_dirpath, f) for f in filenames)
+
         # locate resources and copy them to destination
         for resource in resources:
             dest_resource = osp.join(dest, resource)
@@ -88,6 +89,8 @@ class GenStaticDataDirMixIn(object):
             copy(osp.join(resource_dir, resource_path), dest_resource)
         # handle md5 version subdirectory
         linkdir(dest, osp.join(dest, config.instance_md5_version()))
+        # ensure generated files are owned by configured uid
+        config.ensure_uid_directory(dest)
         print('You can use apache rewrite rule below :\n'
               'RewriteRule ^/data/(.*) %s/$1 [L]' % dest)
 

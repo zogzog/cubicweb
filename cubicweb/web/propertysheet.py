@@ -1,4 +1,4 @@
-# copyright 2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,10 +29,12 @@ TYPE_CHECKS = [('STYLESHEETS', list), ('JAVASCRIPTS', list),
                ('STYLESHEETS_IE', list), ('STYLESHEETS_PRINT', list),
                ]
 
+
 class lazystr(object):
     def __init__(self, string, context):
         self.string = string
         self.context = context
+
     def __str__(self):
         return self.string % self.context
 
@@ -105,7 +107,12 @@ class PropertySheet(dict):
             tmpfd, tmpfile = tempfile.mkstemp(dir=rcachedir, prefix=osp.basename(cachefile))
             with os.fdopen(tmpfd, 'w') as stream:
                 stream.write(content)
-            os.rename(tmpfile, cachefile)
+            try:
+                os.rename(tmpfile, cachefile)
+            except IOError:
+                # Under windows, os.rename won't overwrite an existing file
+                os.unlink(cachefile)
+                os.rename(tmpfile, cachefile)
             adirectory = self._cache_directory
         return adirectory
 
