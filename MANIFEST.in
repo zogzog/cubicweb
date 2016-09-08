@@ -2,11 +2,13 @@ include README
 include COPYING
 include COPYING.LESSER
 include pylintrc
+include jshintrc
 include tox.ini
 include bin/cubicweb-*
 include man/cubicweb-ctl.1
 
 include doc/*.rst
+include doc/*.txt
 include doc/Makefile
 recursive-include doc/book *
 recursive-include doc/tools *.py
@@ -20,6 +22,8 @@ recursive-include doc/dev .txt *.rst
 recursive-include doc/images *.png *.svg
 include doc/conf.py
 
+include cubicweb/devtools/fix_po_encoding
+
 recursive-include cubicweb/misc *.py *.png *.display
 
 include cubicweb/web/views/*.pt
@@ -30,23 +34,47 @@ recursive-include cubicweb/devtools/data *.js *.css *.sh
 recursive-include cubicweb/i18n *.pot *.po
 recursive-include cubicweb/schemas *.py *.sql
 
+include dev-requirements.txt
+include cubicweb/test/requirements.txt
 recursive-include cubicweb/test/data bootstrap_cubes *.py *.sql
-recursive-include cubicweb/entities/test/data bootstrap_cubes *.py
-recursive-include cubicweb/sobjects/test/data bootstrap_cubes *.py
-recursive-include cubicweb/hooks/test/data bootstrap_cubes *.py
-recursive-include cubicweb/server/test/data bootstrap_cubes *.py source* *.conf.in *.ldif
+recursive-include cubicweb/test/data-rewrite bootstrap_cubes *.py
+recursive-include cubicweb/test/data_schemareader *.py
+recursive-include cubicweb/dataimport/test/data *.py *.csv *.txt
+recursive-include cubicweb/dataimport/test/data-massimport *.py
+include cubicweb/devtools/test/requirements.txt
 recursive-include cubicweb/devtools/test/data bootstrap_cubes *.py *.txt *.js *.po.ref
-recursive-include cubicweb/web/test/data bootstrap_cubes pouet.css *.py
+include cubicweb/entities/test/requirements.txt
+recursive-include cubicweb/entities/test/data bootstrap_cubes *.py
+include cubicweb/etwist/test/requirements.txt
 recursive-include cubicweb/etwist/test/data *.py
-
-recursive-include cubicweb/web/test/jstests *.js *.html *.css *.json
+include cubicweb/ext/test/requirements.txt
+recursive-include cubicweb/ext/test/data *.py
+include cubicweb/hooks/test/requirements.txt
+recursive-include cubicweb/hooks/test/data-computed *.py
+recursive-include cubicweb/hooks/test/data bootstrap_cubes *.py
+include cubicweb/sobjects/test/requirements.txt
+recursive-include cubicweb/sobjects/test/data bootstrap_cubes *.py
+include cubicweb/server/test/requirements.txt
+recursive-include cubicweb/server/test/data bootstrap_cubes *.py source* *.conf.in *.ldif
+recursive-include cubicweb/server/test/data-cwep002 *.py
+recursive-include cubicweb/server/test/datacomputed *.py
+recursive-include cubicweb/server/test/data-schema2sql bootstrap_cubes toignore
+recursive-include cubicweb/server/test/data-migractions bootstrap_cubes *.py
+recursive-include cubicweb/server/test/data-schemaserial *.py
+include cubicweb/web/test/requirements.txt
+include cubicweb/web/test/testutils.js
+recursive-include cubicweb/web/test/data bootstrap_cubes pouet.css *.py
+recursive-include cubicweb/web/test/data/static/jstests *.js *.html *.css *.json
 recursive-include cubicweb/web/test/windmill *.py
+include cubicweb/wsgi/test/requirements.txt
+
+include cubicweb/web/data/jquery-treeview/*.md
 
 recursive-include cubicweb/skeleton *.py *.css *.js *.po compat *.in *.tmpl rules tox.ini
 
 prune doc/book/en/.static
 prune doc/book/fr/.static
-prune doc/html/_sources/
+prune doc/html/_sources
 prune cubicweb/misc/cwfs
 prune doc/js_api
 global-exclude *.pyc
