@@ -196,11 +196,6 @@ except ImportError:
 
 def install(**kwargs):
     """setup entry point"""
-    if '--force-manifest' in sys.argv:
-        sys.argv.remove('--force-manifest')
-    # install-layout option was introduced in 2.5.3-1~exp1
-    elif sys.version_info < (2, 5, 4) and '--install-layout=deb' in sys.argv:
-        sys.argv.remove('--install-layout=deb')
     packages = [modname] + get_packages(join(here, modname), modname)
     kwargs['install_requires'] = install_requires
     kwargs['zip_safe'] = False
