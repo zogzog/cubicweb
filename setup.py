@@ -194,21 +194,22 @@ try:
 except ImportError:
     pass
 
-def install(**kwargs):
-    """setup entry point"""
-    packages = [modname] + get_packages(join(here, modname), modname)
-    kwargs['install_requires'] = install_requires
-    kwargs['zip_safe'] = False
-    kwargs['packages'] = packages
-    kwargs['package_data'] = package_data
-    return setup(name=distname, version=version, license=license, url=web,
-                 description=description, long_description=long_description,
-                 author=author, author_email=author_email,
-                 scripts=ensure_scripts(scripts), data_files=data_files,
-                 cmdclass={'install_lib': MyInstallLib,
-                           'install_data': MyInstallData},
-                 **kwargs
-                 )
 
-if __name__ == '__main__' :
-    install()
+setup(
+    name=distname,
+    version=version,
+    license=license,
+    url=web,
+    description=description,
+    long_description=long_description,
+    author=author,
+    author_email=author_email,
+    packages=[modname] + get_packages(join(here, modname), modname),
+    package_data=package_data,
+    scripts=ensure_scripts(scripts),
+    data_files=data_files,
+    install_requires=install_requires,
+    cmdclass={'install_lib': MyInstallLib,
+              'install_data': MyInstallData},
+    zip_safe=False,
+)
