@@ -19,10 +19,9 @@ import sys
 import os
 from os.path import join
 from io import StringIO, BytesIO
+import unittest
 
 from six import PY2
-
-from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
@@ -31,10 +30,12 @@ from cubicweb.server.migractions import ServerMigrationHelper
 CubicWebConfiguration.load_cwctl_plugins() # XXX necessary?
 
 
-class CubicWebCtlTC(TestCase):
+class CubicWebCtlTC(unittest.TestCase):
+
     def setUp(self):
         self.stream = BytesIO() if PY2 else StringIO()
         sys.stdout = self.stream
+
     def tearDown(self):
         sys.stdout = sys.__stdout__
 
@@ -65,4 +66,4 @@ class CubicWebShellTC(CubicWebTC):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    unittest.main()
