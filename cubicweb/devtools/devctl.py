@@ -512,20 +512,6 @@ def update_cube_catalogs(cubedir):
     return toedit
 
 
-# XXX totally broken, fix it
-# class LiveServerCommand(Command):
-#     """Run a server from within a cube directory.
-#     """
-#     name = 'live-server'
-#     arguments = ''
-#     options = ()
-
-#     def run(self, args):
-#         """run the command with its specific arguments"""
-#         from cubicweb.devtools.livetest import runserver
-#         runserver()
-
-
 class NewCubeCommand(Command):
     """Create a new cube.
 
@@ -852,7 +838,6 @@ class GenerateSchema(Command):
 
 for cmdcls in (UpdateCubicWebCatalogCommand,
                UpdateCubeCatalogCommand,
-               #LiveServerCommand,
                NewCubeCommand,
                ExamineLogCommand,
                GenerateSchema,
