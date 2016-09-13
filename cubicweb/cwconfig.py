@@ -188,6 +188,8 @@ import os
 from os.path import (exists, join, expanduser, abspath, normpath,
                      basename, isdir, dirname, splitext)
 import pkgutil
+import pkg_resources
+import re
 from smtplib import SMTP
 import stat
 import sys
@@ -263,6 +265,12 @@ def _find_prefix(start_path=None):
         old_prefix = prefix
         prefix = dirname(prefix)
     return prefix
+
+
+def _cube_pkgname(cube):
+    if not cube.startswith('cubicweb_'):
+        return 'cubicweb_' + cube
+    return cube
 
 
 # persistent options definition
@@ -447,9 +455,21 @@ this option is set to yes",
 
     @classmethod
     def available_cubes(cls):
-        cls.warning('only listing "legacy" cubes found in cubes path')
-        import re
         cubes = set()
+        for entry_point in pkg_resources.iter_entry_points(
+                group='cubicweb.cubes', name=None):
+            try:
+                module = entry_point.load()
+            except ImportError:
+                continue
+            else:
+                modname = module.__name__
+                if not modname.startswith('cubicweb_'):
+                    cls.warning('entry point %s does not appear to be a cube',
+                                entry_point)
+                    continue
+                cubes.add(modname)
+        # Legacy cubes.
         for directory in cls.cubes_search_path():
             if not exists(directory):
                 cls.error('unexistant directory in cubes search path: %s'
@@ -463,7 +483,18 @@ this option is set to yes",
                 cubedir = join(directory, cube)
                 if isdir(cubedir) and exists(join(cubedir, '__init__.py')):
                     cubes.add(cube)
-        return sorted(cubes)
+
+        def sortkey(cube):
+            """Preserve sorting with "cubicweb_" prefix."""
+            prefix = 'cubicweb_'
+            if cube.startswith(prefix):
+                # add a suffix to have a deterministic sorting between
+                # 'cubicweb_<cube>' and '<cube>' (useful in tests with "hash
+                # randomization" turned on).
+                return cube[len(prefix):] + '~'
+            return cube
+
+        return sorted(cubes, key=sortkey)
 
     @classmethod
     def cubes_search_path(cls):
@@ -487,7 +518,8 @@ this option is set to yes",
         """return the cube directory for the given cube id, raise
         `ConfigurationError` if it doesn't exist
         """
-        loader = pkgutil.find_loader('cubicweb_%s' % cube)
+        pkgname = _cube_pkgname(cube)
+        loader = pkgutil.find_loader(pkgname)
         if loader:
             return dirname(loader.get_filename())
         # Legacy cubes.
@@ -495,9 +527,9 @@ this option is set to yes",
             cubedir = join(directory, cube)
             if exists(cubedir):
                 return cubedir
-        msg = ('no module cubicweb_%(cube)s in search path '
-               'nor cube %(cube)r in %(path)s')
+        msg = 'no module %(pkg)s in search path nor cube %(cube)r in %(path)s'
         raise ConfigurationError(msg % {'cube': cube,
+                                        'pkg': _cube_pkgname(cube),
                                         'path': cls.cubes_search_path()})
 
     @classmethod
@@ -508,8 +540,9 @@ this option is set to yes",
     @classmethod
     def cube_pkginfo(cls, cube):
         """return the information module for the given cube"""
+        pkgname = _cube_pkgname(cube)
         try:
-            return importlib.import_module('cubicweb_%s.__pkginfo__' % cube)
+            return importlib.import_module('%s.__pkginfo__' % pkgname)
         except ImportError:
             cube = CW_MIGRATION_MAP.get(cube, cube)
             try:
@@ -649,17 +682,22 @@ this option is set to yes",
                 continue
             cls.info('loaded cubicweb-ctl plugin %s', ctlmod)
         for cube in cls.available_cubes():
-            pluginfile = join(cls.cube_dir(cube), 'ccplugin.py')
-            initfile = join(cls.cube_dir(cube), '__init__.py')
+            cubedir = cls.cube_dir(cube)
+            pluginfile = join(cubedir, 'ccplugin.py')
+            initfile = join(cubedir, '__init__.py')
+            if cube.startswith('cubicweb_'):
+                pkgname = cube
+            else:
+                pkgname = 'cubes.%s' % cube
             if exists(pluginfile):
                 try:
-                    __import__('cubes.%s.ccplugin' % cube)
+                    __import__(pkgname + '.ccplugin')
                     cls.info('loaded cubicweb-ctl plugin from %s', cube)
                 except Exception:
                     cls.exception('while loading plugin %s', pluginfile)
             elif exists(initfile):
                 try:
-                    __import__('cubes.%s' % cube)
+                    __import__(pkgname)
                 except Exception:
                     cls.exception('while loading cube %s', cube)
             else:
@@ -841,7 +879,7 @@ this option is set to yes",
         # load cubes'__init__.py file first
         for cube in cubes:
             try:
-                importlib.import_module('cubicweb_%s' % cube)
+                importlib.import_module(_cube_pkgname(cube))
             except ImportError:
                 # Legacy cube.
                 __import__('cubes.%s' % cube)

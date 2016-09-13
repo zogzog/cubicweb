@@ -1,4 +1,5 @@
 Pygments
+mock
 #fyzz XXX pip install fails
 cubicweb-card
 cubicweb-file

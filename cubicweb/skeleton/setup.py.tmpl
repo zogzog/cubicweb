@@ -72,5 +72,10 @@ setup(
     classifiers=classifiers,
     packages=find_packages(exclude=['test']),
     install_requires=install_requires,
+    entry_points={
+        'cubicweb.cubes': [
+            '%(cubename)s=cubicweb_%(cubename)s',
+        ],
+    },
     zip_safe=False,
 )

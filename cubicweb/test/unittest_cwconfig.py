@@ -21,8 +21,10 @@ import sys
 import os
 import tempfile
 from os.path import dirname, join, abspath
+from pkg_resources import EntryPoint, Distribution
 import unittest
 
+from mock import patch
 from six import PY3
 
 from logilab.common.modutils import cleanup_sys_modules
@@ -59,6 +61,34 @@ class CubicWebConfigurationTC(testlib.BaseTestCase):
 
     def tearDown(self):
         ApptestConfiguration.CUBES_PATH = []
+
+    def iter_entry_points(group, name):
+        """Mock pkg_resources.iter_entry_points to yield EntryPoint from
+        packages found in test/data/libpython even though these are not
+        installed.
+        """
+        libpython = CubicWebConfigurationTC.datapath('libpython')
+        prefix = 'cubicweb_'
+        for pkgname in os.listdir(libpython):
+            if not pkgname.startswith(prefix):
+                continue
+            location = join(libpython, pkgname)
+            yield EntryPoint(pkgname[len(prefix):], pkgname,
+                             dist=Distribution(location))
+
+    @patch('pkg_resources.iter_entry_points', side_effect=iter_entry_points)
+    def test_available_cubes(self, mock_iter_entry_points):
+        expected_cubes = [
+            'card', 'cubicweb_comment', 'cubicweb_email', 'file',
+            'cubicweb_file', 'cubicweb_forge', 'localperms',
+            'cubicweb_mycube', 'tag',
+        ]
+        self._test_available_cubes(expected_cubes)
+        mock_iter_entry_points.assert_called_once_with(
+            group='cubicweb.cubes', name=None)
+
+    def _test_available_cubes(self, expected_cubes):
+        self.assertEqual(self.config.available_cubes(), expected_cubes)
 
     def test_reorder_cubes(self):
         # forge depends on email and file and comment
@@ -133,6 +163,15 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
     def tearDown(self):
         ApptestConfiguration.CUBES_PATH = []
 
+    def test_available_cubes(self):
+        expected_cubes = sorted(set([
+            # local cubes
+            'comment', 'email', 'file', 'forge', 'mycube',
+            # test dependencies
+            'card', 'file', 'localperms', 'tag',
+        ]))
+        self._test_available_cubes(expected_cubes)
+
     def test_reorder_cubes_recommends(self):
         from cubes.comment import __pkginfo__ as comment_pkginfo
         self._test_reorder_cubes_recommends(comment_pkginfo)
@@ -159,8 +198,7 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
         from cubes import mycube
         self.assertEqual(mycube.__path__, [join(self.custom_cubes_dir, 'mycube')])
         # file cube should be overriden by the one found in data/cubes
-        sys.modules.pop('cubes.file', None)
-        if PY3:
+        if sys.modules.pop('cubes.file', None) and PY3:
             del cubes.file
         from cubes import file
         self.assertEqual(file.__path__, [join(self.custom_cubes_dir, 'file')])
