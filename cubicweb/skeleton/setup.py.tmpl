@@ -37,7 +37,7 @@ with open(pkginfo) as f:
     exec(f.read(), __pkginfo__)
 
 # get required metadatas
-modname = __pkginfo__['modname']
+distname = __pkginfo__['distname']
 version = __pkginfo__['version']
 license = __pkginfo__['license']
 description = __pkginfo__['description']
@@ -50,7 +50,6 @@ with open(join(here, 'README')) as f:
     long_description = f.read()
 
 # get optional metadatas
-distname = __pkginfo__.get('distname', modname)
 data_files = __pkginfo__.get('data_files', None)
 dependency_links = __pkginfo__.get('dependency_links', ())
 
