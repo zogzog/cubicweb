@@ -24,6 +24,7 @@ import imp
 import logging
 import os
 import pickle
+import pkgutil
 import sys
 import warnings
 import zlib
@@ -304,18 +305,4 @@ class _CubesImporter(object):
             except ImportError:
                 return None
             else:
-                return _CubesLoader(modinfo)
-
-
-class _CubesLoader(object):
-    """Module loader handling redirection of import of "cubes.<name>"
-    to "cubicweb_<name>".
-    """
-
-    def __init__(self, modinfo):
-        self.modinfo = modinfo
-
-    def load_module(self, fullname):
-        if fullname not in sys.modules:  # Otherwise, it's a reload.
-            sys.modules[fullname] = imp.load_module(fullname, *self.modinfo)
-        return sys.modules[fullname]
+                return pkgutil.ImpLoader(fullname, *modinfo)
