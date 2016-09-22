@@ -1323,24 +1323,34 @@ class SQLGenerator(object):
         """generate SQL for an attribute relation"""
         lhs, rhs = rel.get_parts()
         rhssql = rhs.accept(self)
-        table = self._var_table(lhs.variable)
-        if table is None:
-            assert rel.r_type == 'eid'
+        if isinstance(lhs.variable, ColumnAlias):
+            if rel.r_type != 'eid':
+                raise BadRQLQuery('Attribute %s of %s must be selected from subqueries'
+                                  % (rel.r_type, lhs.variable))
+            # nb: case where subquery variable isn't an eid will raise a TypeResolverException, no
+            # need for defense here
             lhssql = lhs.accept(self)
         else:
-            mapkey = '%s.%s' % (self._state.solution[lhs.name], rel.r_type)
-            if mapkey in self.attr_map:
-                cb, sourcecb = self.attr_map[mapkey]
-                if sourcecb:
-                    # callback is a source callback, we can't use this
-                    # attribute in restriction
-                    raise QueryError("can't use %s (%s) in restriction"
-                                     % (mapkey, rel.as_string()))
-                lhssql = cb(self, lhs.variable, rel)
-            elif rel.r_type == 'eid':
-                lhssql = lhs.variable._q_sql
+            table = self._var_table(lhs.variable)
+            if table is None:
+                # table is None if variable has been annotated as invariant, hence we don't expect
+                # accessing another attribute than eid
+                assert rel.r_type == 'eid'
+                lhssql = lhs.accept(self)
             else:
-                lhssql = '%s.%s%s' % (table, SQL_PREFIX, rel.r_type)
+                mapkey = '%s.%s' % (self._state.solution[lhs.name], rel.r_type)
+                if mapkey in self.attr_map:
+                    cb, sourcecb = self.attr_map[mapkey]
+                    if sourcecb:
+                        # callback is a source callback, we can't use this
+                        # attribute in restriction
+                        raise QueryError("can't use %s (%s) in restriction"
+                                         % (mapkey, rel.as_string()))
+                    lhssql = cb(self, lhs.variable, rel)
+                elif rel.r_type == 'eid':
+                    lhssql = lhs.variable._q_sql
+                else:
+                    lhssql = '%s.%s%s' % (table, SQL_PREFIX, rel.r_type)
         try:
             if rel._q_needcast == 'TODAY':
                 sql = 'DATE(%s)%s' % (lhssql, rhssql)
