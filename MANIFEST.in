@@ -34,39 +34,30 @@ recursive-include cubicweb/devtools/data *.js *.css *.sh
 recursive-include cubicweb/i18n *.pot *.po
 recursive-include cubicweb/schemas *.py *.sql
 
-include dev-requirements.txt
-include cubicweb/test/requirements.txt
+recursive-include requirements *.txt
+
 recursive-include cubicweb/test/data bootstrap_cubes *.py *.sql
 recursive-include cubicweb/test/data-rewrite bootstrap_cubes *.py
 recursive-include cubicweb/test/data_schemareader *.py
 recursive-include cubicweb/dataimport/test/data *.py *.csv *.txt
 recursive-include cubicweb/dataimport/test/data-massimport *.py
-include cubicweb/devtools/test/requirements.txt
 recursive-include cubicweb/devtools/test/data bootstrap_cubes *.py *.txt *.js *.po.ref
-include cubicweb/entities/test/requirements.txt
 recursive-include cubicweb/entities/test/data bootstrap_cubes *.py
-include cubicweb/etwist/test/requirements.txt
 recursive-include cubicweb/etwist/test/data *.py
-include cubicweb/ext/test/requirements.txt
 recursive-include cubicweb/ext/test/data *.py
-include cubicweb/hooks/test/requirements.txt
 recursive-include cubicweb/hooks/test/data-computed *.py
 recursive-include cubicweb/hooks/test/data bootstrap_cubes *.py
-include cubicweb/sobjects/test/requirements.txt
 recursive-include cubicweb/sobjects/test/data bootstrap_cubes *.py
-include cubicweb/server/test/requirements.txt
 recursive-include cubicweb/server/test/data bootstrap_cubes *.py source* *.conf.in *.ldif
 recursive-include cubicweb/server/test/data-cwep002 *.py
 recursive-include cubicweb/server/test/datacomputed *.py
 recursive-include cubicweb/server/test/data-schema2sql bootstrap_cubes toignore
 recursive-include cubicweb/server/test/data-migractions bootstrap_cubes *.py
 recursive-include cubicweb/server/test/data-schemaserial *.py
-include cubicweb/web/test/requirements.txt
 include cubicweb/web/test/testutils.js
 recursive-include cubicweb/web/test/data bootstrap_cubes pouet.css *.py
 recursive-include cubicweb/web/test/data/static/jstests *.js *.html *.css *.json
 recursive-include cubicweb/web/test/windmill *.py
-include cubicweb/wsgi/test/requirements.txt
 
 include cubicweb/web/data/jquery-treeview/*.md
 
