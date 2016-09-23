@@ -203,6 +203,15 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
         from cubes import file
         self.assertEqual(file.__path__, [join(self.custom_cubes_dir, 'file')])
 
+    def test_config_value_from_environment(self):
+        self.assertIsNone(self.config['base-url'])
+        os.environ['CW_BASE_URL'] = 'https://www.cubicweb.org'
+        try:
+            self.assertEqual(self.config['base-url'],
+                             'https://www.cubicweb.org')
+        finally:
+            del os.environ['CW_BASE_URL']
+
 
 class FindPrefixTC(unittest.TestCase):
     def make_dirs(self, *args):

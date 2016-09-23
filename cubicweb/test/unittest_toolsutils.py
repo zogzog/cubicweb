@@ -17,10 +17,12 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
 import tempfile
 import unittest
 
-from cubicweb.toolsutils import RQLExecuteMatcher, read_config
+from cubicweb.toolsutils import (RQLExecuteMatcher, option_value_from_env,
+                                 read_config)
 
 
 class RQLExecuteMatcherTests(unittest.TestCase):
@@ -78,6 +80,15 @@ db-port=
 
 class ToolsUtilsTC(unittest.TestCase):
 
+    def test_option_value_from_env(self):
+        os.environ['CW_DB_HOST'] = 'here'
+        try:
+            self.assertEqual(option_value_from_env('db-host'), 'here')
+            self.assertEqual(option_value_from_env('db-host', 'nothere'), 'here')
+            self.assertEqual(option_value_from_env('db-hots', 'nothere'), 'nothere')
+        finally:
+            del os.environ['CW_DB_HOST']
+
     def test_read_config(self):
         with tempfile.NamedTemporaryFile() as f:
             f.write(SOURCES_CONTENT)
@@ -95,6 +106,17 @@ class ToolsUtilsTC(unittest.TestCase):
             },
         }
         self.assertEqual(config, expected)
+
+    def test_read_config_env(self):
+        os.environ['CW_DB_HOST'] = 'here'
+        try:
+            with tempfile.NamedTemporaryFile() as f:
+                f.write(SOURCES_CONTENT)
+                f.seek(0)
+                config = read_config(f.name)
+        finally:
+            del os.environ['CW_DB_HOST']
+        self.assertEqual(config['system']['db-host'], 'here')
 
 
 if __name__ == '__main__':

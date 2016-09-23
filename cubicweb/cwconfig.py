@@ -206,7 +206,7 @@ from logilab.common.configuration import (Configuration, Method,
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       ConfigurationError, Binary, _)
-from cubicweb.toolsutils import create_dir
+from cubicweb.toolsutils import create_dir, option_value_from_env
 
 CONFIGURATIONS = []
 
@@ -416,6 +416,12 @@ this option is set to yes",
           'group': 'email', 'level': 3,
           }),
         )
+
+    def __getitem__(self, key):
+        """Get configuration option, by first looking at environmnent."""
+        file_value = super(CubicWebNoAppConfiguration, self).__getitem__(key)
+        return option_value_from_env(key, file_value)
+
     # static and class methods used to get instance independant resources ##
     @staticmethod
     def cubicweb_version():

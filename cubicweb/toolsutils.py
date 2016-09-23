@@ -170,6 +170,15 @@ def restrict_perms_to_user(filepath, log=None):
         print('-> set permissions to 0600 for %s' % filepath)
     chmod(filepath, 0o600)
 
+
+def option_value_from_env(option, default=None):
+    """Return the value of configuration `option` from cannonical environment
+    variable.
+    """
+    envvar = ('CW_' + '_'.join(option.split('-'))).upper()
+    return os.environ.get(envvar, default)
+
+
 def read_config(config_file, raise_if_unreadable=False):
     """read some simple configuration from `config_file` and return it as a
     dictionary. If `raise_if_unreadable` is false (the default), an empty
@@ -194,7 +203,7 @@ def read_config(config_file, raise_if_unreadable=False):
                 sys.stderr.write('ignoring malformed line\n%r\n' % line)
                 continue
             option = option.strip().replace(' ', '_')
-            value = value.strip()
+            value = option_value_from_env(option, value.strip())
             current[option] = value or None
     except IOError as ex:
         if raise_if_unreadable:
