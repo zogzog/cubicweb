@@ -22,3 +22,4 @@ syntax: regexp
 ^doc/book/en/devweb/js_api/
 ^doc/_build
 ^doc/js_api/
+test-results.xml
