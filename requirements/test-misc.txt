@@ -20,5 +20,11 @@ flake8
 ## cubicweb/hooks/test
 psycopg2
 
+## cubicweb/pyramid/test
+pyramid >= 1.5.0
+waitress >= 0.8.9
+wsgicors >= 0.3
+pyramid_multiauth
+
 ## cubicweb/sobject/test
 cubicweb-comment

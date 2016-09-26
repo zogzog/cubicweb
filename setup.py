@@ -50,12 +50,6 @@ with io.open('README', encoding='utf-8') as f:
     long_description = f.read()
 
 # import optional features
-requires = {}
-for entry in ("__depends__",): # "__recommends__"):
-    requires.update(__pkginfo__.get(entry, {}))
-install_requires = [("%s %s" % (d, v and v or "")).strip()
-                   for d, v in requires.items()]
-
 distname = __pkginfo__['distname']
 scripts = __pkginfo__['scripts']
 include_dirs = __pkginfo__['include_dirs']
@@ -208,7 +202,51 @@ setup(
     package_data=package_data,
     scripts=ensure_scripts(scripts),
     data_files=data_files,
-    install_requires=install_requires,
+    install_requires=[
+        'six >= 1.4.0',
+        'logilab-common >= 1.2.2',
+        'logilab-mtconverter >= 0.8.0',
+        'rql >= 0.34.0',
+        'yams >= 0.44.0',
+        'lxml',
+        'logilab-database >= 1.15.0',
+        'passlib',
+        'pytz',
+        'Markdown',
+        'unittest2 >= 0.7.0',
+    ],
+    extra_requires={
+        'captcha': [
+            'Pillow',
+        ],
+        'crypto': [
+            'pycrypto',
+        ],
+        'etwist': [
+            'Twisted < 16.0.0',
+        ],
+        'ext': [
+            'docutils >= 0.6',
+        ],
+        'ical': [
+            'vobject >= 0.6.0',
+        ],
+        'pyramid': [
+            'pyramid >= 1.5.0',
+            'waitress >= 0.8.9',
+            'wsgicors >= 0.3',
+            'pyramid_multiauth',
+        ],
+        'rdf': [
+            'rdflib',
+        ],
+        'sparql': [
+            'fyzz >= 0.1.0',
+        ],
+        'zmq': [
+            'pyzmq',
+        ],
+    },
     cmdclass={'install_lib': MyInstallLib,
               'install_data': MyInstallData},
     zip_safe=False,

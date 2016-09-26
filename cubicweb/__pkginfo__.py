@@ -43,42 +43,6 @@ classifiers = [
     'Programming Language :: JavaScript',
 ]
 
-__depends__ = {
-    'six': '>= 1.4.0',
-    'logilab-common': '>= 1.2.2',
-    'logilab-mtconverter': '>= 0.8.0',
-    'rql': '>= 0.34.0',
-    'yams': '>= 0.44.0',
-    #gettext                    # for xgettext, msgcat, etc...
-    # web dependencies
-    'lxml': '',
-    # XXX graphviz
-    # server dependencies
-    'logilab-database': '>= 1.15.0',
-    'passlib': '',
-    'pytz': '',
-    'Markdown': '',
-    'unittest2': '>= 0.7.0',
-    # pyramid dependencies
-    'pyramid': '>= 1.5.0',
-    'waitress': '>= 0.8.9',
-    'wsgicors': '>= 0.3',
-    'pyramid_multiauth': '',
-    }
-
-__recommends__ = {
-    'docutils': '>= 0.6',
-    'Pillow': '',               # for captcha
-    'pycrypto': '',             # for crypto extensions
-    'fyzz': '>= 0.1.0',         # for sparql
-    'vobject': '>= 0.6.0',      # for ical view
-    'rdflib': None,             #
-    'pyzmq': None,
-    'Twisted': '< 16.0.0',
-    #'Products.FCKeditor':'',
-    #'SimpleTAL':'>= 4.1.6',
-}
-
 scripts = [s for s in glob.glob(join('bin', 'cubicweb-*'))
            if not s.endswith('.bat')]
 include_dirs = [join('test', 'data'),
