@@ -1,0 +1,15 @@
+3.34 (UNRELEASED)
+=================
+
+New features
+------------
+
+* Various bits of a CubicWeb application configuration can be now be
+  overridden through environments variables matching configuration option
+  names prefixed by ``CW_`` (for instance ``CW_BASE_URL``).
+
+* Cubes are now standard Python packages named as ``cubicweb_<cubename>``.
+  They are not anymore installed in ``<prefix>/share/cubicweb/cubes``. Their
+  discovery by CubicWeb is handled by a new setuptools entry point
+  ``cubicweb.cubes``. A backward compatibility layer is kept for "legacy"
+  cubes.
