@@ -97,7 +97,8 @@ WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
                       'SubWorkflowExitPoint'))
 
 INTERNAL_TYPES = set(('CWProperty', 'CWCache', 'ExternalUri', 'CWDataImport',
-                      'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig'))
+                      'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
+                      'CWSession'))
 
 UNIQUE_CONSTRAINTS = ('SizeConstraint', 'FormatConstraint',
                       'StaticVocabularyConstraint',

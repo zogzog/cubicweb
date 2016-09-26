@@ -23,7 +23,7 @@ from cubicweb import _
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation,
                             String, TZDatetime, Datetime, Password, Interval,
-                            Boolean, UniqueConstraint)
+                            Boolean, Bytes, UniqueConstraint)
 from cubicweb.schema import (
     RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
     PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS,
@@ -381,3 +381,17 @@ class see_also(RelationType):
         'add':    ('managers', RRQLExpression('U has_update_permission S'),),
         'delete': ('managers', RRQLExpression('U has_update_permission S'),),
         }
+
+
+class CWSession(EntityType):
+    """Persistent session.
+
+    Used by cubicweb.pyramid to store the session data.
+    """
+    __permissions__ = {
+        'read':   ('managers',),
+        'add':    (),
+        'update': (),
+        'delete': (),
+    }
+    cwsessiondata = Bytes()

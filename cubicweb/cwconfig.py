@@ -681,7 +681,7 @@ this option is set to yes",
     def load_cwctl_plugins(cls):
         cls.cls_adjust_sys_path()
         for ctlmod in ('web.webctl',  'etwist.twctl', 'server.serverctl',
-                       'devtools.devctl'):
+                       'devtools.devctl', 'pyramid.pyramidctl'):
             try:
                 __import__('cubicweb.%s' % ctlmod)
             except ImportError:

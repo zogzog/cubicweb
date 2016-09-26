@@ -31,7 +31,7 @@ class AutomaticWebTest(AutomaticWebTest):
         # some EntityType. The two Blog types below require the sioc cube that
         # we do not want to add as a dependency.
         etypes = super(AutomaticWebTest, self).to_test_etypes()
-        etypes -= set(('Blog', 'BlogEntry'))
+        etypes -= set(('Blog', 'BlogEntry', 'CWSession'))
         return etypes
 
 

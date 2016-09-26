@@ -48,7 +48,6 @@ recursive-include cubicweb/etwist/test/data *.py
 recursive-include cubicweb/ext/test/data *.py
 recursive-include cubicweb/hooks/test/data-computed *.py
 recursive-include cubicweb/hooks/test/data bootstrap_cubes *.py
-recursive-include cubicweb/pyramid/test/data bootstrap_cubes
 recursive-include cubicweb/sobjects/test/data bootstrap_cubes *.py
 recursive-include cubicweb/server/test/data bootstrap_cubes *.py source* *.conf.in *.ldif
 recursive-include cubicweb/server/test/data-cwep002 *.py
