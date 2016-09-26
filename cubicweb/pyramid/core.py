@@ -22,9 +22,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-CW_321 = cubicweb.__pkginfo__.numversion >= (3, 21, 0)
-
-
 class Connection(cwsession.Connection):
     """ A specialised Connection that access the session data through a
     property.
@@ -247,16 +244,10 @@ def _cw_cnx(request):
     if session is None:
         return None
 
-    if CW_321:
-        cnx = session.new_cnx()
+    cnx = session.new_cnx()
 
-        def commit_state(cnx):
-            return cnx.commit_state
-    else:
-        cnx = repoapi.ClientConnection(session)
-
-        def commit_state(cnx):
-            return cnx._cnx.commit_state
+    def commit_state(cnx):
+        return cnx.commit_state
 
     def cleanup(request):
         try:
