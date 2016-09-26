@@ -81,7 +81,7 @@ class CubicWebConfigurationTC(testlib.BaseTestCase):
         expected_cubes = [
             'card', 'comment', 'cubicweb_comment', 'cubicweb_email', 'file',
             'cubicweb_file', 'cubicweb_forge', 'localperms',
-            'cubicweb_mycube', 'tag',
+            'cubicweb_mycube', 'pyramid', 'tag',
         ]
         self._test_available_cubes(expected_cubes)
         mock_iter_entry_points.assert_called_once_with(
@@ -168,7 +168,7 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
             # local cubes
             'comment', 'email', 'file', 'forge', 'mycube',
             # test dependencies
-            'card', 'file', 'localperms', 'tag',
+            'card', 'file', 'localperms', 'pyramid', 'tag',
         ]))
         self._test_available_cubes(expected_cubes)
 

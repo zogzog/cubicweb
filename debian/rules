@@ -55,6 +55,7 @@ install: build
 	rm -rf debian/cubicweb-twisted/usr/lib/python2*/*-packages/cubicweb/etwist/test
 	rm -rf debian/cubicweb-common/usr/lib/python2*/*-packages/cubicweb/ext/test
 	rm -rf debian/cubicweb-common/usr/lib/python2*/*-packages/cubicweb/entities/test
+	rm -rf debian/cubicweb-pyramid/usr/lib/python2*/*-packages/cubicweb/pyramid/tests
 
 
 # Build architecture-independent files here.

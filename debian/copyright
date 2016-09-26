@@ -5,11 +5,13 @@ It was downloaded from http://download.logilab.org/pub/cubicweb
 Upstream Author:
 
     Logilab <contact@logilab.fr>
+    Christophe de Vienne
 
 Copyright:
 
     Copyright (c) 2003-2014 LOGILAB S.A. (Paris, FRANCE).
     http://www.logilab.fr/ -- mailto:contact@logilab.fr
+    Copyright (c) 2014 Unlish
 
 License:
 
@@ -43,4 +45,3 @@ Licence:
 
     The rights to each pictogram in the social extension are either
     trademarked or copyrighted by the respective company.
-

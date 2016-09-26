@@ -73,6 +73,7 @@ A.k.a. "The Book"
 
    book/devrepo/index
    book/devweb/index
+   book/pyramid/index
 
 .. toctree::
    :maxdepth: 2

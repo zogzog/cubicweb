@@ -20,5 +20,8 @@ flake8
 ## cubicweb/hooks/test
 psycopg2
 
+## cubicweb/pyramid/test
+http://hg.logilab.org/review/cubes/pyramid/archive/4808ab6b1c9c.tar.bz2
+
 ## cubicweb/sobject/test
 cubicweb-comment

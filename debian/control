@@ -18,6 +18,9 @@ Build-Depends:
  python-rql (>= 0.34.0),
  python-yams (>= 0.44.0),
  python-lxml,
+ python-setuptools,
+ python-pyramid,
+ python-waitress,
 Standards-Version: 3.9.1
 Homepage: https://www.cubicweb.org
 X-Python-Version: >= 2.6
@@ -118,6 +121,26 @@ Description: twisted-based web interface for the CubicWeb framework
  the adaptative web interface (see cubicweb-web package).
  .
  This package provides only the twisted server part of the library.
+
+
+Package: cubicweb-pyramid
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+ cubicweb-web (= ${source:Version}),
+ cubicweb-ctl (= ${source:Version}),
+ python-pyramid (>= 1.5.0),
+ python-pyramid-multiauth,
+ python-waitress (>= 0.8.9),
+ python-wsgicors,
+Recommends:
+ python-pyramid-debugtoolbar
+Description: Integrate CubicWeb with a Pyramid application
+ Provides pyramid extensions to load a CubicWeb instance and serve it through
+ the pyramid stack.
+ .
+ It prefigures what CubicWeb 4.0 will be.
 
 
 Package: cubicweb-web

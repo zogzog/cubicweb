@@ -59,6 +59,11 @@ __depends__ = {
     'pytz': '',
     'Markdown': '',
     'unittest2': '>= 0.7.0',
+    # pyramid dependencies
+    'pyramid': '>= 1.5.0',
+    'waitress': '>= 0.8.9',
+    'wsgicors': '>= 0.3',
+    'pyramid_multiauth': '',
     }
 
 __recommends__ = {

@@ -1,4 +1,5 @@
 include README
+include README.pyramid.rst
 include COPYING
 include COPYING.LESSER
 include pylintrc
@@ -13,7 +14,7 @@ include doc/Makefile
 recursive-include doc/book *
 recursive-include doc/tools *.py
 recursive-include doc/tutorials *.rst *.py
-include doc/api/*.rst
+recursive-include doc/api *.rst
 recursive-include doc/_themes *
 recursive-include doc/_static *
 include doc/_templates/*.html
@@ -47,6 +48,7 @@ recursive-include cubicweb/etwist/test/data *.py
 recursive-include cubicweb/ext/test/data *.py
 recursive-include cubicweb/hooks/test/data-computed *.py
 recursive-include cubicweb/hooks/test/data bootstrap_cubes *.py
+recursive-include cubicweb/pyramid/test/data bootstrap_cubes
 recursive-include cubicweb/sobjects/test/data bootstrap_cubes *.py
 recursive-include cubicweb/server/test/data bootstrap_cubes *.py source* *.conf.in *.ldif
 recursive-include cubicweb/server/test/data-cwep002 *.py
