@@ -136,6 +136,10 @@ Depends:
  python-wsgicors,
 Recommends:
  python-pyramid-debugtoolbar
+Conflicts:
+ pyramid-cubicweb
+Replaces:
+ pyramid-cubicweb
 Description: Integrate CubicWeb with a Pyramid application
  Provides pyramid extensions to load a CubicWeb instance and serve it through
  the pyramid stack.
