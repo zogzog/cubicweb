@@ -17,6 +17,11 @@ It is a simple text file in the INI format
 each option name is prefixed with its own section and followed by its
 default value if necessary, e.g. "`<section>.<option>` [value]."
 
+.. note:: At runtime, configuration options can be overriden by environments
+    variables which name follows the option name with ``-`` replaced by ``_``
+    and a ``CW_`` prefix. For instance ``CW_BASE_URL=https://www.example.com``
+    would override the ``base-url`` configuration option.
+
 .. _`WebServerConfig`:
 
 Configuring the Web server
