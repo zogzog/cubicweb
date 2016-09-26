@@ -3,12 +3,12 @@ Creating a new cube from scratch
 
 Let's start by creating the cube environment in which we will develop ::
 
-  cd ~/cubes
+  cd ~/myproject
   # use cubicweb-ctl to generate a template for the cube
   # will ask some questions, most with nice default
   cubicweb-ctl newcube mycube
   # makes the cube source code managed by mercurial
-  cd mycube
+  cd cubicweb-mycube
   hg init
   hg add .
   hg ci
@@ -22,21 +22,3 @@ To reuse an existing cube, add it to the list named
 This variable is used for the instance packaging (dependencies handled
 by system utility tools such as APT) and to find used cubes when the
 database for the instance is created.
-
-On a Unix system, the available cubes are usually stored in the
-directory :file:`/usr/share/cubicweb/cubes`. If you are using the
-cubicweb mercurial repository (:ref:`SourceInstallation`), the cubes
-are searched in the directory
-:file:`/path/to/cubicweb_toplevel/cubes`. In this configuration
-cubicweb itself ought to be located at
-:file:`/path/to/cubicweb_toplevel/cubicweb`.
-
-.. note::
-
-    Please note that if you do not wish to use default directory for your cubes
-    library, you should set the :envvar:`CW_CUBES_PATH` environment variable to
-    add extra directories where cubes will be search, and you'll then have to use
-    the option `--directory` to specify where you would like to place the source
-    code of your cube:
-
-    ``cubicweb-ctl newcube --directory=/path/to/cubes/library mycube``

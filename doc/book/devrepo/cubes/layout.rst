@@ -6,17 +6,46 @@
 Standard structure for a cube
 -----------------------------
 
-A cube is structured as follows:
+A cube named "mycube" is Python package "cubicweb-mycube" structured as
+follows:
 
 ::
 
-  mycube/
+  cubicweb-mycube/
   |
-  |-- data/
-  |   |-- cubes.mycube.css
-  |   |-- cubes.mycube.js
-  |   `-- external_resources
-  |
+  |-- cubicweb_mycube/
+  |   |
+  |   |-- data/
+  |   |   |-- cubes.mycube.css
+  |   |   |-- cubes.mycube.js
+  |   |   `-- external_resources
+  |   |
+  |   |
+  |   |-- entities.py
+  |   |
+  |   |-- i18n/
+  |   |   |-- en.po
+  |   |   |-- es.po
+  |   |   `-- fr.po
+  |   |
+  |   |-- __init__.py
+  |   |
+  |   |
+  |   |-- migration/
+  |   |   |-- postcreate.py
+  |   |   `-- precreate.py
+  |   |
+  |   |-- __pkginfo__.py
+  |   |
+  |   |-- schema.py
+  |   |
+  |   |
+  |   |-- site_cubicweb.py
+  |   |
+  |   |-- hooks.py
+  |   |
+  |   |
+  |   `-- views.py
   |-- debian/
   |   |-- changelog
   |   |-- compat
@@ -24,56 +53,32 @@ A cube is structured as follows:
   |   |-- copyright
   |   |-- cubicweb-mycube.prerm
   |   `-- rules
-  |
-  |-- entities.py
-  |
-  |-- i18n/
-  |   |-- en.po
-  |   |-- es.po
-  |   `-- fr.po
-  |
-  |-- __init__.py
-  |
   |-- MANIFEST.in
-  |
-  |-- migration/
-  |   |-- postcreate.py
-  |   `-- precreate.py
-  |
-  |-- __pkginfo__.py
-  |
-  |-- schema.py
-  |
   |-- setup.py
-  |
-  |-- site_cubicweb.py
-  |
-  |-- hooks.py
-  |
-  |-- test/
-  |   |-- data/
-  |   |   `-- bootstrap_cubes
-  |   |-- pytestconf.py
-  |   |-- realdb_test_mycube.py
-  |   `-- test_mycube.py
-  |
-  `-- views.py
+  `-- test/
+      |-- data/
+      |   `-- bootstrap_cubes
+      |-- pytestconf.py
+      |-- realdb_test_mycube.py
+      `-- test_mycube.py
 
 
-We can use subpackages instead of python modules for ``views.py``, ``entities.py``,
+We can use subpackages instead of Python modules for ``views.py``, ``entities.py``,
 ``schema.py`` or ``hooks.py``. For example, we could have:
 
 ::
 
-  mycube/
+  cubicweb-mycube/
   |
-  |-- entities.py
-  |-- hooks.py
-  `-- views/
-      |-- __init__.py
-      |-- forms.py
-      |-- primary.py
-      `-- widgets.py
+  |-- cubicweb_mycube/
+  |   |
+      |-- entities.py
+  .   |-- hooks.py
+  .   `-- views/
+  .       |-- __init__.py
+          |-- forms.py
+          |-- primary.py
+          `-- widgets.py
 
 
 where :
@@ -126,6 +131,27 @@ will be loaded before the cube A (same thing happend when A depends on B).
 Having this behaviour is sometime desired: on schema creation, you may rely on
 something defined in the other's schema; on database creation, on something
 created by the other's postcreate, and so on.
+
+The :file:`setup.py` file
+-------------------------
+
+This is standard setuptools based setup module which reads most of its data
+from :file:`__pkginfo__.py`. In the ``setup`` function call, it should also
+include an entry point definition under the ``cubicweb.cubes`` group so that
+CubicWeb can discover cubes (in particular their custom ``cubicweb-ctl``
+commands):
+
+::
+
+    setup(
+      # ...
+      entry_points={
+          'cubicweb.cubes': [
+              'mycube=cubicweb_mycube',
+          ],
+      },
+      # ...
+    )
 
 
 :file:`migration/precreate.py` and :file:`migration/postcreate.py`
