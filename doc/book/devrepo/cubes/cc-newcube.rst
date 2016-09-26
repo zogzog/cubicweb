@@ -40,18 +40,3 @@ cubicweb itself ought to be located at
     code of your cube:
 
     ``cubicweb-ctl newcube --directory=/path/to/cubes/library mycube``
-
-
-.. XXX resurrect once live-server is back
-.. Usage of :command:`cubicweb-ctl liveserver`
-.. -------------------------------------------
-
-.. To quickly test a new cube, you can also use the `liveserver` command for cubicweb-ctl
-.. which allows to create an instance in memory (using an SQLite database by
-.. default) and make it accessible through a web server ::
-
-..   cubicweb-ctl live-server mycube
-
-.. or by using an existing database (SQLite or Postgres)::
-
-..   cubicweb-ctl live-server -s myfile_sources mycube
