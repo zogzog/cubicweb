@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,21 +18,19 @@
 """Functions to add additional annotations on a rql syntax tree to ease later
 code generation.
 """
+
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
-
 from rql import BadRQLQuery
-from rql.nodes import Relation, VariableRef, Constant, Variable, Or, Exists
+from rql.nodes import Relation, VariableRef, Constant, Variable, Or
 from rql.utils import common_parent
+
 
 def _annotate_select(annotator, rqlst):
     has_text_query = False
     for subquery in rqlst.with_:
         if annotator._annotate_union(subquery.query):
             has_text_query = True
-    #if server.DEBUG:
-    #    print '-------- sql annotate', repr(rqlst)
     getrschema = annotator.schema.rschema
     for var in rqlst.defined_vars.values():
         stinfo = var.stinfo
@@ -49,15 +47,16 @@ def _annotate_select(annotator, rqlst):
             stinfo['invariant'] = True
             stinfo['principal'] = None
             continue
-        if any(rel for rel in stinfo['relations'] if rel.r_type == 'eid' and rel.operator() != '=') and \
-               not any(r for r in var.stinfo['relations'] - var.stinfo['rhsrelations']
-                       if r.r_type != 'eid' and (getrschema(r.r_type).inlined or getrschema(r.r_type).final)):
+        if (any(rel for rel in stinfo['relations'] if rel.r_type == 'eid' and rel.operator() != '=')
+                and not any(r for r in var.stinfo['relations'] - var.stinfo['rhsrelations']
+                            if r.r_type != 'eid'
+                            and (getrschema(r.r_type).inlined or getrschema(r.r_type).final))):
             # Any X WHERE X eid > 2
             # those particular queries should be executed using the system entities table
             stinfo['invariant'] = True
             stinfo['principal'] = None
             continue
-        if stinfo['selected'] and var.valuable_references() == 1+bool(stinfo['constnode']):
+        if stinfo['selected'] and var.valuable_references() == 1 + bool(stinfo['constnode']):
             # "Any X", "Any X, Y WHERE X attr Y"
             stinfo['invariant'] = False
             continue
@@ -74,21 +73,21 @@ def _annotate_select(annotator, rqlst):
                 if not (onlhs and len(stinfo['relations']) > 1):
                     break
                 if not stinfo['constnode']:
-                    joins.add( (rel, role) )
+                    joins.add((rel, role))
                 continue
             elif rel.r_type == 'identity':
                 # identity can't be used as principal, so check other relation are used
                 # XXX explain rhs.operator == '='
-                if rhs.operator != '=' or len(stinfo['relations']) <= 1: #(stinfo['constnode'] and rhs.operator == '='):
+                if rhs.operator != '=' or len(stinfo['relations']) <= 1:
                     break
-                joins.add( (rel, role) )
+                joins.add((rel, role))
                 continue
             rschema = getrschema(rel.r_type)
             if rel.optional:
                 if rel in stinfo.get('optrelations', ()):
                     # optional variable can't be invariant if this is the lhs
                     # variable of an inlined relation
-                    if not rel in stinfo['rhsrelations'] and rschema.inlined:
+                    if rel not in stinfo['rhsrelations'] and rschema.inlined:
                         break
                 # variable used as main variable of an optional relation can't
                 # be invariant, unless we can use some other relation as
@@ -109,7 +108,7 @@ def _annotate_select(annotator, rqlst):
                     # need join anyway if the variable appears in a final or
                     # inlined relation
                     break
-                joins.add( (rel, role) )
+                joins.add((rel, role))
                 continue
             if not stinfo['constnode']:
                 if rschema.inlined and rel.neged(strict=True):
@@ -120,7 +119,7 @@ def _annotate_select(annotator, rqlst):
                     # can use N.ecrit_par as principal
                     if (stinfo['selected'] or len(stinfo['relations']) > 1):
                         break
-            joins.add( (rel, role) )
+            joins.add((rel, role))
         else:
             # if there is at least one ambigous relation and no other to
             # restrict types, can't be invariant since we need to filter out
@@ -151,11 +150,11 @@ def _annotate_select(annotator, rqlst):
     return has_text_query
 
 
-
 class CantSelectPrincipal(Exception):
     """raised when no 'principal' variable can be found"""
 
-def _select_principal(scope, relations, _sort=lambda x:x):
+
+def _select_principal(scope, relations, _sort=lambda x: x):
     """given a list of rqlst relations, select one which will be used to
     represent an invariant variable (e.g. using on extremity of the relation
     instead of the variable's type table
@@ -200,6 +199,7 @@ def _select_principal(scope, relations, _sort=lambda x:x):
     # duplicates, so we should have to check cardinality
     raise CantSelectPrincipal()
 
+
 def _select_main_var(relations):
     """given a list of rqlst relations, select one which will be used as main
     relation for the rhs variable
@@ -209,8 +209,9 @@ def _select_main_var(relations):
     # sort for test predictability
     for rel in sorted(relations, key=lambda x: (x.children[0].name, x.r_type)):
         # only equality relation with a variable as rhs may be principal
-        if rel.operator() not in ('=', 'IS') \
-               or not isinstance(rel.children[1].children[0], VariableRef) or rel.neged(strict=True):
+        if (rel.operator() not in ('=', 'IS')
+                or not isinstance(rel.children[1].children[0], VariableRef)
+                or rel.neged(strict=True)):
             continue
         if rel.optional:
             others.append(rel)
@@ -259,7 +260,7 @@ class SQLGenAnnotator(object):
           syntax tree or because a solution for this variable has been removed
           due to security filtering)
         """
-        #assert rqlst.TYPE == 'select', rqlst
+        # assert rqlst.TYPE == 'select', rqlst
         rqlst.has_text_query = self._annotate_union(rqlst)
 
     def _annotate_union(self, union):
@@ -276,7 +277,7 @@ class SQLGenAnnotator(object):
         # interesting in multi-sources cases, as it may avoid a costly query
         # on sources to get all entities of a given type to achieve this, while
         # we have all the necessary information.
-        root = var.stmt.root # Union node
+        root = var.stmt.root  # Union node
         # rel.scope -> Select or Exists node, so add .parent to get Union from
         # Select node
         rels = [rel for rel in var.stinfo['relations'] if rel.scope.parent is root]
@@ -319,8 +320,8 @@ class IsAmbData(object):
     def compute(self, rqlst):
         # set domains for each variable
         for varname, var in rqlst.defined_vars.items():
-            if var.stinfo['uidrel'] is not None or \
-                   self.eschema(rqlst.solutions[0][varname]).final:
+            if (var.stinfo['uidrel'] is not None
+                    or self.eschema(rqlst.solutions[0][varname]).final):
                 ptypes = var.stinfo['possibletypes']
             else:
                 ptypes = set(self.nfdomain)
@@ -356,14 +357,15 @@ class IsAmbData(object):
 
     def _debug_print(self):
         print('varsols', dict((x, sorted(str(v) for v in values))
-                               for x, values in self.varsols.items()))
+                              for x, values in self.varsols.items()))
         print('ambiguous vars', sorted(self.ambiguousvars))
 
     def set_rel_constraint(self, term, rel, etypes_func):
         if isinstance(term, VariableRef) and self.is_ambiguous(term.variable):
             var = term.variable
-            if len(var.stinfo['relations']) == 1 \
-                   or rel.scope is var.scope or rel.r_type == 'identity':
+            if (len(var.stinfo['relations']) == 1
+                    or rel.scope is var.scope
+                    or rel.r_type == 'identity'):
                 self.restrict(var, frozenset(etypes_func()))
                 try:
                     self.maydeambrels[var].add(rel)
@@ -378,7 +380,7 @@ class IsAmbData(object):
         # XXX isinstance(other.variable, Variable) to skip column alias
         if isinstance(other, VariableRef) and isinstance(other.variable, Variable):
             deambiguifier = other.variable
-            if not var is self.deambification_map.get(deambiguifier):
+            if var is not self.deambification_map.get(deambiguifier):
                 if var.stinfo['typerel'] is None:
                     otheretypes = deambiguifier.stinfo['possibletypes']
                 elif not self.is_ambiguous(deambiguifier):
