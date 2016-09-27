@@ -283,15 +283,6 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             store.prepare_insert_entity('Location', name=u'toto')
             store.finish()
 
-    def test_multiple_insert_relation(self):
-        with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx)
-            store.init_rtype_table('Country', 'used_language', 'Language')
-            store.finish()
-            store = MassiveObjectStore(cnx)
-            store.init_rtype_table('Country', 'used_language', 'Language')
-            store.finish()
-
 
 if __name__ == '__main__':
     import unittest
