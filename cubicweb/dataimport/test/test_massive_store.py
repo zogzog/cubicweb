@@ -35,6 +35,11 @@ def tearDownModule(*args):
     stoppgcluster(__file__)
 
 
+def all_indexes(cnx):
+    crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
+    return set(r[0] for r in crs.fetchall())
+
+
 class MassiveObjectStoreWithCustomMDGenStoreTC(
         test_stores.NoHookRQLObjectStoreWithCustomMDGenStoreTC):
     configcls = PostgresApptestConfiguration
@@ -118,30 +123,36 @@ class MassImportSimpleTC(testlib.CubicWebTC):
                                       'T name TN')[0]
             self.assertEqual(cnx.entity_from_eid(eid).cw_etype, etname)
 
-    def test_drop_index(self):
+    def test_index_not_dropped_by_init(self):
         with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx)
+            store = MassiveObjectStore(cnx)  # noqa
             cnx.commit()
-        with self.admin_access.repo_cnx() as cnx:
-            crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
-            indexes = [r[0] for r in crs.fetchall()]
-        self.assertNotIn('entities_pkey', indexes)
-        self.assertNotIn('owned_by_relation_pkey', indexes)
-        self.assertNotIn('owned_by_relation_to_idx', indexes)
+            indexes = all_indexes(cnx)
+            self.assertIn('entities_pkey', indexes)
+            self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
+                          indexes)
+            self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
+                          indexes)
 
     def test_drop_index_recreation(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
+
+            store._drop_constraints()
+            indexes = all_indexes(cnx)
+            self.assertNotIn('entities_pkey', indexes)
+            self.assertNotIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
+                             indexes)
+            self.assertNotIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
+                             indexes)
+
             store.finish()
-            cnx.commit()
-        with self.admin_access.repo_cnx() as cnx:
-            crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
-            indexes = [r[0] for r in crs.fetchall()]
-        self.assertIn('entities_pkey', indexes)
-        self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
-                      indexes)
-        self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
-                      indexes)
+            indexes = all_indexes(cnx)
+            self.assertIn('entities_pkey', indexes)
+            self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
+                          indexes)
+            self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
+                          indexes)
 
     def test_eids_seq_range(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -212,18 +223,6 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             store.flush()
         self.assertEqual(next(counter), 1)
 
-    def test_slave_mode_indexes(self):
-        with self.admin_access.repo_cnx() as cnx:
-            slave_store = MassiveObjectStore(cnx, slave_mode=True)
-        with self.admin_access.repo_cnx() as cnx:
-            crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
-            indexes = [r[0] for r in crs.fetchall()]
-        self.assertIn('entities_pkey', indexes)
-        self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
-                      indexes)
-        self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
-                      indexes)
-
     def test_slave_mode_exception(self):
         with self.admin_access.repo_cnx() as cnx:
             slave_store = MassiveObjectStore(cnx, slave_mode=True)
@@ -249,8 +248,7 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             store.flush()
 
             # Check index
-            crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
-            indexes = [r[0] for r in crs.fetchall()]
+            indexes = all_indexes(cnx)
             self.assertNotIn('entities_pkey', indexes)
             self.assertNotIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
                              indexes)
@@ -261,8 +259,7 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             store.finish()
 
             # Check index again
-            crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
-            indexes = [r[0] for r in crs.fetchall()]
+            indexes = all_indexes(cnx)
             self.assertIn('entities_pkey', indexes)
             self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
                           indexes)

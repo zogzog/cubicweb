@@ -97,11 +97,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._data_relations = defaultdict(list)
         self._initialized = set()
 
-        if not self.slave_mode:
-            # drop constraint and metadata table, they will be recreated when self.finish() is
-            # called
-            self._drop_all_constraints()
-            self._drop_metatables_constraints()
+        self._constraints_dropped = self.slave_mode
 
     def _get_eid_gen(self):
         """ Function getting the next eid. This is done by preselecting
@@ -114,6 +110,15 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     # SQL utilities #########################################################
 
+    def _drop_constraints(self):
+        """Drop """
+        if not self._constraints_dropped:
+            # drop constraint and metadata table, they will be recreated when self.finish() is
+            # called
+            self._drop_all_constraints()
+            self._drop_metatables_indexes()
+            self._constraints_dropped = True
+
     def _drop_all_constraints(self):
         etypes_tables = ('cw_%s' % eschema.type.lower() for eschema in self.schema.entities()
                          if not eschema.final)
@@ -122,7 +127,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         for tablename in chain(etypes_tables, rtypes_tables, ('entities',)):
             self._dbh.drop_constraints(tablename)
 
-    def _drop_metatables_constraints(self):
+    def _drop_metatables_indexes(self):
         """ Drop all the constraints for the meta data"""
         for tablename in ('created_by_relation', 'owned_by_relation',
                           'is_instance_of_relation', 'is_relation',
@@ -142,6 +147,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """
         if not self.slave_mode and etype not in self._initialized:
             self._initialized.add(etype)
+            self._drop_constraints()
             self._dbh.drop_indexes('cw_%s' % etype.lower())
             self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
                      '(retype text, type varchar(128))')
@@ -170,6 +176,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if not self.slave_mode and rtype not in self._initialized:
             assert not self._cnx.vreg.schema.rschema(rtype).inlined
             self._initialized.add(rtype)
+            self._drop_constraints()
             self._dbh.drop_indexes('%s_relation' % rtype.lower())
             self.sql('CREATE TABLE %s_relation_tmp (eid_from integer, eid_to integer)'
                      % rtype.lower())
