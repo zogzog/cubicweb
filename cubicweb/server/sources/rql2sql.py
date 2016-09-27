@@ -47,8 +47,6 @@ and Informix.
 .. _Comparison of different SQL implementations: http://www.troels.arvin.dk/db/rdbms
 """
 
-__docformat__ = "restructuredtext en"
-
 import threading
 
 from six import PY2
