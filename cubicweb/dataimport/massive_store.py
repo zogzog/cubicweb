@@ -334,7 +334,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def finish(self):
         """Remove temporary tables and columns."""
-        self.logger.info("Start cleaning")
         if self.slave_mode:
             raise RuntimeError('Store cleanup is not allowed in slave mode')
         self.logger.info("Start cleaning")
