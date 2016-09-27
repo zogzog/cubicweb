@@ -81,12 +81,12 @@ class MassImportSimpleTC(testlib.CubicWebTC):
                       'alternatenames': infos[3],
                       'latitude': latitude, 'longitude': longitude,
                       'feature_class': feature_class,
-                      'alternate_country_code':infos[9],
+                      'alternate_country_code': infos[9],
                       'admin_code_3': infos[12],
                       'admin_code_4': infos[13],
                       'population': population, 'elevation': elevation,
                       'gtopo30': gtopo, 'timezone': timezone_code.get(infos[17]),
-                      'cwuri':  u'http://sws.geonames.org/%s/' % int(infos[0]),
+                      'cwuri': u'http://sws.geonames.org/%s/' % int(infos[0]),
                       'geonameid': int(infos[0]),
                       }
             store.prepare_insert_entity('Location', **entity)
@@ -229,7 +229,6 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
 
     def test_slave_mode_exception(self):
         with self.admin_access.repo_cnx() as cnx:
-            master_store = MassiveObjectStore(cnx, slave_mode=False)
             slave_store = MassiveObjectStore(cnx, slave_mode=True)
             self.assertRaises(RuntimeError, slave_store.finish)
 
