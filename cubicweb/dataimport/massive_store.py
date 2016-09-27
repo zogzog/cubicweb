@@ -533,7 +533,6 @@ class PGHelper(object):
     def restore_indexes_and_constraints(self):
         """Restore indexes and constraints."""
         if not self.table_exists('cwmassive_constraints'):
-            self.logger.info('The table cwmassive_constraints does not exist')
             return
         cu = self.sql('SELECT sql, insert_order FROM cwmassive_constraints '
                       'ORDER BY insert_order DESC')
