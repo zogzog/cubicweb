@@ -238,13 +238,17 @@ class DataFeedSource(AbstractSource):
                                       source_uris=source_uris,
                                       moved_uris=self.moved_uris(cnx))
         except ObjectNotFound:
-            return {}
-        if parser.process_urls(self.urls, raise_on_error):
-            self.warning("some error occurred, don't attempt to delete entities")
+            msg = 'failed to load parser for %s'
+            importlog.record_error(msg % ('source "%s"' % self.uri))
+            self.error(msg, self)
+            stats = {}
         else:
-            parser.handle_deletion(self.config, cnx, source_uris)
+            if parser.process_urls(self.urls, raise_on_error):
+                self.warning("some error occurred, don't attempt to delete entities")
+            else:
+                parser.handle_deletion(self.config, cnx, source_uris)
+            stats = parser.stats
         self.update_latest_retrieval(cnx)
-        stats = parser.stats
         if stats.get('created'):
             importlog.record_info('added %s entities' % len(stats['created']))
         if stats.get('updated'):

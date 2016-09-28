@@ -52,6 +52,10 @@ class DataFeedTC(CubicWebTC):
                 yield self.repo.sources_by_uri[u'ô myfeed']._get_parser(session)
             else:
                 yield
+        # vreg.unregister just pops appobjects from their regid entry,
+        # completely remove the entry to ensure we have no side effect with
+        # this empty entry.
+        del self.vreg['parsers'][AParser.__regid__]
 
     def test(self):
         self.assertIn(u'ô myfeed', self.repo.sources_by_uri)
@@ -149,6 +153,17 @@ class DataFeedTC(CubicWebTC):
             self.assertEqual(dfsource.urls, [u'ignored'])
             cnx.commit()
         self.assertEqual(dfsource.urls, [u"http://pouet.com", u"http://pouet.org"])
+
+    def test_parser_not_found(self):
+        dfsource = self.repo.sources_by_uri[u'ô myfeed']
+        with self.assertLogs('cubicweb.sources.o myfeed', level='ERROR') as cm:
+            with self.repo.internal_cnx() as cnx:
+                stats = dfsource.pull_data(cnx, force=True)
+                importlog = cnx.find('CWDataImport').one().log
+        self.assertIn('failed to load parser for', cm.output[0])
+        self.assertEqual(stats, {})
+        self.assertIn(u'failed to load parser for source &quot;ô myfeed&quot;',
+                      importlog)
 
 
 class DataFeedConfigTC(CubicWebTC):
