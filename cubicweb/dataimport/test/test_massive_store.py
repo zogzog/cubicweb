@@ -154,6 +154,19 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
                           indexes)
 
+    def test_consider_metagen(self):
+        """Ensure index on owned_by is not deleted if we don't consider this metadata."""
+        with self.admin_access.repo_cnx() as cnx:
+            metagen = stores.MetadataGenerator(cnx, meta_skipped=('owned_by',))
+            store = MassiveObjectStore(cnx, metagen=metagen)
+
+            store._drop_constraints()
+            indexes = all_indexes(cnx)
+            self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
+                          indexes)
+            self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
+                          indexes)
+
     def test_eids_seq_range(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, eids_seq_range=1000)

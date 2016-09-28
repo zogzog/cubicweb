@@ -119,10 +119,12 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
         They will be recreated by the `finish` method.
         """
-        for tablename in ('created_by_relation', 'owned_by_relation',
-                          'is_instance_of_relation', 'is_relation'):
-             self._dbh.drop_constraints(tablename)
-            self._dbh.drop_indexes(tablename)
+        rtypes = [rtype for rtype in self.metagen.meta_relations
+                  if not self.schema.rschema(rtype).final]
+        rtypes += ('is_instance_of', 'is', 'cw_source')
+        for rtype in rtypes:
+            self._dbh.drop_constraints(rtype + '_relation')
+            self._dbh.drop_indexes(rtype + '_relation')
         # don't drop constraints for the entities table, the only one is the primary key's index on
         # eid and we want to keep it
         self._dbh.drop_indexes('entities')

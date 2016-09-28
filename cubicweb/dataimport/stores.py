@@ -416,10 +416,7 @@ class MetaGenerator(object):
     """
     __deprecation_warning__ = '[3.23] this class is deprecated, use MetadataGenerator instead'
 
-    META_RELATIONS = (META_RTYPES
-                      - VIRTUAL_RTYPES
-                      - set(('eid', 'cwuri',
-                             'is', 'is_instance_of', 'cw_source')))
+    META_RELATIONS = MetadataGenerator.META_RELATIONS
 
     def __init__(self, cnx, baseurl=None, source=None):
         self._cnx = cnx
