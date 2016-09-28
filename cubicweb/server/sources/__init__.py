@@ -71,11 +71,6 @@ class AbstractSource(object):
     # migration
     connect_for_migration = True
 
-    # mappings telling which entities and relations are available in the source
-    # keys are supported entity/relation types and values are boolean indicating
-    # wether the support is read-only (False) or read-write (True)
-    support_entities = {}
-    support_relations = {}
     # a global identifier for this source, which has to be set by the source
     # instance
     uri = None
@@ -101,7 +96,6 @@ class AbstractSource(object):
     def __init__(self, repo, source_config, eid=None):
         self.repo = repo
         self.set_schema(repo.schema)
-        self.support_relations['identity'] = False
         self.eid = eid
         self.public_config = source_config.copy()
         self.public_config['use-cwuri-as-url'] = self.use_cwuri_as_url
@@ -263,44 +257,6 @@ class AbstractSource(object):
         pass
 
     # external source api ######################################################
-
-    def support_entity(self, etype, write=False):
-        """return true if the given entity's type is handled by this adapter
-        if write is true, return true only if it's a RW support
-        """
-        try:
-            wsupport = self.support_entities[etype]
-        except KeyError:
-            return False
-        if write:
-            return wsupport
-        return True
-
-    def support_relation(self, rtype, write=False):
-        """return true if the given relation's type is handled by this adapter
-        if write is true, return true only if it's a RW support
-
-        current implementation return true if the relation is defined into
-        `support_relations` or if it is a final relation of a supported entity
-        type
-        """
-        try:
-            wsupport = self.support_relations[rtype]
-        except KeyError:
-            rschema = self.schema.rschema(rtype)
-            if not rschema.final or rschema.type == 'has_text':
-                return False
-            for etype in rschema.subjects():
-                try:
-                    wsupport = self.support_entities[etype]
-                    break
-                except KeyError:
-                    continue
-            else:
-                return False
-        if write:
-            return wsupport
-        return True
 
     def before_entity_insertion(self, cnx, lid, etype, eid, sourceparams):
         """called by the repository when an eid has been attributed for an

@@ -454,10 +454,10 @@ class Repository(object):
         # iter on sources_by_uri then check enabled source since sources doesn't
         # contain copy based sources
         for source in self.sources_by_uri.values():
-            if self.config.source_enabled(source) and source.support_entity('CWUser'):
+            if self.config.source_enabled(source):
                 try:
                     return source.authenticate(cnx, login, **authinfo)
-                except AuthenticationError:
+                except (NotImplementedError, AuthenticationError):
                     continue
         else:
             raise AuthenticationError('authentication failed with all sources')

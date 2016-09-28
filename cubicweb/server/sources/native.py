@@ -505,22 +505,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             authentifier.set_schema(self.schema)
         clear_cache(self, 'need_fti_indexation')
 
-    def support_entity(self, etype, write=False):
-        """return true if the given entity's type is handled by this adapter
-        if write is true, return true only if it's a RW support
-        """
-        return etype not in NONSYSTEM_ETYPES
-
-    def support_relation(self, rtype, write=False):
-        """return true if the given relation's type is handled by this adapter
-        if write is true, return true only if it's a RW support
-        """
-        if write:
-            return rtype not in NONSYSTEM_RELATIONS
-        # due to current multi-sources implementation, the system source
-        # can't claim not supporting a relation
-        return True  #not rtype == 'content_for'
-
     @statsd_timeit
     def authenticate(self, cnx, login, **kwargs):
         """return CWUser eid for the given login and other authentication
