@@ -140,7 +140,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
 
             store._drop_constraints()
             indexes = all_indexes(cnx)
-            self.assertNotIn('entities_pkey', indexes)
+            self.assertIn('entities_pkey', indexes)
             self.assertNotIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
                              indexes)
             self.assertNotIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
@@ -249,7 +249,7 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
 
             # Check index
             indexes = all_indexes(cnx)
-            self.assertNotIn('entities_pkey', indexes)
+            self.assertIn('entities_pkey', indexes)
             self.assertNotIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
                              indexes)
             self.assertNotIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),

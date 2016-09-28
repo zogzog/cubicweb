@@ -27,8 +27,6 @@ from six.moves import range
 
 from yams.constraints import SizeConstraint
 
-from cubicweb.schema import PURE_VIRTUAL_RTYPES
-from cubicweb.server.schema2sql import rschema_has_table
 from cubicweb.dataimport import stores, pgstore
 
 
@@ -110,29 +108,24 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     # SQL utilities #########################################################
 
-    def _drop_constraints(self):
-        """Drop """
+    def _drop_metadata_constraints_if_necessary(self):
+        """Drop constraints and indexes for the metadata tables if necessary."""
         if not self._constraints_dropped:
-            # drop constraint and metadata table, they will be recreated when self.finish() is
-            # called
-            self._drop_all_constraints()
-            self._drop_metatables_indexes()
+            self._drop_metadata_constraints()
             self._constraints_dropped = True
 
-    def _drop_all_constraints(self):
-        etypes_tables = ('cw_%s' % eschema.type.lower() for eschema in self.schema.entities()
-                         if not eschema.final)
-        rtypes_tables = ('%s_relation' % rschema.type.lower() for rschema in self.schema.relations()
-                         if rschema_has_table(rschema, skip_relations=PURE_VIRTUAL_RTYPES))
-        for tablename in chain(etypes_tables, rtypes_tables, ('entities',)):
-            self._dbh.drop_constraints(tablename)
+    def _drop_metadata_constraints(self):
+        """Drop constraints and indexes for the metadata tables.
 
-    def _drop_metatables_indexes(self):
-        """ Drop all the constraints for the meta data"""
+        They will be recreated by the `finish` method.
+        """
         for tablename in ('created_by_relation', 'owned_by_relation',
-                          'is_instance_of_relation', 'is_relation',
-                          'entities'):
+                          'is_instance_of_relation', 'is_relation'):
+             self._dbh.drop_constraints(tablename)
             self._dbh.drop_indexes(tablename)
+        # don't drop constraints for the entities table, the only one is the primary key's index on
+        # eid and we want to keep it
+        self._dbh.drop_indexes('entities')
 
     def restart_eid_sequence(self, start_eid):
         self.sql(self._cnx.repo.system_source.dbhelper.sql_restart_numrange(
@@ -147,8 +140,10 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """
         if not self.slave_mode and etype not in self._initialized:
             self._initialized.add(etype)
-            self._drop_constraints()
-            self._dbh.drop_indexes('cw_%s' % etype.lower())
+            self._drop_metadata_constraints_if_necessary()
+            tablename = 'cw_%s' % etype.lower()
+            self._dbh.drop_constraints(tablename)
+            self._dbh.drop_indexes(tablename)
             self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
                      '(retype text, type varchar(128))')
             self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'etype')", {'e': etype})
@@ -176,10 +171,12 @@ class MassiveObjectStore(stores.RQLObjectStore):
         if not self.slave_mode and rtype not in self._initialized:
             assert not self._cnx.vreg.schema.rschema(rtype).inlined
             self._initialized.add(rtype)
-            self._drop_constraints()
-            self._dbh.drop_indexes('%s_relation' % rtype.lower())
-            self.sql('CREATE TABLE %s_relation_tmp (eid_from integer, eid_to integer)'
-                     % rtype.lower())
+            self._drop_metadata_constraints_if_necessary()
+            tablename = '%s_relation' % rtype.lower()
+            self._dbh.drop_constraints(tablename)
+            self._dbh.drop_indexes(tablename)
+            self.sql('CREATE TABLE %s_tmp (eid_from integer, eid_to integer)'
+                     % tablename)
             self.sql('CREATE TABLE IF NOT EXISTS cwmassive_initialized'
                      '(retype text, type varchar(128))')
             self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'rtype')", {'e': rtype})
