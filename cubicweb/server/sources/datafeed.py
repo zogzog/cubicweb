@@ -233,8 +233,7 @@ class DataFeedSource(AbstractSource):
         source_uris = self.source_uris(cnx)
         try:
             parser = self._get_parser(cnx, import_log=importlog,
-                                      source_uris=source_uris,
-                                      moved_uris=self.moved_uris(cnx))
+                                      source_uris=source_uris)
         except ObjectNotFound:
             msg = 'failed to load parser for %s'
             importlog.record_error(msg % ('source "%s"' % self.uri))
@@ -260,10 +259,6 @@ class DataFeedSource(AbstractSource):
         return dict((self.decode_extid(uri), (eid, type))
                     for uri, eid, type in cnx.system_sql(sql, {'source': self.uri}).fetchall())
 
-    def moved_uris(self, cnx):
-        sql = 'SELECT extid FROM moved_entities'
-        return set(self.decode_extid(uri) for uri, in cnx.system_sql(sql).fetchall())
-
     def init_import_log(self, cnx, import_log_eid=None, **kwargs):
         if import_log_eid is None:
             import_log = cnx.create_entity('CWDataImport', cw_import_of=self,
@@ -280,16 +275,13 @@ class DataFeedSource(AbstractSource):
 class DataFeedParser(AppObject):
     __registry__ = 'parsers'
 
-    def __init__(self, cnx, source, import_log=None, source_uris=None, moved_uris=None):
+    def __init__(self, cnx, source, import_log=None, source_uris=None):
         super(DataFeedParser, self).__init__(cnx)
         self.source = source
         self.import_log = import_log
         if source_uris is None:
             source_uris = {}
         self.source_uris = source_uris
-        if moved_uris is None:
-            moved_uris = ()
-        self.moved_uris = moved_uris
         self.stats = {'created': set(), 'updated': set(), 'checked': set()}
 
     def normalize_url(self, url):

@@ -447,8 +447,7 @@ def check_indexes(cnx):
     schema = cnx.repo.schema
     schema_indices = SYSTEM_INDICES.copy()
     if source.dbdriver == 'postgres':
-        schema_indices.update({'appears_words_idx': ('appears', 'words'),
-                               'moved_entities_extid_key': ('moved_entities', 'extid')})
+        schema_indices.update({'appears_words_idx': ('appears', 'words')})
         index_filter = lambda idx: not (idx.startswith('pg_') or idx.endswith('_pkey'))
     else:
         schema_indices.update({'appears_uid': ('appears', 'uid'),

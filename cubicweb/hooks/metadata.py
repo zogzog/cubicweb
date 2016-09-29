@@ -200,15 +200,6 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             syssource = newsource.repo_source
             oldsource = self._cw.entity_from_eid(schange[self.eidfrom])
             entity = self._cw.entity_from_eid(self.eidfrom)
-            # we don't want the moved entity to be reimported later.  To
-            # distinguish this state, move the record from the 'entities' table
-            # to 'moved_entities'.  External source will then have consider
-            # case where `extid2eid` returns a negative eid as 'this entity was
-            # known but has been moved, ignore it'.
-            extid = self._cw.entity_metas(entity.eid)['extid']
-            assert extid is not None
-            attrs = {'eid': entity.eid, 'extid': b64encode(extid).decode('ascii')}
-            self._cw.system_sql(syssource.sqlgen.insert('moved_entities', attrs), attrs)
             attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': None,
                      'asource': 'system'}
             self._cw.system_sql(syssource.sqlgen.update('entities', attrs, ['eid']), attrs)

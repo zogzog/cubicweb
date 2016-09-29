@@ -1361,10 +1361,6 @@ CREATE TABLE entities (
   extid VARCHAR(256)
 );;
 CREATE INDEX entities_type_idx ON entities(type);;
-CREATE TABLE moved_entities (
-  eid INTEGER PRIMARY KEY NOT NULL,
-  extid VARCHAR(256) UNIQUE NOT NULL
-);;
 
 CREATE TABLE transactions (
   tx_uuid CHAR(32) PRIMARY KEY NOT NULL,

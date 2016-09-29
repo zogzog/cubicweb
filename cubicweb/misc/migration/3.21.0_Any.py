@@ -133,21 +133,7 @@ helper.drop_index(cu, 'entities', 'extid', False)
 for query in helper.sqls_create_multicol_unique_index('entities', ['extid']):
     cu.execute(query)
 
-if 'moved_entities' not in helper.list_tables(cu):
-    sql('''
-    CREATE TABLE moved_entities (
-      eid INTEGER PRIMARY KEY NOT NULL,
-      extid VARCHAR(256) UNIQUE
-    )
-    ''')
-
-moved_entities = sql('SELECT -eid, extid FROM entities WHERE eid < 0',
-                     ask_confirm=False)
-if moved_entities:
-    cu.executemany('INSERT INTO moved_entities (eid, extid) VALUES (%s, %s)',
-                   moved_entities)
-    sql('DELETE FROM entities WHERE eid < 0')
-
+sql('DELETE FROM entities WHERE eid < 0')
 commit()
 
 sync_schema_props_perms('CWEType')
