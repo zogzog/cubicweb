@@ -186,23 +186,19 @@ def check_entities(schema, cnx, eids, fix=1):
             notify_fixed(fix)
     # source in entities, but no relation cw_source
     # XXX this (get_versions) requires a second connection to the db when we already have one open
-    applcwversion = cnx.repo.get_versions().get('cubicweb')
-    if applcwversion >= (3, 13, 1): # entities.asource appeared in 3.13.1
-        cursor = cnx.system_sql('SELECT e.eid FROM entities as e, cw_CWSource as s '
-                                    'WHERE s.cw_name=e.asource AND '
-                                    'NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '
-                                    '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid) '
-                                    'ORDER BY e.eid')
-        msg = ('  Entity with eid %s refers to source in entities table, '
-               'but is missing relation cw_source (autofix will create the relation)\n')
-        for row in cursor.fetchall():
-            sys.stderr.write(msg % row[0])
-        if fix:
-            cnx.system_sql('INSERT INTO cw_source_relation (eid_from, eid_to) '
-                               'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWSource as s '
-                               'WHERE s.cw_name=e.asource AND NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '
-                               '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
-            notify_fixed(True)
+    cursor = cnx.system_sql('SELECT e.eid FROM entities as e, cw_CWSource as s '
+                            'WHERE NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '
+                            '  WHERE cs.eid_from=e.eid) '
+                            'ORDER BY e.eid')
+    msg = ('  Entity with eid %s is missing relation cw_source (autofix will create the relation)\n')
+    for row in cursor.fetchall():
+        sys.stderr.write(msg % row[0])
+    if fix:
+        cnx.system_sql('INSERT INTO cw_source_relation (eid_from, eid_to) '
+                       'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWSource as s '
+                       "WHERE s.cw_name='system' AND NOT EXISTS(SELECT 1 FROM cw_source_relation as cs "
+                       '  WHERE cs.eid_from=e.eid)')
+        notify_fixed(True)
     # inconsistencies for 'is'
     msg = '  %s #%s is missing relation "is" (autofix will create the relation)\n'
     cursor = cnx.system_sql('SELECT e.type, e.eid FROM entities as e, cw_CWEType as s '
