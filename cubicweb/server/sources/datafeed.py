@@ -73,7 +73,8 @@ class DataFeedSource(AbstractSource):
          {'type' : 'yn',
           'default': False,
           'help': ('Should already imported entities not found anymore on the '
-                   'external source be deleted?'),
+                   'external source be deleted? Handling of this parameter '
+                   "will depend on source's parser."),
           'group': 'datafeed-source', 'level': 2,
           }),
         ('logs-lifetime',
@@ -230,10 +231,8 @@ class DataFeedSource(AbstractSource):
 
     def _pull_data(self, cnx, force=False, raise_on_error=False, import_log_eid=None):
         importlog = self.init_import_log(cnx, import_log_eid)
-        source_uris = self.source_uris(cnx)
         try:
-            parser = self._get_parser(cnx, import_log=importlog,
-                                      source_uris=source_uris)
+            parser = self._get_parser(cnx, import_log=importlog)
         except ObjectNotFound:
             msg = 'failed to load parser for %s'
             importlog.record_error(msg % ('source "%s"' % self.uri))
@@ -242,8 +241,6 @@ class DataFeedSource(AbstractSource):
         else:
             if parser.process_urls(self.urls, raise_on_error):
                 self.warning("some error occurred, don't attempt to delete entities")
-            else:
-                parser.handle_deletion(self.config, cnx, source_uris)
             stats = parser.stats
         self.update_latest_retrieval(cnx)
         if stats.get('created'):
@@ -253,11 +250,6 @@ class DataFeedSource(AbstractSource):
         importlog.write_log(cnx, end_timestamp=self.latest_retrieval)
         cnx.commit()
         return stats
-
-    def source_uris(self, cnx):
-        sql = 'SELECT extid, eid, type FROM entities WHERE asource=%(source)s'
-        return dict((self.decode_extid(uri), (eid, type))
-                    for uri, eid, type in cnx.system_sql(sql, {'source': self.uri}).fetchall())
 
     def init_import_log(self, cnx, import_log_eid=None, **kwargs):
         if import_log_eid is None:
@@ -275,13 +267,10 @@ class DataFeedSource(AbstractSource):
 class DataFeedParser(AppObject):
     __registry__ = 'parsers'
 
-    def __init__(self, cnx, source, import_log=None, source_uris=None):
+    def __init__(self, cnx, source, import_log=None):
         super(DataFeedParser, self).__init__(cnx)
         self.source = source
         self.import_log = import_log
-        if source_uris is None:
-            source_uris = {}
-        self.source_uris = source_uris
         self.stats = {'created': set(), 'updated': set(), 'checked': set()}
 
     def normalize_url(self, url):
@@ -396,18 +385,6 @@ class DataFeedParser(AppObject):
         stuff in sub-classes.
         """
         return True
-
-    def handle_deletion(self, config, cnx, source_uris):
-        if config['delete-entities'] and source_uris:
-            byetype = {}
-            for extid, (eid, etype) in source_uris.items():
-                if self.is_deleted(extid, etype, eid):
-                    byetype.setdefault(etype, []).append(str(eid))
-            for etype, eids in byetype.items():
-                self.warning('delete %s %s entities', len(eids), etype)
-                cnx.execute('DELETE %s X WHERE X eid IN (%s)'
-                            % (etype, ','.join(eids)))
-            cnx.commit()
 
     def update_if_necessary(self, entity, attrs):
         entity.complete(tuple(attrs))

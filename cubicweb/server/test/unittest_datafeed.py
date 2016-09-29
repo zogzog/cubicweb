@@ -1,5 +1,5 @@
 # coding: utf-8
-# copyright 2011-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2011-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -96,8 +96,6 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(self.repo._type_source_cache[entity.eid],
                                  ('Card', b'http://www.cubicweb.org/', u'ô myfeed'))
 
-                self.assertEqual(dfsource.source_uris(cnx),
-                                 {b'http://www.cubicweb.org/': (entity.eid, 'Card')})
                 self.assertTrue(dfsource.latest_retrieval)
                 self.assertTrue(dfsource.fresh())
 
