@@ -138,7 +138,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
 
-            store._drop_constraints()
+            store._drop_metadata_constraints()
             indexes = all_indexes(cnx)
             self.assertIn('entities_pkey', indexes)
             self.assertNotIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
@@ -159,8 +159,8 @@ class MassImportSimpleTC(testlib.CubicWebTC):
         with self.admin_access.repo_cnx() as cnx:
             metagen = stores.MetadataGenerator(cnx, meta_skipped=('owned_by',))
             store = MassiveObjectStore(cnx, metagen=metagen)
+            store._drop_metadata_constraints()
 
-            store._drop_constraints()
             indexes = all_indexes(cnx)
             self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
                           indexes)
