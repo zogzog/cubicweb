@@ -835,9 +835,7 @@ du :eid:`1:*ReST*`'''
         with self.admin_access.web_request() as req:
             note = req.create_entity('Note', type=u'z')
             metainf = note.cw_metainformation()
-            self.assertEqual(metainf, {'source': {'type': 'native', 'uri': 'system',
-                                                  'use-cwuri-as-url': False},
-                                       'type': u'Note', 'extid': None})
+            self.assertEqual(metainf, {'type': u'Note', 'extid': None})
 
     def test_absolute_url_empty_field(self):
         with self.admin_access.web_request() as req:

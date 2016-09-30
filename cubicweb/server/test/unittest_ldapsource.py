@@ -284,10 +284,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
             self.assertEqual(len(rset), 1)
             e = rset.get_entity(0, 0)
             self.assertEqual(e.eid, eid)
-            self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native',
-                                                                 'uri': u'system',
-                                                                 'use-cwuri-as-url': False},
-                                                      'type': 'CWUser',
+            self.assertEqual(e.cw_metainformation(), {'type': 'CWUser',
                                                       'extid': None})
             self.assertEqual(e.cw_source[0].name, 'system')
             self.assertTrue(e.creation_date)
@@ -297,10 +294,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
             self.assertEqual(len(rset), 1)
             self.assertTrue(self.repo.system_source.authenticate(cnx, 'syt', password='syt'))
             # make sure the pull from ldap have not "reverted" user as a ldap-feed user
-            self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native',
-                                                                 'uri': u'system',
-                                                                 'use-cwuri-as-url': False},
-                                                      'type': 'CWUser',
+            self.assertEqual(e.cw_metainformation(), {'type': 'CWUser',
                                                       'extid': None})
             # and that the password stored in the system source is not empty or so
             user = cnx.execute('CWUser U WHERE U login "syt"').get_entity(0, 0)

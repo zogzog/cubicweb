@@ -77,7 +77,7 @@ class XMLItemView(EntityView):
     def entity_call(self, entity):
         """element as an item for an xml feed"""
         entity.complete()
-        source = entity.cw_metainformation()['source']['uri']
+        source = entity.cw_source[0].name
         self.w(u'<%s eid="%s" cwuri="%s" cwsource="%s">\n'
                % (entity.cw_etype, entity.eid, xml_escape(entity.cwuri),
                   xml_escape(source)))

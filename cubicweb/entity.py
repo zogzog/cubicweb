@@ -625,9 +625,7 @@ class Entity(AppObject):
 
     @cached
     def cw_metainformation(self):
-        metas = self._cw.entity_metas(self.eid)
-        metas['source'] = self._cw.source_defs()[metas['source']]
-        return metas
+        return self._cw.entity_metas(self.eid)
 
     def cw_check_perm(self, action):
         self.e_schema.check_perm(self._cw, action, eid=self.eid)

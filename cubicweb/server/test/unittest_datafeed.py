@@ -86,7 +86,6 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(entity.cw_source[0].name, u'ô myfeed')
                 self.assertEqual(entity.cw_metainformation(),
                                  {'type': 'Card',
-                                  'source': {'uri': u'ô myfeed', 'type': 'datafeed', 'use-cwuri-as-url': True},
                                   'extid': b'http://www.cubicweb.org/'}
                                  )
                 # test repo cache keys
@@ -107,7 +106,6 @@ class DataFeedTC(CubicWebTC):
             self.assertEqual(entity.cw_source[0].name, 'myrenamedfeed')
             self.assertEqual(entity.cw_metainformation(),
                              {'type': 'Card',
-                              'source': {'uri': 'myrenamedfeed', 'type': 'datafeed', 'use-cwuri-as-url': True},
                               'extid': b'http://www.cubicweb.org/'}
                              )
             self.assertEqual(self.repo._type_source_cache[entity.eid],
