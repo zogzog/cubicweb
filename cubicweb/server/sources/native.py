@@ -851,35 +851,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         res.append("system")
         return res
 
-    def extid2eid(self, cnx, extid):
-        """get eid from an external id. Return None if no record found."""
-        assert isinstance(extid, binary_type)
-        args = {'x': b64encode(extid).decode('ascii')}
-        cursor = self.doexec(cnx,
-                             'SELECT eid FROM entities WHERE extid=%(x)s',
-                             args)
-        # XXX testing rowcount cause strange bug with sqlite, results are there
-        #     but rowcount is 0
-        #if cursor.rowcount > 0:
-        try:
-            result = cursor.fetchone()
-            if result:
-                return result[0]
-        except Exception:
-            pass
-        cursor = self.doexec(cnx,
-                             'SELECT eid FROM moved_entities WHERE extid=%(x)s',
-                             args)
-        try:
-            result = cursor.fetchone()
-            if result:
-                # entity was moved to the system source, return negative
-                # number to tell the external source to ignore it
-                return -result[0]
-        except Exception:
-            pass
-        return None
-
     def _handle_is_relation_sql(self, cnx, sql, attrs):
         """ Handler for specific is_relation sql that may be
         overwritten in some stores"""

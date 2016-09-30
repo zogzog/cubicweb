@@ -183,7 +183,6 @@ class Repository(object):
         # cache eid -> (type, extid, actual source)
         self._type_source_cache = {}
         # cache extid -> eid
-        self._extid_cache = {}
         # open some connection sets
         if config.init_cnxset_pool:
             self.init_cnxset_pool()
@@ -732,13 +731,11 @@ class Repository(object):
 
     def clear_caches(self, eids):
         etcache = self._type_source_cache
-        extidcache = self._extid_cache
         rqlcache = self.querier._rql_cache
         for eid in eids:
             try:
                 etype, extid, auri = etcache.pop(int(eid))  # may be a string in some cases
                 rqlcache.pop(('%s X WHERE X eid %s' % (etype, eid),), None)
-                extidcache.pop(extid, None)
             except KeyError:
                 etype = None
             rqlcache.pop(('Any X WHERE X eid %s' % eid,), None)
@@ -762,73 +759,6 @@ class Repository(object):
             # ensure eid is correctly typed in args
             args[key] = int(args[key])
         return tuple(cachekey)
-
-    @deprecated('[3.22] use the new store API')
-    def extid2eid(self, source, extid, etype, cnx, insert=True,
-                  sourceparams=None):
-        """Return eid from a local id. If the eid is a negative integer, that
-        means the entity is known but has been copied back to the system source
-        hence should be ignored.
-
-        If no record is found, ie the entity is not known yet:
-
-        1. an eid is attributed
-
-        2. the source's :meth:`before_entity_insertion` method is called to
-           build the entity instance
-
-        3. unless source's :attr:`should_call_hooks` tell otherwise,
-          'before_add_entity' hooks are called
-
-        4. record is added into the system source
-
-        5. the source's :meth:`after_entity_insertion` method is called to
-           complete building of the entity instance
-
-        6. unless source's :attr:`should_call_hooks` tell otherwise,
-          'before_add_entity' hooks are called
-        """
-        try:
-            return self._extid_cache[extid]
-        except KeyError:
-            pass
-        eid = self.system_source.extid2eid(cnx, extid)
-        if eid is not None:
-            self._extid_cache[extid] = eid
-            self._type_source_cache[eid] = (etype, extid, source.uri)
-            return eid
-        if not insert:
-            return
-        # no link between extid and eid, create one
-        # write query, ensure connection's mode is 'write' so connections
-        # won't be released until commit/rollback
-        try:
-            eid = self.system_source.create_eid(cnx)
-            self._extid_cache[extid] = eid
-            self._type_source_cache[eid] = (etype, extid, source.uri)
-            entity = source.before_entity_insertion(
-                cnx, extid, etype, eid, sourceparams)
-            if source.should_call_hooks:
-                # get back a copy of operation for later restore if
-                # necessary, see below
-                pending_operations = cnx.pending_operations[:]
-                self.hm.call_hooks('before_add_entity', cnx, entity=entity)
-            self.add_info(cnx, entity, source, extid)
-            source.after_entity_insertion(cnx, extid, entity, sourceparams)
-            if source.should_call_hooks:
-                self.hm.call_hooks('after_add_entity', cnx, entity=entity)
-            return eid
-        except Exception:
-            # XXX do some cleanup manually so that the transaction has a
-            # chance to be commited, with simply this entity discarded
-            self._extid_cache.pop(extid, None)
-            self._type_source_cache.pop(eid, None)
-            if 'entity' in locals():
-                hook.CleanupDeletedEidsCacheOp.get_instance(cnx).add_data(entity.eid)
-                self.system_source.delete_info_multi(cnx, [entity])
-                if source.should_call_hooks:
-                    cnx.pending_operations = pending_operations
-            raise
 
     def add_info(self, cnx, entity, source, extid=None):
         """add type and source info for an eid into the system table,
@@ -885,7 +815,6 @@ class Repository(object):
             extid = None
         else:
             extid = source.get_extid(entity)
-            self._extid_cache[str(extid)] = entity.eid
         self._type_source_cache[entity.eid] = (entity.cw_etype, extid, source.uri)
         return extid
 

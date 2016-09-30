@@ -52,7 +52,6 @@ class StatsService(Service):
             results['%s_cache_miss' % title] = misses
             results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
         results['type_source_cache_size'] = len(repo._type_source_cache)
-        results['extid_cache_size'] = len(repo._extid_cache)
         results['sql_no_cache'] = repo.system_source.no_cache
         results['nb_open_sessions'] = len(repo._sessions)
         results['nb_active_threads'] = threading.activeCount()

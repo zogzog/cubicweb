@@ -64,9 +64,6 @@ def dbg_results(results):
 class AbstractSource(object):
     """an abstract class for sources"""
 
-    # boolean telling if modification hooks should be called when something is
-    # modified in this source
-    should_call_hooks = True
     # boolean telling if the repository should connect to this source during
     # migration
     connect_for_migration = True
@@ -258,25 +255,6 @@ class AbstractSource(object):
 
     # external source api ######################################################
 
-    def before_entity_insertion(self, cnx, lid, etype, eid, sourceparams):
-        """called by the repository when an eid has been attributed for an
-        entity stored here but the entity has not been inserted in the system
-        table yet.
-
-        This method must return the an Entity instance representation of this
-        entity.
-        """
-        entity = self.repo.vreg['etypes'].etype_class(etype)(cnx)
-        entity.eid = eid
-        entity.cw_edited = EditedEntity(entity)
-        return entity
-
-    def after_entity_insertion(self, cnx, lid, entity, sourceparams):
-        """called by the repository after an entity stored here has been
-        inserted in the system table.
-        """
-        pass
-
     def _load_mapping(self, cnx, **kwargs):
         if not 'CWSourceSchemaConfig' in self.schema:
             self.warning('instance is not mapping ready')
@@ -406,13 +384,6 @@ class AbstractSource(object):
 
     def drop_index(self, cnx, table, column, unique=False):
         raise NotImplementedError(self)
-
-
-    @deprecated('[3.13] use extid2eid(source, value, etype, cnx, **kwargs)')
-    def extid2eid(self, value, etype, cnx, **kwargs):
-        return self.repo.extid2eid(self, value, etype, cnx, **kwargs)
-
-
 
 
 def source_adapter(source_type):

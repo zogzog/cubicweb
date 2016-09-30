@@ -22,6 +22,7 @@ from contextlib import contextmanager
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sources import datafeed
+from cubicweb.dataimport.stores import NoHookRQLObjectStore, MetaGenerator
 
 
 class DataFeedTC(CubicWebTC):
@@ -37,15 +38,16 @@ class DataFeedTC(CubicWebTC):
     def base_parser(self, session):
         class AParser(datafeed.DataFeedParser):
             __regid__ = 'testparser'
+
             def process(self, url, raise_on_error=False):
-                entity = self.extid2entity('http://www.cubicweb.org/', 'Card',
-                                           item={'title': u'cubicweb.org',
-                                                 'content': u'the cw web site'},
-                                           raise_on_error=raise_on_error)
-                if not self.created_during_pull(entity):
-                    self.notify_updated(entity)
-            def before_entity_copy(self, entity, sourceparams):
-                entity.cw_edited.update(sourceparams['item'])
+                metagenerator = MetaGenerator(self._cw, source=self.source)
+                store = NoHookRQLObjectStore(self._cw, metagenerator)
+                store.prepare_insert_entity('Card',
+                                            cwuri=u'http://www.cubicweb.org/',
+                                            title=u'cubicweb.org',
+                                            content=u'the cw web site')
+                store.flush()
+                store.commit()
 
         with self.temporary_appobjects(AParser):
             if u'ô myfeed' in self.repo.sources_by_uri:
@@ -72,14 +74,11 @@ class DataFeedTC(CubicWebTC):
 
         with self.repo.internal_cnx() as cnx:
             with self.base_parser(cnx):
-                stats = dfsource.pull_data(cnx, force=True)
+                stats = dfsource.pull_data(cnx, force=True, raise_on_error=True)
                 cnx.commit()
                 # test import stats
                 self.assertEqual(sorted(stats), ['checked', 'created', 'updated'])
-                self.assertEqual(len(stats['created']), 1)
                 entity = cnx.execute('Card X').get_entity(0, 0)
-                self.assertIn(entity.eid, stats['created'])
-                self.assertEqual(stats['updated'], set())
                 # test imported entities
                 self.assertEqual(entity.title, 'cubicweb.org')
                 self.assertEqual(entity.content, 'the cw web site')
@@ -94,22 +93,8 @@ class DataFeedTC(CubicWebTC):
                 # test repo cache keys
                 self.assertEqual(self.repo._type_source_cache[entity.eid],
                                  ('Card', b'http://www.cubicweb.org/', u'ô myfeed'))
-                self.assertEqual(self.repo._extid_cache[b'http://www.cubicweb.org/'],
-                                 entity.eid)
-                # test repull
-                stats = dfsource.pull_data(cnx, force=True)
-                self.assertEqual(stats['created'], set())
-                self.assertEqual(stats['updated'], set((entity.eid,)))
-                # test repull with caches reseted
-                self.repo._type_source_cache.clear()
-                self.repo._extid_cache.clear()
-                stats = dfsource.pull_data(cnx, force=True)
-                self.assertEqual(stats['created'], set())
-                self.assertEqual(stats['updated'], set((entity.eid,)))
                 self.assertEqual(self.repo._type_source_cache[entity.eid],
                                  ('Card', b'http://www.cubicweb.org/', u'ô myfeed'))
-                self.assertEqual(self.repo._extid_cache[b'http://www.cubicweb.org/'],
-                                 entity.eid)
 
                 self.assertEqual(dfsource.source_uris(cnx),
                                  {b'http://www.cubicweb.org/': (entity.eid, 'Card')})
@@ -130,8 +115,6 @@ class DataFeedTC(CubicWebTC):
                              )
             self.assertEqual(self.repo._type_source_cache[entity.eid],
                              ('Card', b'http://www.cubicweb.org/', 'myrenamedfeed'))
-            self.assertEqual(self.repo._extid_cache[b'http://www.cubicweb.org/'],
-                             entity.eid)
 
             # test_delete_source
             cnx.execute('DELETE CWSource S WHERE S name "myrenamedfeed"')

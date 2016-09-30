@@ -166,7 +166,6 @@ class ChangeEntitySourceUpdateCaches(hook.Operation):
         extid = entity.cw_metainformation()['extid']
         repo._type_source_cache[entity.eid] = (
             entity.cw_etype, None, self.newsource.uri)
-        repo._extid_cache[extid] = -entity.eid
 
 
 class ChangeEntitySourceDeleteHook(MetaDataHook):

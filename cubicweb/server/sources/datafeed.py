@@ -24,7 +24,6 @@ from os.path import exists
 from datetime import datetime, timedelta
 from functools import partial
 
-from six import text_type
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.request import Request, build_opener, HTTPCookieProcessor
 from six.moves.urllib.error import HTTPError
@@ -35,8 +34,7 @@ from lxml import etree
 
 from logilab.common.deprecation import deprecated
 
-from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, UnknownEid, SourceException
-from cubicweb.server.repository import preprocess_inlined_relations
+from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, SourceException
 from cubicweb.server.sources import AbstractSource
 from cubicweb.appobject import AppObject
 
@@ -257,42 +255,6 @@ class DataFeedSource(AbstractSource):
         cnx.commit()
         return stats
 
-    @deprecated('[3.21] use the new store API')
-    def before_entity_insertion(self, cnx, lid, etype, eid, sourceparams):
-        """called by the repository when an eid has been attributed for an
-        entity stored here but the entity has not been inserted in the system
-        table yet.
-
-        This method must return the an Entity instance representation of this
-        entity.
-        """
-        entity = super(DataFeedSource, self).before_entity_insertion(
-            cnx, lid, etype, eid, sourceparams)
-        entity.cw_edited['cwuri'] = lid.decode('utf-8')
-        entity.cw_edited.set_defaults()
-        sourceparams['parser'].before_entity_copy(entity, sourceparams)
-        return entity
-
-    @deprecated('[3.21] use the new store API')
-    def after_entity_insertion(self, cnx, lid, entity, sourceparams):
-        """called by the repository after an entity stored here has been
-        inserted in the system table.
-        """
-        relations = preprocess_inlined_relations(cnx, entity)
-        if cnx.is_hook_category_activated('integrity'):
-            entity.cw_edited.check(creation=True)
-        self.repo.system_source.add_entity(cnx, entity)
-        entity.cw_edited.saved = entity._cw_is_saved = True
-        sourceparams['parser'].after_entity_copy(entity, sourceparams)
-        # call hooks for inlined relations
-        call_hooks = self.repo.hm.call_hooks
-        if self.should_call_hooks:
-            for attr, value in relations:
-                call_hooks('before_add_relation', cnx,
-                           eidfrom=entity.eid, rtype=attr, eidto=value)
-                call_hooks('after_add_relation', cnx,
-                           eidfrom=entity.eid, rtype=attr, eidto=value)
-
     def source_uris(self, cnx):
         sql = 'SELECT extid, eid, type FROM entities WHERE asource=%(source)s'
         return dict((self.decode_extid(uri), (eid, type))
@@ -397,52 +359,6 @@ class DataFeedParser(AppObject):
         msg = schemacfg._cw._("this parser doesn't use a mapping")
         raise ValidationError(schemacfg.eid, {None: msg})
 
-    @deprecated('[3.21] use the new store API')
-    def extid2entity(self, uri, etype, **sourceparams):
-        """Return an entity for the given uri. May return None if it should be
-        skipped.
-
-        If a `raise_on_error` keyword parameter is passed, a ValidationError
-        exception may be raised.
-        """
-        raise_on_error = sourceparams.pop('raise_on_error', False)
-        cnx = self._cw
-        # if cwsource is specified and repository has a source with the same
-        # name, call extid2eid on that source so entity will be properly seen as
-        # coming from this source
-        source_uri = sourceparams.pop('cwsource', None)
-        if source_uri is not None and source_uri != 'system':
-            source = cnx.repo.sources_by_uri.get(source_uri, self.source)
-        else:
-            source = self.source
-        sourceparams['parser'] = self
-        if isinstance(uri, text_type):
-            uri = uri.encode('utf-8')
-        try:
-            eid = cnx.repo.extid2eid(source, uri, etype, cnx,
-                                     sourceparams=sourceparams)
-        except ValidationError as ex:
-            if raise_on_error:
-                raise
-            self.source.critical('error while creating %s: %s', etype, ex)
-            self.import_log.record_error('error while creating %s: %s'
-                                         % (etype, ex))
-            return None
-        if eid < 0:
-            # entity has been moved away from its original source
-            #
-            # Don't give etype to entity_from_eid so we get UnknownEid if the
-            # entity has been removed
-            try:
-                entity = cnx.entity_from_eid(-eid)
-            except UnknownEid:
-                return None
-            self.notify_updated(entity)  # avoid later update from the source's data
-            return entity
-        if self.source_uris is not None:
-            self.source_uris.pop(str(uri), None)
-        return cnx.entity_from_eid(eid, etype)
-
     def process_urls(self, urls, raise_on_error=False):
         error = False
         for url in urls:
@@ -469,14 +385,6 @@ class DataFeedParser(AppObject):
     def process(self, url, raise_on_error=False):
         """main callback: process the url"""
         raise NotImplementedError
-
-    @deprecated('[3.21] use the new store API')
-    def before_entity_copy(self, entity, sourceparams):
-        raise NotImplementedError
-
-    @deprecated('[3.21] use the new store API')
-    def after_entity_copy(self, entity, sourceparams):
-        self.stats['created'].add(entity.eid)
 
     def created_during_pull(self, entity):
         return entity.eid in self.stats['created']
