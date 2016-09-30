@@ -28,7 +28,7 @@ from inspect import isgeneratorfunction
 from itertools import chain
 import tempfile
 
-from six import text_type, string_types
+from six import text_type, string_types, reraise
 from six.moves import range
 from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
 
@@ -981,9 +981,7 @@ class CubicWebTC(BaseTestCase):
                 msg = '[%s in %s] %s' % (klass, view.__regid__, exc)
             except Exception:
                 msg = '[%s in %s] undisplayable exception' % (klass, view.__regid__)
-            exc = AssertionError(msg)
-            exc.__traceback__ = tcbk
-            raise exc
+            reraise(AssertionError, AssertionError(msg), sys.exc_info()[-1])
         return self._check_html(output, view, template)
 
     def get_validator(self, view=None, content_type=None, output=None):
