@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Specific views for email addresses entities"""
 
-__docformat__ = "restructuredtext en"
+
 
 from logilab.mtconverter import xml_escape
 

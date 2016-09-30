@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,17 +17,15 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """core CubicWeb schema, but not necessary at bootstrap time"""
 
-__docformat__ = "restructuredtext en"
-from cubicweb import _
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
-                            SubjectRelation,
-                            String, TZDatetime, Datetime, Password, Interval,
-                            Boolean, Bytes, UniqueConstraint)
+                            SubjectRelation, String, Bytes, TZDatetime, Password)
+
+from cubicweb import _
 from cubicweb.schema import (
     RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
-    PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS,
-    RO_ATTR_PERMS)
+    PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS, RO_ATTR_PERMS)
+
 
 class CWUser(WorkflowableEntityType):
     """define a CubicWeb user"""
@@ -320,6 +318,7 @@ class CWDataImport(EntityType):
     status = String(required=True, internationalizable=True, indexed=True,
                     default='in progress',
                     vocabulary=[_('in progress'), _('success'), _('failed')])
+
 
 class cw_import_of(RelationDefinition):
     __permissions__ = RELATION_MANAGERS_PERMISSIONS

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,6 +24,7 @@ from cubicweb.devtools import TestServerConfiguration, fake
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server import hook
 from cubicweb.hooks import integrity, syncschema
+
 
 class OperationsTC(CubicWebTC):
 
@@ -55,7 +56,10 @@ class OperationsTC(CubicWebTC):
             op3 = syncschema.MemSchemaNotifyChanges(cnx)
             self.assertEqual([op1, op2, op3], cnx.pending_operations)
 
-class HookCalled(Exception): pass
+
+class HookCalled(Exception):
+    pass
+
 
 config = TestServerConfiguration('data', __file__)
 config.bootstrap_cubes()
@@ -65,10 +69,12 @@ def tearDownModule(*args):
     global config, schema
     del config, schema
 
+
 class AddAnyHook(hook.Hook):
     __regid__ = 'addany'
     category = 'cat1'
     events = ('before_add_entity',)
+
     def __call__(self):
         raise HookCalled()
 
@@ -133,60 +139,6 @@ class SystemHooksTC(CubicWebTC):
             self.assertEqual(hooks.CALLED_EVENTS['session_open'], 'anon')
         anonaccess.close()
         self.assertEqual(hooks.CALLED_EVENTS['session_close'], 'anon')
-
-
-# class RelationHookTC(TestCase):
-#     """testcase for relation hooks grouping"""
-#     def setUp(self):
-#         """ called before each test from this class """
-#         self.o = HooksManager(schema)
-#         self.called = []
-
-#     def test_before_add_relation(self):
-#         """make sure before_xxx_relation hooks are called directly"""
-#         self.o.register(self._before_relation_hook,
-#                              'before_add_relation', 'concerne')
-#         self.assertEqual(self.called, [])
-#         self.o.call_hooks('before_add_relation', 'concerne', 'USER',
-#                           1, 'concerne', 2)
-#         self.assertEqual(self.called, [(1, 'concerne', 2)])
-
-#     def test_after_add_relation(self):
-#         """make sure after_xxx_relation hooks are deferred"""
-#         self.o.register(self._after_relation_hook,
-#                              'after_add_relation', 'concerne')
-#         self.assertEqual(self.called, [])
-#         self.o.call_hooks('after_add_relation', 'concerne', 'USER',
-#                           1, 'concerne', 2)
-#         self.o.call_hooks('after_add_relation', 'concerne', 'USER',
-#                           3, 'concerne', 4)
-#         self.assertEqual(self.called, [(1, 'concerne', 2), (3, 'concerne', 4)])
-
-#     def test_before_delete_relation(self):
-#         """make sure before_xxx_relation hooks are called directly"""
-#         self.o.register(self._before_relation_hook,
-#                              'before_delete_relation', 'concerne')
-#         self.assertEqual(self.called, [])
-#         self.o.call_hooks('before_delete_relation', 'concerne', 'USER',
-#                           1, 'concerne', 2)
-#         self.assertEqual(self.called, [(1, 'concerne', 2)])
-
-#     def test_after_delete_relation(self):
-#         """make sure after_xxx_relation hooks are deferred"""
-#         self.o.register(self._after_relation_hook,
-#                         'after_delete_relation', 'concerne')
-#         self.o.call_hooks('after_delete_relation', 'concerne', 'USER',
-#                           1, 'concerne', 2)
-#         self.o.call_hooks('after_delete_relation', 'concerne', 'USER',
-#                           3, 'concerne', 4)
-#         self.assertEqual(self.called, [(1, 'concerne', 2), (3, 'concerne', 4)])
-
-
-#     def _before_relation_hook(self, cnxset, subject, r_type, object):
-#         self.called.append((subject, r_type, object))
-
-#     def _after_relation_hook(self, cnxset, subject, r_type, object):
-#         self.called.append((subject, r_type, object))
 
 
 if __name__ == '__main__':

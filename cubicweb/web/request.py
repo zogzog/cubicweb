@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,18 +17,16 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """abstract class for http request"""
 
-__docformat__ = "restructuredtext en"
-
 import time
 import random
 import base64
-from hashlib import sha1 # pylint: disable=E0611
+from hashlib import sha1  # pylint: disable=E0611
 from calendar import timegm
 from datetime import date, datetime
 from warnings import warn
 from io import BytesIO
 
-from six import PY2, binary_type, text_type, string_types
+from six import PY2, text_type, string_types
 from six.moves import http_client
 from six.moves.urllib.parse import urlsplit, quote as urlquote
 from six.moves.http_cookies import SimpleCookie
@@ -37,19 +35,19 @@ from rql.utils import rqlvar_maker
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
-from logilab.mtconverter import xml_escape
 
 from cubicweb import AuthenticationError
 from cubicweb.req import RequestSessionBase
 from cubicweb.uilib import remove_html_tags, js
 from cubicweb.utils import HTMLHead, make_uid
-from cubicweb.view import TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
 from cubicweb.web.httpcache import get_validators
-from cubicweb.web.http_headers import Headers, Cookie, parseDateTime
+from cubicweb.web.http_headers import Headers, Cookie
+
 
 _MARKER = object()
+
 
 def build_cb_uid(seed):
     sha = sha1(('%s%s%s' % (time.time(), seed, random.random())).encode('ascii'))
@@ -1013,7 +1011,6 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
     source_defs = _cnx_func('source_defs')
     get_shared_data = _cnx_func('get_shared_data')
     set_shared_data = _cnx_func('set_shared_data')
-    describe = _cnx_func('describe') # deprecated XXX
 
     # security #################################################################
 

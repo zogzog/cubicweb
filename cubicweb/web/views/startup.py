@@ -21,7 +21,7 @@
 .. autoclass:: ManageView
 """
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from logilab.common.textutils import unormalize

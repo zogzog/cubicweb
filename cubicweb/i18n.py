@@ -18,7 +18,7 @@
 """Some i18n/gettext utilities."""
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 import re
 import os

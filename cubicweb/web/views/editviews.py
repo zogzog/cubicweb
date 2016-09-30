@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some views used to help to the edition process"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from logilab.common.decorators import cached

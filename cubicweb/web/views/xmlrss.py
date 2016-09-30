@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,7 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """base xml and rss views"""
 
-__docformat__ = "restructuredtext en"
 from cubicweb import _
 
 from base64 import b64encode
@@ -28,10 +27,11 @@ from six.moves import range
 from logilab.mtconverter import xml_escape
 
 from cubicweb.predicates import (is_instance, non_final_entity, one_line_rset,
-                                appobject_selectable, adaptable)
+                                 appobject_selectable, adaptable)
 from cubicweb.view import EntityView, EntityAdapter, AnyRsetView, Component
 from cubicweb.uilib import simple_sgml_tag
 from cubicweb.web import httpcache, component
+
 
 def encode_bytes(value):
     return '<![CDATA[%s]]>' % b64encode(value.getvalue())
@@ -110,7 +110,7 @@ class XMLItemView(EntityView):
             else:
                 self.error('badly formated relation name %r', relstr)
                 continue
-            if not rtype in getrschema:
+            if rtype not in getrschema:
                 self.error('unexisting relation %r', relstr)
                 continue
             self.w(u'  <%s role="%s">\n' % (rtype, role))

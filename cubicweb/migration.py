@@ -18,7 +18,7 @@
 """utilities for instances migration"""
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 import sys
 import os

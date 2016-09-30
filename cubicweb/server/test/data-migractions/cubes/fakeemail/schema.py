@@ -4,7 +4,7 @@
 :copyright: 2006-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 # pylint: disable-msg=E0611,F0401

@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Twisted request handler for CubicWeb"""
 
-__docformat__ = "restructuredtext en"
+
 
 
 from cubicweb.web.request import CubicWebRequestBase

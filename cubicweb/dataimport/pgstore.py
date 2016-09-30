@@ -1,4 +1,4 @@
-# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Postgres specific store"""
+
 from __future__ import print_function
 
 import warnings
@@ -24,10 +25,8 @@ from io import StringIO
 from time import asctime
 from datetime import date, datetime, time
 from collections import defaultdict
-from base64 import b64encode
 
-from six import (string_types, integer_types, text_type, binary_type,
-                 add_metaclass)
+from six import string_types, integer_types, text_type, add_metaclass
 from six.moves import cPickle as pickle, range
 
 from logilab.common.deprecation import class_deprecated

@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """base application's entities class implementation: `AnyEntity`"""
 
-__docformat__ = "restructuredtext en"
+
 
 from warnings import warn
 

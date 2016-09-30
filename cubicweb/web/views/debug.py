@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,7 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """management and error screens"""
 
-__docformat__ = "restructuredtext en"
 from cubicweb import _
 
 from time import strftime, localtime
@@ -29,6 +28,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.predicates import none_rset, match_user_groups
 from cubicweb.view import StartupView
 from cubicweb.web.views import actions, tabs
+
 
 def dict_to_html(w, dict):
     # XHTML doesn't allow emtpy <ul> nodes
@@ -42,7 +42,7 @@ def dict_to_html(w, dict):
 
 class SiteInfoAction(actions.ManagersAction):
     __regid__ = 'siteinfo'
-    __select__ = match_user_groups('users','managers')
+    __select__ = match_user_groups('users', 'managers')
     title = _('Site information')
     category = 'manage'
     order = 1000

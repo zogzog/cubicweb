@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,7 +31,6 @@ xy.add_equivalence('Project', 'doap:Project')
 xy.add_equivalence('Project creation_date', 'doap:Project doap:created')
 xy.add_equivalence('Project name', 'doap:Project doap:name')
 xy.add_equivalence('Project name', 'doap:Project dc:title')
-
 
 
 @unittest.skipIf(SKIPCAUSE, SKIPCAUSE)

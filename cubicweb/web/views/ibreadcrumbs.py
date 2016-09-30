@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """breadcrumbs components definition for CubicWeb web client"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from warnings import warn

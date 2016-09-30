@@ -62,7 +62,7 @@ Entity specific fields and function
 .. autofunction:: cubicweb.web.formfields.guess_field
 
 """
-__docformat__ = "restructuredtext en"
+
 
 from datetime import datetime, timedelta
 

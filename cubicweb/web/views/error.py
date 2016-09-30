@@ -19,7 +19,7 @@
 as startup views and are used for standard error pages (404, 500, etc.)
 """
 
-__docformat__ = "restructuredtext en"
+
 
 from cubicweb.view import StartupView
 

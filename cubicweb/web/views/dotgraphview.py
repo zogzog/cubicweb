@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """some basic stuff to build dot generated graph images"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 import tempfile

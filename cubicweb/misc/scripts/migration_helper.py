@@ -21,7 +21,7 @@ to be available in the standard migration environment
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 def drop_entity_types_fast(*etypes, **kwargs):
     """drop an entity type bypassing all hooks

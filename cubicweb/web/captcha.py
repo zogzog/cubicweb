@@ -19,7 +19,7 @@
 if you want something better...
 """
 
-__docformat__ = "restructuredtext en"
+
 
 from random import randint, choice
 from io import BytesIO

@@ -18,7 +18,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """exceptions used in the core of the CubicWeb web application"""
 
-__docformat__ = "restructuredtext en"
+
 
 from six.moves import http_client
 

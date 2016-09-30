@@ -18,7 +18,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unittests for cubicweb.uilib"""
 
-__docformat__ = "restructuredtext en"
+
 
 
 import doctest

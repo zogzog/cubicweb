@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Simple cryptographic routines, based on python-crypto."""
-__docformat__ = "restructuredtext en"
+
 
 from base64 import b64encode, b64decode
 

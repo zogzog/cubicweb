@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """html timetable views"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from six.moves import range

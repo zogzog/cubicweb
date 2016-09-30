@@ -55,7 +55,7 @@ or a method and the number of calls. It will send a message like::
 
 """
 
-__docformat__ = "restructuredtext en"
+
 
 import time
 import socket

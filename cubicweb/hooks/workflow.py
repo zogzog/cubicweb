@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Core hooks: workflow related hooks"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from datetime import datetime

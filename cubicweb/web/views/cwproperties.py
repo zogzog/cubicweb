@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Specific views for CWProperty (eg site/user preferences"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from logilab.mtconverter import xml_escape

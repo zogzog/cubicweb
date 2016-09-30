@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Core hooks: synchronize living session on persistent data changes"""
 
-__docformat__ = "restructuredtext en"
-
 from cubicweb import _
 from cubicweb import UnknownProperty, BadConnectionId, validation_error
 from cubicweb.predicates import is_instance

@@ -6,7 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-__docformat__ = "restructuredtext en"
+
 
 class HTTPResponse(object):
     """An object representing an HTTP Response to be sent to the client.

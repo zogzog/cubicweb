@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,25 +16,21 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb server sources support"""
-from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+from __future__ import print_function
 
 from time import time
 from logging import getLogger
-from base64 import b64decode
 
 from six import text_type
 
 from logilab.common import configuration
 from logilab.common.textutils import unormalize
-from logilab.common.deprecation import deprecated
 
 from yams.schema import role_name
 
 from cubicweb import ValidationError, set_log_methods, server
 from cubicweb.server import SOURCE_TYPES
-from cubicweb.server.edition import EditedEntity
 
 
 def dbg_st_search(uri, union, args, cachekey=None, prefix='rql for'):
@@ -49,6 +45,7 @@ def dbg_st_search(uri, union, args, cachekey=None, prefix='rql for'):
                                             for s in union.children))
     # return true so it can be used as assertion (and so be killed by python -O)
     return True
+
 
 def dbg_results(results):
     if server.DEBUG & server.DBG_RQL:
@@ -391,6 +388,7 @@ def source_adapter(source_type):
         return SOURCE_TYPES[source_type]
     except KeyError:
         raise RuntimeError('Unknown source type %r' % source_type)
+
 
 def get_source(type, source_config, repo, eid):
     """return a source adapter according to the adapter field in the source's

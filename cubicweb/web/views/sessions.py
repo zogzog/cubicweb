@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """web session: by default the session is actually the db connection """
-__docformat__ = "restructuredtext en"
+
 
 from time import time
 from logging import getLogger

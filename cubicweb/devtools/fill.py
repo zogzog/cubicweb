@@ -19,7 +19,7 @@
 """This modules defines func / methods for creating test repositories"""
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 import logging
 from random import randint, choice

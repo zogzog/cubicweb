@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """abstract views and templates classes for CubicWeb web client"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from io import BytesIO

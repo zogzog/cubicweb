@@ -179,7 +179,7 @@ Here are all environment variables that may be used to configure *CubicWeb*:
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 import importlib
 import logging

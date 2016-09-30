@@ -18,7 +18,7 @@
 """some utilities for cubicweb command line tools"""
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 # XXX move most of this in logilab.common (shellutils ?)
 

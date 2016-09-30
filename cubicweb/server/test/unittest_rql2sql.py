@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,8 +19,8 @@
 from __future__ import print_function
 
 import sys
-import os
-from datetime import date
+
+from logilab import database as db
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
 from rql import BadRQLQuery
@@ -34,15 +34,15 @@ from cubicweb.server.sources.rql2sql import remove_unused_solutions
 # add a dumb registered procedure
 class stockproc(FunctionDescr):
     supported_backends = ('postgres', 'sqlite', 'mysql')
+
 try:
     register_function(stockproc)
-except AssertionError as ex:
-    pass # already registered
+except AssertionError:
+    pass  # already registered
 
 
-from logilab import database as db
 def monkey_patch_import_driver_module(driver, drivers, quiet=True):
-    if not driver in drivers:
+    if driver not in drivers:
         raise db.UnknownDriver(driver)
     for modname in drivers[driver]:
         try:

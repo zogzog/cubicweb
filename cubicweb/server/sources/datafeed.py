@@ -34,7 +34,7 @@ from lxml import etree
 
 from logilab.common.deprecation import deprecated
 
-from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, SourceException
+from cubicweb import ObjectNotFound, ValidationError, SourceException
 from cubicweb.server.sources import AbstractSource
 from cubicweb.appobject import AppObject
 

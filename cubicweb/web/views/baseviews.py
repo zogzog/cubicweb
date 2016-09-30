@@ -75,15 +75,11 @@ views use those text views as a basis.
 .. autoclass:: OutOfContextView
 """
 
-__docformat__ = "restructuredtext en"
 from cubicweb import _
 
-from datetime import timedelta
 from warnings import warn
 
 from six.moves import range
-
-from rql import nodes
 
 from logilab.mtconverter import TransformError, xml_escape
 from logilab.common.registry import yes

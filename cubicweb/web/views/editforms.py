@@ -19,7 +19,7 @@
 or a list of entities of the same type
 """
 
-__docformat__ = "restructuredtext en"
+
 
 from copy import copy
 

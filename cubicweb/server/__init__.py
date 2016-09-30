@@ -22,7 +22,7 @@ The server module contains functions to initialize a new repository.
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 from contextlib import contextmanager
 

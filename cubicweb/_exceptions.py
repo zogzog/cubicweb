@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Exceptions shared by different cubicweb packages."""
 
-__docformat__ = "restructuredtext en"
+
 
 from warnings import warn
 

@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """schema definition related entities"""
 
-__docformat__ = "restructuredtext en"
+
 
 from logilab.common.decorators import cached
 

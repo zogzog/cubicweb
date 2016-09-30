@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """some constants and classes to define schema permissions"""
 
-__docformat__ = "restructuredtext en"
+
 
 from cubicweb.schema import RO_REL_PERMS, RO_ATTR_PERMS, \
      PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, \

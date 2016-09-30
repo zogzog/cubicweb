@@ -55,7 +55,7 @@ Here is the default evaluator chain:
  Actionpath executes a query whose results is lost
  because of redirecting instead of direct traversal.
 """
-__docformat__ = "restructuredtext en"
+
 
 from rql import TypeResolverException
 

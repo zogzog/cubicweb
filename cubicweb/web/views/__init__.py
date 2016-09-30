@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Views, forms, actions... for the CubicWeb web client"""
 
-__docformat__ = "restructuredtext en"
+
 
 import os
 import sys

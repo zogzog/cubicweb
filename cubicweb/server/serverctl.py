@@ -18,8 +18,6 @@
 """cubicweb-ctl commands and command handlers specific to the repository"""
 from __future__ import print_function
 
-__docformat__ = 'restructuredtext en'
-
 # *ctl module should limit the number of import to be imported as quickly as
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.

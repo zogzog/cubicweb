@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """abstract controller classe for CubicWeb web client"""
 
-__docformat__ = "restructuredtext en"
+
 
 from six import PY2
 

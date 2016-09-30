@@ -61,7 +61,7 @@ implement the ``__call__`` method:
 
 """
 
-__docformat__ = "restructuredtext en"
+
 
 from warnings import warn
 from functools import partial

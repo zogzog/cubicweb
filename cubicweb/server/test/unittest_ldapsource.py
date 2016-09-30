@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,6 +19,7 @@
 
 Those tests expect to have slapd, python-ldap3 and ldapscripts packages installed.
 """
+
 from __future__ import print_function
 
 import os

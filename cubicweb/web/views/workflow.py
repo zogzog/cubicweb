@@ -21,7 +21,7 @@
 * workflow entities views (State, Transition, TrInfo)
 """
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 import os

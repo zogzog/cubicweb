@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """core hooks registering some maintainance tasks as server startup time"""
 
-__docformat__ = "restructuredtext en"
+
 
 from datetime import timedelta, datetime
 

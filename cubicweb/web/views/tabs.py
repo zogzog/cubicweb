@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """base classes to handle tabbed views"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from six import string_types

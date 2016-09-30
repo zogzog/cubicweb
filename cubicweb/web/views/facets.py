@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """the facets box and some basic facets"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from warnings import warn

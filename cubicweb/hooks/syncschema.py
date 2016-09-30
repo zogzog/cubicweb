@@ -23,9 +23,6 @@
 checking for schema consistency is done in hooks.py
 """
 
-__docformat__ = "restructuredtext en"
-from cubicweb import _
-
 import json
 from copy import copy
 
@@ -35,6 +32,7 @@ from yams import buildobjs as ybo, convert_default_value
 
 from logilab.common.decorators import clear_cache
 
+from cubicweb import _
 from cubicweb import validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,

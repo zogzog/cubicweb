@@ -32,7 +32,7 @@ special view (with `self._cw.build_url(...)` for instance)
 Many examples are available in :mod:`cubicweb.web.views.actions`.
 """
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from cubicweb import target

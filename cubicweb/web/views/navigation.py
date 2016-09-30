@@ -45,7 +45,7 @@ navigation are provided.
   .. autoclass:: NextPrevNavigationComponent
 """
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from datetime import datetime

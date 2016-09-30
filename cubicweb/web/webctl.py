@@ -20,7 +20,7 @@ web configuration
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 import os, os.path as osp
 from shutil import copy, rmtree

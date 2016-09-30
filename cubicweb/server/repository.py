@@ -25,9 +25,8 @@ repository mainly:
   point to a cubicweb instance.
 * handles session management
 """
-from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+from __future__ import print_function
 
 from warnings import warn
 from itertools import chain
@@ -948,7 +947,6 @@ class Repository(object):
         # in setdefault, this should not be changed without profiling.
         for eid in eids:
             etype = self.type_from_eid(eid, cnx)
-            # XXX should cache entity's cw_metainformation
             entity = cnx.entity_from_eid(eid, etype)
             try:
                 data_by_etype[etype].append(entity)

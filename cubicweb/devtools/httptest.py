@@ -20,7 +20,7 @@ http server
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 import random
 import threading

@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """helper classes to generate simple (X)HTML tags"""
 
-__docformat__ = "restructuredtext en"
+
 
 from cubicweb.uilib import simple_sgml_tag, sgml_attributes
 

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """helper classes to handle server-side edition of entities"""
-__docformat__ = "restructuredtext en"
+
 
 from copy import copy
 from yams import ValidationError

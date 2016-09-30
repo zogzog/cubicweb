@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,16 +17,12 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Core hooks: set generic metadata"""
 
-__docformat__ = "restructuredtext en"
-
 from datetime import datetime
-from base64 import b64encode
 
 from pytz import utc
 
 from cubicweb.predicates import is_instance
 from cubicweb.server import hook
-from cubicweb.server.edition import EditedEntity
 
 
 class MetaDataHook(hook.Hook):

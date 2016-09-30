@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,9 +27,10 @@ from six import PY2, integer_types, binary_type, text_type
 
 from logilab.common.testlib import TestCase, unittest_main
 from rql import BadRQLQuery
+from rql.utils import register_function, FunctionDescr
 
 from cubicweb import QueryError, Unauthorized, Binary
-from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.server.sqlutils import SQL_CONNECT_HOOKS, SQL_PREFIX
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.querier import manual_build_descr, _make_description
 from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
@@ -40,27 +41,33 @@ from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
 class FixedOffset(tzinfo):
     def __init__(self, hours=0):
         self.hours = hours
+
     def utcoffset(self, dt):
         return timedelta(hours=self.hours)
+
     def dst(self, dt):
         return timedelta(0)
 
 
 # register priority/severity sorting registered procedure
-from rql.utils import register_function, FunctionDescr
 
 class group_sort_value(FunctionDescr):
     supported_backends = ('sqlite',)
     rtype = 'Int'
+
 try:
     register_function(group_sort_value)
 except AssertionError:
     pass
-from cubicweb.server.sqlutils import SQL_CONNECT_HOOKS
+
+
 def init_sqlite_connexion(cnx):
+
     def group_sort_value(text):
-        return {"managers": "3", "users": "2", "guests":  "1", "owners": "0"}[text]
+        return {"managers": "3", "users": "2", "guests": "1", "owners": "0"}[text]
+
     cnx.create_function("GROUP_SORT_VALUE", 1, group_sort_value)
+
 SQL_CONNECT_HOOKS['sqlite'].append(init_sqlite_connexion)
 
 
@@ -1492,7 +1499,6 @@ Any P1,B,E WHERE P1 identity P2 WITH
                             {'x':self.session.user.eid})
         self.assertEqual(rset.rows, [[u'\xe9name0']])
 
-
     def test_nonregr_description(self):
         """check that a correct description is built in case where infered
         solutions may be "fusionned" into one by the querier while all solutions
@@ -1506,7 +1512,6 @@ Any P1,B,E WHERE P1 identity P2 WITH
         rset = self.qexecute('Any X WHERE X in_basket B, B eid %s' % beid)
         self.assertEqual(len(rset), 2)
         self.assertEqual(rset.description, [('Personne',), ('Societe',)])
-
 
     def test_nonregr_cache_1(self):
         peid = self.qexecute("INSERT Personne X: X nom 'bidule'")[0][0]
@@ -1561,7 +1566,6 @@ Any P1,B,E WHERE P1 identity P2 WITH
         rset = self.qexecute('Any O WHERE O is State, NOT S destination_state O, '
                              'S eid %(x)s, S transition_of ET, O state_of ET', {'x': teid})
         self.assertEqual(len(rset), 1)
-
 
     def test_nonregr_set_datetime(self):
         # huum, psycopg specific

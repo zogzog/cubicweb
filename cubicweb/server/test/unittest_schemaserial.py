@@ -17,19 +17,21 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for schema rql (de)serialization"""
 
+from logilab.database import get_db_helper
+
+from yams import register_base_type, unregister_base_type
+
 from cubicweb import Binary
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.devtools.testlib import BaseTestCase as TestCase, CubicWebTC
-
 from cubicweb.server.schemaserial import (updateeschema2rql, updaterschema2rql, rschema2rql,
                                           eschema2rql, rdef2rql, specialize2rql,
                                           _erperms2rql as erperms2rql)
 
-from logilab.database import get_db_helper
-from yams import register_base_type, unregister_base_type
 
 schema = config = None
+
 def setUpModule(*args):
     register_base_type('BabarTestType', ('jungle_speed',))
     helper = get_db_helper('sqlite')

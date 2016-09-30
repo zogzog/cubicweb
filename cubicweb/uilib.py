@@ -22,7 +22,7 @@ contains some functions designed to help implementation of cubicweb user
 interface.
 """
 
-__docformat__ = "restructuredtext en"
+
 
 import csv
 import re

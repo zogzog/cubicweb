@@ -118,7 +118,7 @@ checking for dark-corner case where it can't be verified properly.
 .. Controlling the generic relation fields
 """
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from warnings import warn

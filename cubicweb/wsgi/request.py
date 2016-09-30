@@ -23,7 +23,7 @@ the code has been taken (or adapted) from Djanco source code :
 
 """
 
-__docformat__ = "restructuredtext en"
+
 
 import tempfile
 

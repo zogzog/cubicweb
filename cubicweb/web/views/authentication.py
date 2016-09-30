@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """user authentication component"""
 
-__docformat__ = "restructuredtext en"
+
 
 from logilab.common.deprecation import class_renamed
 

@@ -19,7 +19,7 @@
 """looping task for dumping instance's stats in a file
 """
 
-__docformat__ = "restructuredtext en"
+
 
 from datetime import datetime
 import json

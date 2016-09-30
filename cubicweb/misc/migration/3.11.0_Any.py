@@ -1,5 +1,3 @@
-from datetime import datetime
-
 for rtype in ('cw_support', 'cw_dont_cross', 'cw_may_cross'):
     drop_relation_type(rtype)
 

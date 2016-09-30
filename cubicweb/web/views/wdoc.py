@@ -19,7 +19,7 @@
 CubicWeb and cubes
 
 """
-__docformat__ = "restructuredtext en"
+
 
 from itertools import chain
 from os.path import join

@@ -1,4 +1,4 @@
-# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,6 +26,7 @@ from logilab.common.decorators import clear_cache
 from cubicweb import validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.server import SOURCE_TYPES, hook
+
 
 class SourceHook(hook.Hook):
     __abstract__ = True

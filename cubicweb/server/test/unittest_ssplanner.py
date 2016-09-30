@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,17 +20,20 @@ from cubicweb.devtools import TestServerConfiguration, get_test_db_handler
 from cubicweb.devtools.repotest import BasePlannerTC, check_plan
 from cubicweb.server.ssplanner import SSPlanner
 
-# keep cnx so it's not garbage collected and the associated session closed
+
 def setUpModule(*args):
+    # keep cnx so it's not garbage collected and the associated session closed
     global repo, cnx
     handler = get_test_db_handler(TestServerConfiguration('data', __file__))
     handler.build_db_cache()
     global repo, cnx
     repo, cnx = handler.get_repo_and_cnx()
 
+
 def tearDownModule(*args):
     global repo, cnx
     del repo, cnx
+
 
 class SSPlannerTC(BasePlannerTC):
     _test = check_plan

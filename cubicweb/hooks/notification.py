@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """some hooks to handle notification on entity's changes"""
 
-__docformat__ = "restructuredtext en"
+
 
 from logilab.common.textutils import normalize_text
 from logilab.common.deprecation import deprecated

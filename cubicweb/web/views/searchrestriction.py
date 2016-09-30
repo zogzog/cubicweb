@@ -19,7 +19,7 @@
 a search
 
 """
-__docformat__ = "restructuredtext en"
+
 
 from logilab.common.deprecation import moved
 

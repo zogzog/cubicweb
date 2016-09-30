@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """WSGI request handler for cubicweb"""
 
-__docformat__ = "restructuredtext en"
+
 
 from itertools import chain, repeat
 

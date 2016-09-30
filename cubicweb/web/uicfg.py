@@ -18,7 +18,7 @@
 """
 This module has been moved to web.views.uicfg.
 """
-__docformat__ = "restructuredtext en"
+
 
 from warnings import warn
 from cubicweb.web.views.uicfg import *

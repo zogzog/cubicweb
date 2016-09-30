@@ -19,23 +19,18 @@
 CWSourceHostConfig, CWSourceSchemaConfig).
 """
 
-__docformat__ = "restructuredtext en"
-from cubicweb import _
-
 import logging
-from itertools import repeat
 
 from six.moves import range
 
-from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
 
+from cubicweb import _
 from cubicweb import Unauthorized, tags
 from cubicweb.utils import make_uid
 from cubicweb.predicates import (is_instance, score_entity, has_related_entities,
                                  match_user_groups, match_kwargs, match_view, one_line_rset)
 from cubicweb.view import EntityView, StartupView
-from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
 from cubicweb.web import Redirect, formwidgets as wdgs, facet, action
 from cubicweb.web.views import add_etype_button
 from cubicweb.web.views import (uicfg, tabs, actions, ibreadcrumbs, navigation,

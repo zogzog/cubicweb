@@ -18,7 +18,7 @@
 """produces some Ontology Web Language schema and views
 
 """
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from six.moves import range

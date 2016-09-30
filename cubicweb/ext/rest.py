@@ -32,7 +32,7 @@ following ReST directives:
 * `rql-table`, create a table from a RQL query
 
 """
-__docformat__ = "restructuredtext en"
+
 
 import sys
 from itertools import chain

@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """security management and error screens"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 

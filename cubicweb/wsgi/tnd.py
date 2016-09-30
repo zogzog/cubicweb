@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """tornado wsgi server for CubicWeb web instances"""
 
-__docformat__ = "restructuredtext en"
+
 
 
 from cubicweb.wsgi.handler import CubicWebWSGIApplication

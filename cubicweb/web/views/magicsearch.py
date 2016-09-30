@@ -18,7 +18,7 @@
 """a query processor to handle quick search shortcuts for cubicweb
 """
 
-__docformat__ = "restructuredtext en"
+
 
 import re
 from logging import getLogger

@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Basic views for python values (eg without any result set)
 """
-__docformat__ = "restructuredtext en"
+
 
 from six import text_type
 from six.moves import range

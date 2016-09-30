@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,7 +31,8 @@ from cubicweb.mttransforms import HAS_TAL
 from cubicweb.entity import can_use_rest_path
 from cubicweb.entities import fetch_config
 from cubicweb.uilib import soup2xhtml
-from cubicweb.schema import  RRQLExpression
+from cubicweb.schema import RRQLExpression
+
 
 class EntityTC(CubicWebTC):
 

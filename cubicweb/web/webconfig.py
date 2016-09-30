@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """web ui configuration for cubicweb instances"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 import os

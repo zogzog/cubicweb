@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """HTTP cache managers"""
 
-__docformat__ = "restructuredtext en"
+
 
 from calendar import timegm
 from datetime import datetime

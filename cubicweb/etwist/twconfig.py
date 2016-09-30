@@ -21,7 +21,7 @@
   web server integrating a repository server in the same process (only available
   if the repository part of the software is installed
 """
-__docformat__ = "restructuredtext en"
+
 
 from os.path import join
 

@@ -22,7 +22,6 @@ import os.path as osp
 from datetime import date
 from contextlib import contextmanager
 import tempfile
-from hashlib import md5
 
 from logilab.common.testlib import unittest_main, Tags, tag
 from logilab.common import tempattr

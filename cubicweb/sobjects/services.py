@@ -21,9 +21,6 @@ import threading
 
 from six import text_type
 
-from yams.schema import role_name
-
-from cubicweb import ValidationError
 from cubicweb.server import Service
 from cubicweb.predicates import match_user_groups, match_kwargs
 

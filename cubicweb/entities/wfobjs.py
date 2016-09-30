@@ -23,7 +23,7 @@
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 from six import text_type, string_types
 

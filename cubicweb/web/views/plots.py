@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """basic plot views"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from six import add_metaclass

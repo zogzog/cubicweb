@@ -19,7 +19,7 @@
 
 from __future__ import division
 
-__docformat__ = "restructuredtext en"
+
 
 import base64
 import decimal

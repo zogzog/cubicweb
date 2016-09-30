@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -250,9 +250,6 @@ Hooks and operations classes
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
-
-from warnings import warn
 from logging import getLogger
 from itertools import chain
 
@@ -267,6 +264,7 @@ from cubicweb.cwvreg import CWRegistry, CWRegistryStore
 from cubicweb.predicates import ExpectedValuePredicate, is_instance
 from cubicweb.appobject import AppObject
 
+
 ENTITIES_HOOKS = set(('before_add_entity',    'after_add_entity',
                       'before_update_entity', 'after_update_entity',
                       'before_delete_entity', 'after_delete_entity'))
@@ -276,7 +274,9 @@ SYSTEM_HOOKS = set(('server_backup', 'server_restore',
                     'server_startup', 'server_maintenance',
                     'server_shutdown', 'before_server_shutdown',
                     'session_open', 'session_close'))
+
 ALL_HOOKS = ENTITIES_HOOKS | RELATIONS_HOOKS | SYSTEM_HOOKS
+
 
 def _iter_kwargs(entities, eids_from_to, kwargs):
     if not entities and not eids_from_to:

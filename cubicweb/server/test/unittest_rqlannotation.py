@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,6 +20,7 @@
 
 from cubicweb.devtools import TestServerConfiguration, get_test_db_handler
 from cubicweb.devtools.repotest import BaseQuerierTC
+
 
 class SQLGenAnnotatorTC(BaseQuerierTC):
 

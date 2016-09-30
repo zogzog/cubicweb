@@ -18,8 +18,6 @@
 """Fake objects to ease testing of cubicweb without a fully working environment
 """
 
-__docformat__ = "restructuredtext en"
-
 from contextlib import contextmanager
 
 from six import string_types

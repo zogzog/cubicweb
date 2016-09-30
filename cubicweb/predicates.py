@@ -18,7 +18,7 @@
 """Predicate classes
 """
 
-__docformat__ = "restructuredtext en"
+
 
 import logging
 from warnings import warn

@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """CubicWeb web client application object"""
 
-__docformat__ = "restructuredtext en"
+
 
 import contextlib
 from functools import wraps

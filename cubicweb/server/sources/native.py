@@ -25,11 +25,8 @@ Notes:
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
-
 from threading import Lock
 from datetime import datetime
-from base64 import b64encode
 from contextlib import contextmanager
 from os.path import basename
 import re
@@ -38,7 +35,7 @@ import zipfile
 import logging
 import sys
 
-from six import PY2, text_type, binary_type, string_types
+from six import PY2, text_type, string_types
 from six.moves import range, cPickle as pickle
 
 from logilab.common.decorators import cached, clear_cache

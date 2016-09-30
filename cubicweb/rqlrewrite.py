@@ -20,7 +20,7 @@ tree.
 
 This is used for instance for read security checking in the repository.
 """
-__docformat__ = "restructuredtext en"
+
 
 from six import text_type, string_types
 

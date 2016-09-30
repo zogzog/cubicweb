@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """default templates for CubicWeb web client"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from logilab.mtconverter import xml_escape

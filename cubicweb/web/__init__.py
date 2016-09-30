@@ -19,7 +19,7 @@
 publisher to get a full CubicWeb web application
 """
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from six.moves.urllib.parse import quote as urlquote

@@ -42,7 +42,7 @@ Actually there exists a third form class:
 but you'll use this one rarely.
 """
 
-__docformat__ = "restructuredtext en"
+
 
 
 import time

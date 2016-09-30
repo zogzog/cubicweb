@@ -28,7 +28,7 @@ The following data actions are supported for now:
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 import sys
 import os

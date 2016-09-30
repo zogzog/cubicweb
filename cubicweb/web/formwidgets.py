@@ -93,7 +93,7 @@ argument given to :meth:`render` will be `None`.
 .. autoclass:: cubicweb.web.formwidgets.ResetButton
 .. autoclass:: cubicweb.web.formwidgets.ImgButton
 """
-__docformat__ = "restructuredtext en"
+
 
 from functools import reduce
 from datetime import date

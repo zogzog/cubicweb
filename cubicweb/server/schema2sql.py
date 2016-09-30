@@ -17,7 +17,7 @@
 # with yams. If not, see <http://www.gnu.org/licenses/>.
 """write a schema as sql"""
 
-__docformat__ = "restructuredtext en"
+
 
 from hashlib import md5
 

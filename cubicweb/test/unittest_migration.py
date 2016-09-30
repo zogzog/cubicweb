@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,13 +17,12 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.migration unit tests"""
 
-from os.path import abspath, dirname, join
+from os.path import dirname, join
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.cwconfig import CubicWebConfiguration
-from cubicweb.migration import MigrationHelper, filter_scripts, version_strictly_lower
-from cubicweb.server.migractions import ServerMigrationHelper
+from cubicweb.migration import filter_scripts, version_strictly_lower
 
 
 class Schema(dict):
@@ -35,6 +34,7 @@ TMIGRDIR = join(dirname(__file__), 'data', 'migration') + '/'
 
 class MigrTestConfig(TestServerConfiguration):
     verbosity = 0
+
     def migration_scripts_dir(cls):
         return SMIGRDIR
 

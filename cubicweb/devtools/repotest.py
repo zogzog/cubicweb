@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,8 +21,6 @@ This module contains functions to initialize a new repository.
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
-
 from pprint import pprint
 
 from logilab.common.decorators import cachedproperty
@@ -30,12 +28,15 @@ from logilab.common.testlib import SkipTest
 
 from cubicweb.devtools.testlib import RepoAccess
 
+
 def tuplify(mylist):
     return [tuple(item) for item in mylist]
+
 
 def snippet_key(a):
     # a[0] may be a dict or a key/value tuple
     return (sorted(dict(a[0]).items()), [e.expression for e in a[1]])
+
 
 def check_plan(self, rql, expected, kwargs=None):
     with self.session.new_cnx() as cnx:
@@ -43,13 +44,14 @@ def check_plan(self, rql, expected, kwargs=None):
         self.planner.build_plan(plan)
         try:
             self.assertEqual(len(plan.steps), len(expected),
-                              'expected %s steps, got %s' % (len(expected), len(plan.steps)))
+                             'expected %s steps, got %s' % (len(expected), len(plan.steps)))
             # step order is important
             for i, step in enumerate(plan.steps):
                 compare_steps(self, step.test_repr(), expected[i])
         except AssertionError:
             pprint([step.test_repr() for step in plan.steps])
             raise
+
 
 def compare_steps(self, step, expected):
     try:

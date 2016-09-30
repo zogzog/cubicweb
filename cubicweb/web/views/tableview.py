@@ -60,7 +60,7 @@ above and implement your own class.
    :members:
 """
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from warnings import warn

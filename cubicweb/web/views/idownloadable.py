@@ -19,7 +19,7 @@
 Specific views for entities adapting to IDownloadable
 =====================================================
 """
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from six.moves import range

@@ -53,7 +53,7 @@ Actions box configuration
    # primary view
    uicfg.actionbox_appearsin_addmenu.tag_object_of(('*', 'entry_of', 'Blog'), True)
 """
-__docformat__ = "restructuredtext en"
+
 
 from warnings import warn
 

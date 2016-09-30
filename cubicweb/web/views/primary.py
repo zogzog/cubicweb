@@ -37,7 +37,7 @@ views describled below. For instance:
 .. autoclass:: VerbatimAttributeView
 """
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from warnings import warn

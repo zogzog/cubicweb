@@ -49,7 +49,7 @@ to skip those classes...
 .. comment: XXX widgets
 """
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from functools import reduce

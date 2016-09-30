@@ -27,7 +27,7 @@ We can find a certain number of attributes and methods defined in this class and
 common to all the application objects.
 
 """
-__docformat__ = "restructuredtext en"
+
 
 from logging import getLogger
 

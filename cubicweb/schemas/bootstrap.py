@@ -18,7 +18,7 @@
 """core CubicWeb schema necessary for bootstrapping the actual instance's schema
 """
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition, Bytes,

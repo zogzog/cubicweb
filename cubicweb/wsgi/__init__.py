@@ -24,7 +24,7 @@ NOTE: this package borrows a lot of code to Django
 WSGI corresponding PEP: http://www.python.org/dev/peps/pep-0333/
 
 """
-__docformat__ = "restructuredtext en"
+
 
 from email import message, message_from_string
 from pprint import pformat as _pformat

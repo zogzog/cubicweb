@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Specific views for users and groups"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from hashlib import sha1 # pylint: disable=E0611

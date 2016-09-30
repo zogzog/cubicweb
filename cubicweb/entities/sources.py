@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """data source related entities"""
 
-__docformat__ = "restructuredtext en"
-
 import re
 from socket import gethostname
 import logging
@@ -28,6 +26,7 @@ from logilab.common.configuration import OptionError
 from logilab.mtconverter import xml_escape
 
 from cubicweb.entities import AnyEntity, fetch_config
+
 
 class _CWSourceCfgMixIn(object):
     @property

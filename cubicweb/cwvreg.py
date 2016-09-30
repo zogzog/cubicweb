@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,9 +19,6 @@
 Cubicweb registries
 """
 
-__docformat__ = "restructuredtext en"
-from cubicweb import _
-
 import sys
 from os.path import join, dirname, realpath
 from warnings import warn
@@ -38,6 +35,7 @@ from logilab.common.registry import RegistryStore, Registry, ObjectNotFound, Reg
 from rql import RQLHelper
 from yams.constraints import BASE_CONVERTERS
 
+from cubicweb import _
 from cubicweb import (CW_SOFTWARE_ROOT, ETYPE_NAME_MAP, CW_EVENT_MANAGER,
                       onevent, Binary, UnknownProperty, UnknownEid)
 from cubicweb.predicates import appobject_selectable, _reset_is_instance_cache

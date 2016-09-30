@@ -22,8 +22,6 @@
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
-
 import sys
 from datetime import datetime
 

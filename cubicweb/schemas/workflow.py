@@ -18,7 +18,7 @@
 """workflow related schemas
 
 """
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,

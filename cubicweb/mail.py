@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Common utilies to format / send emails."""
 
-__docformat__ = "restructuredtext en"
+
 
 from base64 import b64encode, b64decode
 from time import time

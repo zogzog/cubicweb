@@ -20,7 +20,7 @@ are much more limited for the moment)
 
 """
 
-__docformat__ = "restructuredtext en"
+
 
 from re import compile
 

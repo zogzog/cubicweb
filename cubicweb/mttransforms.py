@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """mime type transformation engine for cubicweb, based on mtconverter"""
 
-__docformat__ = "restructuredtext en"
+
 
 from logilab import mtconverter
 

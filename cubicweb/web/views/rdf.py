@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """base xml and rss views"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from six.moves import range

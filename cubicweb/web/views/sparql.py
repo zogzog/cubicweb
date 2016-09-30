@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """SPARQL integration"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from six.moves import range

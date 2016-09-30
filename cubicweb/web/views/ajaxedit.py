@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Set of views allowing edition of entities/relations using ajax"""
 
-__docformat__ = "restructuredtext en"
+
 
 from cubicweb import role
 from cubicweb.view import View

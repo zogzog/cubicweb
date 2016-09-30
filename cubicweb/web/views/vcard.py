@@ -18,7 +18,7 @@
 """vcard import / export
 
 """
-__docformat__ = "restructuredtext en"
+
 
 from cubicweb.predicates import is_instance
 from cubicweb.view import EntityView

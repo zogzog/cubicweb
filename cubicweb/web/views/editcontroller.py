@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """The edit controller, automatically handling entity form submitting"""
 
-__docformat__ = "restructuredtext en"
+
 
 from warnings import warn
 from collections import defaultdict

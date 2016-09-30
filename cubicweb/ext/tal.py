@@ -19,7 +19,7 @@
 
 """
 
-__docformat__ = "restructuredtext en"
+
 
 import sys
 import re

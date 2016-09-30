@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """html calendar views"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 import copy

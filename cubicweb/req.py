@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Base class for request/session"""
 
-__docformat__ = "restructuredtext en"
-
 from warnings import warn
 from datetime import time, datetime, timedelta
 

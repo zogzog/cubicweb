@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """bookmark related hooks"""
 
-__docformat__ = "restructuredtext en"
+
 
 from cubicweb.server import hook
 

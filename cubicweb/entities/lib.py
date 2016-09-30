@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """entity classes for optional library entities"""
 
-__docformat__ = "restructuredtext en"
+
 from warnings import warn
 from datetime import datetime
 

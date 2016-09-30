@@ -18,7 +18,7 @@
 """server.serverconfig definition"""
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
+
 
 import sys
 from os.path import join, exists

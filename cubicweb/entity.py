@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Base class for entity objects manipulated in clients"""
-
-__docformat__ = "restructuredtext en"
 
 from warnings import warn
 
@@ -46,6 +44,7 @@ from cubicweb.uilib import soup2xhtml
 from cubicweb.mttransforms import ENGINE
 
 _marker = object()
+
 
 def greater_card(rschema, subjtypes, objtypes, index):
     for subjtype in subjtypes:

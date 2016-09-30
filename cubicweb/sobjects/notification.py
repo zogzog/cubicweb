@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """some views to handle notification on data changes"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from itertools import repeat

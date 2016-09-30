@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Hooks for synchronizing computed attributes"""
 
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from collections import defaultdict

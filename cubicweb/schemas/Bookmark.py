@@ -18,7 +18,7 @@
 """the Bookmark entity type for internal links
 
 """
-__docformat__ = "restructuredtext en"
+
 from cubicweb import _
 
 from yams.buildobjs import EntityType, RelationType, SubjectRelation, String

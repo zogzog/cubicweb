@@ -22,7 +22,7 @@ Take care to security when you're using it, think about the user that
 will provide the text to analyze...
 """
 
-__docformat__ = "restructuredtext en"
+
 
 import re
 

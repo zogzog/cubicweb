@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """entity classes user and group entities"""
 
-__docformat__ = "restructuredtext en"
+
 
 from six import string_types, text_type
 

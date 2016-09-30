@@ -43,7 +43,7 @@ be clearer to read than a bunch of sequential function calls.
 .. autoclass:: cubicweb.web.uihelper.FormConfig
 
 """
-__docformat__ = "restructuredtext en"
+
 
 from six import add_metaclass
 
