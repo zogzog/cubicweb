@@ -248,7 +248,6 @@ class ISerializableTC(CubicWebTC):
             serializer = entity.cw_adapt_to('ISerializable')
             expected = {
                 'cw_etype': u'CWGroup',
-                'cw_source': 'system',
                 'eid': entity.eid,
                 'cwuri': u'http://testing.fr/cubicweb/%s' % entity.eid,
                 'creation_date': entity.creation_date,
