@@ -843,8 +843,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if extid is not None:
             assert isinstance(extid, binary_type)
             extid = b64encode(extid).decode('ascii')
-        attrs = {'type': text_type(entity.cw_etype), 'eid': entity.eid, 'extid': extid,
-                 'asource': text_type(source.uri)}
+        attrs = {'type': text_type(entity.cw_etype), 'eid': entity.eid, 'extid': extid}
         self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
 
@@ -1334,7 +1333,6 @@ def sql_schema(driver):
 CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
-  asource VARCHAR(128) NOT NULL,
   extid VARCHAR(256)
 );;
 CREATE INDEX entities_type_idx ON entities(type);;

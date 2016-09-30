@@ -92,12 +92,6 @@ class SourceConfigUpdatedOp(hook.DataOperationMixIn, hook.Operation):
 class SourceRenamedOp(hook.LateOperation):
     oldname = newname = None # make pylint happy
 
-    def precommit_event(self):
-        source = self.cnx.repo.sources_by_uri[self.oldname]
-        sql = 'UPDATE entities SET asource=%(newname)s WHERE asource=%(oldname)s'
-        self.cnx.system_sql(sql, {'oldname': self.oldname,
-                                      'newname': self.newname})
-
     def postcommit_event(self):
         repo = self.cnx.repo
         # XXX race condition

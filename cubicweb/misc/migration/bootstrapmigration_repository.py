@@ -54,23 +54,6 @@ def replace_eid_sequence_with_eid_numrange(session):
     cursor.execute(dbh.sql_restart_numrange('entities_id_seq', initial_value=lasteid))
     session.commit()
 
-if applcubicwebversion <= (3, 13, 0) and cubicwebversion >= (3, 13, 1):
-    sql('ALTER TABLE entities ADD asource VARCHAR(64)')
-    sql('UPDATE entities SET asource=cw_name  '
-        'FROM cw_CWSource, cw_source_relation '
-        'WHERE entities.eid=cw_source_relation.eid_from AND cw_source_relation.eid_to=cw_CWSource.cw_eid')
-    commit()
-
-if applcubicwebversion <= (3, 14, 4) and cubicwebversion >= (3, 14, 4):
-    from cubicweb.server import schema2sql as y2sql
-    dbhelper = repo.system_source.dbhelper
-    rdefdef = schema['CWSource'].rdef('name')
-    attrtype = y2sql.type_from_constraints(dbhelper, rdefdef.object, rdefdef.constraints).split()[0]
-    cursor = session.cnxset.cu
-    sql('UPDATE entities SET asource = source WHERE asource is NULL')
-    dbhelper.change_col_type(cursor, 'entities', 'asource', attrtype, False)
-    dbhelper.change_col_type(cursor, 'entities', 'source', attrtype, False)
-
 if applcubicwebversion < (3, 19, 0) and cubicwebversion >= (3, 19, 0):
     try: 
         # need explicit drop of the indexes on some database systems (sqlserver)

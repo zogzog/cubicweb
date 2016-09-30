@@ -303,10 +303,10 @@ class MassiveObjectStore(stores.RQLObjectStore):
         for parent_eschema in chain(eschema.ancestors(), [eschema]):
             self._insert_meta_relation(etype, parent_eschema.eid, 'is_instance_of_relation')
         # finally insert records into the entities table
-        self.sql("INSERT INTO entities (eid, type, asource, extid) "
-                 "SELECT cw_eid, '%s', '%s', extid FROM cw_%s "
+        self.sql("INSERT INTO entities (eid, type, extid) "
+                 "SELECT cw_eid, '%s', extid FROM cw_%s "
                  "WHERE NOT EXISTS (SELECT 1 FROM entities WHERE eid=cw_eid)"
-                 % (etype, self.metagen.source.uri, etype.lower()))
+                 % (etype, etype.lower()))
 
     def _insert_meta_relation(self, etype, eid_to, rtype):
         self.sql("INSERT INTO %s (eid_from, eid_to) SELECT cw_eid, %s FROM cw_%s "

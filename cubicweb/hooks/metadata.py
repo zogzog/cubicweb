@@ -194,8 +194,7 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             syssource = newsource.repo_source
             oldsource = self._cw.entity_from_eid(schange[self.eidfrom])
             entity = self._cw.entity_from_eid(self.eidfrom)
-            attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': None,
-                     'asource': 'system'}
+            attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': None}
             self._cw.system_sql(syssource.sqlgen.update('entities', attrs, ['eid']), attrs)
             # register an operation to update repository/sources caches
             ChangeEntitySourceUpdateCaches(self._cw, entity=entity,

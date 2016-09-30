@@ -403,9 +403,6 @@ class SQLGenSourceWrapper(object):
         self._sql_entities[sql].append(attrs)
 
     def _handle_insert_entity_sql(self, cnx, sql, attrs):
-        # We have to overwrite the source given in parameters
-        # as here, we directly use the system source
-        attrs['asource'] = self.system_source.uri
         self._sql_eids[sql].append(attrs)
 
     def _handle_is_relation_sql(self, cnx, sql, attrs):
@@ -426,8 +423,7 @@ class SQLGenSourceWrapper(object):
         if extid is not None:
             assert isinstance(extid, binary_type)
             extid = b64encode(extid).decode('ascii')
-        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
-                 'asource': source.uri}
+        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid}
         self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         self._handle_is_relation_sql(cnx, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
