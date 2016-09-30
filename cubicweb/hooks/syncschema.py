@@ -311,9 +311,9 @@ class CWETypeRenameOp(MemSchemaOperation):
         self.info('renamed table %s to %s', oldname, newname)
         sqlexec('UPDATE entities SET type=%(newname)s WHERE type=%(oldname)s',
                 {'newname': newname, 'oldname': oldname})
-        for eid, (etype, extid, auri) in cnx.repo._type_source_cache.items():
+        for eid, (etype, extid) in cnx.repo._type_extid_cache.items():
             if etype == oldname:
-                cnx.repo._type_source_cache[eid] = (newname, extid, auri)
+                cnx.repo._type_extid_cache[eid] = (newname, extid)
         # recreate the indexes
         for rschema in eschema.subject_relations():
             if rschema.inlined or (rschema.final and eschema.rdef(rschema.type).indexed):

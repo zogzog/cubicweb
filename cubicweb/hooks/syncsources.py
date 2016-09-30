@@ -104,7 +104,6 @@ class SourceRenamedOp(hook.LateOperation):
         source.uri = self.newname
         source.public_config['uri'] = self.newname
         repo.sources_by_uri[self.newname] = source
-        repo._type_source_cache.clear()
         clear_cache(repo, 'source_defs')
 
 

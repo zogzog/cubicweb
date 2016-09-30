@@ -157,15 +157,13 @@ class UpdateFTIHook(MetaDataHook):
 # entity source handling #######################################################
 
 class ChangeEntitySourceUpdateCaches(hook.Operation):
-    oldsource = newsource = entity = None # make pylint happy
+    oldsource = entity = None # make pylint happy
 
     def postcommit_event(self):
         self.oldsource.reset_caches()
         repo = self.cnx.repo
         entity = self.entity
-        extid = entity.cw_metainformation()['extid']
-        repo._type_source_cache[entity.eid] = (
-            entity.cw_etype, None, self.newsource.uri)
+        repo._type_extid_cache[entity.eid] = (entity.cw_etype, None)
 
 
 class ChangeEntitySourceDeleteHook(MetaDataHook):
@@ -205,5 +203,4 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             self._cw.system_sql(syssource.sqlgen.update('entities', attrs, ['eid']), attrs)
             # register an operation to update repository/sources caches
             ChangeEntitySourceUpdateCaches(self._cw, entity=entity,
-                                           oldsource=oldsource.repo_source,
-                                           newsource=syssource)
+                                           oldsource=oldsource.repo_source)

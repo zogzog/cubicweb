@@ -337,7 +337,6 @@ def check_mandatory_relations(schema, cnx, eids, fix=1):
                 for entity in cnx.execute(rql).entities():
                     sys.stderr.write(msg % (entity.cw_etype, entity.eid, role, rschema))
                     if fix:
-                        #if entity.cw_describe()['source']['uri'] == 'system': XXX
                         entity.cw_delete() # XXX this is BRUTAL!
                     notify_fixed(fix)
 

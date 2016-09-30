@@ -50,7 +50,6 @@ class RQLObjectStoreTC(CubicWebTC):
             self.assertEqual(user.created_by[0].eid, cnx.user.eid)
             self.assertEqual(user.owned_by[0].eid, cnx.user.eid)
             self.assertEqual(user.cw_source[0].name, self.source_name)
-            self.assertEqual(cnx.describe(user.eid), ('CWUser', self.source_name, self.user_extid))
             groups = cnx.execute('CWGroup X WHERE U in_group X, U login "lgn"')
             self.assertEqual(group_eid, groups.one().eid)
             # Check data update

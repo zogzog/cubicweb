@@ -197,8 +197,6 @@ class RepositoryTC(CubicWebTC):
         repo = self.repo
         session = repo.new_session(self.admlogin, password=self.admpassword)
         with session.new_cnx() as cnx:
-            self.assertEqual(repo.type_and_source_from_eid(2, cnx),
-                             ('CWGroup', None, 'system'))
             self.assertEqual(repo.type_from_eid(2, cnx), 'CWGroup')
         session.close()
 

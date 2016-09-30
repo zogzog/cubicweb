@@ -94,7 +94,7 @@ class ProcessInformationView(StartupView):
         stats['looping_tasks'] = ', '.join('%s (%s seconds)' % (n, i) for n, i in stats['looping_tasks'])
         stats['threads'] = ', '.join(sorted(stats['threads']))
         for k in stats:
-            if k == 'type_source_cache_size':
+            if k == 'type_extid_cache_size':
                 continue
             if k.endswith('_cache_size'):
                 stats[k] = '%s / %s' % (stats[k]['size'], stats[k]['maxsize'])

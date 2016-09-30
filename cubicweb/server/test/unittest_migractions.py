@@ -351,7 +351,7 @@ class MigrationCommandsTC(MigrationTC):
     def test_rename_entity_type(self):
         with self.mh() as (cnx, mh):
             entity = mh.create_entity('Old', name=u'old')
-            self.repo.type_and_source_from_eid(entity.eid, entity._cw)
+            self.repo.type_from_eid(entity.eid, entity._cw)
             mh.cmd_rename_entity_type('Old', 'New')
             dbh = self.repo.system_source.dbhelper
             indices = set(dbh.list_indices(cnx.cnxset.cu, 'cw_New'))

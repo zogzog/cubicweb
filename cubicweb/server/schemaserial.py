@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -149,7 +149,7 @@ def deserialize_schema(schema, cnx):
                     {'x': etype, 'n': netype})
             cnx.commit(False)
             tocleanup = [eid]
-            tocleanup += (eid for eid, cached in repo._type_source_cache.items()
+            tocleanup += (eid for eid, cached in repo._type_extid_cache.items()
                           if etype == cached[0])
             repo.clear_caches(tocleanup)
             cnx.commit(False)

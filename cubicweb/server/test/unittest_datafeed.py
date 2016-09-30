@@ -89,10 +89,10 @@ class DataFeedTC(CubicWebTC):
                                   'extid': b'http://www.cubicweb.org/'}
                                  )
                 # test repo cache keys
-                self.assertEqual(self.repo._type_source_cache[entity.eid],
-                                 ('Card', b'http://www.cubicweb.org/', u'ô myfeed'))
-                self.assertEqual(self.repo._type_source_cache[entity.eid],
-                                 ('Card', b'http://www.cubicweb.org/', u'ô myfeed'))
+                self.assertEqual(self.repo._type_extid_cache[entity.eid],
+                                 ('Card', b'http://www.cubicweb.org/'))
+                self.assertEqual(self.repo._type_extid_cache[entity.eid],
+                                 ('Card', b'http://www.cubicweb.org/'))
 
                 self.assertTrue(dfsource.latest_retrieval)
                 self.assertTrue(dfsource.fresh())
@@ -108,8 +108,8 @@ class DataFeedTC(CubicWebTC):
                              {'type': 'Card',
                               'extid': b'http://www.cubicweb.org/'}
                              )
-            self.assertEqual(self.repo._type_source_cache[entity.eid],
-                             ('Card', b'http://www.cubicweb.org/', 'myrenamedfeed'))
+            self.assertEqual(self.repo._type_extid_cache[entity.eid],
+                             ('Card', b'http://www.cubicweb.org/'))
 
             # test_delete_source
             cnx.execute('DELETE CWSource S WHERE S name "myrenamedfeed"')

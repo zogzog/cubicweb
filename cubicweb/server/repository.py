@@ -180,8 +180,8 @@ class Repository(object):
         self.sources_by_uri = {'system': self.system_source}
         # querier helper, need to be created after sources initialization
         self.querier = querier.QuerierHelper(self, self.schema)
-        # cache eid -> (type, extid, actual source)
-        self._type_source_cache = {}
+        # cache eid -> (type, extid)
+        self._type_extid_cache = {}
         # cache extid -> eid
         # open some connection sets
         if config.init_cnxset_pool:
@@ -711,39 +711,37 @@ class Repository(object):
         return session
 
     # data sources handling ###################################################
-    # * correspondance between eid and (type, source)
+    # * correspondance between eid and type
     # * correspondance between eid and local id (i.e. specific to a given source)
 
-    def type_and_source_from_eid(self, eid, cnx):
-        """return a tuple `(type, extid, actual source uri)` for the entity of
-        the given `eid`
-        """
-        try:
-            eid = int(eid)
-        except ValueError:
-            raise UnknownEid(eid)
-        try:
-            return self._type_source_cache[eid]
-        except KeyError:
-            etype, extid, auri = self.system_source.eid_type_source(cnx, eid)
-            self._type_source_cache[eid] = (etype, extid, auri)
-            return etype, extid, auri
-
     def clear_caches(self, eids):
-        etcache = self._type_source_cache
+        etcache = self._type_extid_cache
         rqlcache = self.querier._rql_cache
         for eid in eids:
             try:
-                etype, extid, auri = etcache.pop(int(eid))  # may be a string in some cases
+                etype, extid = etcache.pop(int(eid))  # may be a string in some cases
                 rqlcache.pop(('%s X WHERE X eid %s' % (etype, eid),), None)
             except KeyError:
                 etype = None
             rqlcache.pop(('Any X WHERE X eid %s' % eid,), None)
             self.system_source.clear_eid_cache(eid, etype)
 
+    def type_and_extid_from_eid(self, eid, cnx):
+        """Return the type and extid of the entity with id `eid`."""
+        try:
+            eid = int(eid)
+        except ValueError:
+            raise UnknownEid(eid)
+        try:
+            return self._type_extid_cache[eid]
+        except KeyError:
+            etype, extid = self.system_source.eid_type_extid(cnx, eid)
+            self._type_extid_cache[eid] = (etype, extid)
+            return etype, extid
+
     def type_from_eid(self, eid, cnx):
-        """return the type of the entity with id <eid>"""
-        return self.type_and_source_from_eid(eid, cnx)[0]
+        """Return the type of the entity with id `eid`"""
+        return self.type_and_extid_from_eid(eid, cnx)[0]
 
     def querier_cache_key(self, cnx, rql, args, eidkeys):
         cachekey = [rql]
@@ -815,7 +813,7 @@ class Repository(object):
             extid = None
         else:
             extid = source.get_extid(entity)
-        self._type_source_cache[entity.eid] = (entity.cw_etype, extid, source.uri)
+        self._type_extid_cache[entity.eid] = (entity.cw_etype, extid)
         return extid
 
     def glob_add_entity(self, cnx, edited):

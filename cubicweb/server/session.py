@@ -779,22 +779,11 @@ class Connection(RequestSessionBase):
     def source_defs(self):
         return self.repo.source_defs()
 
-    @deprecated('[3.19] use .entity_metas(eid) instead')
-    @_open_only
-    def describe(self, eid, asdict=False):
-        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        etype, extid, source = self.repo.type_and_source_from_eid(eid, self)
-        metas = {'type': etype, 'source': source, 'extid': extid}
-        if asdict:
-            metas['asource'] = metas['source']  # XXX pre 3.19 client compat
-            return metas
-        return etype, source, extid
-
     @_open_only
     def entity_metas(self, eid):
-        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        etype, extid, source = self.repo.type_and_source_from_eid(eid, self)
-        return {'type': etype, 'source': source, 'extid': extid}
+        """Return a dictionary {type, extid}) for the entity with id `eid`."""
+        etype, extid = self.repo.type_and_extid_from_eid(eid, self)
+        return {'type': etype, 'extid': extid}
 
     # core method #############################################################
 
@@ -952,10 +941,8 @@ class Connection(RequestSessionBase):
 
     @_open_only
     def rtype_eids_rdef(self, rtype, eidfrom, eidto):
-        # use type_and_source_from_eid instead of type_from_eid for optimization
-        # (avoid two extra methods call)
-        subjtype = self.repo.type_and_source_from_eid(eidfrom, self)[0]
-        objtype = self.repo.type_and_source_from_eid(eidto, self)[0]
+        subjtype = self.repo.type_from_eid(eidfrom, self)
+        objtype = self.repo.type_from_eid(eidto, self)
         return self.vreg.schema.rschema(rtype).rdefs[(subjtype, objtype)]
 
 

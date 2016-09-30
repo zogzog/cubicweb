@@ -500,9 +500,3 @@ class RequestSessionBase(object):
         """
         url = self._base_url(secure=secure)
         return url if url is None else url.rstrip('/') + '/'
-
-    # abstract methods to override according to the web front-end #############
-
-    def describe(self, eid, asdict=False):
-        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        raise NotImplementedError

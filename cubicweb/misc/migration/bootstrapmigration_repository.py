@@ -70,10 +70,6 @@ if applcubicwebversion <= (3, 14, 4) and cubicwebversion >= (3, 14, 4):
     dbhelper.change_col_type(cursor, 'entities', 'asource', attrtype, False)
     dbhelper.change_col_type(cursor, 'entities', 'source', attrtype, False)
 
-    # we now have a functional asource column, start using the normal eid_type_source method
-    if repo.system_source.eid_type_source == repo.system_source.eid_type_source_pre_131:
-        del repo.system_source.eid_type_source
-
 if applcubicwebversion < (3, 19, 0) and cubicwebversion >= (3, 19, 0):
     try: 
         # need explicit drop of the indexes on some database systems (sqlserver)
@@ -338,21 +334,6 @@ if not ('CWUniqueTogetherConstraint', 'CWRType') in schema['relations'].rdefs:
     commit()
     drop_relation_definition('CWUniqueTogetherConstraint', 'relations', 'CWAttribute')
     drop_relation_definition('CWUniqueTogetherConstraint', 'relations', 'CWRelation')
-
-
-if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
-
-    with hooks_control(session, session.HOOKS_ALLOW_ALL, 'integrity'):
-        session.set_shared_data('do-not-insert-cwuri', True)
-        add_relation_type('cwuri')
-        base_url = session.base_url()
-        for eid, in rql('Any X', ask_confirm=False):
-            type, source, extid = session.describe(eid)
-            if source == 'system':
-                rql('SET X cwuri %(u)s WHERE X eid %(x)s',
-                    {'x': eid, 'u': u'%s%s' % (base_url, eid)})
-        isession.commit()
-        session.set_shared_data('do-not-insert-cwuri', False)
 
 if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
     # check that migration is not doomed

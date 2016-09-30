@@ -441,12 +441,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 self.open_source_connections()
 
     def init(self, activated, source_entity):
-        try:
-            # test if 'asource' column exists
-            query = self.dbhelper.sql_add_limit_offset('SELECT asource FROM entities', 1)
-            source_entity._cw.system_sql(query)
-        except Exception:
-            self.eid_type_source = self.eid_type_source_pre_131
         super(NativeSQLSource, self).init(activated, source_entity)
         self.init_creating(source_entity._cw.cnxset)
 
@@ -823,33 +817,19 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     # system source interface #################################################
 
-    def _eid_type_source(self, cnx, eid, sql):
+    def eid_type_extid(self, cnx, eid):  # pylint: disable=E0202
+        """return a tuple (type, extid) for the entity with id <eid>"""
+        sql = 'SELECT type, extid FROM entities WHERE eid=%s' % eid
         try:
             res = self.doexec(cnx, sql).fetchone()
             if res is not None:
+                if not isinstance(res, list):
+                    res = list(res)
+                res[-1] = self.decode_extid(res[-1])
                 return res
         except Exception:
             self.exception('failed to query entities table for eid %s', eid)
         raise UnknownEid(eid)
-
-    def eid_type_source(self, cnx, eid):  # pylint: disable=E0202
-        """return a tuple (type, extid, source) for the entity with id <eid>"""
-        sql = 'SELECT type, extid, asource FROM entities WHERE eid=%s' % eid
-        res = self._eid_type_source(cnx, eid, sql)
-        if not isinstance(res, list):
-            res = list(res)
-        res[-2] = self.decode_extid(res[-2])
-        return res
-
-    def eid_type_source_pre_131(self, cnx, eid):
-        """return a tuple (type, extid, source) for the entity with id <eid>"""
-        sql = 'SELECT type, extid FROM entities WHERE eid=%s' % eid
-        res = self._eid_type_source(cnx, eid, sql)
-        if not isinstance(res, list):
-            res = list(res)
-        res[-1] = self.decode_extid(res[-1])
-        res.append("system")
-        return res
 
     def _handle_is_relation_sql(self, cnx, sql, attrs):
         """ Handler for specific is_relation sql that may be
