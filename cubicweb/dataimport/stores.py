@@ -52,6 +52,7 @@ case the store requires additional work once everything is done.
 
 * ``finish() -> None``: additional stuff to do after import is terminated.
 
+.. autoclass:: cubicweb.dataimport.stores.NullStore
 .. autoclass:: cubicweb.dataimport.stores.RQLObjectStore
 .. autoclass:: cubicweb.dataimport.stores.NoHookRQLObjectStore
 .. autoclass:: cubicweb.dataimport.stores.MetadataGenerator
@@ -60,6 +61,7 @@ import inspect
 import warnings
 from datetime import datetime
 from copy import copy
+from itertools import count
 
 from six import text_type, add_metaclass
 
@@ -72,7 +74,44 @@ from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES
 from cubicweb.server.edition import EditedEntity
 
 
-class RQLObjectStore(object):
+class NullStore(object):
+    """Store that mainly describe the store API.
+
+    It may be handy to test input data files or to measure time taken by steps above the store
+    (e.g. data parsing, importer, etc.): simply give a :class:`NullStore` instance instead of the
+    actual store.
+    """
+
+    def __init__(self):
+        self._eid_gen = count()
+
+    def prepare_insert_entity(self, *args, **kwargs):
+        """Given an entity type, attributes and inlined relations, return the inserted entity's
+        eid.
+        """
+        return next(self._eid_gen)
+
+    def prepare_update_entity(self, etype, eid, **kwargs):
+        """Given an entity type and eid, update the corresponding entity with specified attributes
+        and inlined relations.
+        """
+
+    def prepare_insert_relation(self, eid_from, rtype, eid_to, **kwargs):
+        """Insert into the database a  relation ``rtype`` between entities with eids ``eid_from``
+        and ``eid_to``.
+        """
+
+    def flush(self):
+        """Flush internal data structures."""
+
+    def commit(self):
+        """Commit the database transaction."""
+
+    def finish(self):
+        """Import is terminated, do necessary cleanup."""
+
+
+class RQLObjectStore(NullStore):
     """Store that works by making RQL queries, hence with all the cubicweb's machinery activated.
     """
 
@@ -92,41 +131,23 @@ class RQLObjectStore(object):
         return self._cnx.execute(*args)
 
     def prepare_insert_entity(self, *args, **kwargs):
-        """Given an entity type, attributes and inlined relations, returns the inserted entity's
-        eid.
-        """
         entity = self._cnx.create_entity(*args, **kwargs)
         self.eids[entity.eid] = entity
         self.types.setdefault(args[0], []).append(entity.eid)
         return entity.eid
 
     def prepare_update_entity(self, etype, eid, **kwargs):
-        """Given an entity type and eid, updates the corresponding entity with specified attributes
-        and inlined relations.
-        """
         entity = self._cnx.entity_from_eid(eid)
         assert entity.cw_etype == etype, 'Trying to update with wrong type %s' % etype
         # XXX some inlined relations may already exists
         entity.cw_set(**kwargs)
 
     def prepare_insert_relation(self, eid_from, rtype, eid_to, **kwargs):
-        """Insert into the database a  relation ``rtype`` between entities with eids ``eid_from``
-        and ``eid_to``.
-        """
         self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                  {'x': int(eid_from), 'y': int(eid_to)})
 
-    def flush(self):
-        """Nothing to flush for this store."""
-        pass
-
     def commit(self):
-        """Commit the database transaction."""
         return self._commit()
-
-    def finish(self):
-        """Nothing to do once import is terminated for this store."""
-        pass
 
     @property
     def session(self):
