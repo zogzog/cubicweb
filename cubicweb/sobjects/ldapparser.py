@@ -1,4 +1,4 @@
-# copyright 2011-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2011-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -120,8 +120,12 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     def build_importer(self, raise_on_error):
         """Instantiate and configure an importer"""
         etypes = ('CWUser', 'EmailAddress', 'CWGroup')
-        extid2eid = dict((self.source.decode_extid(x), y) for x, y in
-                self._cw.system_sql('select extid, eid from entities where asource = %(s)s', {'s': self.source.uri}))
+        extid2eid = {}
+        for etype in etypes:
+            rset = self._cw.execute('Any XURI, X WHERE X cwuri XURI, X is {0},'
+                                    ' X cw_source S, S name %(source)s'.format(etype),
+                                    {'source': self.source.uri})
+            extid2eid.update(dict((extid.encode('ascii'), eid) for extid, eid in rset))
         existing_relations = {}
         for rtype in ('in_group', 'use_email', 'owned_by'):
             rql = 'Any S,O WHERE S {} O, S cw_source SO, SO eid %(s)s'.format(rtype)

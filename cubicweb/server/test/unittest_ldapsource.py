@@ -292,7 +292,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
             self.assertEqual(e.cw_source[0].name, 'system')
             self.assertTrue(e.creation_date)
             self.assertTrue(e.modification_date)
-            source.pull_data(cnx)
+            source.pull_data(cnx, raise_on_error=True)
             rset = cnx.execute('CWUser X WHERE X login %(login)s', {'login': 'syt'})
             self.assertEqual(len(rset), 1)
             self.assertTrue(self.repo.system_source.authenticate(cnx, 'syt', password='syt'))

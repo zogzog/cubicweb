@@ -1,4 +1,4 @@
-# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -262,11 +262,12 @@ You can set multiple groups by separating them by a comma.',
         except Exception:
             self.error('while trying to authenticate %s', user, exc_info=True)
             raise AuthenticationError()
-        eid = self.repo.system_source.extid2eid(cnx, user['dn'].encode('ascii'))
-        if eid is None or eid < 0:
+        rset = cnx.execute('Any X,SN WHERE X cwuri %(extid)s, X is CWUser, '
+                           'X cw_source S, S name SN', {'extid': user['dn']})
+        if not rset or rset[0][1] != self.uri:
             # user is not known or has been moved away from this source
             raise AuthenticationError()
-        return eid
+        return rset[0][0]
 
     def _connect(self, user=None, userpwd=None):
         protocol, host, port = self.connection_info()
