@@ -655,26 +655,16 @@ class Entity(AppObject):
             method = args[0]
         else:
             method = None
-        # in linksearch mode, we don't want external urls else selecting
-        # the object for use in the relation is tricky
-        # XXX search_state is web specific
-        use_ext_id = False
-        if 'base_url' not in kwargs and \
-               getattr(self._cw, 'search_state', ('normal',))[0] == 'normal':
-            sourcemeta = self.cw_metainformation()['source']
-            if sourcemeta.get('use-cwuri-as-url'):
-                return self.cwuri # XXX consider kwargs?
-            if sourcemeta.get('base-url'):
-                kwargs['base_url'] = sourcemeta['base-url']
-                use_ext_id = True
         if method in (None, 'view'):
-            kwargs['_restpath'] = self.rest_path(use_ext_id)
+            kwargs['_restpath'] = self.rest_path()
         else:
             kwargs['rql'] = 'Any X WHERE X eid %s' % self.eid
         return self._cw.build_url(method, **kwargs)
 
-    def rest_path(self, use_ext_eid=False): # XXX cw_rest_path
+    def rest_path(self, *args, **kwargs): # XXX cw_rest_path
         """returns a REST-like (relative) path for this entity"""
+        if args or kwargs:
+            warn("[3.24] rest_path doesn't take parameters anymore", DeprecationWarning)
         mainattr, needcheck = self.cw_rest_attr_info()
         etype = str(self.e_schema)
         path = etype.lower()
@@ -696,10 +686,7 @@ class Entity(AppObject):
                     mainattr = 'eid'
                     path = None
         if mainattr == 'eid':
-            if use_ext_eid:
-                value = self.cw_metainformation()['extid']
-            else:
-                value = self.eid
+            value = self.eid
         if path is None:
             # fallback url: <base-url>/<eid> url is used as cw entities uri,
             # prefer it to <base-url>/<etype>/eid/<eid>
@@ -889,9 +876,7 @@ class Entity(AppObject):
             selected.append((attr, var))
         # +1 since this doesn't include the main variable
         lastattr = len(selected) + 1
-        # don't fetch extra relation if attributes specified or of the entity is
-        # coming from an external source (may lead to error)
-        if attributes is None and self.cw_metainformation()['source']['uri'] == 'system':
+        if attributes is None:
             # fetch additional relations (restricted to 0..1 relations)
             for rschema, role in self._cw_to_complete_relations():
                 rtype = rschema.type

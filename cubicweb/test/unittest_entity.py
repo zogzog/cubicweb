@@ -831,18 +831,13 @@ du :eid:`1:*ReST*`'''
             note.cw_set(ecrit_par=person.eid)
             self.assertEqual(len(person.reverse_ecrit_par), 2)
 
-    def test_metainformation_and_external_absolute_url(self):
+    def test_metainformation(self):
         with self.admin_access.web_request() as req:
             note = req.create_entity('Note', type=u'z')
             metainf = note.cw_metainformation()
             self.assertEqual(metainf, {'source': {'type': 'native', 'uri': 'system',
                                                   'use-cwuri-as-url': False},
                                        'type': u'Note', 'extid': None})
-            self.assertEqual(note.absolute_url(), 'http://testing.fr/cubicweb/note/%s' % note.eid)
-            metainf['source'] = metainf['source'].copy()
-            metainf['source']['base-url']  = 'http://cubicweb2.com/'
-            metainf['extid']  = 1234
-            self.assertEqual(note.absolute_url(), 'http://cubicweb2.com/note/1234')
 
     def test_absolute_url_empty_field(self):
         with self.admin_access.web_request() as req:
