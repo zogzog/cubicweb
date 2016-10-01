@@ -558,7 +558,7 @@ class CWRegistryStore(RegistryStore):
 
     def solutions(self, req, rqlst, args):
         def type_from_eid(eid, req=req):
-            return req.entity_metas(eid)['type']
+            return req.entity_type(eid)
         return self.rqlhelper.compute_solutions(rqlst, {'eid': type_from_eid}, args)
 
     def parse(self, req, rql, args=None):

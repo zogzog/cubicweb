@@ -87,7 +87,7 @@ class _CheckRequiredRelationOperation(hook.DataOperationMixIn,
             if rtype in pendingrtypes:
                 continue
             if not cnx.execute(self.base_rql % rtype, {'x': eid}):
-                etype = cnx.entity_metas(eid)['type']
+                etype = cnx.entity_type(eid)
                 msg = _('at least one relation %(rtype)s is required on '
                         '%(etype)s (%(eid)s)')
                 raise validation_error(eid, {(rtype, self.role): msg},

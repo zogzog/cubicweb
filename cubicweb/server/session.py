@@ -606,7 +606,7 @@ class Connection(RequestSessionBase):
             rset.rows.append([targeteid])
             if not isinstance(rset.description, list):  # else description not set
                 rset.description = list(rset.description)
-            rset.description.append([self.entity_metas(targeteid)['type']])
+            rset.description.append([self.entity_type(targeteid)])
             targetentity = self.entity_from_eid(targeteid)
             if targetentity.cw_rset is None:
                 targetentity.cw_rset = rset

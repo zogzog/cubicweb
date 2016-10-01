@@ -937,20 +937,20 @@ class CubicWebRelationSchema(PermissionMixIn, RelationSchema):
             assert not ('fromeid' in kwargs or 'toeid' in kwargs), kwargs
             assert action in ('read', 'update')
             if 'eid' in kwargs:
-                subjtype = _cw.entity_metas(kwargs['eid'])['type']
+                subjtype = _cw.entity_type(kwargs['eid'])
             else:
                 subjtype = objtype = None
         else:
             assert 'eid' not in kwargs, kwargs
             assert action in ('read', 'add', 'delete')
             if 'fromeid' in kwargs:
-                subjtype = _cw.entity_metas(kwargs['fromeid'])['type']
+                subjtype = _cw.entity_type(kwargs['fromeid'])
             elif 'frometype' in kwargs:
                 subjtype = kwargs.pop('frometype')
             else:
                 subjtype = None
             if 'toeid' in kwargs:
-                objtype = _cw.entity_metas(kwargs['toeid'])['type']
+                objtype = _cw.entity_type(kwargs['toeid'])
             elif 'toetype' in kwargs:
                 objtype = kwargs.pop('toetype')
             else:

@@ -92,7 +92,7 @@ def _extract_eid_consts(plan, rqlst):
                 # to be selected)
                 if checkread and eid not in neweids:
                     with cnx.security_enabled(read=False):
-                        eschema(cnx.entity_metas(eid)['type']).check_perm(
+                        eschema(cnx.entity_type(eid)).check_perm(
                             cnx, 'read', eid=eid)
                 eidconsts[lhs.variable] = eid
     return eidconsts

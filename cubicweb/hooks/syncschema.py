@@ -1347,7 +1347,7 @@ class AfterAddPermissionHook(SyncSchemaHook):
 
     def __call__(self):
         action = self.rtype.split('_', 1)[0]
-        if self._cw.entity_metas(self.eidto)['type'] == 'CWGroup':
+        if self._cw.entity_type(self.eidto) == 'CWGroup':
             MemSchemaPermissionAdd(self._cw, action=action, eid=self.eidfrom,
                                    group_eid=self.eidto)
         else:  # RQLExpression
@@ -1368,7 +1368,7 @@ class BeforeDelPermissionHook(AfterAddPermissionHook):
         if self._cw.deleted_in_transaction(self.eidfrom):
             return
         action = self.rtype.split('_', 1)[0]
-        if self._cw.entity_metas(self.eidto)['type'] == 'CWGroup':
+        if self._cw.entity_type(self.eidto) == 'CWGroup':
             MemSchemaPermissionDel(self._cw, action=action, eid=self.eidfrom,
                                    group_eid=self.eidto)
         else:  # RQLExpression

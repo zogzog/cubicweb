@@ -644,7 +644,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         else:  # used by data import
             etypes = {}
             for subject, object in subj_obj_list:
-                etype = cnx.entity_metas(subject)['type']
+                etype = cnx.entity_type(subject)
                 if etype in etypes:
                     etypes[etype].append((subject, object))
                 else:
@@ -669,7 +669,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def _delete_relation(self, cnx, subject, rtype, object, inlined=False):
         """delete a relation from the source"""
         if inlined:
-            table = SQL_PREFIX + cnx.entity_metas(subject)['type']
+            table = SQL_PREFIX + cnx.entity_type(subject)
             column = SQL_PREFIX + rtype
             sql = 'UPDATE %s SET %s=NULL WHERE %seid=%%(eid)s' % (table, column,
                                                                   SQL_PREFIX)

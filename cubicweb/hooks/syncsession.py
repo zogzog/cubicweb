@@ -257,7 +257,7 @@ class AddForUserRelationHook(SyncSessionHook):
     def __call__(self):
         cnx = self._cw
         eidfrom = self.eidfrom
-        if not cnx.entity_metas(eidfrom)['type'] == 'CWProperty':
+        if not cnx.entity_type(eidfrom) == 'CWProperty':
             return
         key, value = cnx.execute('Any K,V WHERE P eid %(x)s,P pkey K,P value V',
                                  {'x': eidfrom})[0]
