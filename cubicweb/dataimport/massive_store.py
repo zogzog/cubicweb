@@ -45,11 +45,11 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
        store = MassiveObjectStore(cnx)
        eid_p = store.prepare_insert_entity('Person',
-                                           cwuri='http://dbpedia.org/toto',
-                                           name='Toto')
+                                           cwuri=u'http://dbpedia.org/toto',
+                                           name=u'Toto')
        eid_loc = store.prepare_insert_entity('Location',
-                                             cwuri='http://geonames.org/11111',
-                                             name='Somewhere')
+                                             cwuri=u'http://geonames.org/11111',
+                                             name=u'Somewhere')
        store.prepare_insert_relation(eid_p, 'lives_in', eid_loc)
        store.flush()
        ...
@@ -65,10 +65,11 @@ class MassiveObjectStore(stores.RQLObjectStore):
                  slave_mode=False,
                  eids_seq_range=10000,
                  metagen=None):
-        """ Create a MassiveObject store, with the following attributes:
+        """Create a MassiveObject store, with the following arguments:
 
-        - cnx: CubicWeb cnx
-        - eids_seq_range: size of eid range reserved by the store for each batch
+        - `cnx`, a connection to the repository
+        - `metagen`, optional :class:`MetadataGenerator` instance
+        - `eids_seq_range`: size of eid range reserved by the store for each batch
         """
         super(MassiveObjectStore, self).__init__(cnx)
         self.on_commit_callback = on_commit_callback
@@ -81,18 +82,14 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
         self.logger = logging.getLogger('dataimport.massive_store')
         self.sql = cnx.system_sql
-        self.schema = self._cnx.vreg.schema
+        self.schema = cnx.vreg.schema
         self.default_values = get_default_values(self.schema)
         self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
         self._dbh = PGHelper(cnx)
 
-        cnx.read_security = False
-        cnx.write_security = False
-
         self._data_entities = defaultdict(list)
         self._data_relations = defaultdict(list)
         self._initialized = set()
-
         self._constraints_dropped = self.slave_mode
 
     def _get_eid_gen(self):
