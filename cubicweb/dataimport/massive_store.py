@@ -25,8 +25,6 @@ from base64 import b64encode
 
 from six.moves import range
 
-from yams.constraints import SizeConstraint
-
 from cubicweb.dataimport import stores, pgstore
 
 
@@ -332,29 +330,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.sql("INSERT INTO %s (eid_from, eid_to) SELECT cw_eid, %s FROM cw_%s "
                  "WHERE NOT EXISTS (SELECT 1 FROM entities WHERE eid=cw_eid)"
                  % (rtype, eid_to, etype.lower()))
-
-
-def get_size_constraints(schema):
-    """analyzes yams ``schema`` and returns the list of size constraints.
-
-    The returned value is a dictionary mapping entity types to a
-    sub-dictionnaries mapping attribute names -> max size.
-    """
-    size_constraints = {}
-    # iterates on all entity types
-    for eschema in schema.entities():
-        # for each entity type, iterates on attribute definitions
-        size_constraints[eschema.type] = eschema_constraints = {}
-        for rschema, aschema in eschema.attribute_definitions():
-            # for each attribute, if a size constraint is found,
-            # append it to the size constraint list
-            maxsize = None
-            rdef = rschema.rdef(eschema, aschema)
-            for constraint in rdef.constraints:
-                if isinstance(constraint, SizeConstraint):
-                    maxsize = constraint.max
-                    eschema_constraints[rschema.type] = maxsize
-    return size_constraints
 
 
 def get_default_values(schema):
