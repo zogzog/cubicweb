@@ -1,0 +1,10 @@
+include *.py
+include */*.py
+recursive-include cubicweb_%(cubename)s *.py
+recursive-include cubicweb_%(cubename)s/data *.gif *.png *.ico *.css *.js
+recursive-include cubicweb_%(cubename)s/i18n *.po
+recursive-include cubicweb_%(cubename)s/wdoc *
+recursive-include test/data bootstrap_cubes *.py
+include tox.ini
+recursive-include debian changelog compat control copyright rules
+include cubicweb-%(cubename)s.spec
