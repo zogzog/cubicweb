@@ -30,6 +30,7 @@ from datetime import datetime, date
 from os import mkdir, chdir, path as osp
 from warnings import warn
 
+from pytz import UTC
 from six.moves import input
 
 from logilab.common import STD_BLACKLIST
@@ -651,19 +652,21 @@ layout, and a full featured cube with "full" layout.',
         }
         if verbose:
             dependencies.update(self._ask_for_dependencies())
-        context = {'cubename' : cubename,
-                   'distname' : distname,
-                   'shortdesc' : shortdesc,
-                   'longdesc' : longdesc or shortdesc,
-                   'dependencies' : dependencies,
-                   'version'  : cubicwebversion,
-                   'year'  : str(date.today().year),
-                   'author': self['author'],
-                   'author-email': self['author-email'],
-                   'author-web-site': self['author-web-site'],
-                   'license': self['license'],
-                   'long-license': self.LICENSES[self['license']],
-                   }
+        context = {
+            'cubename': cubename,
+            'distname': distname,
+            'shortdesc': shortdesc,
+            'longdesc': longdesc or shortdesc,
+            'dependencies': dependencies,
+            'version': cubicwebversion,
+            'year': str(date.today().year),
+            'author': self['author'],
+            'author-email': self['author-email'],
+            'rfc2822-date': datetime.now(tz=UTC).strftime('%a, %d %b %Y %T %z'),
+            'author-web-site': self['author-web-site'],
+            'license': self['license'],
+            'long-license': self.LICENSES[self['license']],
+        }
         exclude = SKEL_EXCLUDE
         if self['layout'] == 'simple':
             exclude += ('sobjects.py*', 'precreate.py*', 'realdb_test*',
