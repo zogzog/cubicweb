@@ -202,7 +202,7 @@ class BaseQuerierTC(TestCase):
         self._access = RepoAccess(self.repo, 'admin', FakeRequest)
         self.ueid = self.session.user.eid
         assert self.ueid != -1
-        self.repo._type_extid_cache = {} # clear cache
+        self.repo._type_cache = {} # clear cache
         self.maxeid = self.get_max_eid()
         do_monkey_patch()
         self._dumb_sessions = []

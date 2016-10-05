@@ -15,14 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Adapters for native cubicweb sources.
+"""Adapters for native cubicweb sources."""
 
-Notes:
-* extid (aka external id, the primary key of an entity in the external source
-  from which it comes from) are stored in a varchar column encoded as a base64
-  string. This is because it should actually be Bytes but we want an index on
-  it for fast querying.
-"""
 from __future__ import print_function
 
 from threading import Lock
@@ -814,16 +808,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     # system source interface #################################################
 
-    def eid_type_extid(self, cnx, eid):  # pylint: disable=E0202
-        """return a tuple (type, extid) for the entity with id <eid>"""
-        sql = 'SELECT type, extid FROM entities WHERE eid=%s' % eid
+    def eid_type(self, cnx, eid):  # pylint: disable=E0202
+        """Return the entity's type for `eid`."""
+        sql = 'SELECT type FROM entities WHERE eid=%s' % eid
         try:
             res = self.doexec(cnx, sql).fetchone()
             if res is not None:
-                if not isinstance(res, list):
-                    res = list(res)
-                res[-1] = self.decode_extid(res[-1])
-                return res
+                return res[0]
         except Exception:
             self.exception('failed to query entities table for eid %s', eid)
         raise UnknownEid(eid)
@@ -836,14 +827,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     _handle_insert_entity_sql = doexec
     _handle_is_instance_of_sql = _handle_source_relation_sql = _handle_is_relation_sql
 
-    def add_info(self, cnx, entity, source, extid):
+    def add_info(self, cnx, entity, source):
         """add type and source info for an eid into the system table"""
         assert cnx.cnxset is not None
-        # begin by inserting eid/type/source/extid into the entities table
-        if extid is not None:
-            assert isinstance(extid, binary_type)
-            extid = b64encode(extid).decode('ascii')
-        attrs = {'type': text_type(entity.cw_etype), 'eid': entity.eid, 'extid': extid}
+        # begin by inserting eid/type/source into the entities table
+        attrs = {'type': text_type(entity.cw_etype), 'eid': entity.eid}
         self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
 
@@ -1131,7 +1119,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # restore the entity
         action.changes['cw_eid'] = eid
         # restore record in entities (will update fti if needed)
-        self.add_info(cnx, entity, self, None)
+        self.add_info(cnx, entity, self)
         sql = self.sqlgen.insert(SQL_PREFIX + etype, action.changes)
         self.doexec(cnx, sql, action.changes)
         self.repo.hm.call_hooks('after_add_entity', cnx, entity=entity)
@@ -1332,8 +1320,7 @@ def sql_schema(driver):
     for sql in ("""
 CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
-  type VARCHAR(64) NOT NULL,
-  extid VARCHAR(256)
+  type VARCHAR(64) NOT NULL
 );;
 CREATE INDEX entities_type_idx ON entities(type);;
 
@@ -1387,11 +1374,6 @@ FOR EACH ROW BEGIN
     DELETE FROM tx_relation_actions WHERE tx_uuid=OLD.tx_uuid;
 END;
 '''
-    # define a multi-columns index on a single index to please sqlserver, which doesn't like several
-    # null entries in a UNIQUE column
-    for sql in helper.sqls_create_multicol_unique_index('entities', ['extid'],
-                                                        'entities_extid_idx'):
-        yield sql
 
 
 def grant_schema(user, set_owner=True):

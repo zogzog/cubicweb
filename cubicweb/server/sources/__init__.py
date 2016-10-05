@@ -192,12 +192,6 @@ class AbstractSource(object):
         else:
             self.urls = []
 
-    @staticmethod
-    def decode_extid(extid):
-        if extid is None:
-            return extid
-        return b64decode(extid)
-
     # source initialization / finalization #####################################
 
     def set_schema(self, schema):
@@ -301,10 +295,6 @@ class AbstractSource(object):
     # write modification api ###################################################
     # read-only sources don't have to implement methods below
 
-    def get_extid(self, entity):
-        """return the external id for the given newly inserted entity"""
-        raise NotImplementedError(self)
-
     def add_entity(self, cnx, entity):
         """add a new entity to the source"""
         raise NotImplementedError(self)
@@ -339,14 +329,14 @@ class AbstractSource(object):
 
     # system source interface #################################################
 
-    def eid_type_extid(self, cnx, eid):
-        """return a tuple (type, extid) for the entity with id <eid>"""
+    def eid_type(self, cnx, eid):
+        """Return the type of entity `eid`."""
         raise NotImplementedError(self)
 
     def create_eid(self, cnx):
         raise NotImplementedError(self)
 
-    def add_info(self, cnx, entity, source, extid):
+    def add_info(self, cnx, entity, source):
         """add type and source info for an eid into the system table"""
         raise NotImplementedError(self)
 

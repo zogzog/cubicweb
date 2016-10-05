@@ -414,7 +414,6 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
 SYSTEM_INDICES = {
     # see cw/server/sources/native.py
     'entities_type_idx': ('entities', 'type'),
-    'entities_extid_idx': ('entities', 'extid'),
     'transactions_tx_time_idx': ('transactions', 'tx_time'),
     'transactions_tx_user_idx': ('transactions', 'tx_user'),
     'tx_entity_actions_txa_action_idx': ('tx_entity_actions', 'txa_action'),

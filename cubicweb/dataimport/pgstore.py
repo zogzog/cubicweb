@@ -417,13 +417,10 @@ class SQLGenSourceWrapper(object):
     # add_info is _copypasted_ from the one in NativeSQLSource. We want it
     # there because it will use the _handlers of the SQLGenSourceWrapper, which
     # are not like the ones in the native source.
-    def add_info(self, cnx, entity, source, extid):
+    def add_info(self, cnx, entity, source):
         """add type and source info for an eid into the system table"""
-        # begin by inserting eid/type/source/extid into the entities table
-        if extid is not None:
-            assert isinstance(extid, binary_type)
-            extid = b64encode(extid).decode('ascii')
-        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid}
+        # begin by inserting eid/type/source into the entities table
+        attrs = {'type': entity.cw_etype, 'eid': entity.eid}
         self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         self._handle_is_relation_sql(cnx, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',

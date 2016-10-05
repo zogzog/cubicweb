@@ -213,8 +213,8 @@ class NoHookRQLObjectStore(RQLObjectStore):
         entity.cw_edited.update(kwargs, skipsec=False)
         cnx = self._cnx
         entity.eid = self._create_eid(cnx)
-        entity_source, extid = self.metagen.init_entity(entity)
-        self._system_source.add_info(cnx, entity, entity_source, extid)
+        entity_source = self.metagen.init_entity(entity)
+        self._system_source.add_info(cnx, entity, entity_source)
         self._system_source.add_entity(cnx, entity)
         kwargs = dict()
         if inspect.getargspec(self._add_relation).keywords:
@@ -288,7 +288,6 @@ class MetadataGenerator(object):
         if source is None:
             source = cnx.repo.system_source
         self.source = source
-        self._need_extid = source is not cnx.repo.system_source
         self._now = datetime.now(pytz.utc)
         # attributes/relations shared by all entities of the same type
         self._etype_attrs = []
@@ -341,20 +340,6 @@ class MetadataGenerator(object):
             if genfunc:
                 rels[rel] = genfunc(etype)
         return rels
-
-    def entity_extid(self, etype, eid, attrs):
-        """Return the extid for the entity of given type and eid, to be inserted in the 'entities'
-        system table.
-        """
-        if self._need_extid:
-            extid = attrs.get('cwuri')
-            if extid is None:
-                raise Exception('entity from an external source but no extid specified')
-            elif isinstance(extid, text_type):
-                extid = extid.encode('utf-8')
-        else:
-            extid = None
-        return extid
 
     def init_entity_attrs(self, etype, eid, attrs):
         """Insert into an entity attrs dictionary attributes whose value is set per instance, not per
@@ -412,12 +397,10 @@ class _MetaGeneratorBWCompatWrapper(object):
         return entity, rels
 
     def init_entity(self, entity):
-        # if cwuri is specified, this is an extid. It's not if it's generated in the above loop
-        extid = self._mdgen.entity_extid(entity.cw_etype, entity.eid, entity.cw_edited)
         attrs = dict(entity.cw_edited)
         self._mdgen.init_entity_attrs(entity.cw_etype, entity.eid, attrs)
         entity.cw_edited.update(attrs, skipsec=False)
-        return self._mdgen.source, extid
+        return self._mdgen.source
 
 
 @add_metaclass(class_deprecated)
@@ -482,10 +465,6 @@ class MetaGenerator(object):
         return entity, rels
 
     def init_entity(self, entity):
-        # if cwuri is specified, this is an extid. It's not if it's generated in the above loop
-        extid = entity.cw_edited.get('cwuri')
-        if isinstance(extid, text_type):
-            extid = extid.encode('utf-8')
         for attr in self.entity_attrs:
             if attr in entity.cw_edited:
                 # already set, skip this attribute
@@ -493,7 +472,7 @@ class MetaGenerator(object):
             genfunc = self.generate(attr)
             if genfunc:
                 entity.cw_edited.edited_attribute(attr, genfunc(entity))
-        return self.source, extid
+        return self.source
 
     def generate(self, rtype):
         return getattr(self, 'gen_%s' % rtype, None)

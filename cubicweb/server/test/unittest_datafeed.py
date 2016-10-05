@@ -85,10 +85,7 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(entity.cwuri, 'http://www.cubicweb.org/')
                 self.assertEqual(entity.cw_source[0].name, u'ô myfeed')
                 # test repo cache keys
-                self.assertEqual(self.repo._type_extid_cache[entity.eid],
-                                 ('Card', b'http://www.cubicweb.org/'))
-                self.assertEqual(self.repo._type_extid_cache[entity.eid],
-                                 ('Card', b'http://www.cubicweb.org/'))
+                self.assertEqual(self.repo._type_cache[entity.eid], 'Card')
 
                 self.assertTrue(dfsource.latest_retrieval)
                 self.assertTrue(dfsource.fresh())

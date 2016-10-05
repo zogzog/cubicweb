@@ -179,9 +179,8 @@ class Repository(object):
         self.sources_by_uri = {'system': self.system_source}
         # querier helper, need to be created after sources initialization
         self.querier = querier.QuerierHelper(self, self.schema)
-        # cache eid -> (type, extid)
-        self._type_extid_cache = {}
-        # cache extid -> eid
+        # cache eid -> type
+        self._type_cache = {}
         # open some connection sets
         if config.init_cnxset_pool:
             self.init_cnxset_pool()
@@ -714,33 +713,29 @@ class Repository(object):
     # * correspondance between eid and local id (i.e. specific to a given source)
 
     def clear_caches(self, eids):
-        etcache = self._type_extid_cache
+        etcache = self._type_cache
         rqlcache = self.querier._rql_cache
         for eid in eids:
             try:
-                etype, extid = etcache.pop(int(eid))  # may be a string in some cases
+                etype = etcache.pop(int(eid))  # may be a string in some cases
                 rqlcache.pop(('%s X WHERE X eid %s' % (etype, eid),), None)
             except KeyError:
                 etype = None
             rqlcache.pop(('Any X WHERE X eid %s' % eid,), None)
             self.system_source.clear_eid_cache(eid, etype)
 
-    def type_and_extid_from_eid(self, eid, cnx):
-        """Return the type and extid of the entity with id `eid`."""
+    def type_from_eid(self, eid, cnx):
+        """Return the type of the entity with id `eid`"""
         try:
             eid = int(eid)
         except ValueError:
             raise UnknownEid(eid)
         try:
-            return self._type_extid_cache[eid]
+            return self._type_cache[eid]
         except KeyError:
-            etype, extid = self.system_source.eid_type_extid(cnx, eid)
-            self._type_extid_cache[eid] = (etype, extid)
-            return etype, extid
-
-    def type_from_eid(self, eid, cnx):
-        """Return the type of the entity with id `eid`"""
-        return self.type_and_extid_from_eid(eid, cnx)[0]
+            etype = self.system_source.eid_type(cnx, eid)
+            self._type_cache[eid] = etype
+            return etype
 
     def querier_cache_key(self, cnx, rql, args, eidkeys):
         cachekey = [rql]
@@ -757,13 +752,13 @@ class Repository(object):
             args[key] = int(args[key])
         return tuple(cachekey)
 
-    def add_info(self, cnx, entity, source, extid=None):
+    def add_info(self, cnx, entity, source):
         """add type and source info for an eid into the system table,
         and index the entity with the full text index
         """
-        # begin by inserting eid/type/source/extid into the entities table
+        # begin by inserting eid/type/source into the entities table
         hook.CleanupNewEidsCacheOp.get_instance(cnx).add_data(entity.eid)
-        self.system_source.add_info(cnx, entity, source, extid)
+        self.system_source.add_info(cnx, entity, source)
 
     def _delete_cascade_multi(self, cnx, entities):
         """same as _delete_cascade but accepts a list of entities with
@@ -804,16 +799,9 @@ class Repository(object):
                                        entities, rql)
 
     def init_entity_caches(self, cnx, entity, source):
-        """add entity to connection entities cache and repo's extid cache.
-        Return entity's ext id if the source isn't the system source.
-        """
+        """Add entity to connection entities cache and repo's cache."""
         cnx.set_entity_cache(entity)
-        if source.uri == 'system':
-            extid = None
-        else:
-            extid = source.get_extid(entity)
-        self._type_extid_cache[entity.eid] = (entity.cw_etype, extid)
-        return extid
+        self._type_cache[entity.eid] = entity.cw_etype
 
     def glob_add_entity(self, cnx, edited):
         """add an entity to the repository
@@ -829,7 +817,7 @@ class Repository(object):
         # allocate an eid to the entity before calling hooks
         entity.eid = self.system_source.create_eid(cnx)
         # set caches asap
-        extid = self.init_entity_caches(cnx, entity, source)
+        self.init_entity_caches(cnx, entity, source)
         if server.DEBUG & server.DBG_REPO:
             print('ADD entity', self, entity.cw_etype, entity.eid, edited)
         prefill_entity_caches(entity)
@@ -838,7 +826,7 @@ class Repository(object):
         edited.set_defaults()
         if cnx.is_hook_category_activated('integrity'):
             edited.check(creation=True)
-        self.add_info(cnx, entity, source, extid)
+        self.add_info(cnx, entity, source)
         try:
             source.add_entity(cnx, entity)
         except (UniqueTogetherError, ViolatedConstraint) as exc:

@@ -14,12 +14,12 @@ assert olddn != newdn
 
 raw_input("Ensure you've stopped the instance, type enter when done.")
 
-for eid, extid in sql("SELECT eid, extid FROM entities WHERE source='%s'" % uri):
-    olduserdn = b64decode(extid)
+for eid, olduserdn in rql("Any X, XURI WHERE X cwuri XURI, X cw_source S, S name %(name)s",
+                          {'name': uri}):
     newuserdn = olduserdn.replace(olddn, newdn)
     if newuserdn != olduserdn:
         print(olduserdn, '->', newuserdn)
-        sql("UPDATE entities SET extid='%s' WHERE eid=%s" % (b64encode(newuserdn), eid))
+        sql("UPDATE cw_cwuser SET cw_cwuri='%s' WHERE cw_eid=%s" % (newuserdn, eid))
 
 commit()
 

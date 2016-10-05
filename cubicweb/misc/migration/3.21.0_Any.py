@@ -127,12 +127,6 @@ add_foreign_keys()
 cu = session.cnxset.cu
 helper = repo.system_source.dbhelper
 
-helper.drop_index(cu, 'entities', 'extid', False)
-# don't use create_index because it doesn't work for columns that may be NULL
-# on sqlserver
-for query in helper.sqls_create_multicol_unique_index('entities', ['extid']):
-    cu.execute(query)
-
 sql('DELETE FROM entities WHERE eid < 0')
 commit()
 

@@ -45,7 +45,7 @@ def group_mapping(cnx, interactive=True):
     """
     res = {}
     for eid, name in cnx.execute('Any G, N WHERE G is CWGroup, G name N',
-                                    build_descr=False):
+                                 build_descr=False):
         res[name] = eid
     if not interactive:
         return res
@@ -147,8 +147,8 @@ def deserialize_schema(schema, cnx):
                     {'x': etype, 'n': netype})
             cnx.commit(False)
             tocleanup = [eid]
-            tocleanup += (eid for eid, cached in repo._type_extid_cache.items()
-                          if etype == cached[0])
+            tocleanup += (eid for eid, cached in repo._type_cache.items()
+                          if etype == cached)
             repo.clear_caches(tocleanup)
             cnx.commit(False)
             if needcopy:

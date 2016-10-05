@@ -779,10 +779,15 @@ class Connection(RequestSessionBase):
         return self.repo.source_defs()
 
     @_open_only
+    def entity_type(self, eid):
+        """Return entity type for the entity with id `eid`."""
+        return self.repo.type_from_eid(eid, self)
+
+    @deprecated('[3.24] use entity_type(eid) instead')
+    @_open_only
     def entity_metas(self, eid):
-        """Return a dictionary {type, extid}) for the entity with id `eid`."""
-        etype, extid = self.repo.type_and_extid_from_eid(eid, self)
-        return {'type': etype, 'extid': extid}
+        """Return a dictionary {type}) for the entity with id `eid`."""
+        return {'type': self.repo.type_from_eid(eid, self)}
 
     # core method #############################################################
 

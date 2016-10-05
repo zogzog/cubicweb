@@ -126,7 +126,6 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
             indexes = [r[0] for r in crs.fetchall()]
         self.assertNotIn('entities_pkey', indexes)
-        self.assertNotIn('entities_extid_idx', indexes)
         self.assertNotIn('owned_by_relation_pkey', indexes)
         self.assertNotIn('owned_by_relation_to_idx', indexes)
 
@@ -139,7 +138,6 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
             indexes = [r[0] for r in crs.fetchall()]
         self.assertIn('entities_pkey', indexes)
-        self.assertIn('entities_extid_idx', indexes)
         self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
                       indexes)
         self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
@@ -221,7 +219,6 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
             indexes = [r[0] for r in crs.fetchall()]
         self.assertIn('entities_pkey', indexes)
-        self.assertIn('entities_extid_idx', indexes)
         self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
                       indexes)
         self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
@@ -255,7 +252,6 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
             indexes = [r[0] for r in crs.fetchall()]
             self.assertNotIn('entities_pkey', indexes)
-            self.assertNotIn('entities_extid_idx', indexes)
             self.assertNotIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
                              indexes)
             self.assertNotIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
@@ -268,7 +264,6 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             crs = cnx.system_sql('SELECT indexname FROM pg_indexes')
             indexes = [r[0] for r in crs.fetchall()]
             self.assertIn('entities_pkey', indexes)
-            self.assertIn('entities_extid_idx', indexes)
             self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
                           indexes)
             self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
