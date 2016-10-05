@@ -20,11 +20,12 @@ cubicweb's cubes development
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
-
 # *ctl module should limit the number of import to be imported as quickly as
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.
+
+import shutil
+import tempfile
 import sys
 from datetime import datetime, date
 from os import mkdir, chdir, path as osp
@@ -34,15 +35,21 @@ from pytz import UTC
 from six.moves import input
 
 from logilab.common import STD_BLACKLIST
+from logilab.common.fileutils import ensure_fs_mode
+from logilab.common.shellutils import find
 
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage, ExecutionError
+from cubicweb.i18n import extract_from_tal, execute2
 from cubicweb.cwctl import CWCTL
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.toolsutils import (SKEL_EXCLUDE, Command, copy_skeleton,
                                  underline_title)
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
+
+
+__docformat__ = "restructuredtext en"
 
 
 STD_BLACKLIST = set(STD_BLACKLIST)
@@ -432,66 +439,140 @@ def update_cubes_catalogs(cubes):
                        '<yourinstance>" to see changes in your instances.')
             return True
 
+
+class I18nCubeMessageExtractor(object):
+    """This class encapsulates all the xgettext extraction logic
+
+    ``generate_pot_file`` is the main entry point called by the ``i18ncube``
+    command. A cube might decide to customize extractors to ignore a given
+    directory or to extract messages from a new file type (e.g. .jinja2 files)
+
+    For each file type, the class must define two methods:
+
+    - ``collect_{filetype}()`` that must return the list of files
+      xgettext should inspect,
+
+    - ``extract_{filetype}(files)`` that calls xgettext and returns the
+      path to the generated ``pot`` file
+    """
+    blacklist = STD_BLACKLIST
+    formats = ['tal', 'js', 'py']
+
+    def __init__(self, workdir, cubedir):
+        self.workdir = workdir
+        self.cubedir = cubedir
+
+    def generate_pot_file(self):
+        """main entry point: return the generated ``cube.pot`` file
+
+        This function first generates all the pot files (schema, tal,
+        py, js) and then merges them in a single ``cube.pot`` that will
+        be used to eventually update the ``i18n/*.po`` files.
+        """
+        potfiles = self.generate_pot_files()
+        potfile = osp.join(self.workdir, 'cube.pot')
+        print('-> merging %i .pot files' % len(potfiles))
+        cmd = ['msgcat', '-o', potfile]
+        cmd.extend(potfiles)
+        execute2(cmd)
+        return potfile if osp.exists(potfile) else None
+
+    def find(self, exts, blacklist=None):
+        """collect files with extensions ``exts`` in the cube directory
+        """
+        if blacklist is None:
+            blacklist = self.blacklist
+        return find(self.cubedir, exts, blacklist=blacklist)
+
+    def generate_pot_files(self):
+        """generate and return the list of all ``pot`` files for the cube
+
+        - static-messages.pot,
+        - schema.pot,
+        - one ``pot`` file for each inspected format (.py, .js, etc.)
+        """
+        print('-> extracting messages:', end=' ')
+        potfiles = []
+        # static messages
+        if osp.exists(osp.join('i18n', 'entities.pot')):
+            warn('entities.pot is deprecated, rename file '
+                 'to static-messages.pot (%s)'
+                 % osp.join('i18n', 'entities.pot'), DeprecationWarning)
+            potfiles.append(osp.join('i18n', 'entities.pot'))
+        elif osp.exists(osp.join('i18n', 'static-messages.pot')):
+            potfiles.append(osp.join('i18n', 'static-messages.pot'))
+        # messages from schema
+        potfiles.append(self.schemapot())
+        # messages from sourcecode
+        for fmt in self.formats:
+            collector = getattr(self, 'collect_{0}'.format(fmt))
+            extractor = getattr(self, 'extract_{0}'.format(fmt))
+            files = collector()
+            if files:
+                potfile = extractor(files)
+                if potfile:
+                    potfiles.append(potfile)
+        return potfiles
+
+    def schemapot(self):
+        """generate the ``schema.pot`` file"""
+        schemapot = osp.join(self.workdir, 'schema.pot')
+        print('schema', end=' ')
+        # explicit close necessary else the file may not be yet flushed when
+        # we'll using it below
+        schemapotstream = open(schemapot, 'w')
+        generate_schema_pot(schemapotstream.write, self.cubedir)
+        schemapotstream.close()
+        return schemapot
+
+    def _xgettext(self, files, output, k='_', extraopts=''):
+        """shortcut to execute the xgettext command and return output file
+        """
+        tmppotfile = osp.join(self.workdir, output)
+        cmd = ['xgettext', '--no-location', '--omit-header', '-k' + k,
+               '-o', tmppotfile] + extraopts.split() + files
+        execute2(cmd)
+        if osp.exists(tmppotfile):
+            return tmppotfile
+
+    def collect_tal(self):
+        print('TAL', end=' ')
+        return self.find(('.py', '.pt'))
+
+    def extract_tal(self, files):
+        tali18nfile = osp.join(self.workdir, 'tali18n.py')
+        extract_from_tal(files, tali18nfile)
+        return self._xgettext(files, output='tal.pot')
+
+    def collect_js(self):
+        print('Javascript')
+        return [jsfile for jsfile in self.find('.js')
+                if osp.basename(jsfile).startswith('cub')]
+
+    def extract_js(self, files):
+        return self._xgettext(files, output='js.pot',
+                              extraopts='-L java --from-code=utf-8')
+
+    def collect_py(self):
+        print('-> creating cube-specific catalog')
+        return self.find('.py')
+
+    def extract_py(self, files):
+        return self._xgettext(files, output='py.pot')
+
+
 def update_cube_catalogs(cubedir):
-    import shutil
-    import tempfile
-    from logilab.common.fileutils import ensure_fs_mode
-    from logilab.common.shellutils import find, rm
-    from cubicweb.i18n import extract_from_tal, execute2
-    cube = osp.basename(osp.normpath(cubedir))
-    tempdir = tempfile.mkdtemp()
+    cubedir = osp.abspath(osp.normpath(cubedir))
+    workdir = tempfile.mkdtemp()
+    cube = osp.basename(cubedir)
+    print('cubedir', cubedir)
     print(underline_title('Updating i18n catalogs for cube %s' % cube))
     chdir(cubedir)
-    if osp.exists(osp.join('i18n', 'entities.pot')):
-        warn('entities.pot is deprecated, rename file to static-messages.pot (%s)'
-             % osp.join('i18n', 'entities.pot'), DeprecationWarning)
-        potfiles = [osp.join('i18n', 'entities.pot')]
-    elif osp.exists(osp.join('i18n', 'static-messages.pot')):
-        potfiles = [osp.join('i18n', 'static-messages.pot')]
-    else:
-        potfiles = []
-    print('-> extracting messages:', end=' ')
-    print('schema', end=' ')
-    schemapot = osp.join(tempdir, 'schema.pot')
-    potfiles.append(schemapot)
-    # explicit close necessary else the file may not be yet flushed when
-    # we'll using it below
-    schemapotstream = open(schemapot, 'w')
-    generate_schema_pot(schemapotstream.write, cubedir)
-    schemapotstream.close()
-    print('TAL', end=' ')
-    tali18nfile = osp.join(tempdir, 'tali18n.py')
-    ptfiles = find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST)
-    extract_from_tal(ptfiles, tali18nfile)
-    print('Javascript')
-    jsfiles =  [jsfile for jsfile in find('.', '.js')
-                if osp.basename(jsfile).startswith('cub')]
-    if jsfiles:
-        tmppotfile = osp.join(tempdir, 'js.pot')
-        cmd = ['xgettext', '--no-location', '--omit-header', '-k_', '-L', 'java',
-               '--from-code=utf-8', '-o', tmppotfile] + jsfiles
-        execute2(cmd)
-        # no pot file created if there are no string to translate
-        if osp.exists(tmppotfile):
-            potfiles.append(tmppotfile)
-    print('-> creating cube-specific catalog')
-    tmppotfile = osp.join(tempdir, 'generated.pot')
-    cubefiles = find('.', '.py', blacklist=STD_BLACKLIST)
-    cubefiles.append(tali18nfile)
-    cmd = ['xgettext', '--no-location', '--omit-header', '-k_', '-o', tmppotfile]
-    cmd.extend(cubefiles)
-    execute2(cmd)
-    if osp.exists(tmppotfile): # doesn't exists of no translation string found
-        potfiles.append(tmppotfile)
-    potfile = osp.join(tempdir, 'cube.pot')
-    print('-> merging %i .pot files' % len(potfiles))
-    cmd = ['msgcat', '-o', potfile]
-    cmd.extend(potfiles)
-    execute2(cmd)
-    if not osp.exists(potfile):
+    extractor = I18nCubeMessageExtractor(workdir, cubedir)
+    potfile = extractor.generate_pot_file()
+    if potfile is None:
         print('no message catalog for cube', cube, 'nothing to translate')
-        # cleanup
-        rm(tempdir)
+        shutil.rmtree(workdir)
         return ()
     print('-> merging main pot file with existing translations:', end=' ')
     chdir('i18n')
@@ -502,14 +583,15 @@ def update_cube_catalogs(cubedir):
         if not osp.exists(cubepo):
             shutil.copy(potfile, cubepo)
         else:
-            cmd = ['msgmerge','-N','-s','-o', cubepo+'new', cubepo, potfile]
+            cmd = ['msgmerge', '-N', '-s', '-o', cubepo + 'new',
+                   cubepo, potfile]
             execute2(cmd)
             ensure_fs_mode(cubepo)
             shutil.move('%snew' % cubepo, cubepo)
         toedit.append(osp.abspath(cubepo))
     print()
     # cleanup
-    rm(tempdir)
+    shutil.rmtree(workdir)
     return toedit
 
 
