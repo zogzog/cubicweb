@@ -113,7 +113,6 @@ def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
     attrs += [(rschema, None)
               for rschema in eschema.subject_relations()
               if not rschema.final and rschema.inlined]
-    # XXX handle objectinline physical mode
     for i in range(len(attrs)):
         rschema, attrschema = attrs[i]
         if attrschema is not None:
