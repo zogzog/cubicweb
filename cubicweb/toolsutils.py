@@ -155,6 +155,7 @@ def copy_skeleton(skeldir, targetdir, context,
                 show_diffs(tfpath, fpath, askconfirm)
             else:
                 shutil.copyfile(fpath, tfpath)
+                shutil.copymode(fpath, tfpath)
 
 def fill_templated_file(fpath, tfpath, context):
     with io.open(fpath, encoding='ascii') as fobj:
