@@ -185,25 +185,17 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     # store api ################################################################
 
-    def prepare_insert_entity(self, etype, **kwargs):
+    def prepare_insert_entity(self, etype, **data):
         """Given an entity type, attributes and inlined relations, returns the inserted entity's
         eid.
         """
         if not self.slave_mode and etype not in self._initialized:
             self._initialized.add(etype)
             self.master_init_etype(etype)
-        attrs = self.metagen.base_etype_attrs(etype)
-        data = copy(attrs)  # base_etype_attrs is @cached, a copy is necessary
-        data.update(kwargs)
         if 'eid' not in data:
             # If eid is not given and the eids sequence is set, use the value from the sequence
             eid = self.get_next_eid()
             data['eid'] = eid
-        # XXX default values could be set once for all in base entity
-        default_values = self.default_values[etype]
-        missing_keys = set(default_values) - set(data)
-        data.update((key, default_values[key]) for key in missing_keys)
-        self.metagen.init_entity_attrs(etype, data['eid'], data)
         self._data_entities[etype].append(data)
         return data['eid']
 
@@ -303,6 +295,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def flush_entities(self):
         """Flush the entities data."""
+        metagen = self.metagen
         for etype, data in self._data_entities.items():
             if not data:
                 # There is no data for these etype for this flush round.
@@ -314,11 +307,14 @@ class MassiveObjectStore(stores.RQLObjectStore):
             columns = set()
             for d in data:
                 columns.update(d)
-            _data = []
             _base_data = dict.fromkeys(columns)
+            _base_data.update(self.default_values[etype])
+            _base_data.update(metagen.base_etype_attrs(etype))
+            _data = []
             for d in data:
                 _d = _base_data.copy()
                 _d.update(d)
+                metagen.init_entity_attrs(etype, _d['eid'], _d)
                 _data.append(_d)
             buf = pgstore._create_copyfrom_buffer(_data, columns)
             if not buf:
