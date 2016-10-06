@@ -182,7 +182,7 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
     def test_greater_eid_typed(self):
         with self.session.new_cnx() as cnx:
             rqlst = self._prepare(cnx, 'Any X WHERE X eid > 5, X is Note')
-            self.assertEqual(rqlst.defined_vars['X']._q_invariant, True)
+            self.assertEqual(rqlst.defined_vars['X']._q_invariant, False)
 
     def test_max_eid(self):
         with self.session.new_cnx() as cnx:

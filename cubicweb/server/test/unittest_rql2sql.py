@@ -496,9 +496,18 @@ FROM entities AS _X
 WHERE _X.eid>12'''),
 
     ('Any X WHERE X eid > 12, X is Note',
-     """SELECT _X.eid
-FROM entities AS _X
-WHERE _X.type='Note' AND _X.eid>12"""),
+     """SELECT _X.cw_eid
+FROM cw_Note AS _X
+WHERE _X.cw_eid>12"""),
+
+    ('Any X WHERE X eid > 12, X is IN (Bookmark, Card)',
+     """SELECT _X.cw_eid
+FROM cw_Bookmark AS _X
+WHERE _X.cw_eid>12
+UNION ALL
+SELECT _X.cw_eid
+FROM cw_Card AS _X
+WHERE _X.cw_eid>12"""),
 
     ('Any X, T WHERE X eid > 12, X title T, X is IN (Bookmark, Card)',
      """SELECT _X.cw_eid, _X.cw_title
@@ -802,13 +811,13 @@ HAS_TEXT_LG_INDEXER = [
 FROM appears AS appears0
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata'))"""),
             ('Personne X WHERE X has_text "toto tata"',
-             """SELECT DISTINCT _X.eid
-FROM appears AS appears0, entities AS _X
-WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.eid AND _X.type='Personne'"""),
+             """SELECT DISTINCT _X.cw_eid
+FROM appears AS appears0, cw_Personne AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid"""),
             ('Personne X WHERE X has_text %(text)s',
-             """SELECT DISTINCT _X.eid
-FROM appears AS appears0, entities AS _X
-WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('hip', 'hop', 'momo')) AND appears0.uid=_X.eid AND _X.type='Personne'
+             """SELECT DISTINCT _X.cw_eid
+FROM appears AS appears0, cw_Personne AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('hip', 'hop', 'momo')) AND appears0.uid=_X.cw_eid
 """),
             ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
              """SELECT DISTINCT _X.cw_eid
@@ -1560,14 +1569,19 @@ FROM appears AS appears0
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata')"""),
 
             ('Personne X WHERE X has_text "toto tata"',
-             """SELECT _X.eid
-FROM appears AS appears0, entities AS _X
-WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.eid AND _X.type='Personne'"""),
+             """SELECT _X.cw_eid
+FROM appears AS appears0, cw_Personne AS _X
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid"""),
 
             ('Personne X WHERE X has_text %(text)s',
-             """SELECT _X.eid
-FROM appears AS appears0, entities AS _X
-WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.eid AND _X.type='Personne'"""),
+             """SELECT _X.cw_eid
+FROM appears AS appears0, cw_Personne AS _X
+WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.cw_eid"""),
+
+            ('Any X WHERE X has_text "toto tata", X is IN (Basket,Folder)',
+             """SELECT appears0.uid
+FROM appears AS appears0
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid IN (SELECT cw_eid FROM cw_Basket UNION SELECT cw_eid FROM cw_Folder)"""),
 
             ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
              """SELECT _X.cw_eid
@@ -1579,9 +1593,9 @@ FROM appears AS appears0, cw_Folder AS _X
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu"""),
 
             ('Personne X where X has_text %(text)s, X travaille S, S has_text %(text)s',
-             """SELECT _X.eid
-FROM appears AS appears0, appears AS appears2, entities AS _X, travaille_relation AS rel_travaille1
-WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.eid AND _X.type='Personne' AND _X.eid=rel_travaille1.eid_from AND appears2.uid=rel_travaille1.eid_to AND appears2.words @@ to_tsquery('default', 'hip&hop&momo')"""),
+             """SELECT _X.cw_eid
+FROM appears AS appears0, appears AS appears2, cw_Personne AS _X, travaille_relation AS rel_travaille1
+WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.cw_eid AND _X.cw_eid=rel_travaille1.eid_from AND appears2.uid=rel_travaille1.eid_to AND appears2.words @@ to_tsquery('default', 'hip&hop&momo')"""),
 
             ('Any X ORDERBY FTIRANK(X) DESC WHERE X has_text "toto tata"',
              """SELECT appears0.uid
@@ -1590,15 +1604,15 @@ WHERE appears0.words @@ to_tsquery('default', 'toto&tata')
 ORDER BY ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight DESC"""),
 
             ('Personne X ORDERBY FTIRANK(X) WHERE X has_text "toto tata"',
-             """SELECT _X.eid
-FROM appears AS appears0, entities AS _X
-WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.eid AND _X.type='Personne'
+             """SELECT _X.cw_eid
+FROM appears AS appears0, cw_Personne AS _X
+WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid
 ORDER BY ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight"""),
 
             ('Personne X ORDERBY FTIRANK(X) WHERE X has_text %(text)s',
-             """SELECT _X.eid
-FROM appears AS appears0, entities AS _X
-WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.eid AND _X.type='Personne'
+             """SELECT _X.cw_eid
+FROM appears AS appears0, cw_Personne AS _X
+WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.cw_eid
 ORDER BY ts_rank(appears0.words, to_tsquery('default', 'hip&hop&momo'))*appears0.weight"""),
 
             ('Any X ORDERBY FTIRANK(X) WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
@@ -1612,9 +1626,9 @@ WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.c
 ORDER BY 2) AS T1"""),
 
             ('Personne X ORDERBY FTIRANK(X),FTIRANK(S) WHERE X has_text %(text)s, X travaille S, S has_text %(text)s',
-             """SELECT _X.eid
-FROM appears AS appears0, appears AS appears2, entities AS _X, travaille_relation AS rel_travaille1
-WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.eid AND _X.type='Personne' AND _X.eid=rel_travaille1.eid_from AND appears2.uid=rel_travaille1.eid_to AND appears2.words @@ to_tsquery('default', 'hip&hop&momo')
+             """SELECT _X.cw_eid
+FROM appears AS appears0, appears AS appears2, cw_Personne AS _X, travaille_relation AS rel_travaille1
+WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_X.cw_eid AND _X.cw_eid=rel_travaille1.eid_from AND appears2.uid=rel_travaille1.eid_to AND appears2.words @@ to_tsquery('default', 'hip&hop&momo')
 ORDER BY ts_rank(appears0.words, to_tsquery('default', 'hip&hop&momo'))*appears0.weight,ts_rank(appears2.words, to_tsquery('default', 'hip&hop&momo'))*appears2.weight"""),
 
 
@@ -2030,9 +2044,9 @@ FROM appears AS appears0
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('hip', 'hop', 'momo'))"""),
 
             ('Personne X WHERE X has_text "toto tata"',
-             """SELECT DISTINCT _X.eid
-FROM appears AS appears0, entities AS _X
-WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.eid AND _X.type='Personne'"""),
+             """SELECT DISTINCT _X.cw_eid
+FROM appears AS appears0, cw_Personne AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid"""),
 
             ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
              """SELECT DISTINCT _X.cw_eid
@@ -2159,13 +2173,13 @@ WHERE NOT (EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel
 FROM appears AS appears0
 WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE)"""),
             ('Personne X WHERE X has_text "toto tata"',
-             """SELECT _X.eid
-FROM appears AS appears0, entities AS _X
-WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=_X.eid AND _X.type='Personne'"""),
+             """SELECT _X.cw_eid
+FROM appears AS appears0, cw_Personne AS _X
+WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=_X.cw_eid"""),
             ('Personne X WHERE X has_text %(text)s',
-             """SELECT _X.eid
-FROM appears AS appears0, entities AS _X
-WHERE MATCH (appears0.words) AGAINST ('hip hop momo' IN BOOLEAN MODE) AND appears0.uid=_X.eid AND _X.type='Personne'"""),
+             """SELECT _X.cw_eid
+FROM appears AS appears0, cw_Personne AS _X
+WHERE MATCH (appears0.words) AGAINST ('hip hop momo' IN BOOLEAN MODE) AND appears0.uid=_X.cw_eid"""),
             ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
              """SELECT _X.cw_eid
 FROM appears AS appears0, cw_Basket AS _X

@@ -40,22 +40,23 @@ def _annotate_select(annotator, rqlst):
             stinfo['invariant'] = False
             stinfo['principal'] = _select_main_var(stinfo['rhsrelations'])
             continue
-        if not stinfo['relations'] and stinfo['typerel'] is None:
-            # Any X, Any MAX(X)...
+        if stinfo['typerel'] is None:
             # those particular queries should be executed using the system
             # entities table unless there is some type restriction
-            stinfo['invariant'] = True
-            stinfo['principal'] = None
-            continue
-        if (any(rel for rel in stinfo['relations'] if rel.r_type == 'eid' and rel.operator() != '=')
-                and not any(r for r in var.stinfo['relations'] - var.stinfo['rhsrelations']
-                            if r.r_type != 'eid'
-                            and (getrschema(r.r_type).inlined or getrschema(r.r_type).final))):
-            # Any X WHERE X eid > 2
-            # those particular queries should be executed using the system entities table
-            stinfo['invariant'] = True
-            stinfo['principal'] = None
-            continue
+            if not stinfo['relations']:
+                # Any X, Any MAX(X)...
+                stinfo['invariant'] = True
+                stinfo['principal'] = None
+                continue
+            if (any(rel for rel in stinfo['relations']
+                    if rel.r_type == 'eid' and rel.operator() != '=')
+                    and not any(r for r in var.stinfo['relations'] - var.stinfo['rhsrelations']
+                                if r.r_type != 'eid'
+                                and (getrschema(r.r_type).inlined or getrschema(r.r_type).final))):
+                # Any X WHERE X eid > 2
+                stinfo['invariant'] = True
+                stinfo['principal'] = None
+                continue
         if stinfo['selected'] and var.valuable_references() == 1 + bool(stinfo['constnode']):
             # "Any X", "Any X, Y WHERE X attr Y"
             stinfo['invariant'] = False
@@ -235,7 +236,7 @@ def set_qdata(getrschema, union, noinvariant):
             set_qdata(getrschema, subquery.query, noinvariant)
         for var in select.defined_vars.values():
             if var.stinfo['invariant']:
-                if var in noinvariant and not var.stinfo['principal'].r_type == 'has_text':
+                if var in noinvariant:
                     var._q_invariant = False
                 else:
                     var._q_invariant = True

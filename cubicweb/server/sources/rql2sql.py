@@ -1374,20 +1374,17 @@ class SQLGenerator(object):
         lhsvar = lhs.variable
         me_is_principal = lhsvar.stinfo.get('principal') is rel
         if me_is_principal:
-            if lhsvar.stinfo['typerel'] is None:
-                # the variable is using the fti table, no join needed
-                jointo = None
-            else:
-                # join on entities instead of etype's table to get result for
-                # external entities on multisources configurations
-                ealias = lhsvar._q_sqltable = '_' + lhsvar.name
-                jointo = lhsvar._q_sql = '%s.eid' % ealias
-                self._state.add_table('entities AS %s' % ealias, ealias)
+            jointo = None
+            if lhsvar.stinfo['typerel'] is not None:
                 if not lhsvar._q_invariant or len(lhsvar.stinfo['possibletypes']) == 1:
-                    restriction = " AND %s.type='%s'" % (ealias, self._state.solution[lhs.name])
+                    ealias = lhsvar._q_sqltable = '_' + lhsvar.name
+                    jointo = lhsvar._q_sql = '%s.cw_eid' % ealias
+                    self._state.add_table('cw_%s AS %s' % (self._state.solution[lhs.name], ealias),
+                                          ealias)
                 else:
-                    etypes = ','.join("'%s'" % etype for etype in lhsvar.stinfo['possibletypes'])
-                    restriction = " AND %s.type IN (%s)" % (ealias, etypes)
+                    subquery = ' UNION '.join('SELECT cw_eid FROM cw_%s' % etype
+                                              for etype in sorted(lhsvar.stinfo['possibletypes']))
+                    restriction = ' AND %s IN (%s)' % (lhsvar._q_sql, subquery)
         if isinstance(rel.parent, Not):
             self._state.done.add(rel.parent)
             not_ = True
@@ -1546,19 +1543,10 @@ class SQLGenerator(object):
             # since variable is invariant, we know we won't found final relation
             principal = variable.stinfo['principal']
             if principal is None:
+                assert variable.stinfo['typerel'] is None
                 vtablename = '_' + variable.name
                 self._state.add_table('entities AS %s' % vtablename, vtablename)
                 sql = '%s.eid' % vtablename
-                if variable.stinfo['typerel'] is not None:
-                    # add additional restriction on entities.type column
-                    pts = variable.stinfo['possibletypes']
-                    if len(pts) == 1:
-                        etype = next(iter(variable.stinfo['possibletypes']))
-                        restr = "%s.type='%s'" % (vtablename, etype)
-                    else:
-                        etypes = ','.join("'%s'" % et for et in pts)
-                        restr = '%s.type IN (%s)' % (vtablename, etypes)
-                    self._state.add_restriction(restr)
             elif principal.r_type == 'has_text':
                 sql = '%s.%s' % (self._state.fti_table(principal,
                                                        self.dbhelper.fti_table),
