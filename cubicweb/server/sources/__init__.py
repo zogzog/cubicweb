@@ -244,33 +244,6 @@ class AbstractSource(object):
         """clear potential caches for the given eid"""
         pass
 
-    # external source api ######################################################
-
-    def _load_mapping(self, cnx, **kwargs):
-        if not 'CWSourceSchemaConfig' in self.schema:
-            self.warning('instance is not mapping ready')
-            return
-        for schemacfg in cnx.execute(
-            'Any CFG,CFGO,S WHERE '
-            'CFG options CFGO, CFG cw_schema S, '
-            'CFG cw_for_source X, X eid %(x)s', {'x': self.eid}).entities():
-            self.add_schema_config(schemacfg, **kwargs)
-
-    def add_schema_config(self, schemacfg, checkonly=False):
-        """added CWSourceSchemaConfig, modify mapping accordingly"""
-        msg = schemacfg._cw._("this source doesn't use a mapping")
-        raise ValidationError(schemacfg.eid, {None: msg})
-
-    def del_schema_config(self, schemacfg, checkonly=False):
-        """deleted CWSourceSchemaConfig, modify mapping accordingly"""
-        msg = schemacfg._cw._("this source doesn't use a mapping")
-        raise ValidationError(schemacfg.eid, {None: msg})
-
-    def update_schema_config(self, schemacfg, checkonly=False):
-        """updated CWSourceSchemaConfig, modify mapping accordingly"""
-        self.del_schema_config(schemacfg, checkonly)
-        self.add_schema_config(schemacfg, checkonly)
-
     # user authentication api ##################################################
 
     def authenticate(self, cnx, login, **kwargs):

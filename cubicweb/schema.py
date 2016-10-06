@@ -71,7 +71,7 @@ WORKFLOW_DEF_RTYPES = set(('workflow_of', 'state_of', 'transition_of',
 SYSTEM_RTYPES = set(('in_group', 'require_group',
                      # cwproperty
                      'for_user',
-                     'cw_schema', 'cw_import_of', 'cw_for_source',
+                     'cw_import_of',
                      'cw_host_config_of',
                      )) | WORKFLOW_RTYPES
 NO_I18NCONTEXT = META_RTYPES | WORKFLOW_RTYPES
@@ -96,8 +96,7 @@ WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
                       'SubWorkflowExitPoint'))
 
 INTERNAL_TYPES = set(('CWProperty', 'CWCache', 'ExternalUri', 'CWDataImport',
-                      'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
-                      'CWSession'))
+                      'CWSource', 'CWSourceHostConfig', 'CWSession'))
 
 UNIQUE_CONSTRAINTS = ('SizeConstraint', 'FormatConstraint',
                       'StaticVocabularyConstraint',

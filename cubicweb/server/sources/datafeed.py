@@ -130,7 +130,6 @@ class DataFeedSource(AbstractSource):
     def init(self, activated, source_entity):
         super(DataFeedSource, self).init(activated, source_entity)
         self.parser_id = source_entity.parser
-        self.load_mapping(source_entity._cw)
 
     def _get_parser(self, cnx, **kwargs):
         if self.parser_id is None:
@@ -138,27 +137,6 @@ class DataFeedSource(AbstractSource):
             raise ObjectNotFound()
         return self.repo.vreg['parsers'].select(
             self.parser_id, cnx, source=self, **kwargs)
-
-    def load_mapping(self, cnx):
-        self.mapping = {}
-        self.mapping_idx = {}
-        try:
-            parser = self._get_parser(cnx)
-        except (RegistryNotFound, ObjectNotFound):
-            return # no parser yet, don't go further
-        self._load_mapping(cnx, parser=parser)
-
-    def add_schema_config(self, schemacfg, checkonly=False, parser=None):
-        """added CWSourceSchemaConfig, modify mapping accordingly"""
-        if parser is None:
-            parser = self._get_parser(schemacfg._cw)
-        parser.add_schema_config(schemacfg, checkonly)
-
-    def del_schema_config(self, schemacfg, checkonly=False, parser=None):
-        """deleted CWSourceSchemaConfig, modify mapping accordingly"""
-        if parser is None:
-            parser = self._get_parser(schemacfg._cw)
-        parser.del_schema_config(schemacfg, checkonly)
 
     def fresh(self):
         if self.latest_retrieval is None:
@@ -329,16 +307,6 @@ class DataFeedParser(AppObject):
 
         # url is probably plain content
         return URLLibResponseAdapter(BytesIO(url.encode('ascii')), url)
-
-    def add_schema_config(self, schemacfg, checkonly=False):
-        """added CWSourceSchemaConfig, modify mapping accordingly"""
-        msg = schemacfg._cw._("this parser doesn't use a mapping")
-        raise ValidationError(schemacfg.eid, {None: msg})
-
-    def del_schema_config(self, schemacfg, checkonly=False):
-        """deleted CWSourceSchemaConfig, modify mapping accordingly"""
-        msg = schemacfg._cw._("this parser doesn't use a mapping")
-        raise ValidationError(schemacfg.eid, {None: msg})
 
     def process_urls(self, urls, raise_on_error=False):
         error = False

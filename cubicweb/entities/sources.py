@@ -71,32 +71,6 @@ class CWSource(_CWSourceCfgMixIn, AnyEntity):
     def host_configs(self):
         return self.reverse_cw_host_config_of
 
-    def init_mapping(self, mapping):
-        for key, options in mapping:
-            if isinstance(key, tuple): # relation definition
-                assert len(key) == 3
-                restrictions = ['X relation_type RT, RT name %(rt)s']
-                kwargs = {'rt': key[1]}
-                if key[0] != '*':
-                    restrictions.append('X from_entity FT, FT name %(ft)s')
-                    kwargs['ft'] = key[0]
-                if key[2] != '*':
-                    restrictions.append('X to_entity TT, TT name %(tt)s')
-                    kwargs['tt'] = key[2]
-                rql = 'Any X WHERE %s' % ','.join(restrictions)
-                schemarset = self._cw.execute(rql, kwargs)
-            elif key[0].isupper(): # entity type
-                schemarset = self._cw.execute('CWEType X WHERE X name %(et)s',
-                                              {'et': key})
-            else: # relation type
-                schemarset = self._cw.execute('CWRType X WHERE X name %(rt)s',
-                                              {'rt': key})
-            for schemaentity in schemarset.entities():
-                self._cw.create_entity('CWSourceSchemaConfig',
-                                       cw_for_source=self,
-                                       cw_schema=schemaentity,
-                                       options=options)
-
     @property
     def repo_source(self):
         """repository only property, not available from the web side (eg
@@ -115,22 +89,6 @@ class CWSourceHostConfig(_CWSourceCfgMixIn, AnyEntity):
 
     def match(self, hostname):
         return re.match(self.match_host, hostname)
-
-
-class CWSourceSchemaConfig(AnyEntity):
-    __regid__ = 'CWSourceSchemaConfig'
-    fetch_attrs, cw_fetch_order = fetch_config(['cw_for_source', 'cw_schema', 'options'])
-
-    def dc_title(self):
-        return self._cw._(self.cw_etype) + ' #%s' % self.eid
-
-    @property
-    def schema(self):
-        return self.cw_schema[0]
-
-    @property
-    def cwsource(self):
-        return self.cw_for_source[0]
 
 
 class CWDataImport(AnyEntity):

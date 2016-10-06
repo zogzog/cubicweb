@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Specific views for data sources and related entities (eg CWSource,
-CWSourceHostConfig, CWSourceSchemaConfig).
+CWSourceHostConfig).
 """
 
 import logging
@@ -39,15 +39,11 @@ from cubicweb.web.views import (uicfg, tabs, actions, ibreadcrumbs, navigation,
 
 _abaa = uicfg.actionbox_appearsin_addmenu
 # there are explicit 'add' buttons for those
-_abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_schema', '*'), False)
-_abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_for_source', '*'), False)
-_abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_host_config_of', '*'), False)
 _abaa.tag_object_of(('CWDataImport', 'cw_import_of', '*'), False)
 
 _afs = uicfg.autoform_section
 _afs.tag_attribute(('CWSource', 'latest_retrieval'), 'main', 'hidden')
 _afs.tag_attribute(('CWSource', 'in_synchronization'), 'main', 'hidden')
-_afs.tag_object_of(('*', 'cw_for_source', 'CWSource'), 'main', 'hidden')
 
 _affk = uicfg.autoform_field_kwargs
 _affk.tag_attribute(('CWSource', 'parser'), {'widget': wdgs.TextInput})
@@ -56,7 +52,6 @@ _affk.tag_attribute(('CWSource', 'parser'), {'widget': wdgs.TextInput})
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_attribute(('CWSource', 'name'), 'hidden')
-_pvs.tag_object_of(('*', 'cw_for_source', 'CWSource'), 'hidden')
 _pvs.tag_object_of(('*', 'cw_host_config_of', 'CWSource'), 'hidden')
 
 _pvdc = uicfg.primaryview_display_ctrl
@@ -65,12 +60,11 @@ _pvdc.tag_attribute(('CWSource', 'type'), {'vid': 'attribute'})# disable reledit
 _rc = uicfg.reledit_ctrl
 _rc.tag_attribute(('CWSource', 'config'), {'rvid': 'verbatimattr'})
 _rc.tag_attribute(('CWSourceHostConfig', 'config'), {'rvid': 'verbatimattr'})
-_rc.tag_attribute(('CWSourceSchemaConfig', 'options'), {'rvid': 'verbatimattr'})
 
 
 class CWSourcePrimaryView(tabs.TabbedPrimaryView):
     __select__ = is_instance('CWSource')
-    tabs = [_('cwsource-main'), _('cwsource-mapping'), _('cwsource-imports')]
+    tabs = [_('cwsource-main'), _('cwsource-imports')]
     default_tab = 'cwsource-main'
 
 
@@ -95,108 +89,6 @@ class CWSourceMainTab(tabs.PrimaryTab):
                 self._cw.view('table', hostconfig, w=self.w,
                               displaycols=list(range(2)),
                               cellvids={1: 'editable-final'})
-
-
-MAPPED_SOURCE_TYPES = set( ('datafeed',) )
-
-class CWSourceMappingTab(EntityView):
-    __regid__ = 'cwsource-mapping'
-    __select__ = (is_instance('CWSource')
-                  & match_user_groups('managers')
-                  & score_entity(lambda x:x.type in MAPPED_SOURCE_TYPES))
-
-    def entity_call(self, entity):
-        _ = self._cw._
-        self.w('<h3>%s</h3>' % _('Entity and relation supported by this source'))
-        self.w(add_etype_button(self._cw, 'CWSourceSchemaConfig',
-                                __linkto='cw_for_source:%s:subject' % entity.eid))
-        self.w(u'<div class="clear"></div>')
-        rset = self._cw.execute(
-            'Any X, SCH, XO ORDERBY ET WHERE X options XO, X cw_for_source S, S eid %(s)s, '
-            'X cw_schema SCH, SCH is ET', {'s': entity.eid})
-        self.wview('table', rset, 'noresult')
-        checker = MappingChecker(entity)
-        checker.check()
-        if (checker.errors or checker.warnings or checker.infos):
-            self.w('<h2>%s</h2>' % _('Detected problems'))
-            errors = zip(repeat(_('error')), checker.errors)
-            warnings = zip(repeat(_('warning')), checker.warnings)
-            infos = zip(repeat(_('warning')), checker.infos)
-            self.wview('pyvaltable', pyvalue=errors + warnings + infos)
-
-
-class MappingChecker(object):
-    def __init__(self, cwsource):
-        self.cwsource = cwsource
-        self.errors = []
-        self.warnings = []
-        self.infos = []
-        self.schema = cwsource._cw.vreg.schema
-
-    def init(self):
-        # supported entity types
-        self.sentities = set()
-        # supported relations
-        self.srelations = {}
-        # avoid duplicated messages
-        self.seen = set()
-        # first get mapping as dict/sets
-        for schemacfg in self.cwsource.reverse_cw_for_source:
-            self.init_schemacfg(schemacfg)
-
-    def init_schemacfg(self, schemacfg):
-        cwerschema = schemacfg.schema
-        if cwerschema.__regid__ == 'CWEType':
-            self.sentities.add(cwerschema.name)
-        elif cwerschema.__regid__ == 'CWRType':
-            assert not cwerschema.name in self.srelations
-            self.srelations[cwerschema.name] = None
-        else: # CWAttribute/CWRelation
-            self.srelations.setdefault(cwerschema.rtype.name, []).append(
-                (cwerschema.stype.name, cwerschema.otype.name) )
-            self.sentities.add(cwerschema.stype.name)
-            self.sentities.add(cwerschema.otype.name)
-
-    def check(self):
-        self.init()
-        error = self.errors.append
-        warning = self.warnings.append
-        info = self.infos.append
-        for etype in self.sentities:
-            eschema = self.schema[etype]
-            for rschema, ttypes, role in eschema.relation_definitions():
-                if rschema in META_RTYPES:
-                    continue
-                ttypes = [ttype for ttype in ttypes if ttype in self.sentities]
-                if not rschema in self.srelations:
-                    for ttype in ttypes:
-                        rdef = rschema.role_rdef(etype, ttype, role)
-                        self.seen.add(rdef)
-                        if rdef.role_cardinality(role) in '1+':
-                            error(_('relation %(type)s with %(etype)s as %(role)s '
-                                    'and target type %(target)s is mandatory but '
-                                    'not supported') %
-                                  {'rtype': rschema, 'etype': etype, 'role': role,
-                                   'target': ttype})
-                        elif ttype in self.sentities:
-                            warning(_('%s could be supported') % rdef)
-                elif not ttypes:
-                    warning(_('relation %(rtype)s with %(etype)s as %(role)s is '
-                              'supported but no target type supported') %
-                            {'rtype': rschema, 'role': role, 'etype': etype})
-        for rtype, rdefs in self.srelations.items():
-            if rdefs is None:
-                rschema = self.schema[rtype]
-                for subj, obj in rschema.rdefs:
-                    if subj in self.sentities and obj in self.sentities:
-                        break
-                else:
-                    error(_('relation %s is supported but none of its definitions '
-                            'matches supported entities') % rtype)
-        self.custom_check()
-
-    def custom_check(self):
-        pass
 
 
 class CWSourceImportsTab(EntityView):
@@ -500,7 +392,7 @@ class CWDataImportStatusFacet(facet.AttributeFacet):
 # breadcrumbs configuration ####################################################
 
 class CWsourceConfigIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = is_instance('CWSourceHostConfig', 'CWSourceSchemaConfig')
+    __select__ = is_instance('CWSourceHostConfig')
     def parent_entity(self):
         return self.entity.cwsource
 

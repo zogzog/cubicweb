@@ -6,3 +6,5 @@ rql('DELETE CWProperty X WHERE X pkey "system.version.pyramid"',
 sql('DROP TABLE moved_entities')
 sql('ALTER TABLE entities DROP COLUMN asource')
 sql('ALTER TABLE entities DROP COLUMN extid')
+
+drop_entity_type('CWSourceSchemaConfig')
