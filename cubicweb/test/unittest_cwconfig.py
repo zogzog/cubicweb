@@ -142,6 +142,12 @@ class CubicWebConfigurationTC(testlib.BaseTestCase):
                               ['email/views', 'email/hooks.py'])
         self.assertEqual(path[10:], ['test/data/entities.py', 'test/data/views.py'])
 
+    def test_init_cubes_ignore_pyramid_cube(self):
+        warning_msg = 'cubicweb-pyramid got integrated into CubicWeb'
+        with self.assertLogs('cubicweb.configuration', level='WARNING') as cm:
+            self.config.init_cubes(['pyramid', 'card'])
+        self.assertIn(warning_msg, cm.output[0])
+        self.assertNotIn('pyramid', self.config._cubes)
 
 class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
 

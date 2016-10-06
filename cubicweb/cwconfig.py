@@ -881,6 +881,11 @@ this option is set to yes",
     _cubes = None
 
     def init_cubes(self, cubes):
+        cubes = list(cubes)
+        if 'pyramid' in cubes:
+            self.warning("cubicweb-pyramid got integrated into CubicWeb; "
+                         "remove it from your project's dependencies")
+            cubes.remove('pyramid')
         self._cubes = self.reorder_cubes(cubes)
         # load cubes'__init__.py file first
         for cube in cubes:
