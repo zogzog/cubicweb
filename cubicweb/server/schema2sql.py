@@ -102,6 +102,28 @@ def iter_unique_index_names(eschema):
         yield attrs, unique_index_name(eschema, attrs)
 
 
+def eschema_sql_def(dbhelper, eschema, skip_relations=(), prefix=''):
+    """Return a list of (column names, sql type def) for the given entity schema.
+
+    No constraint nor index are considered - this function is usually for massive import purpose.
+    """
+    attrs = [attrdef for attrdef in eschema.attribute_definitions()
+             if not attrdef[0].type in skip_relations]
+    attrs += [(rschema, None)
+              for rschema in eschema.subject_relations()
+              if not rschema.final and rschema.inlined]
+    result = []
+    for i in range(len(attrs)):
+        rschema, attrschema = attrs[i]
+        if attrschema is not None:
+            # creating = False will avoid NOT NULL / REFERENCES constraints
+            sqltype = aschema2sql(dbhelper, eschema, rschema, attrschema, creating=False)
+        else:  # inline relation
+            sqltype = 'integer'
+        result.append(('%s%s' % (prefix, rschema.type), sqltype))
+    return result
+
+
 def eschema2sql(dbhelper, eschema, skip_relations=(), prefix=''):
     """Yield SQL statements to initialize database from an entity schema."""
     table = prefix + eschema.type

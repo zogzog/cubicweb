@@ -245,6 +245,32 @@ class SQLSchemaTC(TestCase):
         output = list(schema2sql.schema2sql(dbhelper, schema, skip_relations=('works_for',)))
         self.assertEqual(output, EXPECTED_DATA_NO_DROP)
 
+    def test_eschema_sql_def_attributes(self):
+        dbhelper = get_db_helper('postgres')
+        attr_defs = schema2sql.eschema_sql_def(dbhelper, schema['Person'])
+        self.assertEqual(attr_defs,
+                         [('nom', 'varchar(64)'),
+                          ('prenom', 'varchar(64)'),
+                          ('sexe', "varchar(1) DEFAULT 'M'"),
+                          ('promo', 'varchar(22)'),
+                          ('titre', 'varchar(128)'),
+                          ('adel', 'varchar(128)'),
+                          ('ass', 'varchar(128)'),
+                          ('web', 'varchar(128)'),
+                          ('tel', 'integer'),
+                          ('fax', 'integer'),
+                          ('datenaiss', 'date'),
+                          ('test', 'boolean'),
+                          ('salary', 'float')])
+
+    def test_eschema_sql_def_inlined_rel(self):
+        dbhelper = get_db_helper('postgres')
+        attr_defs = schema2sql.eschema_sql_def(dbhelper, schema['Affaire'])
+        self.assertEqual(attr_defs,
+                         [('sujet', 'varchar(128)'),
+                          ('ref', 'varchar(12)'),
+                          ('inline_rel', 'integer')])
+
 
 if __name__ == '__main__':
     unittest_main()

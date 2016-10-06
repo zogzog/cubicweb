@@ -119,6 +119,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
             store.prepare_insert_entity('Location', timezone=timezone_eid)
             store.flush()
             store.commit()
+            store.finish()
             eid, etname = cnx.execute('Any X, TN WHERE X timezone TZ, X is T, '
                                       'T name TN')[0]
             self.assertEqual(cnx.entity_from_eid(eid).cw_etype, etname)
@@ -231,15 +232,10 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
         counter = itertools.count()
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx, on_rollback_callback=lambda *_: next(counter))
-            store.prepare_insert_entity('Location', nm='toto')
-            store.commit()  # commit modification to the database before flush
+            # oversized attribute
+            store.prepare_insert_entity('Location', feature_class='toto')
             store.flush()
         self.assertEqual(next(counter), 1)
-
-    def test_slave_mode_exception(self):
-        with self.admin_access.repo_cnx() as cnx:
-            slave_store = MassiveObjectStore(cnx, slave_mode=True)
-            self.assertRaises(RuntimeError, slave_store.finish)
 
     def test_simple_insert(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -263,10 +259,10 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             # Check index
             indexes = all_indexes(cnx)
             self.assertIn('entities_pkey', indexes)
-            self.assertNotIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
-                             indexes)
-            self.assertNotIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
-                             indexes)
+            self.assertIn(build_index_name('owned_by_relation', ['eid_from', 'eid_to'], 'key_'),
+                          indexes)
+            self.assertIn(build_index_name('owned_by_relation', ['eid_from'], 'idx_'),
+                          indexes)
 
             # Cleanup -> index
             store.finish()
