@@ -25,8 +25,7 @@ if PY2:
 else:
     from io import StringIO
 
-from cubicweb.devtools import (PostgresApptestConfiguration, TestServerConfiguration,
-                               get_test_db_handler, startpgcluster, stoppgcluster)
+from cubicweb import devtools
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.checkintegrity import check, check_indexes, reindex_entities
 
@@ -34,7 +33,7 @@ from cubicweb.server.checkintegrity import check, check_indexes, reindex_entitie
 class CheckIntegrityTC(unittest.TestCase):
 
     def setUp(self):
-        handler = get_test_db_handler(TestServerConfiguration('data', __file__))
+        handler = devtools.get_test_db_handler(devtools.TestServerConfiguration('data', __file__))
         handler.build_db_cache()
         self.repo, _cnx = handler.get_repo_and_cnx()
         sys.stderr = sys.stdout = StringIO()
@@ -81,16 +80,16 @@ class SqliteCheckIndexesTC(CubicWebTC):
 
 
 class PGCheckIndexesTC(SqliteCheckIndexesTC):
-    configcls = PostgresApptestConfiguration
+    configcls = devtools.PostgresApptestConfiguration
 
     @classmethod
     def setUpClass(cls):
-        startpgcluster(__file__)
+        devtools.startpgcluster(__file__)
         super(PGCheckIndexesTC, cls).setUpClass()
 
     @classmethod
     def tearDownClass(cls):
-        stoppgcluster(__file__)
+        devtools.stoppgcluster(__file__)
         super(PGCheckIndexesTC, cls).tearDownClass()
 
 

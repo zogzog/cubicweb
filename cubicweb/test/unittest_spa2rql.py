@@ -17,8 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 
-from logilab.common.testlib import TestCase, unittest_main
-from cubicweb.devtools import TestServerConfiguration
+from cubicweb import devtools
 from cubicweb.xy import xy
 
 SKIPCAUSE = None
@@ -40,7 +39,7 @@ class XYTC(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        config = TestServerConfiguration('data', __file__)
+        config = devtools.TestServerConfiguration('data', __file__)
         config.bootstrap_cubes()
         cls.schema = config.load_schema()
 

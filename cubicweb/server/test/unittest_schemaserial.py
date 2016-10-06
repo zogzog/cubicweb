@@ -23,7 +23,7 @@ from yams import register_base_type, unregister_base_type
 
 from cubicweb import Binary
 from cubicweb.schema import CubicWebSchemaLoader
-from cubicweb.devtools import TestServerConfiguration
+from cubicweb import devtools
 from cubicweb.devtools.testlib import BaseTestCase as TestCase, CubicWebTC
 from cubicweb.server.schemaserial import (updateeschema2rql, updaterschema2rql, rschema2rql,
                                           eschema2rql, rdef2rql, specialize2rql,
@@ -40,7 +40,7 @@ def setUpModule(*args):
 
     global schema, config
     loader = CubicWebSchemaLoader()
-    config = TestServerConfiguration('data-schemaserial', __file__)
+    config = devtools.TestServerConfiguration('data-schemaserial', __file__)
     config.bootstrap_cubes()
     schema = loader.load(config)
 

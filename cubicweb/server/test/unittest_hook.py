@@ -20,7 +20,8 @@
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
-from cubicweb.devtools import TestServerConfiguration, fake
+from cubicweb import devtools
+from cubicweb.devtools import fake
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server import hook
 from cubicweb.hooks import integrity, syncschema
@@ -61,7 +62,7 @@ class HookCalled(Exception):
     pass
 
 
-config = TestServerConfiguration('data', __file__)
+config = devtools.TestServerConfiguration('data', __file__)
 config.bootstrap_cubes()
 schema = config.load_schema()
 

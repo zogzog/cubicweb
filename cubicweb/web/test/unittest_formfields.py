@@ -22,7 +22,7 @@ from logilab.common.testlib import TestCase, unittest_main, mock_object as mock
 from yams.constraints import StaticVocabularyConstraint, SizeConstraint
 
 import cubicweb
-from cubicweb.devtools import TestServerConfiguration
+from cubicweb import devtools
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.formwidgets import PasswordInput, Select, Radio
 from cubicweb.web.formfields import *
@@ -31,7 +31,7 @@ from cubicweb.web.views.forms import EntityFieldsForm, FieldsForm
 
 def setUpModule(*args):
     global schema
-    config = TestServerConfiguration('data', __file__)
+    config = devtools.TestServerConfiguration('data', __file__)
     config.bootstrap_cubes()
     schema = config.load_schema()
 

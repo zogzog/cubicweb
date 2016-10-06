@@ -20,7 +20,7 @@
 from os.path import dirname, join
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb.devtools import TestServerConfiguration
+from cubicweb import devtools
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.migration import filter_scripts, version_strictly_lower
 
@@ -32,7 +32,8 @@ class Schema(dict):
 SMIGRDIR = join(dirname(__file__), 'data', 'server_migration') + '/'
 TMIGRDIR = join(dirname(__file__), 'data', 'migration') + '/'
 
-class MigrTestConfig(TestServerConfiguration):
+
+class MigrTestConfig(devtools.TestServerConfiguration):
     verbosity = 0
 
     def migration_scripts_dir(cls):

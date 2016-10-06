@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from cubicweb.devtools import TestServerConfiguration, get_test_db_handler
+from cubicweb import devtools
 from cubicweb.devtools.repotest import BasePlannerTC, check_plan
 from cubicweb.server.ssplanner import SSPlanner
 
@@ -24,7 +24,7 @@ from cubicweb.server.ssplanner import SSPlanner
 def setUpModule(*args):
     # keep cnx so it's not garbage collected and the associated session closed
     global repo, cnx
-    handler = get_test_db_handler(TestServerConfiguration('data', __file__))
+    handler = devtools.get_test_db_handler(devtools.TestServerConfiguration('data', __file__))
     handler.build_db_cache()
     global repo, cnx
     repo, cnx = handler.get_repo_and_cnx()

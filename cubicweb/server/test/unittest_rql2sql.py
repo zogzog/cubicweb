@@ -26,7 +26,7 @@ from logilab.common.testlib import TestCase, unittest_main, mock_object
 from rql import BadRQLQuery
 from rql.utils import register_function, FunctionDescr
 
-from cubicweb.devtools import TestServerConfiguration
+from cubicweb import devtools
 from cubicweb.devtools.repotest import RQLGeneratorTC
 from cubicweb.server.sources.rql2sql import remove_unused_solutions
 
@@ -61,7 +61,7 @@ def monkey_patch_import_driver_module(driver, drivers, quiet=True):
 
 def setUpModule():
     global config, schema
-    config = TestServerConfiguration('data', __file__)
+    config = devtools.TestServerConfiguration('data', __file__)
     config.bootstrap_cubes()
     schema = config.load_schema()
     schema['in_state'].inlined = True

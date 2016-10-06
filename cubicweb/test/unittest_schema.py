@@ -28,13 +28,13 @@ from yams.buildobjs import (RelationDefinition, EntityType, RelationType,
                             Int, String, ComputedRelation)
 from yams.reader import fill_schema
 
+from cubicweb import devtools
 from cubicweb.schema import (
     CubicWebSchema, CubicWebSchemaLoader,
     RQLConstraint, RQLUniqueConstraint, RQLVocabularyConstraint,
     ERQLExpression, RRQLExpression,
     normalize_expression, order_eschemas, guess_rrqlexpr_mainvars,
     build_schema_from_namespace)
-from cubicweb.devtools import TestServerConfiguration as TestConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 
 DATADIR = join(dirname(__file__), 'data')
@@ -150,7 +150,7 @@ class CubicWebSchemaTC(TestCase):
 
 
 loader = CubicWebSchemaLoader()
-config = TestConfiguration('data', __file__)
+config = devtools.TestServerConfiguration('data', __file__)
 config.bootstrap_cubes()
 
 
@@ -286,7 +286,7 @@ class SchemaReaderClassTest(TestCase):
 
     def test_relation_perm_overriding(self):
         loader = CubicWebSchemaLoader()
-        config = TestConfiguration('data_schemareader', __file__)
+        config = devtools.TestServerConfiguration('data_schemareader', __file__)
         config.bootstrap_cubes()
         schema = loader.load(config)
         rdef = next(iter(schema['in_group'].rdefs.values()))

@@ -29,11 +29,10 @@ from logilab.common.testlib import TestCase, unittest_main
 from rql import BadRQLQuery
 from rql.utils import register_function, FunctionDescr
 
-from cubicweb import QueryError, Unauthorized, Binary
+from cubicweb import QueryError, Unauthorized, Binary, devtools
 from cubicweb.server.sqlutils import SQL_CONNECT_HOOKS, SQL_PREFIX
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.querier import manual_build_descr, _make_description
-from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
 
@@ -73,8 +72,8 @@ SQL_CONNECT_HOOKS['sqlite'].append(init_sqlite_connexion)
 
 def setUpClass(cls, *args):
     global repo, cnx
-    config = TestServerConfiguration('data', __file__)
-    handler = get_test_db_handler(config)
+    config = devtools.TestServerConfiguration('data', __file__)
+    handler = devtools.get_test_db_handler(config)
     handler.build_db_cache()
     repo, cnx = handler.get_repo_and_cnx()
     cls.repo = repo
