@@ -188,6 +188,7 @@ def includeme(config):
     config.include('cubicweb.pyramid.tools')
     config.include('cubicweb.pyramid.predicates')
     config.include('cubicweb.pyramid.core')
+    config.include('cubicweb.pyramid.syncsession')
 
     if asbool(config.registry.settings.get('cubicweb.bwcompat', True)):
         config.include('cubicweb.pyramid.bwcompat')
