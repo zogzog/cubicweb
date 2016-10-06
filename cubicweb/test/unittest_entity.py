@@ -832,10 +832,14 @@ du :eid:`1:*ReST*`'''
             self.assertEqual(len(person.reverse_ecrit_par), 2)
 
     def test_metainformation(self):
-        with self.admin_access.web_request() as req:
-            note = req.create_entity('Note', type=u'z')
+        with self.admin_access.client_cnx() as cnx:
+            note = cnx.create_entity('Note', type=u'z')
+            cnx.commit()
+            note.cw_clear_all_caches()
             metainf = note.cw_metainformation()
-            self.assertEqual(metainf, {'type': u'Note', 'extid': None})
+            self.assertEqual(metainf, {'type': u'Note',
+                                       'extid': None,
+                                       'source': {'uri': 'system'}})
 
     def test_absolute_url_empty_field(self):
         with self.admin_access.web_request() as req:

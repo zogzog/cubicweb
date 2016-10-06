@@ -623,9 +623,13 @@ class Entity(AppObject):
         """
         return self.has_eid() and self._cw_is_saved
 
+    @deprecated('[3.24] cw_metainformation is deprecated')
     @cached
     def cw_metainformation(self):
-        return self._cw.entity_metas(self.eid)
+        source = self.cw_source[0].name
+        return {'type': self.cw_etype,
+                'extid': self.cwuri if source != 'system' else None,
+                'source': {'uri': source}}
 
     def cw_check_perm(self, action):
         self.e_schema.check_perm(self._cw, action, eid=self.eid)

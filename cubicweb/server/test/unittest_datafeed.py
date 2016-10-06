@@ -84,10 +84,6 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(entity.content, 'the cw web site')
                 self.assertEqual(entity.cwuri, 'http://www.cubicweb.org/')
                 self.assertEqual(entity.cw_source[0].name, u'ô myfeed')
-                self.assertEqual(entity.cw_metainformation(),
-                                 {'type': 'Card',
-                                  'extid': b'http://www.cubicweb.org/'}
-                                 )
                 # test repo cache keys
                 self.assertEqual(self.repo._type_extid_cache[entity.eid],
                                  ('Card', b'http://www.cubicweb.org/'))
@@ -104,12 +100,7 @@ class DataFeedTC(CubicWebTC):
             entity = cnx.execute('Card X').get_entity(0, 0)
             self.assertEqual(entity.cwuri, 'http://www.cubicweb.org/')
             self.assertEqual(entity.cw_source[0].name, 'myrenamedfeed')
-            self.assertEqual(entity.cw_metainformation(),
-                             {'type': 'Card',
-                              'extid': b'http://www.cubicweb.org/'}
-                             )
-            self.assertEqual(self.repo._type_extid_cache[entity.eid],
-                             ('Card', b'http://www.cubicweb.org/'))
+            self.assertEqual(self.repo._type_cache[entity.eid], 'Card')
 
             # test_delete_source
             cnx.execute('DELETE CWSource S WHERE S name "myrenamedfeed"')
