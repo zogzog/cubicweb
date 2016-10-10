@@ -55,6 +55,7 @@ __docformat__ = "restructuredtext en"
 STD_BLACKLIST = set(STD_BLACKLIST)
 STD_BLACKLIST.add('.tox')
 STD_BLACKLIST.add('test')
+STD_BLACKLIST.add('node_modules')
 
 
 class DevConfiguration(ServerConfiguration, WebConfiguration):
