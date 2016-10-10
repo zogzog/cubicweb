@@ -565,35 +565,36 @@ class I18nCubeMessageExtractor(object):
 def update_cube_catalogs(cubedir):
     cubedir = osp.abspath(osp.normpath(cubedir))
     workdir = tempfile.mkdtemp()
-    cube = osp.basename(cubedir)
-    print('cubedir', cubedir)
-    print(underline_title('Updating i18n catalogs for cube %s' % cube))
-    chdir(cubedir)
-    extractor = I18nCubeMessageExtractor(workdir, cubedir)
-    potfile = extractor.generate_pot_file()
-    if potfile is None:
-        print('no message catalog for cube', cube, 'nothing to translate')
+    try:
+        cube = osp.basename(cubedir)
+        print('cubedir', cubedir)
+        print(underline_title('Updating i18n catalogs for cube %s' % cube))
+        chdir(cubedir)
+        extractor = I18nCubeMessageExtractor(workdir, cubedir)
+        potfile = extractor.generate_pot_file()
+        if potfile is None:
+            print('no message catalog for cube', cube, 'nothing to translate')
+            return ()
+        print('-> merging main pot file with existing translations:', end=' ')
+        chdir('i18n')
+        toedit = []
+        for lang in CubicWebNoAppConfiguration.cw_languages():
+            print(lang, end=' ')
+            cubepo = '%s.po' % lang
+            if not osp.exists(cubepo):
+                shutil.copy(potfile, cubepo)
+            else:
+                cmd = ['msgmerge', '-N', '-s', '-o', cubepo + 'new',
+                       cubepo, potfile]
+                execute2(cmd)
+                ensure_fs_mode(cubepo)
+                shutil.move('%snew' % cubepo, cubepo)
+            toedit.append(osp.abspath(cubepo))
+        print()
+        return toedit
+    finally:
+        # cleanup
         shutil.rmtree(workdir)
-        return ()
-    print('-> merging main pot file with existing translations:', end=' ')
-    chdir('i18n')
-    toedit = []
-    for lang in CubicWebNoAppConfiguration.cw_languages():
-        print(lang, end=' ')
-        cubepo = '%s.po' % lang
-        if not osp.exists(cubepo):
-            shutil.copy(potfile, cubepo)
-        else:
-            cmd = ['msgmerge', '-N', '-s', '-o', cubepo + 'new',
-                   cubepo, potfile]
-            execute2(cmd)
-            ensure_fs_mode(cubepo)
-            shutil.move('%snew' % cubepo, cubepo)
-        toedit.append(osp.abspath(cubepo))
-    print()
-    # cleanup
-    shutil.rmtree(workdir)
-    return toedit
 
 
 class NewCubeCommand(Command):
