@@ -229,8 +229,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def finish(self):
         """Remove temporary tables and columns."""
-        if self.slave_mode:
-            raise RuntimeError('Store cleanup is not allowed in slave mode')
+        assert not self.slave_mode, 'finish method should only be called by the master store'
         self.logger.info("Start cleaning")
         # Get all the initialized etypes/rtypes
         if self._dbh.table_exists('cwmassive_initialized'):
