@@ -282,9 +282,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 # There is no data for these etype for this flush round.
                 continue
             buf = pgstore._create_copyfrom_buffer(data, ('eid_from', 'eid_to'))
-            if not buf:
-                # The buffer is empty. This is probably due to error in _create_copyfrom_buffer
-                raise ValueError
             cursor = self._cnx.cnxset.cu
             tablename = '%s_relation' % rtype.lower()
             tmp_tablename = '%s_%s' % (tablename, self.uuid)
@@ -316,9 +313,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 metagen.init_entity_attrs(etype, _d['eid'], _d)
                 _data.append(_d)
             buf = pgstore._create_copyfrom_buffer(_data, columns)
-            if not buf:
-                # The buffer is empty. This is probably due to error in _create_copyfrom_buffer
-                raise ValueError('Error in buffer creation for etype %s' % etype)
             columns = ['cw_%s' % attr for attr in columns]
             cursor = self._cnx.cnxset.cu
             try:
