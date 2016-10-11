@@ -486,6 +486,9 @@ this option is set to yes",
                     continue
                 if not re.match('[_A-Za-z][_A-Za-z0-9]*$', cube):
                     continue # skip invalid python package name
+                if cube == 'pyramid':
+                    cls._warn_pyramid_cube()
+                    continue
                 cubedir = join(directory, cube)
                 if isdir(cubedir) and exists(join(cubedir, '__init__.py')):
                     cubes.add(cube)
@@ -880,11 +883,15 @@ this option is set to yes",
 
     _cubes = None
 
+    @classmethod
+    def _warn_pyramid_cube(cls):
+        cls.warning("cubicweb-pyramid got integrated into CubicWeb; "
+                    "remove it from your project's dependencies")
+
     def init_cubes(self, cubes):
         cubes = list(cubes)
         if 'pyramid' in cubes:
-            self.warning("cubicweb-pyramid got integrated into CubicWeb; "
-                         "remove it from your project's dependencies")
+            self._warn_pyramid_cube()
             cubes.remove('pyramid')
         self._cubes = self.reorder_cubes(cubes)
         # load cubes'__init__.py file first
