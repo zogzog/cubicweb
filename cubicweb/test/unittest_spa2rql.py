@@ -33,7 +33,7 @@ xy.add_equivalence('Project name', 'doap:Project dc:title')
 
 
 @unittest.skipIf(SKIPCAUSE, SKIPCAUSE)
-class XYTC(TestCase):
+class XYTC(unittest.TestCase):
 
     schema = None
 
@@ -224,4 +224,4 @@ class XYTC(TestCase):
 # }
 
 if __name__ == '__main__':
-    unittest_main()
+    unittest.main()

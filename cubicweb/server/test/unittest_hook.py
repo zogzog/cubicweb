@@ -18,7 +18,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit/functional tests for cubicweb.server.hook"""
 
-from logilab.common.testlib import TestCase, unittest_main, mock_object
+import unittest
+from logilab.common.testlib import mock_object
 
 from cubicweb import devtools
 from cubicweb.devtools import fake
@@ -80,7 +81,7 @@ class AddAnyHook(hook.Hook):
         raise HookCalled()
 
 
-class HooksRegistryTC(TestCase):
+class HooksRegistryTC(unittest.TestCase):
 
     def setUp(self):
         """ called before each test from this class """
@@ -143,4 +144,4 @@ class SystemHooksTC(CubicWebTC):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    unittest.main()

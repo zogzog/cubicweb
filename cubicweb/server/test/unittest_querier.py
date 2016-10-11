@@ -20,12 +20,12 @@
 """
 
 from datetime import date, datetime, timedelta, tzinfo
+import unittest
 
 import pytz
 
 from six import PY2, integer_types, binary_type, text_type
 
-from logilab.common.testlib import TestCase, unittest_main
 from rql import BadRQLQuery
 from rql.utils import register_function, FunctionDescr
 
@@ -101,7 +101,7 @@ class Function:
     def get_type(self, solution, args=None):
         return 'Int'
 
-class MakeDescriptionTC(TestCase):
+class MakeDescriptionTC(unittest.TestCase):
     def test_known_values(self):
         solution = {'A': 'Int', 'B': 'CWUser'}
         self.assertEqual(_make_description((Function('max', 'A'), Variable('B')), {}, solution),
@@ -1668,4 +1668,4 @@ class NonRegressionTC(CubicWebTC):
                 cnx.execute('Any A ORDERBY A WHERE U use_email A, U login "admin"').rows)
 
 if __name__ == '__main__':
-    unittest_main()
+    unittest.main()

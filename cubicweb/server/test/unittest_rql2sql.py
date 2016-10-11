@@ -19,9 +19,10 @@
 from __future__ import print_function
 
 import sys
+import unittest
 
 from logilab import database as db
-from logilab.common.testlib import TestCase, unittest_main, mock_object
+from logilab.common.testlib import mock_object
 
 from rql import BadRQLQuery
 from rql.utils import register_function, FunctionDescr
@@ -2236,7 +2237,7 @@ WHERE NOT (DATE(_P.cw_datenaiss)=CURRENT_DATE)'''),
             with self.subTest(rql=rql):
                 self._check(rql, sql)
 
-class removeUnsusedSolutionsTC(TestCase):
+class removeUnsusedSolutionsTC(unittest.TestCase):
     def test_invariant_not_varying(self):
         rqlst = mock_object(defined_vars={})
         rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
@@ -2259,4 +2260,4 @@ class removeUnsusedSolutionsTC(TestCase):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    unittest.main()
