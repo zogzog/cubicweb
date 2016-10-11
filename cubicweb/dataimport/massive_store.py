@@ -256,8 +256,9 @@ class MassiveObjectStore(stores.RQLObjectStore):
                     self.sql('DELETE FROM cwmassive_initialized '
                              'WHERE retype = %(rtype)s AND uuid = %(uuid)s',
                              {'rtype': retype, 'uuid': uuid})
+        # restore all deleted indexes and constraints
         self._dbh.restore_indexes_and_constraints()
-        # Delete the meta data table
+        # delete the meta data table
         self.sql('DROP TABLE IF EXISTS cwmassive_initialized')
         self.commit()
 
@@ -275,7 +276,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             raise exc
 
     def flush_relations(self):
-        """Flush the relations data."""
+        """Flush the relations data from in-memory structures to a temporary table."""
         for rtype, data in self._data_relations.items():
             if not data:
                 # There is no data for these etype for this flush round.
@@ -285,7 +286,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 # The buffer is empty. This is probably due to error in _create_copyfrom_buffer
                 raise ValueError
             cursor = self._cnx.cnxset.cu
-            # Push into the tmp table
             tablename = '%s_relation' % rtype.lower()
             tmp_tablename = '%s_%s' % (tablename, self.uuid)
             cursor.copy_from(buf, tmp_tablename, null='NULL', columns=('eid_from', 'eid_to'))
@@ -293,7 +293,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self._data_relations[rtype] = []
 
     def flush_entities(self):
-        """Flush the entities data."""
+        """Flush the entities data from in-memory structures to a temporary table."""
         metagen = self.metagen
         for etype, data in self._data_entities.items():
             if not data:
