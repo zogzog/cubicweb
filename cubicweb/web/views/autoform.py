@@ -200,6 +200,7 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
 
     _select_attrs = ('peid', 'rtype', 'role', 'pform', 'etype')
     removejs = "removeInlinedEntity('%s', '%s', '%s')"
+    form_renderer_id = 'inline'
 
     # make pylint happy
     peid = rtype = role = pform = etype = None
@@ -229,7 +230,7 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
         form = self._cw.vreg['forms'].select('edition', self._cw,
                                              entity=entity,
                                              formtype='inlined',
-                                             form_renderer_id='inline',
+                                             form_renderer_id=self.form_renderer_id,
                                              copy_nav_params=False,
                                              mainform=False,
                                              parent_form=self.pform,
