@@ -17,15 +17,19 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.utils"""
 
+import base64
 import datetime
 import decimal
 import doctest
 import re
+try:
+    from unittest2 import TestCase
+except ImportError:  # Python3
+    from unittest import TestCase
 
 from six.moves import range
 
-from logilab.common.testlib import TestCase, unittest_main
-
+from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import (make_uid, UStringIO, RepeatList, HTMLHead,
                             QueryCache, parse_repo_uri)
@@ -200,6 +204,12 @@ class JSONEncoderTC(TestCase):
         self.assertEqual(json.loads(self.encode([e])),
                           [{'pouet': 'hop', 'eid': 2}])
 
+    def test_encoding_binary(self):
+        for content in (b'he he', b'h\xe9 hxe9'):
+            with self.subTest(content=content):
+                encoded = self.encode(Binary(content))
+                self.assertEqual(base64.b64decode(encoded), content)
+
     def test_encoding_unknown_stuff(self):
         self.assertEqual(self.encode(TestCase), 'null')
 
@@ -322,4 +332,5 @@ def load_tests(loader, tests, ignore):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    import unittest
+    unittest.main()

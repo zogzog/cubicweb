@@ -21,6 +21,7 @@ from __future__ import division
 
 __docformat__ = "restructuredtext en"
 
+import base64
 import decimal
 import datetime
 import random
@@ -41,6 +42,9 @@ from six.moves.urllib.parse import urlparse
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
 from logilab.common.date import ustrftime
+
+from cubicweb import Binary
+
 
 _MARKER = object()
 
@@ -507,6 +511,8 @@ class CubicWebJsonEncoder(json.JSONEncoder):
             return (obj.days * 24 * 60 * 60) + obj.seconds
         elif isinstance(obj, decimal.Decimal):
             return float(obj)
+        elif isinstance(obj, Binary):
+            return base64.b64encode(obj.getvalue()).decode('ascii')
         try:
             return json.JSONEncoder.default(self, obj)
         except TypeError:
