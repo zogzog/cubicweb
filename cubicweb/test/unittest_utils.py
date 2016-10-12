@@ -203,6 +203,7 @@ class JSONEncoderTC(TestCase):
     def test_encoding_unknown_stuff(self):
         self.assertEqual(self.encode(TestCase), 'null')
 
+
 class HTMLHeadTC(CubicWebTC):
 
     def htmlhead(self, datadir_url):
