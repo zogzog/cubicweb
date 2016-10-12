@@ -381,7 +381,7 @@ class Connection(RequestSessionBase):
     # life cycle handling ####################################################
 
     def __enter__(self):
-        assert self._open is None  # first opening
+        assert not self._open
         self._open = True
         self.cnxset = self.repo._get_cnxset()
         return self
