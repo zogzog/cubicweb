@@ -108,7 +108,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     # master/slaves specific API
 
-    def master_init(self):
+    def master_init(self, commit=True):
         """Initialize database for massive insertion.
 
         This is expected to be called once, by the master store in master/slaves configuration.
@@ -118,6 +118,8 @@ class MassiveObjectStore(stores.RQLObjectStore):
             self.sql('CREATE TABLE cwmassive_initialized'
                      '(retype text, type varchar(128), uuid varchar(32))')
             self._initialized[self] = None
+            if commit:
+                self.commit()
 
     # SQL utilities #########################################################
 
@@ -149,7 +151,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """
         if etype not in self._initialized:
             if not self.slave_mode:
-                self.master_init()
+                self.master_init(commit=False)
             tablename = 'cw_%s' % etype.lower()
             tmp_tablename = '%s_%s' % (tablename, self.uuid)
             self.sql("INSERT INTO cwmassive_initialized VALUES (%(e)s, 'etype', %(uuid)s)",
@@ -175,7 +177,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """
         if rtype not in self._initialized:
             if not self.slave_mode:
-                self.master_init()
+                self.master_init(commit=False)
             assert not self._cnx.vreg.schema.rschema(rtype).inlined
             self._initialized[rtype] = None
             tablename = '%s_relation' % rtype.lower()
