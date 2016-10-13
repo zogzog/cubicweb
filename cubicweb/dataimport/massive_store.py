@@ -17,8 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from base64 import b64encode
-from copy import copy
 from collections import defaultdict
 from itertools import chain
 import logging
@@ -384,20 +382,6 @@ class PGHelper(object):
                       'WHERE table_name=%(t)s AND table_schema=%(s)s',
                       {'t': tablename, 's': self.pg_schema})
         return bool(cu.fetchone())
-
-    def table_indexes_constraints(self, tablename):
-        """Return one dictionary with all indexes by name, another with all constraints by name,
-        for the given table.
-        """
-        indexes = self.table_indexes(tablename)
-        constraints = self.table_constraints(tablename)
-        _indexes = {}
-        for name, query in indexes.items():
-            # Remove pkey indexes (automatically created by constraints)
-            # Specific cases of primary key, see #3224079
-            if name not in constraints:
-                _indexes[name] = query
-        return _indexes, constraints
 
     def table_indexes(self, tablename):
         """Return a dictionary of indexes {index name: index sql}, constraints included."""
