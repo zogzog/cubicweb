@@ -234,12 +234,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
                 self._dbh.drop_indexes(tablename)
                 for uuid in uuids:
                     tmp_tablename = '%s_%s' % (tablename, uuid)
-                    # XXX no index on the original relation table, EXISTS subquery may be sloooow
-                    self.sql('INSERT INTO %(table)s(eid_from, eid_to) SELECT DISTINCT '
-                             'T.eid_from, T.eid_to FROM %(tmp_table)s AS T '
-                             'WHERE NOT EXISTS (SELECT 1 FROM %(table)s AS TT WHERE '
-                             'TT.eid_from=T.eid_from AND TT.eid_to=T.eid_to);'
-                             % {'table': tablename, 'tmp_table': tmp_tablename})
+                    self.fill_relation_table(tablename, tmp_tablename)
                     self._tmp_data_cleanup(tmp_tablename, rtype, uuid)
         # restore all deleted indexes and constraints
         self._dbh.restore_indexes_and_constraints()
@@ -252,20 +247,31 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """
         # insert standard metadata relations
         for rtype, eid in self.metagen.base_etype_rels(etype).items():
-            self._insert_meta_relation(tmp_tablename, rtype, eid)
+            self.fill_meta_relation_table(tmp_tablename, rtype, eid)
         # insert cw_source, is and is_instance_of relations (normally handled by the system source)
-        self._insert_meta_relation(tmp_tablename, 'cw_source', self.metagen.source.eid)
+        self.fill_meta_relation_table(tmp_tablename, 'cw_source', self.metagen.source.eid)
         eschema = self.schema[etype]
-        self._insert_meta_relation(tmp_tablename, 'is', eschema.eid)
+        self.fill_meta_relation_table(tmp_tablename, 'is', eschema.eid)
         for parent_eschema in chain(eschema.ancestors(), [eschema]):
-            self._insert_meta_relation(tmp_tablename, 'is_instance_of', parent_eschema.eid)
+            self.fill_meta_relation_table(tmp_tablename, 'is_instance_of', parent_eschema.eid)
+        self.fill_entities_table(etype, tmp_tablename)
+
+    def fill_entities_table(self, etype, tmp_tablename):
         # finally insert records into the entities table
         self.sql("INSERT INTO entities(eid, type) "
                  "SELECT cw_eid, '%s' FROM %s "
                  "WHERE NOT EXISTS (SELECT 1 FROM entities WHERE eid=cw_eid)"
                  % (etype, tmp_tablename))
 
-    def _insert_meta_relation(self, tmp_tablename, rtype, eid_to):
+    def fill_relation_table(self, tablename, tmp_tablename):
+        # XXX no index on the original relation table, EXISTS subquery may be sloooow
+        self.sql('INSERT INTO %(table)s(eid_from, eid_to) SELECT DISTINCT '
+                 'T.eid_from, T.eid_to FROM %(tmp_table)s AS T '
+                 'WHERE NOT EXISTS (SELECT 1 FROM %(table)s AS TT WHERE '
+                 'TT.eid_from=T.eid_from AND TT.eid_to=T.eid_to);'
+                 % {'table': tablename, 'tmp_table': tmp_tablename})
+
+    def fill_meta_relation_table(self, tmp_tablename, rtype, eid_to):
         self.sql("INSERT INTO %s_relation(eid_from, eid_to) SELECT cw_eid, %s FROM %s "
                  "WHERE NOT EXISTS (SELECT 1 FROM entities WHERE eid=cw_eid)"
                  % (rtype, eid_to, tmp_tablename))
