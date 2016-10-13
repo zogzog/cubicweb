@@ -343,7 +343,7 @@ class LogTableLayout(tableview.TableLayout):
     def render_table(self, w, actions, paginate):
         default_level = self.view.cw_extra_kwargs['default_level']
         if default_level != 'Debug':
-            self._cw.add_onload('$("select.logFilter").val("%s").change();'
+            self._cw.add_onload('$("select.log_filter").val("%s").change();'
                            % self._cw.form.get('logLevel', default_level))
         w(u'\n<form action="#"><fieldset>')
         w(u'<label>%s</label>' % self._cw._(u'Message threshold'))
