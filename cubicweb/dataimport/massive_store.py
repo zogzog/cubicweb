@@ -63,11 +63,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
     if desired.
     """
 
-    def __init__(self, cnx,
-                 on_commit_callback=None, on_rollback_callback=None,
-                 slave_mode=False,
-                 eids_seq_range=10000,
-                 metagen=None):
+    def __init__(self, cnx, slave_mode=False, eids_seq_range=10000, metagen=None):
         """Create a MassiveObject store, with the following arguments:
 
         - `cnx`, a connection to the repository
@@ -77,8 +73,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         super(MassiveObjectStore, self).__init__(cnx)
 
         self.uuid = text_type(uuid4()).replace('-', '')
-        self.on_commit_callback = on_commit_callback
-        self.on_rollback_callback = on_rollback_callback
         self.slave_mode = slave_mode
         self.eids_seq_range = eids_seq_range
         if metagen is None:
@@ -192,11 +186,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.flush_entities()
         self.flush_relations()
 
-    def commit(self):
-        """Commit the database transaction."""
-        self.on_commit()
-        super(MassiveObjectStore, self).commit()
-
     def finish(self):
         """Remove temporary tables and columns."""
         assert not self.slave_mode, 'finish method should only be called by the master store'
@@ -287,17 +276,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     # FLUSH #################################################################
 
-    def on_commit(self):
-        if self.on_commit_callback:
-            self.on_commit_callback()
-
-    def on_rollback(self, exc, etype, data):
-        if self.on_rollback_callback:
-            self.on_rollback_callback(exc, etype, data)
-            self._cnx.rollback()
-        else:
-            raise exc
-
     def flush_relations(self):
         """Flush the relations data from in-memory structures to a temporary table."""
         for rtype, data in self._data_relations.items():
@@ -337,10 +315,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
             tmp_tablename = '%s_%s' % (tablename, self.uuid)
             columns = ['cw_%s' % attr for attr in attrs]
             cursor = self._cnx.cnxset.cu
-            try:
-                cursor.copy_from(buf, tmp_tablename, null='NULL', columns=columns)
-            except Exception as exc:
-                self.on_rollback(exc, etype, data)
+            cursor.copy_from(buf, tmp_tablename, null='NULL', columns=columns)
             # Clear data cache
             self._data_entities[etype] = []
 

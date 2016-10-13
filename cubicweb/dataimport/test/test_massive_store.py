@@ -219,24 +219,6 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             final_descr = self.get_db_descr(cnx)
         self.assertEqual(init_descr, final_descr)
 
-    def test_on_commit_callback(self):
-        counter = itertools.count()
-        with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, on_commit_callback=lambda: next(counter))
-            store.prepare_insert_entity('Location', name=u'toto')
-            store.flush()
-            store.commit()
-        self.assertEqual(next(counter), 1)
-
-    def test_on_rollback_callback(self):
-        counter = itertools.count()
-        with self.admin_access.repo_cnx() as cnx:
-            store = MassiveObjectStore(cnx, on_rollback_callback=lambda *_: next(counter))
-            # oversized attribute
-            store.prepare_insert_entity('Location', feature_class='toto')
-            store.flush()
-        self.assertEqual(next(counter), 1)
-
     def test_simple_insert(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
