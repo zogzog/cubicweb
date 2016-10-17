@@ -1322,7 +1322,6 @@ CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL
 );;
-CREATE INDEX entities_type_idx ON entities(type);;
 
 CREATE TABLE transactions (
   tx_uuid CHAR(32) PRIMARY KEY NOT NULL,
