@@ -272,12 +272,12 @@ class MetadataGenerator(object):
     * `baseurl`: optional base URL to be used for `cwuri` generation - default to config['base-url']
     * `source`: optional source to be used as `cw_source` for imported entities
     """
-    META_RELATIONS = (META_RTYPES
-                      - VIRTUAL_RTYPES
-                      - set(('eid', 'cwuri',
-                             'is', 'is_instance_of', 'cw_source')))
+    META_RELATIONS = frozenset(META_RTYPES
+                               - VIRTUAL_RTYPES
+                               - set(('eid', 'cwuri',
+                                      'is', 'is_instance_of', 'cw_source')))
 
-    def __init__(self, cnx, baseurl=None, source=None):
+    def __init__(self, cnx, baseurl=None, source=None, meta_skipped=()):
         self._cnx = cnx
         if baseurl is None:
             config = cnx.vreg.config
@@ -295,7 +295,8 @@ class MetadataGenerator(object):
         # attributes/relations specific to each entity
         self._entity_attrs = ['cwuri']
         rschema = cnx.vreg.schema.rschema
-        for rtype in self.META_RELATIONS:
+        self.meta_relations = self.META_RELATIONS - set(meta_skipped)
+        for rtype in self.meta_relations:
             # skip owned_by / created_by if user is the internal manager
             if cnx.user.eid == -1 and rtype in ('owned_by', 'created_by'):
                 continue
