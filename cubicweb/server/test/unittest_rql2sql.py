@@ -23,13 +23,29 @@ import unittest
 
 from logilab import database as db
 from logilab.common.testlib import mock_object
+from logilab.common.decorators import monkeypatch
 
 from rql import BadRQLQuery
 from rql.utils import register_function, FunctionDescr
 
 from cubicweb import devtools
 from cubicweb.devtools.repotest import RQLGeneratorTC
-from cubicweb.server.sources.rql2sql import remove_unused_solutions
+from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
+
+
+def setUpModule():
+    """Monkey-patch the SQL generator to ensure solutions order is predictable."""
+    global orig_solutions_sql
+    orig_solutions_sql = SQLGenerator._solutions_sql
+
+    @monkeypatch
+    def _solutions_sql(self, select, solutions, distinct, needalias):
+        return orig_solutions_sql(self, select, sorted(solutions), distinct, needalias)
+
+
+def tearDownModule():
+    """Remove monkey-patch done in setUpModule"""
+    SQLGenerator._solutions_sql = orig_solutions_sql
 
 
 # add a dumb registered procedure
