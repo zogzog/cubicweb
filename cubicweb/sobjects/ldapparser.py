@@ -25,7 +25,7 @@ from six.moves import map, filter
 from logilab.common.decorators import cached, cachedproperty
 from logilab.common.shellutils import generate_password
 
-from cubicweb import Binary, ConfigurationError
+from cubicweb import ConfigurationError
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources import datafeed
 from cubicweb.dataimport import stores, importer
@@ -149,7 +149,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 # generate a dumb password if not fetched from ldap (see
                 # userPassword)
                 pwd = crypt_password(generate_password())
-                attrs['upassword'] = set([Binary(pwd)])
+                attrs['upassword'] = set([pwd])
             extuser = importer.ExtEntity('CWUser', userdict['dn'].encode('ascii'), attrs)
             extuser.values['owned_by'] = set([extuser.extid])
             for extemail in self._process_email(extuser, userdict):
