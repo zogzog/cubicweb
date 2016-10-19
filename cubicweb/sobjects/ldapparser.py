@@ -31,17 +31,17 @@ from cubicweb.server.sources import datafeed
 from cubicweb.dataimport import stores, importer
 
 
-class UserMetaGenerator(stores.MetaGenerator):
+class UserMetaGenerator(stores.MetadataGenerator):
     """Specific metadata generator, used to see newly created user into their initial state.
     """
     @cached
-    def base_etype_dicts(self, entity):
-        entity, rels = super(UserMetaGenerator, self).base_etype_dicts(entity)
-        if entity.cw_etype == 'CWUser':
+    def base_etype_rels(self, etype):
+        rels = super(UserMetaGenerator, self).base_etype_rels(etype)
+        if etype == 'CWUser':
             wf_state = self._cnx.execute('Any S WHERE ET default_workflow WF, ET name %(etype)s, '
-                                         'WF initial_state S', {'etype': entity.cw_etype}).one()
+                                         'WF initial_state S', {'etype': etype}).one()
             rels['in_state'] = wf_state.eid
-        return entity, rels
+        return rels
 
 
 class DataFeedLDAPAdapter(datafeed.DataFeedParser):
