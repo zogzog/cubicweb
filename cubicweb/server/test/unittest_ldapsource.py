@@ -44,10 +44,6 @@ group-base-dn=ou=Group,dc=cubicweb,dc=test
 user-attrs-map=uid=login,mail=email,userPassword=upassword
 group-attrs-map=cn=name,memberUid=member
 '''
-CONFIG_LDAPUSER = u'''
-user-base-dn=ou=People,dc=cubicweb,dc=test
-user-attrs-map=uid=login,mail=email,userPassword=upassword
-'''
 
 URL = None
 
