@@ -1,8 +1,8 @@
-cubicweb (3.23.2-1) UNRELEASED; urgency=medium
+cubicweb (3.23.2-1) unstable; urgency=medium
 
   * new upstream release 
 
- -- David Douard <david.douard@logilab.fr>  Tue, 12 Jul 2016 11:34:48 +0200
+ -- Sylvain Thenault <sylvain.thenault@logilab.fr>  Wed, 19 Oct 2016 19:21:09 +0200
 
 cubicweb (3.23.1-1) unstable; urgency=medium
 
