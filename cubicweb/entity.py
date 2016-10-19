@@ -152,7 +152,7 @@ class Entity(AppObject):
     the class and instances has access to their issuing cursor.
 
     A property is set for each attribute and relation on each entity's type
-    class. Becare that among attributes, 'eid' is *NEITHER* stored in the
+    class. Becare that among attributes, 'eid' is *NEVER* stored in the
     dict containment (which acts as a cache for other attributes dynamically
     fetched)
 
@@ -774,7 +774,7 @@ class Entity(AppObject):
         for rtype in self.skip_copy_for:
             skip_copy_for['subject'].add(rtype)
             warn('[3.14] skip_copy_for on entity classes (%s) is deprecated, '
-                 'use cw_skip_for instead with list of couples (rtype, role)' % self.cw_etype,
+                 'use cw_skip_copy_for instead with list of couples (rtype, role)' % self.cw_etype,
                  DeprecationWarning)
         for rtype, role in self.cw_skip_copy_for:
             assert role in ('subject', 'object'), role
