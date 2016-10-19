@@ -113,6 +113,14 @@ class MigrationTC(CubicWebTC):
         assert result, 'no table %s' % tablename
         return dict((x[0], (x[1], x[2])) for x in result)
 
+    def table_constraints(self, mh, tablename):
+        result = mh.sqlexec(
+            "SELECT DISTINCT constraint_name FROM information_schema.constraint_column_usage "
+            "WHERE LOWER(table_name) = '%(table)s' AND constraint_name LIKE 'cstr%%'"
+            % {'table': tablename.lower()})
+        assert result, 'no table %s' % tablename
+        return set(x[0] for x in result)
+
 
 class MigrationCommandsTC(MigrationTC):
 
