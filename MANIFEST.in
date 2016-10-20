@@ -19,7 +19,7 @@ recursive-include doc/_themes *
 recursive-include doc/_static *
 include doc/_templates/*.html
 include doc/changes/*.rst
-recursive-include doc/dev .txt *.rst
+recursive-include doc/dev *.txt *.rst
 recursive-include doc/images *.png *.svg
 include doc/conf.py
 
