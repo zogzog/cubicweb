@@ -41,24 +41,24 @@ def pil_captcha(text, fontfile, fontsize):
     adapted from http://code.activestate.com/recipes/440588/
     """
     # randomly select the foreground color
-    fgcolor = randint(0, 0xffff00)
-    # make the background color the opposite of fgcolor
-    bgcolor = fgcolor ^ 0xffffff
+    fgcolor = (randint(100, 256), randint(100, 256), randint(100, 256))
     # create a font object
     font = ImageFont.truetype(fontfile, fontsize)
     # determine dimensions of the text
     dim = font.getsize(text)
     # create a new image slightly larger that the text
-    img = Image.new('RGB', (dim[0]+5, dim[1]+5), bgcolor)
+    img = Image.new('RGB', (dim[0]+15, dim[1]+5), 0)
     draw = ImageDraw.Draw(img)
     # draw 100 random colored boxes on the background
     x, y = img.size
     for num in range(100):
+        fill = (randint(0, 100), randint(0, 100), randint(0, 100))
         draw.rectangle((randint(0, x), randint(0, y),
                         randint(0, x), randint(0, y)),
-                       fill=randint(0, 0xffffff))
+                       fill=fill)
     # add the text to the image
-    draw.text((3, 3), text, font=font, fill=fgcolor)
+    # we add a trailing space to prevent the last char to be truncated
+    draw.text((3, 3), text + ' ', font=font, fill=fgcolor)
     img = img.filter(ImageFilter.EDGE_ENHANCE_MORE)
     return img
 

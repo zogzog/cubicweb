@@ -33,6 +33,7 @@ def count_lines(stream_or_filename):
     else:
         f = stream_or_filename
         f.seek(0)
+    i = 0  # useful is f is an empty file
     for i, line in enumerate(f):
         pass
     f.seek(0)

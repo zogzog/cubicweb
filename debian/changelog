@@ -1,3 +1,9 @@
+cubicweb (3.23.2-1) unstable; urgency=medium
+
+  * new upstream release
+
+ -- Sylvain Thenault <sylvain.thenault@logilab.fr>  Wed, 19 Oct 2016 19:21:09 +0200
+
 cubicweb (3.23.1-1) unstable; urgency=medium
 
   * new upstream release.
@@ -9,6 +15,12 @@ cubicweb (3.23.0-1) unstable; urgency=medium
   * New upstream release.
 
  -- Denis Laxalde <denis.laxalde@logilab.fr>  Thu, 23 Jun 2016 16:28:39 +0200
+
+cubicweb (3.22.4-1) unstable; urgency=medium
+
+  * new upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Thu, 21 Jul 2016 21:02:14 +0200
 
 cubicweb (3.22.3-1) unstable; urgency=medium
 
@@ -81,6 +93,12 @@ cubicweb (3.21.0-1) unstable; urgency=low
   * New upstream release.
 
  -- Julien Cristau <julien.cristau@logilab.fr>  Fri, 10 Jul 2015 17:04:11 +0200
+
+cubicweb (3.20.16-1) unstable; urgency=medium
+
+  * new upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Tue, 19 Jul 2016 12:48:45 +0200
 
 cubicweb (3.20.15-1) unstable; urgency=medium
 

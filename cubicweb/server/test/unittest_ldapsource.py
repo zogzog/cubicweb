@@ -44,10 +44,6 @@ group-base-dn=ou=Group,dc=cubicweb,dc=test
 user-attrs-map=uid=login,mail=email,userPassword=upassword
 group-attrs-map=cn=name,memberUid=member
 '''
-CONFIG_LDAPUSER = u'''
-user-base-dn=ou=People,dc=cubicweb,dc=test
-user-attrs-map=uid=login,mail=email,userPassword=upassword
-'''
 
 URL = None
 
@@ -313,6 +309,24 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
             pwd = cu.fetchall()[0][0]
             self.assertIsNotNone(pwd)
             self.assertTrue(str(pwd))
+
+
+class LDAPGeneratePwdTC(LDAPFeedTestBase):
+    """
+    A testcase for password generation on CWUser when none is imported
+    """
+
+    def setup_database(self):
+        with self.admin_access.repo_cnx() as cnx:
+            lfsource = cnx.repo.sources_by_uri['ldap']
+            del lfsource.user_attrs['userPassword']
+        super(LDAPGeneratePwdTC, self).setup_database()
+
+    def test_no_password(self):
+        with self.admin_access.repo_cnx() as cnx:
+            cu = cnx.system_sql("SELECT cw_upassword FROM cw_cwuser WHERE cw_login='syt';")
+            pwd = cu.fetchall()[0][0]
+            self.assertTrue(pwd)
 
 
 class LDAPFeedUserDeletionTC(LDAPFeedTestBase):

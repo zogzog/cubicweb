@@ -368,8 +368,8 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     quick_start = False
 
     if 'VIRTUAL_ENV' in os.environ:
+        mode = _forced_mode or 'user'
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
-        mode = 'user'
     elif CWDEV and _forced_mode != 'system':
         mode = 'user'
         _CUBES_DIR = join(CW_SOFTWARE_ROOT, '../../cubes')
@@ -1182,6 +1182,9 @@ the repository',
             except OSError as ex:
                 self.warning('error while creating %s directory: %s', path, ex)
                 return
+        self.ensure_uid(path)
+
+    def get_uid(self):
         if self['uid']:
             try:
                 uid = int(self['uid'])
@@ -1193,22 +1196,37 @@ the repository',
                 uid = os.getuid()
             except AttributeError: # we are on windows
                 return
+        return uid
+
+    def ensure_uid(self, path, enforce_write=False):
+        if not exists(path):
+            return
+        uid = self.get_uid()
+        if uid is None:
+            return
         fstat = os.stat(path)
         if fstat.st_uid != uid:
-            self.info('giving ownership of %s directory to %s', path, self['uid'])
+            self.info('giving ownership of %s to %s', path, self['uid'])
             try:
                 os.chown(path, uid, os.getgid())
             except OSError as ex:
-                self.warning('error while giving ownership of %s directory to %s: %s',
+                self.warning('error while giving ownership of %s to %s: %s',
                              path, self['uid'], ex)
-        if not (fstat.st_mode & stat.S_IWUSR):
-            self.info('forcing write permission on directory %s', path)
+
+        if enforce_write and not (fstat.st_mode & stat.S_IWUSR):
+            self.info('forcing write permission on %s', path)
             try:
                 os.chmod(path, fstat.st_mode | stat.S_IWUSR)
             except OSError as ex:
-                self.warning('error while forcing write permission on directory %s: %s',
+                self.warning('error while forcing write permission on %s: %s',
                              path, ex)
-                return
+
+    def ensure_uid_directory(self, path, enforce_write=False):
+        self.check_writeable_uid_directory(path)
+        for dirpath, dirnames, filenames in os.walk(path):
+            for name in filenames:
+                self.ensure_uid(join(dirpath, name), enforce_write)
+        return path
 
     @cached
     def instance_md5_version(self):
