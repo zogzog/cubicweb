@@ -134,12 +134,10 @@ class CubicWebRootResource(resource.Resource):
             # XXX should occur before authentication?
             path = self.url_rewriter.rewrite(host, origpath, request)
             request.uri.replace(origpath, path, 1)
-        else:
-            path = origpath
         req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https)
         try:
             ### Try to generate the actual request content
-            content = self.appli.handle_request(req, path)
+            content = self.appli.handle_request(req)
         except DirectResponse as ex:
             return ex.response
         # at last: create twisted object

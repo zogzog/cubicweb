@@ -717,8 +717,9 @@ class CubicWebTC(BaseTestCase):
             ctrl = self.vreg['controllers'].select('ajax', req)
             yield ctrl.publish(), req
 
-    def app_handle_request(self, req, path='view'):
-        return self.app.core_handle(req, path)
+    @application._deprecated_path_arg
+    def app_handle_request(self, req):
+        return self.app.core_handle(req)
 
     @deprecated("[3.15] app_handle_request is the new and better way"
                 " (beware of small semantic changes)")
@@ -859,7 +860,9 @@ class CubicWebTC(BaseTestCase):
         """call the publish method of the application publisher, expecting to
         get a Redirect exception
         """
-        self.app_handle_request(req, path)
+        if req.relative_path(False) != path:
+            req._url = path
+        self.app_handle_request(req)
         self.assertTrue(300 <= req.status_out < 400, req.status_out)
         location = req.get_response_header('location')
         return self._parse_location(req, location)

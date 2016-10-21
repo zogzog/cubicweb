@@ -35,7 +35,7 @@ class staticfilespublishermixin(object):
     def _publish_static_files(self, url, header={}):
         with self.admin_access.web_request(headers=header) as req:
             req._url = url
-            self.app_handle_request(req, url)
+            self.app_handle_request(req)
             yield req
 
 class StaticControllerCacheTC(staticfilespublishermixin, CubicWebTC):
@@ -127,7 +127,7 @@ class ConcatFilesTC(CubicWebTC):
             url = head.concat_urls([req.data_url(js_file)
                                     for js_file in js_files])[len(req.base_url()):]
             req._url = url
-            res = self.app_handle_request(req, url)
+            res = self.app_handle_request(req)
             yield res, req
 
     def expected_content(self, js_files):

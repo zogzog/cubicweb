@@ -65,7 +65,9 @@ class FakeRequest(ConnectionCubicWebRequestBase):
             kwargs['vreg'] = CWRegistryStore(FakeConfig(), initlog=False)
         kwargs['https'] = False
         self._http_method = kwargs.pop('method', 'GET')
-        self._url = kwargs.pop('url', None) or 'view?rql=Blop&vid=blop'
+        self._url = kwargs.pop('url', None)
+        if self._url is None:
+            self._url = 'view?rql=Blop&vid=blop'
         super(FakeRequest, self).__init__(*args, **kwargs)
         self._session_data = {}
 

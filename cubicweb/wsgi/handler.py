@@ -108,8 +108,7 @@ class CubicWebWSGIApplication(object):
         """this function performs the actual rendering
         """
         try:
-            path = req.path
-            result = self.appli.handle_request(req, path)
+            result = self.appli.handle_request(req)
         except DirectResponse as ex:
             return ex.response
         return WSGIResponse(req.status_out, req, result)

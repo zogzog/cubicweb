@@ -510,15 +510,15 @@ class ApplicationTC(CubicWebTC):
 
         with self.temporary_appobjects(ErrorAjaxView):
             with real_error_handling(self.app) as app:
-                with self.admin_access.web_request(vid='test.ajax.error') as req:
+                with self.admin_access.web_request(vid='test.ajax.error', url='') as req:
                     req.ajax_request = True
-                    app.handle_request(req, '')
+                    app.handle_request(req)
         self.assertEqual(http_client.INTERNAL_SERVER_ERROR,
                          req.status_out)
 
     def _test_cleaned(self, kwargs, injected, cleaned):
         with self.admin_access.web_request(**kwargs) as req:
-            page = self.app_handle_request(req, 'view')
+            page = self.app_handle_request(req)
             self.assertNotIn(injected.encode('ascii'), page)
             self.assertIn(cleaned.encode('ascii'), page)
 
@@ -556,20 +556,21 @@ class ApplicationTC(CubicWebTC):
     def test_http_auth_no_anon(self):
         req, origsession = self.init_authentication('http')
         self.assertAuthFailure(req)
-        self.app.handle_request(req, 'login')
+        self.app.handle_request(req)
         self.assertEqual(401, req.status_out)
         clear_cache(req, 'get_authorization')
         authstr = base64.encodestring(('%s:%s' % (self.admlogin, self.admpassword)).encode('ascii'))
         req.set_request_header('Authorization', 'basic %s' % authstr.decode('ascii'))
         self.assertAuthSuccess(req, origsession)
-        self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
+        req._url = 'logout'
+        self.assertRaises(LogOut, self.app_handle_request, req)
         self.assertEqual(len(self.open_sessions), 0)
 
     def test_cookie_auth_no_anon(self):
         req, origsession = self.init_authentication('cookie')
         self.assertAuthFailure(req)
         try:
-            form = self.app.handle_request(req, 'login')
+            form = self.app.handle_request(req)
         except Redirect:
             self.fail('anonymous user should get login form')
         clear_cache(req, 'get_authorization')
@@ -579,7 +580,8 @@ class ApplicationTC(CubicWebTC):
         req.form['__login'] = self.admlogin
         req.form['__password'] = self.admpassword
         self.assertAuthSuccess(req, origsession)
-        self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
+        req._url = 'logout'
+        self.assertRaises(LogOut, self.app_handle_request, req)
         self.assertEqual(len(self.open_sessions), 0)
 
     def test_login_by_email(self):
@@ -594,7 +596,8 @@ class ApplicationTC(CubicWebTC):
         req.form['__login'] = address
         req.form['__password'] = self.admpassword
         self.assertAuthSuccess(req, origsession)
-        self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
+        req._url = 'logout'
+        self.assertRaises(LogOut, self.app_handle_request, req)
         self.assertEqual(len(self.open_sessions), 0)
 
     def _reset_cookie(self, req):
@@ -639,7 +642,8 @@ class ApplicationTC(CubicWebTC):
         authstr = base64.encodestring(('%s:%s' % (self.admlogin, self.admpassword)).encode('ascii'))
         req.set_request_header('Authorization', 'basic %s' % authstr.decode('ascii'))
         self.assertAuthSuccess(req, origsession)
-        self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
+        req._url = 'logout'
+        self.assertRaises(LogOut, self.app_handle_request, req)
         self.assertEqual(len(self.open_sessions), 0)
 
     def test_cookie_auth_anon_allowed(self):
@@ -651,7 +655,8 @@ class ApplicationTC(CubicWebTC):
         req.form['__login'] = self.admlogin
         req.form['__password'] = self.admpassword
         self.assertAuthSuccess(req, origsession)
-        self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
+        req._url = 'logout'
+        self.assertRaises(LogOut, self.app_handle_request, req)
         self.assertEqual(0, len(self.open_sessions))
 
     def test_anonymized_request(self):
@@ -671,6 +676,18 @@ class ApplicationTC(CubicWebTC):
             # expect a rset with None in [0][0]
             req.form['rql'] = 'rql:Any OV1, X WHERE X custom_workflow OV1?'
             self.app_handle_request(req)
+
+    def test_handle_deprecation(self):
+        """Test deprecation warning for *_handle methods."""
+        with self.admin_access.web_request(url='nothing') as req:
+            with self.assertWarns(DeprecationWarning) as cm:
+                self.app.core_handle(req, 'foo')
+            self.assertIn('path argument got removed from "core_handle"',
+                          str(cm.warning))
+            with self.assertWarns(DeprecationWarning) as cm:
+                self.app.main_handle_request('foo', req)
+            self.assertIn('entry point arguments are now (req, path)',
+                          str(cm.warning))
 
 
 if __name__ == '__main__':

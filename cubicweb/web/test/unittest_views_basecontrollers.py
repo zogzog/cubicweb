@@ -708,7 +708,7 @@ class EditControllerTC(CubicWebTC):
 
 
     def test_nonregr_rollback_on_validation_error(self):
-        with self.admin_access.web_request() as req:
+        with self.admin_access.web_request(url='edit') as req:
             p = self.create_user(req, u"doe")
             # do not try to skip 'primary_email' for this test
             old_skips = p.__class__.skip_copy_for
@@ -729,7 +729,7 @@ class EditControllerTC(CubicWebTC):
                 #    which fires a Redirect
                 # 2/ When re-publishing the copy form, the publisher implicitly commits
                 try:
-                    self.app_handle_request(req, 'edit')
+                    self.app_handle_request(req)
                 except Redirect:
                     req.form['rql'] = 'Any X WHERE X eid %s' % p.eid
                     req.form['vid'] = 'copy'
