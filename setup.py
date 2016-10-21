@@ -28,7 +28,7 @@ import shutil
 from os.path import dirname, exists, isdir, join
 
 from setuptools import setup
-from setuptools.command import install_lib
+from setuptools.command import develop, install_lib
 from distutils.command import install_data
 
 here = dirname(__file__)
@@ -160,6 +160,19 @@ class MyInstallData(install_data.install_data):
         ini.write('# Cubicweb cubes directory\n')
         ini.close()
 
+
+class CWDevelop(develop.develop):
+    """Custom "develop" command warning about (legacy) cubes directory not
+    installed.
+    """
+
+    def run(self):
+        cubespath = join(sys.prefix, 'share', 'cubicweb', 'cubes')
+        self.warn('develop command does not install (legacy) cubes directory (%s)'
+                  % cubespath)
+        return super(CWDevelop, self).run()
+
+
 # re-enable copying data files in sys.prefix
 # overwrite MyInstallData to use sys.prefix instead of the egg directory
 MyInstallMoreData = MyInstallData
@@ -247,7 +260,10 @@ setup(
             'pyzmq',
         ],
     },
-    cmdclass={'install_lib': MyInstallLib,
-              'install_data': MyInstallData},
+    cmdclass={
+        'install_lib': MyInstallLib,
+        'install_data': MyInstallData,
+        'develop': CWDevelop,
+    },
     zip_safe=False,
 )
