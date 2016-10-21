@@ -153,6 +153,61 @@ To update the translation catalogs you need to do:
 3. `hg ci -m "updated i18n catalogs"`
 4. `cubicweb-ctl i18ninstance <myinstance>`
 
+
+Customizing the messages extraction process
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The messages extraction performed by the ``i18ncommand`` collects messages
+from a few different sources:
+
+- the schema and application definition (entity names, docstrings,
+  help messages, uicfg),
+
+- the source files:
+
+  - ``i18n:content`` or ``i18n:replace`` directives from TAL files (with ``.pt`` extension),
+  - strings prefixed by an underscore (``_``) in python files,
+  - strings with double quotes prefixed by an underscore in javascript files.
+
+The source files are collected by walking through the cube directory,
+but ignoring a few directories like ``.hg``, ``.tox``, ``test`` or
+``node_modules``.
+
+If you need to customize this behaviour in your cube, you have to
+extend the ``cubicweb.devtools.devctl.I18nCubeMessageExtractor``. The
+example below will collect strings from ``jinja2`` files and ignore
+the ``static`` directory during the messages collection phase::
+
+  # mymodule.py
+  from cubicweb.devtools import devctl
+
+  class MyMessageExtractor(devctl.I18nCubeMessageExtractor):
+
+      blacklist = devctl.I18nCubeMessageExtractor | {'static'}
+      formats = devctl.I18nCubeMessageExtractor.formats + ['jinja2']
+
+      def collect_jinja2(self):
+          return self.find('.jinja2')
+
+      def extract_jinja2(self, files):
+          return self._xgettext(files, output='jinja.pot',
+                                extraopts='-L python --from-code=utf-8')
+
+Then, you'll have to register it with a ``cubicweb.i18ncube`` entry point
+in your cube's setup.py::
+
+  setup(
+      # ...
+      entry_points={
+          # ...
+          'cubicweb.i18ncube': [
+              'mycube=cubicweb_mycube.mymodule:MyMessageExtractor',
+          ],
+      },
+      # ...
+  )
+
+
 Editing po files
 ~~~~~~~~~~~~~~~~
 

@@ -29,9 +29,11 @@ import tempfile
 import sys
 from datetime import datetime, date
 from os import mkdir, chdir, path as osp
+import pkg_resources
 from warnings import warn
 
 from pytz import UTC
+
 from six.moves import input
 
 from logilab.common import STD_BLACKLIST
@@ -566,14 +568,21 @@ def update_cube_catalogs(cubedir):
     cubedir = osp.abspath(osp.normpath(cubedir))
     workdir = tempfile.mkdtemp()
     try:
-        cube = osp.basename(cubedir)
+        distname = osp.basename(cubedir)
+        cubename = distname.split('_')[-1]
         print('cubedir', cubedir)
-        print(underline_title('Updating i18n catalogs for cube %s' % cube))
+        extract_cls = I18nCubeMessageExtractor
+        try:
+            extract_cls = pkg_resources.load_entry_point(
+                distname, 'cubicweb.i18ncube', cubename)
+        except (pkg_resources.DistributionNotFound, ImportError):
+            pass  # no customization found
+        print(underline_title('Updating i18n catalogs for cube %s' % cubename))
         chdir(cubedir)
-        extractor = I18nCubeMessageExtractor(workdir, cubedir)
+        extractor = extract_cls(workdir, cubedir)
         potfile = extractor.generate_pot_file()
         if potfile is None:
-            print('no message catalog for cube', cube, 'nothing to translate')
+            print('no message catalog for cube', cubename, 'nothing to translate')
             return ()
         print('-> merging main pot file with existing translations:', end=' ')
         chdir('i18n')
