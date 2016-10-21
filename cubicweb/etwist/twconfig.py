@@ -44,7 +44,7 @@ class WebConfigurationBase(WebConfiguration):
           }),
         ('interface',
          {'type' : 'string',
-          'default': "",
+          'default': '0.0.0.0',
           'help': 'http server address on which to listen (default to everywhere)',
           'group': 'web', 'level': 1,
           }),
