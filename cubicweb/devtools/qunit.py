@@ -25,7 +25,7 @@ from subprocess import Popen, PIPE, STDOUT
 from six.moves.queue import Queue, Empty
 
 # imported by default to simplify further import statements
-from logilab.common.testlib import unittest_main, with_tempdir, Tags
+from logilab.common.testlib import with_tempdir, Tags
 import webtest.http
 
 import cubicweb
@@ -290,4 +290,5 @@ STATIC_CONTROLLERS.append(CWDevtoolsStaticController)
 
 
 if __name__ == '__main__':
-    unittest_main()
+    import unittest
+    unittest.main()
