@@ -26,6 +26,7 @@ from math import log
 from contextlib import contextmanager
 from inspect import isgeneratorfunction
 from itertools import chain
+import tempfile
 
 from six import text_type, string_types
 from six.moves import range
@@ -56,8 +57,10 @@ if sys.version_info[:2] < (3, 4):
     from unittest2 import TestCase
     if not hasattr(TestCase, 'subTest'):
         raise ImportError('no subTest support in available unittest2')
+    from backports.tempfile import TemporaryDirectory  # noqa
 else:
     from unittest import TestCase
+    from tempfile import TemporaryDirectory  # noqa
 
 # in python 2.7, DeprecationWarning are not shown anymore by default
 warnings.filterwarnings('default', category=DeprecationWarning)

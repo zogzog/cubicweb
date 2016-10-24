@@ -25,7 +25,7 @@ from subprocess import Popen, PIPE, STDOUT
 from six.moves.queue import Queue, Empty
 
 # imported by default to simplify further import statements
-from logilab.common.testlib import with_tempdir, Tags
+from logilab.common.testlib import Tags
 import webtest.http
 
 import cubicweb
@@ -33,6 +33,7 @@ from cubicweb.view import View
 from cubicweb.web.controller import Controller
 from cubicweb.web.views.staticcontrollers import StaticFileController, STATIC_CONTROLLERS
 from cubicweb.devtools import webtest as cwwebtest
+from cubicweb.devtools.testlib import TemporaryDirectory
 
 
 class FirefoxHelper(object):
@@ -109,11 +110,11 @@ class QUnitTestCase(cwwebtest.CubicWebTestTC):
                 depends = args[1]
             else:
                 depends = ()
-            for name, func, args in self._test_qunit(test_file, depends):
-                with self.subTest(name=name):
-                    func(*args)
+            with TemporaryDirectory():
+                for name, func, args in self._test_qunit(test_file, depends):
+                    with self.subTest(name=name):
+                        func(*args)
 
-    @with_tempdir
     def _test_qunit(self, test_file, depends=(), timeout=10):
         QUnitView.test_file = test_file
         QUnitView.depends = depends

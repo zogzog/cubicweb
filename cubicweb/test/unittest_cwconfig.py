@@ -19,7 +19,6 @@
 
 import sys
 import os
-import tempfile
 from os.path import dirname, join, abspath
 from pkg_resources import EntryPoint, Distribution
 import unittest
@@ -28,10 +27,10 @@ from mock import patch
 from six import PY3
 
 from logilab.common.modutils import cleanup_sys_modules
-from logilab.common.testlib import with_tempdir
 from logilab.common.changelog import Version
 
-from cubicweb.devtools import ApptestConfiguration, testlib
+from cubicweb.devtools import ApptestConfiguration
+from cubicweb.devtools.testlib import BaseTestCase, TemporaryDirectory
 from cubicweb.cwconfig import _find_prefix
 
 
@@ -45,7 +44,7 @@ def unabsolutize(path):
     raise Exception('duh? %s' % path)
 
 
-class CubicWebConfigurationTC(testlib.BaseTestCase):
+class CubicWebConfigurationTC(BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -220,97 +219,95 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
 
 
 class FindPrefixTC(unittest.TestCase):
-    def make_dirs(self, *args):
-        path = join(tempfile.tempdir, *args)
+
+    def make_dirs(self, basedir, *args):
+        path = join(basedir, *args)
         if not os.path.exists(path):
             os.makedirs(path)
         return path
 
-    def make_file(self, *args):
-        self.make_dirs(*args[: -1])
-        file_path = join(tempfile.tempdir, *args)
+    def make_file(self, basedir, *args):
+        self.make_dirs(basedir, *args[:-1])
+        file_path = join(basedir, *args)
         with open(file_path, 'w') as f:
             f.write('""" None """')
         return file_path
 
-    @with_tempdir
     def test_samedir(self):
-        prefix = tempfile.tempdir
-        self.make_dirs('share', 'cubicweb')
-        self.assertEqual(_find_prefix(prefix), prefix)
+        with TemporaryDirectory() as prefix:
+            self.make_dirs(prefix, 'share', 'cubicweb')
+            self.assertEqual(_find_prefix(prefix), prefix)
 
-    @with_tempdir
     def test_samedir_filepath(self):
-        prefix = tempfile.tempdir
-        self.make_dirs('share', 'cubicweb')
-        file_path = self.make_file('bob.py')
-        self.assertEqual(_find_prefix(file_path), prefix)
+        with TemporaryDirectory() as prefix:
+            self.make_dirs(prefix, 'share', 'cubicweb')
+            file_path = self.make_file(prefix, 'bob.py')
+            self.assertEqual(_find_prefix(file_path), prefix)
 
-    @with_tempdir
     def test_dir_inside_prefix(self):
-        prefix = tempfile.tempdir
-        self.make_dirs('share', 'cubicweb')
-        dir_path = self.make_dirs('bob')
-        self.assertEqual(_find_prefix(dir_path), prefix)
+        with TemporaryDirectory() as prefix:
+            self.make_dirs(prefix, 'share', 'cubicweb')
+            dir_path = self.make_dirs(prefix, 'bob')
+            self.assertEqual(_find_prefix(dir_path), prefix)
 
-    @with_tempdir
     def test_file_in_dir_inside_prefix(self):
-        prefix = tempfile.tempdir
-        self.make_dirs('share', 'cubicweb')
-        file_path = self.make_file('bob', 'toto.py')
-        self.assertEqual(_find_prefix(file_path), prefix)
+        with TemporaryDirectory() as prefix:
+            self.make_dirs(prefix, 'share', 'cubicweb')
+            file_path = self.make_file(prefix, 'bob', 'toto.py')
+            self.assertEqual(_find_prefix(file_path), prefix)
 
-    @with_tempdir
     def test_file_in_deeper_dir_inside_prefix(self):
-        prefix = tempfile.tempdir
-        self.make_dirs('share', 'cubicweb')
-        file_path = self.make_file('bob', 'pyves', 'alain', 'adim', 'syt', 'toto.py')
-        self.assertEqual(_find_prefix(file_path), prefix)
+        with TemporaryDirectory() as prefix:
+            self.make_dirs(prefix, 'share', 'cubicweb')
+            file_path = self.make_file(prefix, 'bob', 'pyves', 'alain',
+                                       'adim', 'syt', 'toto.py')
+            self.assertEqual(_find_prefix(file_path), prefix)
 
-    @with_tempdir
     def test_multiple_candidate_prefix(self):
-        self.make_dirs('share', 'cubicweb')
-        prefix = self.make_dirs('bob')
-        self.make_dirs('bob', 'share', 'cubicweb')
-        file_path = self.make_file('bob', 'pyves', 'alain', 'adim', 'syt', 'toto.py')
-        self.assertEqual(_find_prefix(file_path), prefix)
+        with TemporaryDirectory() as tempdir:
+            self.make_dirs(tempdir, 'share', 'cubicweb')
+            prefix = self.make_dirs(tempdir, 'bob')
+            self.make_dirs(prefix, 'share', 'cubicweb')
+            file_path = self.make_file(prefix, 'pyves', 'alain',
+                                       'adim', 'syt', 'toto.py')
+            self.assertEqual(_find_prefix(file_path), prefix)
 
-    @with_tempdir
     def test_sister_candidate_prefix(self):
-        prefix = tempfile.tempdir
-        self.make_dirs('share', 'cubicweb')
-        self.make_dirs('bob', 'share', 'cubicweb')
-        file_path = self.make_file('bell', 'toto.py')
-        self.assertEqual(_find_prefix(file_path), prefix)
+        with TemporaryDirectory() as prefix:
+            self.make_dirs(prefix, 'share', 'cubicweb')
+            self.make_dirs(prefix, 'bob', 'share', 'cubicweb')
+            file_path = self.make_file(prefix, 'bell', 'toto.py')
+            self.assertEqual(_find_prefix(file_path), prefix)
 
-    @with_tempdir
     def test_multiple_parent_candidate_prefix(self):
-        self.make_dirs('share', 'cubicweb')
-        prefix = self.make_dirs('share', 'cubicweb', 'bob')
-        self.make_dirs('share', 'cubicweb', 'bob', 'share', 'cubicweb')
-        file_path = self.make_file('share', 'cubicweb', 'bob', 'pyves', 'alain', 'adim', 'syt', 'toto.py')
-        self.assertEqual(_find_prefix(file_path), prefix)
+        with TemporaryDirectory() as tempdir:
+            self.make_dirs(tempdir, 'share', 'cubicweb')
+            prefix = self.make_dirs(tempdir, 'share', 'cubicweb', 'bob')
+            self.make_dirs(tempdir, 'share', 'cubicweb', 'bob', 'share',
+                           'cubicweb')
+            file_path = self.make_file(tempdir, 'share', 'cubicweb', 'bob',
+                                       'pyves', 'alain', 'adim', 'syt',
+                                       'toto.py')
+            self.assertEqual(_find_prefix(file_path), prefix)
 
-    @with_tempdir
     def test_upper_candidate_prefix(self):
-        prefix = tempfile.tempdir
-        self.make_dirs('share', 'cubicweb')
-        self.make_dirs('bell','bob',  'share', 'cubicweb')
-        file_path = self.make_file('bell', 'toto.py')
-        self.assertEqual(_find_prefix(file_path), prefix)
+        with TemporaryDirectory() as prefix:
+            self.make_dirs(prefix, 'share', 'cubicweb')
+            self.make_dirs(prefix, 'bell', 'bob',  'share', 'cubicweb')
+            file_path = self.make_file(prefix, 'bell', 'toto.py')
+            self.assertEqual(_find_prefix(file_path), prefix)
 
-    @with_tempdir
     def test_no_prefix(self):
-        prefix = tempfile.tempdir
-        self.assertEqual(_find_prefix(prefix), sys.prefix)
+        with TemporaryDirectory() as prefix:
+            self.assertEqual(_find_prefix(prefix), sys.prefix)
 
-    @with_tempdir
     def test_virtualenv(self):
         venv = os.environ.get('VIRTUAL_ENV')
         try:
-            prefix = os.environ['VIRTUAL_ENV'] = tempfile.tempdir
-            self.make_dirs('share', 'cubicweb')
-            self.assertEqual(_find_prefix(), prefix)
+            with TemporaryDirectory() as prefix:
+                os.environ['VIRTUAL_ENV'] = prefix
+                self.make_dirs(prefix, 'share', 'cubicweb')
+                self.assertEqual(_find_prefix(), prefix)
         finally:
             if venv:
                 os.environ['VIRTUAL_ENV'] = venv
