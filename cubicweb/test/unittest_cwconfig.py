@@ -229,9 +229,8 @@ class FindPrefixTC(unittest.TestCase):
     def make_file(self, *args):
         self.make_dirs(*args[: -1])
         file_path = join(tempfile.tempdir, *args)
-        file_obj = open(file_path, 'w')
-        file_obj.write('""" None """')
-        file_obj.close()
+        with open(file_path, 'w') as f:
+            f.write('""" None """')
         return file_path
 
     @with_tempdir
