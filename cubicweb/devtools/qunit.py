@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os, os.path as osp
 import errno
@@ -72,12 +72,16 @@ class FirefoxHelper(object):
                 return False, msg
             raise
 
+    @property
+    def log_file(self):
+        return osp.join(self._profile_dir, 'cwtest.log')
+
     def start(self):
         self.stop()
         cmd = self.firefox_cmd + ['-silent', '--profile', self._profile_dir,
                                   '-url', self._url]
-        with open(os.devnull, 'w') as fnull:
-            self._process = Popen(cmd, stdout=fnull, stderr=fnull)
+        with open(self.log_file, 'wb') as fout:
+            self._process = Popen(cmd, stdout=fout, stderr=STDOUT)
 
     def stop(self):
         if self._process is not None:
@@ -142,6 +146,8 @@ class QUnitTestCase(cwwebtest.CubicWebTestTC):
             error = False
 
             def runtime_error(*data):
+                with open(browser.log_file) as logf:
+                    print(logf.read())
                 raise RuntimeError(*data)
 
             while not error:
