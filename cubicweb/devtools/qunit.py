@@ -19,6 +19,7 @@ from __future__ import absolute_import
 
 import os, os.path as osp
 import errno
+import shutil
 from tempfile import mkdtemp
 from subprocess import Popen, PIPE, STDOUT
 
@@ -38,13 +39,27 @@ from cubicweb.devtools.testlib import TemporaryDirectory
 
 class FirefoxHelper(object):
 
-    def __init__(self, url=None):
+    def __init__(self, url):
+        self._url = url
         self._process = None
-        self._profile_dir = mkdtemp(prefix='cwtest-ffxprof-')
+        self._profile_dir = None
         self.firefox_cmd = ['firefox', '-no-remote']
         if os.name == 'posix':
             self.firefox_cmd = [osp.join(osp.dirname(__file__), 'data', 'xvfb-run.sh'),
                                 '-a', '-s', '-noreset -screen 0 800x600x24'] + self.firefox_cmd
+
+    def __enter__(self):
+        self._profile_dir = mkdtemp(prefix='cwtest-ffxprof-')
+        isavailable, reason = self.test()
+        if not isavailable:
+            raise RuntimeError(
+                'firefox not available or not working properly (%s)' % reason)
+        self.start()
+        return self
+
+    def __exit__(self, *exc_info):
+        self.stop()
+        shutil.rmtree(self._profile_dir, ignore_errors=True)
 
     def test(self):
         try:
@@ -57,10 +72,10 @@ class FirefoxHelper(object):
                 return False, msg
             raise
 
-    def start(self, url):
+    def start(self):
         self.stop()
         cmd = self.firefox_cmd + ['-silent', '--profile', self._profile_dir,
-                                  '-url', url]
+                                  '-url', self._url]
         with open(os.devnull, 'w') as fnull:
             self._process = Popen(cmd, stdout=fnull, stderr=fnull)
 
@@ -122,35 +137,32 @@ class QUnitTestCase(cwwebtest.CubicWebTestTC):
         while not self.test_queue.empty():
             self.test_queue.get(False)
 
-        browser = FirefoxHelper()
-        isavailable, reason = browser.test()
-        if not isavailable:
-            self.fail('firefox not available or not working properly (%s)' % reason)
-        browser.start(self.config['base-url'] + "?vid=qunit")
-        test_count = 0
-        error = False
+        with FirefoxHelper(self.config['base-url'] + '?vid=qunit') as browser:
+            test_count = 0
+            error = False
 
-        def runtime_error(*data):
-            raise RuntimeError(*data)
+            def runtime_error(*data):
+                raise RuntimeError(*data)
 
-        while not error:
-            try:
-                result, test_name, msg = self.test_queue.get(timeout=timeout)
-                test_name = '%s (%s)' % (test_name, test_file)
-                if result is None:
-                    break
-                test_count += 1
-                if result:
-                    yield test_name, lambda *args: 1, ()
-                else:
-                    yield test_name, self.fail, (msg, )
-            except Empty:
-                error = True
-                msg = '%s inactivity timeout (%is). %i test results received'
-                yield test_file, runtime_error, (msg % (test_file, timeout, test_count), )
-        browser.stop()
+            while not error:
+                try:
+                    result, test_name, msg = self.test_queue.get(timeout=timeout)
+                    test_name = '%s (%s)' % (test_name, test_file)
+                    if result is None:
+                        break
+                    test_count += 1
+                    if result:
+                        yield test_name, lambda *args: 1, ()
+                    else:
+                        yield test_name, self.fail, (msg, )
+                except Empty:
+                    error = True
+                    msg = '%s inactivity timeout (%is). %i test results received'
+                    yield test_file, runtime_error, (msg % (test_file, timeout, test_count), )
+
         if test_count <= 0 and not error:
             yield test_name, runtime_error, ('No test yielded by qunit for %s' % test_file, )
+
 
 class QUnitResultController(Controller):
 
