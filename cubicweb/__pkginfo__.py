@@ -77,8 +77,6 @@ try:
     # data files that shall be copied outside the main package directory
     data_files = [
         # server data
-        [join('share', 'cubicweb', 'schemas'),
-         glob.glob(join(modname, 'schemas', '*.sql'))],
         [join('share', 'cubicweb', 'migration'),
          [join(_server_migration_dir, filename)
           for filename in listdir(_server_migration_dir)]],
