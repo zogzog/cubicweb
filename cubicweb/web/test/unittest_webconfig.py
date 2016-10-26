@@ -19,11 +19,13 @@
 """cubicweb.web.webconfig unit tests"""
 
 import os
+from unittest import TestCase
 
-from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.devtools import ApptestConfiguration, fake
 
+
 class WebconfigTC(TestCase):
+
     def setUp(self):
         # need explicit None if dirname(__file__) is empty, see
         # ApptestConfiguration.__init__
@@ -54,5 +56,7 @@ class WebconfigTC(TestCase):
         signature = self.config.sign_text(u'hôp')
         self.assertTrue(self.config.check_text_sign(u'hôp', signature))
 
+
 if __name__ == '__main__':
-    unittest_main()
+    import unittest
+    unittest.main()
