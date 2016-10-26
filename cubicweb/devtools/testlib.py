@@ -57,7 +57,11 @@ if sys.version_info[:2] < (3, 4):
     from unittest2 import TestCase
     if not hasattr(TestCase, 'subTest'):
         raise ImportError('no subTest support in available unittest2')
-    from backports.tempfile import TemporaryDirectory  # noqa
+    try:
+        from backports.tempfile import TemporaryDirectory  # noqa
+    except ImportError:
+        # backports.tempfile not available
+        TemporaryDirectory = None
 else:
     from unittest import TestCase
     from tempfile import TemporaryDirectory  # noqa
