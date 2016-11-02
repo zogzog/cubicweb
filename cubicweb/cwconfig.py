@@ -843,7 +843,13 @@ this option is set to yes",
     def _load_site_cubicweb(self, cube):
         """Load site_cubicweb.py from `cube` (or apphome if cube is None)."""
         if cube is not None:
-            modname = 'cubes.%s.site_cubicweb' % cube
+            try:
+                modname = 'cubicweb_%s' % cube
+                __import__(modname)
+            except ImportError:
+                modname = 'cubes.%s' % cube
+                __import__(modname)
+            modname = modname + '.site_cubicweb'
             __import__(modname)
             return sys.modules[modname]
         else:
