@@ -128,10 +128,10 @@ class TreeView(EntityView):
     cssclass = 'treeview widget'
     title = _('tree view')
 
-    def _init_params(self, subvid, treeid, initial_load, initial_thru_ajax, morekwargs):
+    def _init_params(self, subvid, treeid, initial_load, morekwargs):
         form = self._cw.form
         if subvid is None:
-            subvid = form.pop('treesubvid', self.subvid) # consume it
+            subvid = form.pop('treesubvid', self.subvid)  # consume it
         if treeid is None:
             treeid = form.pop('treeid', None)
             if treeid is None:
@@ -141,9 +141,7 @@ class TreeView(EntityView):
             # got unicode & python keywords must be strings
             morekwargs.update(dict((str(k), v)
                                    for k, v in ajaxargs.items()))
-        toplevel_thru_ajax = form.pop('treeview_top', False) or initial_thru_ajax
-        toplevel = toplevel_thru_ajax or (initial_load and not form.get('fname'))
-        return subvid, treeid, toplevel_thru_ajax, toplevel
+        return subvid, treeid
 
     def _init_headers(self, treeid):
         self._cw.add_css(('jquery-treeview/jquery.treeview.css', 'cubicweb.treeview.css'))
@@ -152,13 +150,16 @@ class TreeView(EntityView):
 jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
 
     def call(self, subvid=None, treeid=None,
-             initial_load=True, initial_thru_ajax=False, **morekwargs):
-        subvid, treeid, toplevel_thru_ajax, toplevel = self._init_params(
-            subvid, treeid, initial_load, initial_thru_ajax, morekwargs)
+             initial_load=True, initial_thru_ajax=None, **morekwargs):
+        if initial_thru_ajax is not None:
+            msg = '[3.24] initial_thru_ajax argument is deprecated'
+            warn(msg, DeprecationWarning, stacklevel=2)
+
+        subvid, treeid = self._init_params(subvid, treeid,
+                                           initial_load, morekwargs)
         ulid = ' '
-        if toplevel:
-            self._init_headers(treeid)
-            ulid = ' id="tree-%s"' % treeid
+        self._init_headers(treeid)
+        ulid = ' id="tree-%s"' % treeid
         self.w(u'<ul%s class="%s">' % (ulid, self.cssclass))
         # XXX force sorting on x.sortvalue() (which return dc_title by default)
         # we need proper ITree & co specification to avoid this.
