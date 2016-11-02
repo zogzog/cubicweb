@@ -170,7 +170,7 @@ class CWDevelop(develop.develop):
         cubespath = join(sys.prefix, 'share', 'cubicweb', 'cubes')
         self.warn('develop command does not install (legacy) cubes directory (%s)'
                   % cubespath)
-        return super(CWDevelop, self).run()
+        return develop.develop.run(self)
 
 
 # re-enable copying data files in sys.prefix
