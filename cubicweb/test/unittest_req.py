@@ -19,6 +19,7 @@
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb import ObjectNotFound
 from cubicweb.req import RequestSessionBase, FindEntityError
+from cubicweb.devtools import ApptestConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import Unauthorized
 
@@ -44,12 +45,44 @@ class RequestTC(TestCase):
         self.assertRaises(AssertionError, req.build_url, 'one', 'two not allowed')
         self.assertRaises(AssertionError, req.build_url, 'view', test=None)
 
+    def test_build_url_language_from_url(self):
+        # need req.vreg.config to exist because lang is read in it at set_language() call
+        vreg = MockVReg()
+        vreg.config.global_set_option('language-mode', 'url-prefix')
+        req = RequestSessionBase(vreg)
+        req.base_url = lambda secure=None: 'http://testing.fr/cubicweb/'
+        self.assertIsNone(req.lang)  # language unset yet.
+        self.assertEqual(req.build_url(), 'http://testing.fr/cubicweb/view')
+        self.assertEqual(req.build_url('foo'), 'http://testing.fr/cubicweb/foo')
+        req.set_language('fr')
+        self.assertEqual(req.lang, 'fr')
+        self.assertEqual(req.build_url(), 'http://testing.fr/cubicweb/fr/view')
+        self.assertEqual(req.build_url('foo'), 'http://testing.fr/cubicweb/fr/foo')
+        req.set_language('en')
+        self.assertEqual(req.lang, 'en')
+        self.assertEqual(req.build_url(), 'http://testing.fr/cubicweb/en/view')
+        self.assertEqual(req.build_url('foo'), 'http://testing.fr/cubicweb/en/foo')
+        # no language prefix in URL
+        vreg.config.global_set_option('language-mode', '')
+        self.assertEqual(req.build_url(), 'http://testing.fr/cubicweb/view')
+        self.assertEqual(req.build_url('foo'), 'http://testing.fr/cubicweb/foo')
+        req.set_language('fr')
+        self.assertEqual(req.build_url(), 'http://testing.fr/cubicweb/view')
+        self.assertEqual(req.build_url('foo'), 'http://testing.fr/cubicweb/foo')
+
     def test_ensure_no_rql(self):
         req = RequestSessionBase(None)
         self.assertEqual(req.ensure_ro_rql('Any X WHERE X is CWUser'), None)
         self.assertEqual(req.ensure_ro_rql('  Any X WHERE X is CWUser  '), None)
         self.assertRaises(Unauthorized, req.ensure_ro_rql, 'SET X login "toto" WHERE X is CWUser')
         self.assertRaises(Unauthorized, req.ensure_ro_rql, '   SET X login "toto" WHERE X is CWUser   ')
+
+
+class MockVReg(object):
+    """Fake VReg with just a basic config in it.
+    """
+    def __init__(self):
+        self.config = ApptestConfiguration('data', __file__)
 
 
 class RequestCWTC(CubicWebTC):
@@ -148,6 +181,7 @@ class RequestCWTC(CubicWebTC):
 
             with self.assertRaises(NotImplementedError):
                 req.find('CWUser', in_group=[1, 2])
+
 
 if __name__ == '__main__':
     unittest_main()

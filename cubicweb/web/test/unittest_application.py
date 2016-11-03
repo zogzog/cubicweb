@@ -216,6 +216,87 @@ class ApplicationTC(CubicWebTC):
                              {'login-subject': 'required field'})
             self.assertEqual(forminfo['values'], req.form)
 
+    def test_handle_request_with_lang_fromurl(self):
+        """No language negociation, get language from URL."""
+        self.config.global_set_option('language-mode', 'url-prefix')
+        req, origsession = self.init_authentication('http')
+        self.assertEqual(req.url(), 'http://testing.fr/cubicweb/login')
+        self.assertEqual(req.lang, 'en')
+        self.app.handle_request(req)
+        newreq = self.requestcls(req.vreg, url='fr/toto')
+        self.assertEqual(newreq.lang, 'en')
+        self.assertEqual(newreq.url(), 'http://testing.fr/cubicweb/fr/toto')
+        self.app.handle_request(newreq)
+        self.assertEqual(newreq.lang, 'fr')
+        self.assertEqual(newreq.url(), 'http://testing.fr/cubicweb/fr/toto')
+        # unknown language
+        newreq = self.requestcls(req.vreg, url='unknown-lang/cwuser')
+        result = self.app.handle_request(newreq)
+        self.assertEqual(newreq.lang, 'en')
+        self.assertEqual(newreq.url(), 'http://testing.fr/cubicweb/unknown-lang/cwuser')
+        self.assertIn('this resource does not exist',
+                      result.decode('ascii', errors='ignore'))
+        # no prefix
+        newreq = self.requestcls(req.vreg, url='cwuser')
+        result = self.app.handle_request(newreq)
+        self.assertEqual(newreq.lang, 'en')
+        self.assertEqual(newreq.url(), 'http://testing.fr/cubicweb/cwuser')
+        self.assertNotIn('this resource does not exist',
+                         result.decode('ascii', errors='ignore'))
+
+    def test_handle_request_with_lang_negotiated(self):
+        """Language negociated, normal case."""
+        self.config.global_set_option('language-mode', 'http-negotiation')
+        orig_translations = self.config.translations.copy()
+        self.config.translations = {'fr': (text_type, text_type),
+                                    'en': (text_type, text_type)}
+        try:
+            headers = {'Accept-Language': 'fr'}
+            with self.admin_access.web_request(headers=headers) as req:
+                self.app.handle_request(req)
+            self.assertEqual(req.lang, 'fr')
+        finally:
+            self.config.translations = orig_translations
+
+    def test_handle_request_with_lang_negotiated_prefix_in_url(self):
+        """Language negociated, unexpected language prefix in URL."""
+        self.config.global_set_option('language-mode', 'http-negotiation')
+        with self.admin_access.web_request(url='fr/toto') as req:
+            result = self.app.handle_request(req)
+        self.assertIn('this resource does not exist',  # NotFound.
+                      result.decode('ascii', errors='ignore'))
+
+    def test_handle_request_no_lang_negotiation_fixed_language(self):
+        """No language negociation, "ui.language" fixed."""
+        self.config.global_set_option('language-mode', '')
+        vreg = self.app.vreg
+        self.assertEqual(vreg.property_value('ui.language'), 'en')
+        props = []
+        try:
+            with self.admin_access.cnx() as cnx:
+                props.append(cnx.create_entity('CWProperty', value=u'de',
+                                               pkey=u'ui.language').eid)
+                cnx.commit()
+            self.assertEqual(vreg.property_value('ui.language'), 'de')
+            headers = {'Accept-Language': 'fr'}  # should not have any effect.
+            with self.admin_access.web_request(headers=headers) as req:
+                self.app.handle_request(req)
+            # user has no "ui.language" property, getting site's default.
+            self.assertEqual(req.lang, 'de')
+            with self.admin_access.cnx() as cnx:
+                props.append(cnx.create_entity('CWProperty', value=u'es',
+                                               pkey=u'ui.language',
+                                               for_user=cnx.user).eid)
+                cnx.commit()
+            with self.admin_access.web_request(headers=headers) as req:
+                self.app.handle_request(req)
+            self.assertEqual(req.lang, 'es')
+        finally:
+            with self.admin_access.cnx() as cnx:
+                for peid in props:
+                    cnx.entity_from_eid(peid).cw_delete()
+                cnx.commit()
+
     def test_validation_error_dont_loose_subentity_data_repo(self):
         """test creation of two linked entities
 

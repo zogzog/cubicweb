@@ -83,6 +83,15 @@ class AcceptParserTC(TestCase):
         self.assertEqual('http://babar.com/', req.base_url(False))
         self.assertEqual('https://toto.com/', req.base_url(True))
 
+    def test_negotiated_language(self):
+        vreg = type('DummyVreg', (object,), {})()
+        vreg.config = FakeConfig()
+        vreg.config.translations = {'fr': (None, None), 'en': (None, None)}
+        headers = {
+            'Accept-Language': 'fr,fr-fr;q=0.8,en-us;q=0.5,en;q=0.3',
+        }
+        req = CubicWebRequestBase(vreg, https=False, headers=headers)
+        self.assertEqual(req.negotiated_language(), 'fr')
 
 
 if __name__ == '__main__':

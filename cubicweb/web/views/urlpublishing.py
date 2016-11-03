@@ -115,7 +115,21 @@ class URLPublisherComponent(component.Component):
         :raise NotFound: if no handler is able to decode the given path
         """
         parts = [part for part in path.split('/')
-                 if part != ''] or (self.default_method,)
+                 if part != ''] or [self.default_method]
+        language_mode = self.vreg.config.get('language-mode')
+        if (language_mode == 'url-prefix'
+                and parts and parts[0] in self.vreg.config.available_languages()):
+            # language from URL
+            req.set_language(parts.pop(0))
+            path = '/'.join(parts)
+            # if parts only contains lang, use 'view' default path
+            if not parts:
+                parts = (self.default_method,)
+        elif language_mode in ('http-negotiation', 'url-prefix'):
+            # negotiated language
+            lang = req.negotiated_language()
+            if lang:
+                req.set_language(lang)
         if req.form.get('rql'):
             if parts[0] in self.vreg['controllers']:
                 return parts[0], None

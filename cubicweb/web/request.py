@@ -915,25 +915,25 @@ class _CubicWebRequestBase(RequestSessionBase):
     def html_content_type(self):
         return 'text/html'
 
+    def negotiated_language(self):
+        self.headers_out.addHeader('Vary', 'Accept-Language')
+        for lang in self.header_accept_language():
+            if lang in self.translations:
+                return lang
+        return None
+
     def set_user_language(self, user):
         vreg = self.vreg
         if user is not None:
             try:
-                # 1. user-specified language
                 lang = vreg.typed_value('ui.language', user.properties['ui.language'])
                 self.set_language(lang)
                 return
             except KeyError:
                 pass
-        if vreg.config.get('language-negociation', False):
-            # 2. http accept-language
-            self.headers_out.addHeader('Vary', 'Accept-Language')
-            for lang in self.header_accept_language():
-                if lang in self.translations:
-                    self.set_language(lang)
-                    return
-        # 3. site's default language
-        self.set_default_language(vreg)
+        # site's default language
+        if self.lang is None:
+            self.set_default_language(vreg)
 
 
 def _cnx_func(name):
