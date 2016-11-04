@@ -76,7 +76,6 @@ class RequestSessionBase(object):
         self.user = None
         self.local_perm_cache = {}
         self._ = text_type
-        self.lang = None
 
     def _set_user(self, orig_user):
         """set the user for this req_session_base
@@ -289,18 +288,19 @@ class RequestSessionBase(object):
         if base_url is None:
             secure = kwargs.pop('__secure__', None)
             base_url = self.base_url(secure=secure)
+        path = self.build_url_path(method, kwargs)
+        if not kwargs:
+            return u'%s%s' % (base_url, path)
+        return u'%s%s?%s' % (base_url, path, self.build_url_params(**kwargs))
+
+    def build_url_path(self, method, kwargs):
+        """return the "path" part of an URL"""
         if '_restpath' in kwargs:
             assert method == 'view', repr(method)
             path = kwargs.pop('_restpath')
         else:
             path = method
-        language = ''
-        if self.lang and self.vreg.config.get('language-mode') == 'url-prefix':
-            language = '%s/' % self.lang
-        if not kwargs:
-            return u'%s%s%s' % (base_url, language, path)
-        return u'%s%s%s?%s' % (base_url, language, path,
-                               self.build_url_params(**kwargs))
+        return path
 
     def build_url_params(self, **kwargs):
         """return encoded params to incorporate them in a URL"""

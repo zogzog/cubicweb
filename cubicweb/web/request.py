@@ -661,6 +661,13 @@ class _CubicWebRequestBase(RequestSessionBase):
             args = (method,)
         return super(_CubicWebRequestBase, self).build_url(*args, **kwargs)
 
+    def build_url_path(self, *args):
+        path = super(_CubicWebRequestBase, self).build_url_path(*args)
+        lang_prefix = ''
+        if self.lang and self.vreg.config.get('language-mode') == 'url-prefix':
+            lang_prefix = '%s/' % self.lang
+        return lang_prefix + path
+
     def url(self, includeparams=True):
         """return currently accessed url"""
         return self.base_url() + self.relative_path(includeparams)
@@ -932,8 +939,7 @@ class _CubicWebRequestBase(RequestSessionBase):
             except KeyError:
                 pass
         # site's default language
-        if self.lang is None:
-            self.set_default_language(vreg)
+        self.set_default_language(vreg)
 
 
 def _cnx_func(name):

@@ -4,6 +4,7 @@
 import unittest
 from functools import partial
 
+from six import text_type
 
 from cubicweb.devtools.fake import FakeConfig
 
@@ -95,6 +96,30 @@ class WebRequestTC(unittest.TestCase):
         }
         req = CubicWebRequestBase(vreg, https=False, headers=headers)
         self.assertEqual(req.negotiated_language(), 'fr')
+
+    def test_build_url_language_from_url(self):
+        vreg = type('DummyVreg', (object,), {'config': FakeConfig()})()
+        vreg.config['base-url'] = 'http://testing.fr/cubicweb/'
+        vreg.config['language-mode'] = 'url-prefix'
+        vreg.config.translations['fr'] = text_type, text_type
+        req = CubicWebRequestBase(vreg, https=False)
+        # Override from_controller to avoid getting into relative_path method,
+        # which is not implemented in CubicWebRequestBase.
+        req.from_controller = lambda : 'not view'
+        self.assertEqual(req.lang, 'en')  # site's default language
+        self.assertEqual(req.build_url(), 'http://testing.fr/cubicweb/en/view')
+        self.assertEqual(req.build_url('foo'), 'http://testing.fr/cubicweb/en/foo')
+        req.set_language('fr')
+        self.assertEqual(req.lang, 'fr')
+        self.assertEqual(req.build_url(), 'http://testing.fr/cubicweb/fr/view')
+        self.assertEqual(req.build_url('foo'), 'http://testing.fr/cubicweb/fr/foo')
+        # no language prefix in URL
+        vreg.config['language-mode'] = ''
+        self.assertEqual(req.build_url(), 'http://testing.fr/cubicweb/view')
+        self.assertEqual(req.build_url('foo'), 'http://testing.fr/cubicweb/foo')
+        req.set_language('fr')
+        self.assertEqual(req.build_url(), 'http://testing.fr/cubicweb/view')
+        self.assertEqual(req.build_url('foo'), 'http://testing.fr/cubicweb/foo')
 
 
 if __name__ == '__main__':
