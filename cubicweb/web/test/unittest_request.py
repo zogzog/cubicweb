@@ -67,6 +67,9 @@ class AcceptParserTC(TestCase):
                           ('utf-8', 'utf-8', 0.7),
                           ('*', '*', 0.7)])
 
+
+class WebRequestTC(TestCase):
+
     def test_base_url(self):
         dummy_vreg = type('DummyVreg', (object,), {})()
         dummy_vreg.config = FakeConfig()
