@@ -762,7 +762,7 @@ class ApplicationTC(CubicWebTC):
 
     def test_handle_deprecation(self):
         """Test deprecation warning for *_handle methods."""
-        with self.admin_access.web_request(url='nothing') as req:
+        with self.admin_access.web_request(url='foo') as req:
             with self.assertWarns(DeprecationWarning) as cm:
                 self.app.core_handle(req, 'foo')
             self.assertIn('path argument got removed from "core_handle"',

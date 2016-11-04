@@ -27,6 +27,7 @@ from math import log
 from contextlib import contextmanager
 from inspect import isgeneratorfunction
 from itertools import chain
+from warnings import warn
 import tempfile
 
 from six import text_type, string_types, reraise
@@ -725,8 +726,12 @@ class CubicWebTC(BaseTestCase):
             ctrl = self.vreg['controllers'].select('ajax', req)
             yield ctrl.publish(), req
 
-    @application._deprecated_path_arg
-    def app_handle_request(self, req):
+    def app_handle_request(self, req, path=None):
+        if path is not None:
+            warn('[3.24] path argument got removed from app_handle_request parameters, '
+                 'give it to the request constructor', DeprecationWarning)
+            if req.relative_path(False) != path:
+                req._url = path
         return self.app.core_handle(req)
 
     @deprecated("[3.15] app_handle_request is the new and better way"

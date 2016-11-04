@@ -55,6 +55,9 @@ def _deprecated_path_arg(func):
             func_name = func.func_name if PY2 else func.__name__
             warn('[3.24] path argument got removed from "%s" parameters' % func_name,
                  DeprecationWarning)
+            path = args[0] if args else kwargs['path']
+            assert path == req.relative_path(False), \
+                'mismatching path, {0} vs {1}'.format(path, req.relative_path(False))
         return func(self, req)
     return wrapper
 
