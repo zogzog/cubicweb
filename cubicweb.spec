@@ -37,6 +37,7 @@ Requires:       graphviz-gd
 Requires:       gettext
 
 BuildRequires:  %{python}
+BuildRequires:  %{python}-setuptools
 
 %description
 a repository of entities / relations for knowledge management
