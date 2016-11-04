@@ -1,9 +1,9 @@
 """misc. unittests for utility functions
 """
 
-from logilab.common.testlib import TestCase, unittest_main
-
+import unittest
 from functools import partial
+
 
 from cubicweb.devtools.fake import FakeConfig
 
@@ -12,7 +12,7 @@ from cubicweb.web.request import (CubicWebRequestBase, _parse_accept_header,
 
 
 
-class AcceptParserTC(TestCase):
+class AcceptParserTC(unittest.TestCase):
 
     def test_parse_accept(self):
         parse_accept_header = partial(_parse_accept_header,
@@ -68,7 +68,7 @@ class AcceptParserTC(TestCase):
                           ('*', '*', 0.7)])
 
 
-class WebRequestTC(TestCase):
+class WebRequestTC(unittest.TestCase):
 
     def test_base_url(self):
         dummy_vreg = type('DummyVreg', (object,), {})()
@@ -98,4 +98,4 @@ class WebRequestTC(TestCase):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    unittest.main()
