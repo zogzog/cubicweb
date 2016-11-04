@@ -841,7 +841,7 @@ class CubicWebTC(BaseTestCase):
             if data is not None:
                 req.form.update(data)
             with real_error_handling(self.app):
-                result = self.app_handle_request(req, req.relative_path(False))
+                result = self.app_handle_request(req)
             return result, req
 
     @staticmethod
