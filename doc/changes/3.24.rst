@@ -1,5 +1,5 @@
-3.34 (UNRELEASED)
-=================
+3.24
+====
 
 New features
 ------------
@@ -13,3 +13,7 @@ New features
   discovery by CubicWeb is handled by a new setuptools entry point
   ``cubicweb.cubes``. A backward compatibility layer is kept for "legacy"
   cubes.
+
+* Pyramid support made it into CubicWeb core. Applications that use it
+  should now declare the `cubicweb[pyramid]` dependency instead of
+  `cubicweb-pyramid`.
