@@ -400,6 +400,23 @@ class SchemaModificationHooksTC(CubicWebTC):
             # comparison on Python 2.
             self.assertEqual(set(rdef.constraints), set([cstr, cstr3]))
 
+    def test_eschema_composite_properties(self):
+        with self.admin_access.repo_cnx() as cnx:
+            part_eschema = self.schema['EmailPart']
+            email_eschema = self.schema['Email']
+            parts_rdef = email_eschema.rdef('parts')
+            self.assertEqual(part_eschema.composite_rdef_roles, [])
+            self.assertEqual(part_eschema.is_composite, False)
+            self.assertEqual(email_eschema.composite_rdef_roles,
+                             [(parts_rdef, 'subject')])
+            self.assertEqual(email_eschema.is_composite, True)
+            cnx.execute('DELETE CWRType X WHERE X name "parts"')
+            cnx.commit()
+            self.assertEqual(part_eschema.composite_rdef_roles, [])
+            self.assertEqual(part_eschema.is_composite, False)
+            self.assertEqual(email_eschema.composite_rdef_roles, [])
+            self.assertEqual(email_eschema.is_composite, False)
+
 
 if __name__ == '__main__':
     import unittest
