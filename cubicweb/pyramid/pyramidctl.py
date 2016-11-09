@@ -17,7 +17,6 @@ import threading
 import subprocess
 
 from cubicweb import BadCommandUsage, ExecutionError
-from cubicweb.__pkginfo__ import numversion as cwversion
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
 from cubicweb.pyramid import wsgi_application_from_cwconfig
@@ -86,17 +85,13 @@ class PyramidStartHandler(InstanceCommand):
           'metavar': 'N',
           'help': 'Dump profile stats to ouput every N requests '
                   '(default: 100)'}),
+        ('param',
+         {'short': 'p',
+          'type': 'named',
+          'metavar': 'key1:value1,key2:value2',
+          'default': {},
+          'help': 'override <key> configuration file option with <value>.'}),
     )
-    if cwversion >= (3, 21, 0):
-        options = options + (
-            ('param',
-             {'short': 'p',
-              'type': 'named',
-              'metavar': 'key1:value1,key2:value2',
-              'default': {},
-              'help': 'override <key> configuration file option with <value>.',
-              }),
-        )
 
     _reloader_environ_key = 'CW_RELOADER_SHOULD_RUN'
     _reloader_filelist_environ_key = 'CW_RELOADER_FILELIST'
@@ -303,8 +298,6 @@ class PyramidStartHandler(InstanceCommand):
             return self.restart_with_reloader()
 
         cwconfig = cwcfg.config_for(appid, debugmode=debugmode)
-        if cwversion >= (3, 21, 0):
-            cwconfig.cmdline_options = self.config.param
         if autoreload:
             _turn_sigterm_into_systemexit()
             self.debug('Running reloading file monitor')
