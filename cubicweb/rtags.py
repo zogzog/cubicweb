@@ -100,7 +100,7 @@ class RelationTags(RegistrableRtags):
         if check:
             for (stype, rtype, otype, tagged), value in list(self._tagdefs.items()):
                 for ertype in (stype, rtype, otype):
-                    if ertype != '*' and not ertype in schema:
+                    if ertype != '*' and ertype not in schema:
                         self.warning('removing rtag %s: %s, %s undefined in schema',
                                      (stype, rtype, otype, tagged), value, ertype)
                         self.del_rtag(stype, rtype, otype, tagged)
@@ -142,8 +142,8 @@ class RelationTags(RegistrableRtags):
         assert len(key) == 4, 'bad key: %s' % list(key)
         if self._allowed_values is not None:
             assert tag in self._allowed_values, \
-                   '%r is not an allowed tag (should be in %s)' % (
-                tag, self._allowed_values)
+                '%r is not an allowed tag (should be in %s)' % (
+                    tag, self._allowed_values)
         self._tagdefs[_ensure_str_key(key)] = tag
         return tag
 
@@ -156,7 +156,6 @@ class RelationTags(RegistrableRtags):
             self.tag_subject_of((etype, attr, desttype), *args, **kwargs)
         else:
             self.tag_object_of((desttype, attr, etype), *args, **kwargs)
-
 
     # rtag runtime api ########################################################
 
@@ -178,7 +177,7 @@ class RelationTags(RegistrableRtags):
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
 
 class RelationTagsSet(RelationTags):
