@@ -97,6 +97,11 @@ class WSGIAppTest(PyramidCWTest):
                 content_type='application/x-www-form-urlencoded'))
         self.assertEqual(u"é", req.form['arg'])
 
+    def test_404(self):
+        r = self.webapp.get('/unexisting/', status=404)
+        self.assertNotIn('error occurred', r.text)
+        self.assertIn('resource does not exist', r.text)
+
 
 if __name__ == '__main__':
     from unittest import main
