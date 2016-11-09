@@ -103,7 +103,6 @@ class CubicWebPyramidHandler(object):
             if content is not None:
                 request.response.body = content
 
-
         except LogOut as ex:
             # The actual 'logging out' logic should be in separated function
             # that is accessible by the pyramid views

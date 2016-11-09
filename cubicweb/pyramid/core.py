@@ -7,7 +7,6 @@ from cgi import FieldStorage
 import rql
 
 from cubicweb.web.request import CubicWebRequestBase
-from cubicweb import repoapi
 
 import cubicweb
 import cubicweb.web
@@ -29,6 +28,7 @@ class Connection(cwsession.Connection):
     This behavior makes sure the actual session data is not loaded until
     actually accessed.
     """
+
     def __init__(self, session, *args, **kw):
         super(Connection, self).__init__(session, *args, **kw)
         self._session = session
@@ -277,9 +277,9 @@ def repo_connect(request, repo, eid):
     tools.cnx_attach_entity(session, user)
     # Calling the hooks should be done only once, disabling it completely for
     # now
-    #with session.new_cnx() as cnx:
-        #repo.hm.call_hooks('session_open', cnx)
-        #cnx.commit()
+    # with session.new_cnx() as cnx:
+    #     repo.hm.call_hooks('session_open', cnx)
+    #     cnx.commit()
     # repo._sessions[session.sessionid] = session
     return session
 

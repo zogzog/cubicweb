@@ -1,10 +1,8 @@
 from __future__ import absolute_import
 
 
-from pyramid.httpexceptions import HTTPNotFound
 from pyramid.view import view_config
 from cubicweb.pyramid.resources import EntityResource, ETypeResource
-from cubicweb.pyramid.predicates import MatchIsETypePredicate
 
 
 @view_config(

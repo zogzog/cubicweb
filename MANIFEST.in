@@ -5,6 +5,8 @@ include COPYING.LESSER
 include pylintrc
 include jshintrc
 include tox.ini
+include flake8-ok-files.txt
+
 include bin/cubicweb-*
 include man/cubicweb-ctl.1
 

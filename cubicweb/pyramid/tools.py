@@ -72,5 +72,5 @@ def includeme(config):
     """
     repo = config.registry['cubicweb.repository']
     interval = int(config.registry.settings.get(
-        'cubicweb.usercache.expiration_time', 60*5))
+        'cubicweb.usercache.expiration_time', 60 * 5))
     repo.looping_task(interval, clear_cache)

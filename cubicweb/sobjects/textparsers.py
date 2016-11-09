@@ -22,8 +22,6 @@ Take care to security when you're using it, think about the user that
 will provide the text to analyze...
 """
 
-
-
 import re
 
 from cubicweb import UnknownEid

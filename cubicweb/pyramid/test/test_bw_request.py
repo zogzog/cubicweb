@@ -52,7 +52,7 @@ class WSGIAppTest(PyramidCWTest):
         self.assertIn('https://', r.text)
 
     def test_big_content(self):
-        content = b'x'*100001
+        content = b'x' * 100001
 
         req = CubicWebPyramidRequest(
             self.make_request('/', {

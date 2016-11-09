@@ -17,8 +17,6 @@
 # with yams. If not, see <http://www.gnu.org/licenses/>.
 """write a schema as sql"""
 
-
-
 from hashlib import md5
 
 from six import string_types, text_type

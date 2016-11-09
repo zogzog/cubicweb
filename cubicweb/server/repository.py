@@ -32,6 +32,7 @@ from warnings import warn
 from itertools import chain
 from time import time, localtime, strftime
 from contextlib import contextmanager
+from logging import getLogger
 
 from six.moves import range, queue
 
@@ -45,6 +46,7 @@ from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
                       BadConnectionId, ValidationError, Unauthorized,
                       UniqueTogetherError, onevent, ViolatedConstraint)
+from cubicweb import set_log_methods
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import ShuttingDown, utils, hook, querier, sources
 from cubicweb.server.session import Session, InternalManager
@@ -1032,7 +1034,4 @@ class Repository(object):
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
-
-from logging import getLogger
-from cubicweb import set_log_methods
 set_log_methods(Repository, getLogger('cubicweb.repository'))
