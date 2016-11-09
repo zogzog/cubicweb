@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,13 +15,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
-from logilab.common.testlib import TestCase, unittest_main
+import unittest
+
 from cubicweb.rtags import RelationTags, RelationTagsSet, RelationTagsDict
 
-class RelationTagsTC(TestCase):
+class RelationTagsTC(unittest.TestCase):
 
     def test_rtags_expansion(self):
         rtags = RelationTags()
@@ -92,4 +91,4 @@ class RelationTagsTC(TestCase):
                           {'key1': 'val1', 'key2': 'val2', 'key3': 'val0', 'key4': 'val4'})
 
 if __name__ == '__main__':
-    unittest_main()
+    unittest.main()
