@@ -39,6 +39,7 @@ class PyramidStartHandler(InstanceCommand):
       identifier of the instance to configure.
     """
     name = 'pyramid'
+    actionverb = 'started'
 
     options = (
         ('no-daemon',
