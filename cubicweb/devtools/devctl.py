@@ -102,6 +102,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
 
 def cleanup_sys_modules(config):
     # cleanup sys.modules, required when we're updating multiple cubes
+    appobjects_path = config.appobjects_path()
     for name, mod in list(sys.modules.items()):
         if mod is None:
             # duh ? logilab.common.os for instance
@@ -112,7 +113,7 @@ def cleanup_sys_modules(config):
         if mod.__file__ is None:
             # odd/rare but real
             continue
-        for path in config.appobjects_path():
+        for path in appobjects_path:
             if mod.__file__.startswith(path):
                 del sys.modules[name]
                 break
