@@ -202,7 +202,7 @@ class RelationTagsSet(RelationTags):
 
 
 class RelationTagsDict(RelationTagsSet):
-    """This class associates a set of tags to each key."""
+    """This class associates a dictionary to each key."""
     tag_container_cls = dict
 
     def tag_relation(self, key, tag):
