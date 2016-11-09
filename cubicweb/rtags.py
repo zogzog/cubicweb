@@ -49,6 +49,15 @@ def _ensure_str_key(key):
     return tuple(str(k) for k in key)
 
 
+def rtags_chain(rtag):
+    """Return the rtags chain, starting from the given one, and going back through each parent rtag
+    up to the root (i.e. which as no parent).
+    """
+    while rtag is not None:
+        yield rtag
+        rtag = rtag._parent
+
+
 class RegistrableRtags(RegistrableInstance):
     __registry__ = 'uicfg'
     __select__ = yes()
@@ -68,8 +77,12 @@ class RelationTags(RegistrableRtags):
     # function given as __init__ argument and kept for bw compat
     _init = _initfunc = None
 
-    def __init__(self):
+    def __init__(self, parent=None):
         self._tagdefs = {}
+        self._parent = parent
+        if parent is not None:
+            assert parent.__class__ is self.__class__, \
+                'inconsistent class for parent rtag {0}'.format(parent)
 
     def __repr__(self):
         # find a way to have more infos but keep it readable
@@ -105,7 +118,7 @@ class RelationTags(RegistrableRtags):
                                      (stype, rtype, otype, tagged), value, ertype)
                         self.del_rtag(stype, rtype, otype, tagged)
                         break
-        if self._init is not None:
+        if self._parent is None and self._init is not None:
             self.apply(schema, self._init)
 
     def apply(self, schema, func):
@@ -121,6 +134,19 @@ class RelationTags(RegistrableRtags):
                     func(sschema, rschema, oschema, role)
 
     # rtag declaration api ####################################################
+
+    def derive(self, module, select):
+        """Return a derivated of this relation tag, associated to given module and selector.
+
+        This derivated will hold a set of specific rules but delegate to its "parent" relation tags
+        for unfound keys.
+
+        >>> class_afs = uicfg.autoform_section.derive(__name__, is_instance('Class'))
+        """
+        copied = self.__class__(self)
+        copied.__module__ = module
+        copied.__select__ = select
+        return copied
 
     def tag_attribute(self, key, *args, **kwargs):
         key = list(key)
@@ -163,11 +189,15 @@ class RelationTags(RegistrableRtags):
         del self._tagdefs[key]
 
     def get(self, *key):
+        """Return value for the given key, by looking from the most specific key to the more
+        generic (using '*' wildcards). For each key, look into this rtag and its parent rtags.
+        """
         for key in reversed(self._get_keys(*key)):
-            try:
-                return self._tagdefs[key]
-            except KeyError:
-                continue
+            for rtag in rtags_chain(self):
+                try:
+                    return rtag._tagdefs[key]
+                except KeyError:
+                    continue
         return None
 
     def etype_get(self, etype, rtype, role, ttype='*'):
@@ -192,12 +222,18 @@ class RelationTagsSet(RelationTags):
         return rtags
 
     def get(self, stype, rtype, otype, tagged):
+        """Return value for the given key, which is an union of the values found from the most
+        specific key to the more generic (using '*' wildcards). For each key, look into this rtag
+        and its parent rtags.
+        """
         rtags = self.tag_container_cls()
         for key in self._get_keys(stype, rtype, otype, tagged):
-            try:
-                rtags.update(self._tagdefs[key])
-            except KeyError:
-                continue
+            for rtag in rtags_chain(self):
+                try:
+                    rtags.update(rtag._tagdefs[key])
+                    break
+                except KeyError:
+                    continue
         return rtags
 
 

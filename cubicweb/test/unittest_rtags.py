@@ -20,75 +20,123 @@ import unittest
 
 from cubicweb.rtags import RelationTags, RelationTagsSet, RelationTagsDict
 
+
 class RelationTagsTC(unittest.TestCase):
 
-    def test_rtags_expansion(self):
-        rtags = RelationTags()
-        rtags.tag_subject_of(('Societe', 'travaille', '*'), 'primary')
-        rtags.tag_subject_of(('*', 'evaluee', '*'), 'secondary')
-        rtags.tag_object_of(('*', 'tags', '*'), 'generated')
-        self.assertEqual(rtags.get('Note', 'evaluee', '*', 'subject'),
-                          'secondary')
-        self.assertEqual(rtags.get('Societe', 'travaille', '*', 'subject'),
-                          'primary')
-        self.assertEqual(rtags.get('Note', 'travaille', '*', 'subject'),
-                          None)
-        self.assertEqual(rtags.get('Note', 'tags', '*', 'subject'),
-                          None)
-        self.assertEqual(rtags.get('*', 'tags', 'Note', 'object'),
-                          'generated')
-        self.assertEqual(rtags.get('Tag', 'tags', '*', 'object'),
-                          'generated')
+    def setUp(self):
+        self.rtags = RelationTags()
+        self.rtags.tag_subject_of(('Societe', 'travaille', '*'), 'primary')
+        self.rtags.tag_subject_of(('*', 'evaluee', '*'), 'secondary')
+        self.rtags.tag_object_of(('*', 'tags', '*'), 'generated')
 
-#         self.assertEqual(rtags.rtag('evaluee', 'Note', 'subject'), set(('secondary', 'link')))
-#         self.assertEqual(rtags.is_inlined('evaluee', 'Note', 'subject'), False)
-#         self.assertEqual(rtags.rtag('evaluee', 'Personne', 'subject'), set(('secondary', 'link')))
-#         self.assertEqual(rtags.is_inlined('evaluee', 'Personne', 'subject'), False)
-#         self.assertEqual(rtags.rtag('ecrit_par', 'Note', 'object'), set(('inlineview', 'link')))
-#         self.assertEqual(rtags.is_inlined('ecrit_par', 'Note', 'object'), True)
-#         class Personne2(Personne):
-#             id = 'Personne'
-#             __rtags__ = {
-#                 ('evaluee', 'Note', 'subject') : set(('inlineview',)),
-#                 }
-#         self.vreg.register(Personne2)
-#         rtags = Personne2.rtags
-#         self.assertEqual(rtags.rtag('evaluee', 'Note', 'subject'), set(('inlineview', 'link')))
-#         self.assertEqual(rtags.is_inlined('evaluee', 'Note', 'subject'), True)
-#         self.assertEqual(rtags.rtag('evaluee', 'Personne', 'subject'), set(('secondary', 'link')))
-#         self.assertEqual(rtags.is_inlined('evaluee', 'Personne', 'subject'), False)
+    def test_expansion(self):
+        self.assertEqual(self.rtags.get('Note', 'evaluee', '*', 'subject'),
+                         'secondary')
+        self.assertEqual(self.rtags.get('Societe', 'travaille', '*', 'subject'),
+                         'primary')
+        self.assertEqual(self.rtags.get('Note', 'travaille', '*', 'subject'),
+                         None)
+        self.assertEqual(self.rtags.get('Note', 'tags', '*', 'subject'),
+                         None)
+        self.assertEqual(self.rtags.get('*', 'tags', 'Note', 'object'),
+                         'generated')
+        self.assertEqual(self.rtags.get('Tag', 'tags', '*', 'object'),
+                         'generated')
+
+    def test_expansion_with_parent(self):
+        derived_rtags = self.rtags.derive(__name__, None)
+        derived_rtags.tag_subject_of(('Societe', 'travaille', '*'), 'secondary')
+        derived_rtags.tag_subject_of(('Note', 'evaluee', '*'), 'primary')
+        self.rtags.tag_object_of(('*', 'tags', '*'), 'hidden')
+
+        self.assertEqual(derived_rtags.get('Note', 'evaluee', '*', 'subject'),
+                         'primary')
+        self.assertEqual(derived_rtags.get('Societe', 'evaluee', '*', 'subject'),
+                         'secondary')
+        self.assertEqual(derived_rtags.get('Societe', 'travaille', '*', 'subject'),
+                         'secondary')
+        self.assertEqual(derived_rtags.get('Note', 'travaille', '*', 'subject'),
+                         None)
+        self.assertEqual(derived_rtags.get('*', 'tags', 'Note', 'object'),
+                         'hidden')
 
 
-    def test_rtagset_expansion(self):
-        rtags = RelationTagsSet()
-        rtags.tag_subject_of(('Societe', 'travaille', '*'), 'primary')
-        rtags.tag_subject_of(('*', 'travaille', '*'), 'secondary')
-        self.assertEqual(rtags.get('Societe', 'travaille', '*', 'subject'),
-                          set(('primary', 'secondary')))
-        self.assertEqual(rtags.get('Note', 'travaille', '*', 'subject'),
-                          set(('secondary',)))
-        self.assertEqual(rtags.get('Note', 'tags', "*", 'subject'),
-                          set())
+class RelationTagsSetTC(unittest.TestCase):
 
-    def test_rtagdict_expansion(self):
-        rtags = RelationTagsDict()
-        rtags.tag_subject_of(('Societe', 'travaille', '*'),
-                             {'key1': 'val1', 'key2': 'val1'})
-        rtags.tag_subject_of(('*', 'travaille', '*'),
-                             {'key1': 'val0', 'key3': 'val0'})
-        rtags.tag_subject_of(('Societe', 'travaille', '*'),
-                             {'key2': 'val2'})
-        self.assertEqual(rtags.get('Societe', 'travaille', '*', 'subject'),
-                          {'key1': 'val1', 'key2': 'val2', 'key3': 'val0'})
-        self.assertEqual(rtags.get('Note', 'travaille', '*', 'subject'),
-                          {'key1': 'val0', 'key3': 'val0'})
-        self.assertEqual(rtags.get('Note', 'tags', "*", 'subject'),
-                          {})
+    def setUp(self):
+        self.rtags = RelationTagsSet()
+        self.rtags.tag_subject_of(('Societe', 'travaille', '*'), 'primary')
+        self.rtags.tag_subject_of(('*', 'travaille', '*'), 'secondary')
 
-        rtags.setdefault(('Societe', 'travaille', '*', 'subject'), 'key1', 'val4')
-        rtags.setdefault(('Societe', 'travaille', '*', 'subject'), 'key4', 'val4')
-        self.assertEqual(rtags.get('Societe', 'travaille', '*', 'subject'),
-                          {'key1': 'val1', 'key2': 'val2', 'key3': 'val0', 'key4': 'val4'})
+    def test_expansion(self):
+        self.assertEqual(self.rtags.get('Societe', 'travaille', '*', 'subject'),
+                         set(('primary', 'secondary')))
+        self.assertEqual(self.rtags.get('Note', 'travaille', '*', 'subject'),
+                         set(('secondary',)))
+        self.assertEqual(self.rtags.get('Note', 'tags', "*", 'subject'),
+                         set())
+
+    def test_expansion_with_parent(self):
+        derived_rtags = self.rtags.derive(__name__, None)
+        derived_rtags.tag_subject_of(('Societe', 'travaille', '*'), 'derived_primary')
+        self.assertEqual(derived_rtags.get('Societe', 'travaille', '*', 'subject'),
+                         set(('derived_primary', 'secondary')))
+        self.assertEqual(derived_rtags.get('Note', 'travaille', '*', 'subject'),
+                         set(('secondary',)))
+
+        derived_rtags.tag_subject_of(('*', 'travaille', '*'), 'derived_secondary')
+        self.assertEqual(derived_rtags.get('Societe', 'travaille', '*', 'subject'),
+                         set(('derived_primary', 'derived_secondary')))
+        self.assertEqual(derived_rtags.get('Note', 'travaille', '*', 'subject'),
+                         set(('derived_secondary',)))
+
+        self.assertEqual(derived_rtags.get('Note', 'tags', "*", 'subject'),
+                         set())
+
+
+class RelationTagsDictTC(unittest.TestCase):
+
+    def setUp(self):
+        self.rtags = RelationTagsDict()
+        self.rtags.tag_subject_of(('Societe', 'travaille', '*'),
+                                  {'key1': 'val1', 'key2': 'val1'})
+        self.rtags.tag_subject_of(('*', 'travaille', '*'),
+                                  {'key1': 'val0', 'key3': 'val0'})
+        self.rtags.tag_subject_of(('Societe', 'travaille', '*'),
+                                  {'key2': 'val2'})
+
+    def test_expansion(self):
+        self.assertEqual(self.rtags.get('Societe', 'travaille', '*', 'subject'),
+                         {'key1': 'val1', 'key2': 'val2', 'key3': 'val0'})
+        self.assertEqual(self.rtags.get('Note', 'travaille', '*', 'subject'),
+                         {'key1': 'val0', 'key3': 'val0'})
+        self.assertEqual(self.rtags.get('Note', 'tags', "*", 'subject'),
+                         {})
+
+        self.rtags.setdefault(('Societe', 'travaille', '*', 'subject'), 'key1', 'val4')
+        self.rtags.setdefault(('Societe', 'travaille', '*', 'subject'), 'key4', 'val4')
+        self.assertEqual(self.rtags.get('Societe', 'travaille', '*', 'subject'),
+                         {'key1': 'val1', 'key2': 'val2', 'key3': 'val0', 'key4': 'val4'})
+
+    def test_expansion_with_parent(self):
+        derived_rtags = self.rtags.derive(__name__, None)
+
+        derived_rtags.tag_subject_of(('Societe', 'travaille', '*'),
+                                     {'key0': 'val0'})
+        self.assertEqual(derived_rtags.get('Societe', 'travaille', '*', 'subject'),
+                         {'key0': 'val0', 'key1': 'val0', 'key3': 'val0'})
+        self.assertEqual(derived_rtags.get('Note', 'travaille', '*', 'subject'),
+                         {'key1': 'val0', 'key3': 'val0'})
+        self.assertEqual(derived_rtags.get('Note', 'tags', "*", 'subject'),
+                         {})
+
+        derived_rtags.tag_subject_of(('*', 'travaille', '*'),
+                                     {'key0': 'val00', 'key4': 'val4'})
+        self.assertEqual(derived_rtags.get('Societe', 'travaille', '*', 'subject'),
+                         {'key0': 'val0', 'key4': 'val4'})
+        self.assertEqual(derived_rtags.get('Note', 'travaille', '*', 'subject'),
+                         {'key0': 'val00', 'key4': 'val4'})
+
 
 if __name__ == '__main__':
     unittest.main()

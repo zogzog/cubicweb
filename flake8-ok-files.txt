@@ -76,6 +76,7 @@ cubicweb/test/unittest_binary.py
 cubicweb/test/unittest_mail.py
 cubicweb/test/unittest_repoapi.py
 cubicweb/test/unittest_req.py
+cubicweb/test/unittest_rtags.py
 cubicweb/test/unittest_schema.py
 cubicweb/test/unittest_toolsutils.py
 cubicweb/test/unittest_utils.py
