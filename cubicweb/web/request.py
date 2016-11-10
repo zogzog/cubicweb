@@ -663,7 +663,7 @@ class _CubicWebRequestBase(RequestSessionBase):
     def build_url_path(self, *args):
         path = super(_CubicWebRequestBase, self).build_url_path(*args)
         lang_prefix = ''
-        if self.lang and self.vreg.config.get('language-mode') == 'url-prefix':
+        if self.lang is not None and self.vreg.config.get('language-mode') == 'url-prefix':
             lang_prefix = '%s/' % self.lang
         return lang_prefix + path
 
