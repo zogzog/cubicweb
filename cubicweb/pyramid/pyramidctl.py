@@ -11,7 +11,6 @@ import errno
 import os
 import signal
 import sys
-import tempfile
 import time
 import threading
 import subprocess
@@ -95,7 +94,6 @@ class PyramidStartHandler(InstanceCommand):
     )
 
     _reloader_environ_key = 'CW_RELOADER_SHOULD_RUN'
-    _reloader_filelist_environ_key = 'CW_RELOADER_FILELIST'
 
     def debug(self, msg):
         print('DEBUG - %s' % msg)
@@ -218,17 +216,17 @@ class PyramidStartHandler(InstanceCommand):
         os.dup2(0, 1)  # standard output (1)
         os.dup2(0, 2)  # standard error (2)
 
-    def restart_with_reloader(self):
+    def restart_with_reloader(self, filelist_path):
         self.debug('Starting subprocess with file monitor')
 
-        with tempfile.NamedTemporaryFile(delete=False) as f:
-            filelist_path = f.name
+        # Create or clear monitored files list file.
+        with open(filelist_path, 'w') as f:
+            pass
 
         while True:
             args = [self.quote_first_command_arg(sys.executable)] + sys.argv
             new_environ = os.environ.copy()
             new_environ[self._reloader_environ_key] = 'true'
-            new_environ[self._reloader_filelist_environ_key] = filelist_path
             proc = None
             try:
                 try:
@@ -295,10 +293,13 @@ class PyramidStartHandler(InstanceCommand):
         autoreload = self['reload'] or self['debug']
         daemonize = not (self['no-daemon'] or debugmode or autoreload)
 
-        if autoreload and not os.environ.get(self._reloader_environ_key):
-            return self.restart_with_reloader()
-
         cwconfig = cwcfg.config_for(appid, debugmode=debugmode)
+        filelist_path = os.path.join(cwconfig.apphome,
+                                     '.pyramid-reload-files.list')
+
+        if autoreload and not os.environ.get(self._reloader_environ_key):
+            return self.restart_with_reloader(filelist_path)
+
         if autoreload:
             _turn_sigterm_into_systemexit()
             self.debug('Running reloading file monitor')
@@ -307,8 +308,7 @@ class PyramidStartHandler(InstanceCommand):
             extra_files.extend(self.i18nfiles(cwconfig))
             self.install_reloader(
                 self['reload-interval'], extra_files,
-                filelist_path=os.environ.get(
-                    self._reloader_filelist_environ_key))
+                filelist_path=filelist_path)
 
         if daemonize:
             self.daemonize(cwconfig['pid-file'])
