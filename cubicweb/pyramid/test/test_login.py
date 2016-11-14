@@ -1,3 +1,6 @@
+from os.path import join
+from shutil import rmtree
+
 from cubicweb.pyramid.test import PyramidCWTest
 
 
@@ -41,9 +44,17 @@ class LoginTest(PyramidCWTest):
         self.assertIsNotNone(cookies['pauth_tkt'].expires)
 
     def test_login_bad_password(self):
-        res = self.webapp.post('/login', {
-            '__login': self.admlogin, '__password': 'empty'}, status=403)
-        self.assertIn('Authentication failed', res.text)
+        self.config.i18ncompile(['en', 'fr'])
+        try:
+            self.config._gettext_init()
+            res = self.webapp.post(
+                '/login',
+                {'__login': self.admlogin, '__password': 'empty'},
+                headers={'Accept-Language': 'fr'},
+                status=403)
+        finally:
+            rmtree(join(self.config.apphome, 'i18n'))
+        self.assertIn(u"\xc9chec de l'authentification", res.text)
 
 
 if __name__ == '__main__':
