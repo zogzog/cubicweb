@@ -12,6 +12,14 @@
 \.swp$
 ^doc/book/en/apidoc$
 \.old$
+\.pybuild
+debian/python-cubicweb
+debian/*.log
+debian/*.substvars
+debian/cubicweb-doc
+debian/cubicweb
+debian/files
+
 syntax: regexp
 .*/data.*/database/.*
 .*/data/ldapdb/.*
