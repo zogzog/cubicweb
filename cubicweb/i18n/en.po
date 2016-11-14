@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "POT-Creation-Date: 2006-01-12 17:35+CET\n"
-"PO-Revision-Date: 2011-04-29 12:57+0200\n"
+"PO-Revision-Date: 2016-11-14 12:24+0100\n"
 "Last-Translator: Sylvain Thenault <sylvain.thenault@logilab.fr>\n"
 "Language-Team: English <devel@logilab.fr.org>\n"
 "Language: en\n"
@@ -33,13 +33,6 @@ msgstr ""
 
 msgid " :"
 msgstr ":"
-
-#, python-format
-msgid "\"action\" must be specified in options; allowed values are %s"
-msgstr ""
-
-msgid "\"role=subject\" or \"role=object\" must be specified in options"
-msgstr ""
 
 #, python-format
 msgid "%(KEY-cstr)s constraint failed for value %(KEY-value)r"
@@ -102,10 +95,6 @@ msgid "%d years"
 msgstr ""
 
 #, python-format
-msgid "%s could be supported"
-msgstr ""
-
-#, python-format
 msgid "%s error report"
 msgstr ""
 
@@ -115,19 +104,6 @@ msgstr ""
 
 #, python-format
 msgid "%s updated"
-msgstr ""
-
-#, python-format
-msgid "'%s' action doesn't take any options"
-msgstr ""
-
-#, python-format
-msgid ""
-"'%s' action for in_state relation should at least have 'linkattr=name' option"
-msgstr ""
-
-#, python-format
-msgid "'%s' action requires 'linkattr' option"
 msgstr ""
 
 msgid "(UNEXISTANT EID)"
@@ -213,6 +189,9 @@ msgstr ""
 
 msgid "Attributes permissions:"
 msgstr ""
+
+msgid "Authentication failed. Please check your credentials."
+msgstr "Authentication failed. Please check your credentials."
 
 # schema pot file, generated on 2009-09-16 16:46:55
 #
@@ -338,6 +317,12 @@ msgstr "Relation"
 msgid "CWRelation_plural"
 msgstr "Relations"
 
+msgid "CWSession"
+msgstr "Persistent session"
+
+msgid "CWSession_plural"
+msgstr "Persistent sessions"
+
 msgid "CWSource"
 msgstr "Data source"
 
@@ -346,12 +331,6 @@ msgstr "Source host configuration"
 
 msgid "CWSourceHostConfig_plural"
 msgstr "Source host configurations"
-
-msgid "CWSourceSchemaConfig"
-msgstr "Source schema configuration"
-
-msgid "CWSourceSchemaConfig_plural"
-msgstr "Source schema configurations"
 
 msgid "CWSource_plural"
 msgstr "Data sources"
@@ -439,9 +418,6 @@ msgstr ""
 msgid "Deleted %(etype)s : %(entity)s"
 msgstr ""
 
-msgid "Detected problems"
-msgstr ""
-
 msgid "Do you want to delete the following element(s)?"
 msgstr ""
 
@@ -468,9 +444,6 @@ msgstr ""
 msgid ""
 "Entity %(eid)s has changed since you started to edit it. Reload the page and "
 "reapply your changes."
-msgstr ""
-
-msgid "Entity and relation supported by this source"
 msgstr ""
 
 msgid "ExternalUri"
@@ -578,14 +551,14 @@ msgstr "New relation type"
 msgid "New CWRelation"
 msgstr "New relation"
 
+msgid "New CWSession"
+msgstr "New persistent session"
+
 msgid "New CWSource"
 msgstr "New source"
 
 msgid "New CWSourceHostConfig"
 msgstr "New source host configuration"
-
-msgid "New CWSourceSchemaConfig"
-msgstr "New source schema configuration"
 
 msgid "New CWUniqueTogetherConstraint"
 msgstr "New unicity constraint"
@@ -640,6 +613,9 @@ msgstr "Password"
 
 msgid "Password_plural"
 msgstr "Passwords"
+
+msgid "Persistent session. Used by cubicweb.pyramid to store the session data."
+msgstr "Persistent session. Used by cubicweb.pyramid to store the session data."
 
 msgid "Please note that this is only a shallow copy"
 msgstr ""
@@ -794,14 +770,14 @@ msgstr "This relation type:"
 msgid "This CWRelation:"
 msgstr "This relation:"
 
+msgid "This CWSession:"
+msgstr "This persistent session :"
+
 msgid "This CWSource:"
 msgstr "This data source:"
 
 msgid "This CWSourceHostConfig:"
 msgstr "This source host configuration:"
-
-msgid "This CWSourceSchemaConfig:"
-msgstr "This source schema configuration:"
 
 msgid "This CWUniqueTogetherConstraint:"
 msgstr "This unicity constraint:"
@@ -920,9 +896,6 @@ msgstr ""
 msgid ""
 "You can either submit a new file using the browse button above, or edit file "
 "content online with the widget below."
-msgstr ""
-
-msgid "You can't change this relation"
 msgstr ""
 
 msgid "You cannot remove the system source"
@@ -1135,13 +1108,13 @@ msgstr "add a relation type"
 msgid "add a CWRelation"
 msgstr ""
 
+msgid "add a CWSession"
+msgstr "add a persistent session"
+
 msgid "add a CWSource"
 msgstr ""
 
 msgid "add a CWSourceHostConfig"
-msgstr ""
-
-msgid "add a CWSourceSchemaConfig"
 msgstr ""
 
 msgid "add a CWUniqueTogetherConstraint"
@@ -1247,14 +1220,7 @@ msgstr "alias"
 msgid "allow to set a specific workflow for an entity"
 msgstr ""
 
-msgid "allowed options depends on the source type"
-msgstr ""
-
 msgid "allowed transitions from this state"
-msgstr ""
-
-#, python-format
-msgid "allowed values for \"action\" are %s"
 msgstr ""
 
 msgid "allowed_transition"
@@ -1977,20 +1943,6 @@ msgstr "groups"
 msgid "cw.users-management"
 msgstr "users"
 
-msgid "cw_for_source"
-msgstr "for source"
-
-msgctxt "CWSourceSchemaConfig"
-msgid "cw_for_source"
-msgstr "for source"
-
-msgid "cw_for_source_object"
-msgstr "mapping"
-
-msgctxt "CWSource"
-msgid "cw_for_source_object"
-msgstr "mapping"
-
 msgid "cw_host_config_of"
 msgstr "source"
 
@@ -2018,28 +1970,6 @@ msgstr "imports"
 msgctxt "CWSource"
 msgid "cw_import_of_object"
 msgstr "imports"
-
-msgid "cw_schema"
-msgstr "maps"
-
-msgctxt "CWSourceSchemaConfig"
-msgid "cw_schema"
-msgstr "maps"
-
-msgid "cw_schema_object"
-msgstr "mapped by"
-
-msgctxt "CWEType"
-msgid "cw_schema_object"
-msgstr "mapped by"
-
-msgctxt "CWRType"
-msgid "cw_schema_object"
-msgstr "mapped by"
-
-msgctxt "CWRelation"
-msgid "cw_schema_object"
-msgstr "mapped by"
 
 msgid "cw_source"
 msgstr "source"
@@ -2074,14 +2004,18 @@ msgstr "description"
 msgid "cwrtype-permissions"
 msgstr "permissions"
 
+msgid "cwsessiondata"
+msgstr "session data"
+
+msgctxt "CWSession"
+msgid "cwsessiondata"
+msgstr "session data"
+
 msgid "cwsource-imports"
 msgstr ""
 
 msgid "cwsource-main"
 msgstr "description"
-
-msgid "cwsource-mapping"
-msgstr "mapping"
 
 msgid "cwuri"
 msgstr "internal uri"
@@ -2412,9 +2346,6 @@ msgstr "end timestamp"
 msgid "entities deleted"
 msgstr ""
 
-msgid "entity and relation types can't be mapped, only attributes or relations"
-msgstr ""
-
 msgid "entity copied"
 msgstr ""
 
@@ -2450,9 +2381,6 @@ msgstr ""
 
 msgid "entityview"
 msgstr "entity views"
-
-msgid "error"
-msgstr ""
 
 msgid "error while publishing ReST text"
 msgstr ""
@@ -3368,10 +3296,6 @@ msgstr ""
 msgid "options"
 msgstr ""
 
-msgctxt "CWSourceSchemaConfig"
-msgid "options"
-msgstr "options"
-
 msgid "order"
 msgstr ""
 
@@ -3561,24 +3485,6 @@ msgstr ""
 
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
-msgstr ""
-
-#, python-format
-msgid ""
-"relation %(rtype)s with %(etype)s as %(role)s is supported but no target "
-"type supported"
-msgstr ""
-
-#, python-format
-msgid ""
-"relation %(type)s with %(etype)s as %(role)s and target type %(target)s is "
-"mandatory but not supported"
-msgstr ""
-
-#, python-format
-msgid ""
-"relation %s is supported but none of its definitions matches supported "
-"entities"
 msgstr ""
 
 msgid "relation add"
@@ -4058,13 +3964,7 @@ msgstr ""
 msgid "this entity is currently owned by"
 msgstr ""
 
-msgid "this parser doesn't use a mapping"
-msgstr ""
-
 msgid "this resource does not exist"
-msgstr ""
-
-msgid "this source doesn't use a mapping"
 msgstr ""
 
 msgid "thursday"
@@ -4456,6 +4356,9 @@ msgstr ""
 msgid "view identifier"
 msgstr ""
 
+msgid "view original"
+msgstr "view original"
+
 msgid "view title"
 msgstr ""
 
@@ -4466,9 +4369,6 @@ msgid "view_index"
 msgstr "index"
 
 msgid "visible"
-msgstr ""
-
-msgid "warning"
 msgstr ""
 
 msgid "we are not yet ready to handle this query"
@@ -4556,9 +4456,3 @@ msgstr ""
 
 msgid "you should probably delete that property"
 msgstr ""
-
-#~ msgid "components_etypenavigation"
-#~ msgstr "filtering by type"
-
-#~ msgid "components_etypenavigation_description"
-#~ msgstr "permit to filter search results by entity type"

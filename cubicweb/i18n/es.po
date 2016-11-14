@@ -46,16 +46,6 @@ msgid " :"
 msgstr ":"
 
 #, python-format
-msgid "\"action\" must be specified in options; allowed values are %s"
-msgstr ""
-"\"action\" debe estar especificada en opciones; los valores permitidos son : "
-"%s"
-
-msgid "\"role=subject\" or \"role=object\" must be specified in options"
-msgstr ""
-"\"role=subject\" o \"role=object\" debe ser especificado en las opciones"
-
-#, python-format
 msgid "%(KEY-cstr)s constraint failed for value %(KEY-value)r"
 msgstr "%(KEY-cstr)s restricción errónea para el valor %(KEY-value)r"
 
@@ -116,10 +106,6 @@ msgid "%d years"
 msgstr "%d años"
 
 #, python-format
-msgid "%s could be supported"
-msgstr "%s podría ser mantenido"
-
-#, python-format
 msgid "%s error report"
 msgstr "%s reporte de errores"
 
@@ -130,21 +116,6 @@ msgstr "versión sistema de la base para %s"
 #, python-format
 msgid "%s updated"
 msgstr "%s actualizado"
-
-#, python-format
-msgid "'%s' action doesn't take any options"
-msgstr "la acción '%s'  no acepta opciones"
-
-#, python-format
-msgid ""
-"'%s' action for in_state relation should at least have 'linkattr=name' option"
-msgstr ""
-"'%s' acción en la relación in_state debe por lo menos tener la opción "
-"'linkattr=name'"
-
-#, python-format
-msgid "'%s' action requires 'linkattr' option"
-msgstr "la acción '%s' requiere una opción 'linkattr'"
 
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INEXISTENTE"
@@ -232,6 +203,9 @@ msgstr "Relación agregada : %(entity_from)s %(rtype)s %(entity_to)s"
 
 msgid "Attributes permissions:"
 msgstr "Permisos de atributos:"
+
+msgid "Authentication failed. Please check your credentials."
+msgstr ""
 
 # schema pot file, generated on 2009-09-16 16:46:55
 #
@@ -357,6 +331,12 @@ msgstr "Relación"
 msgid "CWRelation_plural"
 msgstr "Relaciones"
 
+msgid "CWSession"
+msgstr ""
+
+msgid "CWSession_plural"
+msgstr ""
+
 msgid "CWSource"
 msgstr "Fuente de datos"
 
@@ -365,12 +345,6 @@ msgstr "Configuración de Fuente"
 
 msgid "CWSourceHostConfig_plural"
 msgstr "Configuraciones de fuente"
-
-msgid "CWSourceSchemaConfig"
-msgstr "Configuraciones de Esquema de Fuente"
-
-msgid "CWSourceSchemaConfig_plural"
-msgstr "Configuraciones de Esquema de Fuente"
 
 msgid "CWSource_plural"
 msgstr "Fuentes de Datos"
@@ -470,9 +444,6 @@ msgstr "Eliminar relación : %(entity_from)s %(rtype)s %(entity_to)s"
 msgid "Deleted %(etype)s : %(entity)s"
 msgstr "Se eliminó %(etype)s : %(entity)s"
 
-msgid "Detected problems"
-msgstr "Problemas detectados"
-
 msgid "Do you want to delete the following element(s)?"
 msgstr "Desea eliminar el/los elemento(s) a continuación?"
 
@@ -500,9 +471,6 @@ msgid ""
 "Entity %(eid)s has changed since you started to edit it. Reload the page and "
 "reapply your changes."
 msgstr ""
-
-msgid "Entity and relation supported by this source"
-msgstr "Entidades y relaciones aceptadas por esta fuente"
 
 msgid "ExternalUri"
 msgstr "Uri externo"
@@ -609,14 +577,14 @@ msgstr "Agregar tipo de relación"
 msgid "New CWRelation"
 msgstr "Nueva definición de relación final"
 
+msgid "New CWSession"
+msgstr ""
+
 msgid "New CWSource"
 msgstr "Nueva fuente"
 
 msgid "New CWSourceHostConfig"
 msgstr "Nueva configuración de fuente"
-
-msgid "New CWSourceSchemaConfig"
-msgstr "Nueva parte de mapeo de fuente"
 
 msgid "New CWUniqueTogetherConstraint"
 msgstr "Nueva restricción de singularidad"
@@ -671,6 +639,9 @@ msgstr "Contraseña"
 
 msgid "Password_plural"
 msgstr "Contraseñas"
+
+msgid "Persistent session. Used by cubicweb.pyramid to store the session data."
+msgstr ""
 
 msgid "Please note that this is only a shallow copy"
 msgstr "Recuerde que sólo es una copia superficial"
@@ -828,14 +799,14 @@ msgstr "Este tipo de relación:"
 msgid "This CWRelation:"
 msgstr "Esta definición de relación no final:"
 
+msgid "This CWSession:"
+msgstr ""
+
 msgid "This CWSource:"
 msgstr "Esta fuente:"
 
 msgid "This CWSourceHostConfig:"
 msgstr "Esta configuración de fuente:"
-
-msgid "This CWSourceSchemaConfig:"
-msgstr "Esta parte de mapeo de fuente:"
 
 msgid "This CWUniqueTogetherConstraint:"
 msgstr "Esta restricción de singularidad:"
@@ -966,9 +937,6 @@ msgstr ""
 "Puede proponer un nuevo archivo utilizando el botón buscar \n"
 "\"buscar\" en la parte superior, o editar el contenido del archivo en línea\n"
 "en el campo siguiente."
-
-msgid "You can't change this relation"
-msgstr "Usted no puede modificar esta relación"
 
 msgid "You cannot remove the system source"
 msgstr "Usted no puede eliminar la fuente sistema"
@@ -1192,13 +1160,13 @@ msgstr "Agregar un tipo de relación"
 msgid "add a CWRelation"
 msgstr ""
 
+msgid "add a CWSession"
+msgstr ""
+
 msgid "add a CWSource"
 msgstr ""
 
 msgid "add a CWSourceHostConfig"
-msgstr ""
-
-msgid "add a CWSourceSchemaConfig"
 msgstr ""
 
 msgid "add a CWUniqueTogetherConstraint"
@@ -1306,15 +1274,8 @@ msgstr "alias"
 msgid "allow to set a specific workflow for an entity"
 msgstr "permite definir un Workflow específico para una entidad"
 
-msgid "allowed options depends on the source type"
-msgstr "las opciones permitidas dependen del tipo de fuente"
-
 msgid "allowed transitions from this state"
 msgstr "transiciones autorizadas desde este estado"
-
-#, python-format
-msgid "allowed values for \"action\" are %s"
-msgstr "los valores permitidos por \"acción\" son %s"
 
 msgid "allowed_transition"
 msgstr "transiciones autorizadas"
@@ -2063,20 +2024,6 @@ msgstr "grupos"
 msgid "cw.users-management"
 msgstr "usuarios"
 
-msgid "cw_for_source"
-msgstr "fuente"
-
-msgctxt "CWSourceSchemaConfig"
-msgid "cw_for_source"
-msgstr "fuente"
-
-msgid "cw_for_source_object"
-msgstr "elemento de mapeo"
-
-msgctxt "CWSource"
-msgid "cw_for_source_object"
-msgstr "elemento de mapeo"
-
 msgid "cw_host_config_of"
 msgstr "configuración del host de"
 
@@ -2104,28 +2051,6 @@ msgstr "importación"
 msgctxt "CWSource"
 msgid "cw_import_of_object"
 msgstr "importación"
-
-msgid "cw_schema"
-msgstr "esquema"
-
-msgctxt "CWSourceSchemaConfig"
-msgid "cw_schema"
-msgstr "esquema"
-
-msgid "cw_schema_object"
-msgstr "mapeado por"
-
-msgctxt "CWEType"
-msgid "cw_schema_object"
-msgstr "mapeado por"
-
-msgctxt "CWRType"
-msgid "cw_schema_object"
-msgstr "mapeado por"
-
-msgctxt "CWRelation"
-msgid "cw_schema_object"
-msgstr "mapeado por"
 
 msgid "cw_source"
 msgstr "desde la fuente de datos"
@@ -2160,14 +2085,18 @@ msgstr "Descripción"
 msgid "cwrtype-permissions"
 msgstr "Permisos"
 
+msgid "cwsessiondata"
+msgstr ""
+
+msgctxt "CWSession"
+msgid "cwsessiondata"
+msgstr ""
+
 msgid "cwsource-imports"
 msgstr "importación"
 
 msgid "cwsource-main"
 msgstr "descripción"
-
-msgid "cwsource-mapping"
-msgstr "mapeo"
 
 msgid "cwuri"
 msgstr "Uri Interna"
@@ -2516,11 +2445,6 @@ msgstr "horario final"
 msgid "entities deleted"
 msgstr "Entidades eliminadas"
 
-msgid "entity and relation types can't be mapped, only attributes or relations"
-msgstr ""
-"los tipos de entidad y relación no pueden ser mapeados, solo los atributos y "
-"las relaciones"
-
 msgid "entity copied"
 msgstr "Entidad copiada"
 
@@ -2556,9 +2480,6 @@ msgstr "Actualización de la Entidad"
 
 msgid "entityview"
 msgstr "vistas de entidades"
-
-msgid "error"
-msgstr "error"
 
 msgid "error while publishing ReST text"
 msgstr ""
@@ -3503,10 +3424,6 @@ msgstr "Sesiones Web abiertas"
 msgid "options"
 msgstr "Opciones"
 
-msgctxt "CWSourceSchemaConfig"
-msgid "options"
-msgstr "opciones"
-
 msgid "order"
 msgstr "Orden"
 
@@ -3700,30 +3617,6 @@ msgstr "relación"
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
 msgstr "relación %(relname)s de %(ent)s"
-
-#, python-format
-msgid ""
-"relation %(rtype)s with %(etype)s as %(role)s is supported but no target "
-"type supported"
-msgstr ""
-"la relación %(rtype)s con %(etype)s como %(role)s es aceptada pero ningún "
-"tipo target es aceptado"
-
-#, python-format
-msgid ""
-"relation %(type)s with %(etype)s as %(role)s and target type %(target)s is "
-"mandatory but not supported"
-msgstr ""
-"la relación %(type)s con %(etype)s como %(role)s y tipo objetivo %(target)s "
-"es obligatoria pero no mantenida"
-
-#, python-format
-msgid ""
-"relation %s is supported but none of its definitions matches supported "
-"entities"
-msgstr ""
-"la relación %s es aceptada pero ninguna de sus definiciones corresponden a "
-"los tipos de entidades aceptadas"
 
 msgid "relation add"
 msgstr "Agregar Relación"
@@ -4220,14 +4113,8 @@ msgstr "Esta acción es irreversible!."
 msgid "this entity is currently owned by"
 msgstr "Esta Entidad es propiedad de"
 
-msgid "this parser doesn't use a mapping"
-msgstr "este analizador (parser) no utiliza mapeo"
-
 msgid "this resource does not exist"
 msgstr "Este recurso no existe"
-
-msgid "this source doesn't use a mapping"
-msgstr "esta fuente no utiliza mapeo"
 
 msgid "thursday"
 msgstr "Jueves"
@@ -4627,6 +4514,9 @@ msgstr "Ver histórico"
 msgid "view identifier"
 msgstr "Identificador"
 
+msgid "view original"
+msgstr ""
+
 msgid "view title"
 msgstr "Nombre"
 
@@ -4638,9 +4528,6 @@ msgstr "Inicio"
 
 msgid "visible"
 msgstr "Visible"
-
-msgid "warning"
-msgstr "atención"
 
 msgid "we are not yet ready to handle this query"
 msgstr "Aún no podemos manejar este tipo de consulta Sparql"
@@ -4731,8 +4618,33 @@ msgstr "Ha terminado la sesión"
 msgid "you should probably delete that property"
 msgstr "probablamente debería  suprimir esta propriedad"
 
+#~ msgid "\"action\" must be specified in options; allowed values are %s"
+#~ msgstr ""
+#~ "\"action\" debe estar especificada en opciones; los valores permitidos "
+#~ "son : %s"
+
+#~ msgid "\"role=subject\" or \"role=object\" must be specified in options"
+#~ msgstr ""
+#~ "\"role=subject\" o \"role=object\" debe ser especificado en las opciones"
+
+#~ msgid "%s could be supported"
+#~ msgstr "%s podría ser mantenido"
+
 #~ msgid "%s relation should not be in mapped"
 #~ msgstr "la relación %s no debería estar mapeada"
+
+#~ msgid "'%s' action doesn't take any options"
+#~ msgstr "la acción '%s'  no acepta opciones"
+
+#~ msgid ""
+#~ "'%s' action for in_state relation should at least have 'linkattr=name' "
+#~ "option"
+#~ msgstr ""
+#~ "'%s' acción en la relación in_state debe por lo menos tener la opción "
+#~ "'linkattr=name'"
+
+#~ msgid "'%s' action requires 'linkattr' option"
+#~ msgstr "la acción '%s' requiere una opción 'linkattr'"
 
 #~ msgid "Any"
 #~ msgstr "Cualquiera"
@@ -4740,8 +4652,35 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgid "Browse by category"
 #~ msgstr "Busca por categoría"
 
+#~ msgid "CWSourceSchemaConfig"
+#~ msgstr "Configuraciones de Esquema de Fuente"
+
+#~ msgid "CWSourceSchemaConfig_plural"
+#~ msgstr "Configuraciones de Esquema de Fuente"
+
+#~ msgid "Detected problems"
+#~ msgstr "Problemas detectados"
+
+#~ msgid "Entity and relation supported by this source"
+#~ msgstr "Entidades y relaciones aceptadas por esta fuente"
+
+#~ msgid "New CWSourceSchemaConfig"
+#~ msgstr "Nueva parte de mapeo de fuente"
+
 #~ msgid "No account? Try public access at %s"
 #~ msgstr "No esta registrado? Use el acceso público en %s"
+
+#~ msgid "This CWSourceSchemaConfig:"
+#~ msgstr "Esta parte de mapeo de fuente:"
+
+#~ msgid "You can't change this relation"
+#~ msgstr "Usted no puede modificar esta relación"
+
+#~ msgid "allowed options depends on the source type"
+#~ msgstr "las opciones permitidas dependen del tipo de fuente"
+
+#~ msgid "allowed values for \"action\" are %s"
+#~ msgstr "los valores permitidos por \"acción\" son %s"
 
 #~ msgid "anonymous"
 #~ msgstr "anónimo"
@@ -4766,8 +4705,56 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgid "components_etypenavigation_description"
 #~ msgstr "Permite filtrar por tipo de entidad los resultados de una búsqueda"
 
+#~ msgid "cw_for_source"
+#~ msgstr "fuente"
+
+#~ msgctxt "CWSourceSchemaConfig"
+#~ msgid "cw_for_source"
+#~ msgstr "fuente"
+
+#~ msgid "cw_for_source_object"
+#~ msgstr "elemento de mapeo"
+
+#~ msgctxt "CWSource"
+#~ msgid "cw_for_source_object"
+#~ msgstr "elemento de mapeo"
+
+#~ msgid "cw_schema"
+#~ msgstr "esquema"
+
+#~ msgctxt "CWSourceSchemaConfig"
+#~ msgid "cw_schema"
+#~ msgstr "esquema"
+
+#~ msgid "cw_schema_object"
+#~ msgstr "mapeado por"
+
+#~ msgctxt "CWEType"
+#~ msgid "cw_schema_object"
+#~ msgstr "mapeado por"
+
+#~ msgctxt "CWRType"
+#~ msgid "cw_schema_object"
+#~ msgstr "mapeado por"
+
+#~ msgctxt "CWRelation"
+#~ msgid "cw_schema_object"
+#~ msgstr "mapeado por"
+
+#~ msgid "cwsource-mapping"
+#~ msgstr "mapeo"
+
 #~ msgid "edit canceled"
 #~ msgstr "Edición cancelada"
+
+#~ msgid ""
+#~ "entity and relation types can't be mapped, only attributes or relations"
+#~ msgstr ""
+#~ "los tipos de entidad y relación no pueden ser mapeados, solo los "
+#~ "atributos y las relaciones"
+
+#~ msgid "error"
+#~ msgstr "error"
 
 #~ msgid "error while querying source %s, some data may be missing"
 #~ msgstr ""
@@ -4782,8 +4769,39 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgid "no edited fields specified for entity %s"
 #~ msgstr "Ningún campo editable especificado para la entidad %s"
 
+#~ msgctxt "CWSourceSchemaConfig"
+#~ msgid "options"
+#~ msgstr "opciones"
+
+#~ msgid ""
+#~ "relation %(rtype)s with %(etype)s as %(role)s is supported but no target "
+#~ "type supported"
+#~ msgstr ""
+#~ "la relación %(rtype)s con %(etype)s como %(role)s es aceptada pero ningún "
+#~ "tipo target es aceptado"
+
+#~ msgid ""
+#~ "relation %(type)s with %(etype)s as %(role)s and target type %(target)s "
+#~ "is mandatory but not supported"
+#~ msgstr ""
+#~ "la relación %(type)s con %(etype)s como %(role)s y tipo objetivo "
+#~ "%(target)s es obligatoria pero no mantenida"
+
+#~ msgid ""
+#~ "relation %s is supported but none of its definitions matches supported "
+#~ "entities"
+#~ msgstr ""
+#~ "la relación %s es aceptada pero ninguna de sus definiciones corresponden "
+#~ "a los tipos de entidades aceptadas"
+
 #~ msgid "the value \"%s\" is already used, use another one"
 #~ msgstr "El valor \"%s\" ya esta en uso, favor de utilizar otro"
+
+#~ msgid "this parser doesn't use a mapping"
+#~ msgstr "este analizador (parser) no utiliza mapeo"
+
+#~ msgid "this source doesn't use a mapping"
+#~ msgstr "esta fuente no utiliza mapeo"
 
 #~ msgid "timeline"
 #~ msgstr "Escala de Tiempo"
@@ -4793,6 +4811,9 @@ msgstr "probablamente debería  suprimir esta propriedad"
 
 #~ msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
 #~ msgstr "El valor %(KEY-value)s debe ser %(KEY-op)s %(KEY-boundary)s"
+
+#~ msgid "warning"
+#~ msgstr "atención"
 
 #~ msgid "web sessions without CNX"
 #~ msgstr "sesiones web sin conexión asociada"

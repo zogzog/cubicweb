@@ -43,13 +43,6 @@ msgid " :"
 msgstr " :"
 
 #, python-format
-msgid "\"action\" must be specified in options; allowed values are %s"
-msgstr ""
-
-msgid "\"role=subject\" or \"role=object\" must be specified in options"
-msgstr ""
-
-#, python-format
 msgid "%(KEY-cstr)s constraint failed for value %(KEY-value)r"
 msgstr ""
 
@@ -110,10 +103,6 @@ msgid "%d years"
 msgstr "%d Jahre"
 
 #, python-format
-msgid "%s could be supported"
-msgstr ""
-
-#, python-format
 msgid "%s error report"
 msgstr "%s Fehlerbericht"
 
@@ -124,19 +113,6 @@ msgstr "Software-Version der Datenbank %s"
 #, python-format
 msgid "%s updated"
 msgstr "%s aktualisiert"
-
-#, python-format
-msgid "'%s' action doesn't take any options"
-msgstr ""
-
-#, python-format
-msgid ""
-"'%s' action for in_state relation should at least have 'linkattr=name' option"
-msgstr ""
-
-#, python-format
-msgid "'%s' action requires 'linkattr' option"
-msgstr ""
 
 msgid "(UNEXISTANT EID)"
 msgstr "(EID nicht gefunden)"
@@ -224,6 +200,9 @@ msgstr ""
 
 msgid "Attributes permissions:"
 msgstr "Rechte der Attribute"
+
+msgid "Authentication failed. Please check your credentials."
+msgstr ""
 
 # schema pot file, generated on 2009-09-16 16:46:55
 #
@@ -349,6 +328,12 @@ msgstr "Relation"
 msgid "CWRelation_plural"
 msgstr "Relationen"
 
+msgid "CWSession"
+msgstr ""
+
+msgid "CWSession_plural"
+msgstr ""
+
 msgid "CWSource"
 msgstr ""
 
@@ -356,12 +341,6 @@ msgid "CWSourceHostConfig"
 msgstr ""
 
 msgid "CWSourceHostConfig_plural"
-msgstr ""
-
-msgid "CWSourceSchemaConfig"
-msgstr ""
-
-msgid "CWSourceSchemaConfig_plural"
 msgstr ""
 
 msgid "CWSource_plural"
@@ -461,9 +440,6 @@ msgstr ""
 msgid "Deleted %(etype)s : %(entity)s"
 msgstr ""
 
-msgid "Detected problems"
-msgstr ""
-
 msgid "Do you want to delete the following element(s)?"
 msgstr "Wollen Sie das/die folgend(n) Element(e) löschen?"
 
@@ -490,9 +466,6 @@ msgstr "Entitäten"
 msgid ""
 "Entity %(eid)s has changed since you started to edit it. Reload the page and "
 "reapply your changes."
-msgstr ""
-
-msgid "Entity and relation supported by this source"
 msgstr ""
 
 msgid "ExternalUri"
@@ -600,13 +573,13 @@ msgstr "Neuer Relationstyp"
 msgid "New CWRelation"
 msgstr "Neue Relation"
 
+msgid "New CWSession"
+msgstr ""
+
 msgid "New CWSource"
 msgstr ""
 
 msgid "New CWSourceHostConfig"
-msgstr ""
-
-msgid "New CWSourceSchemaConfig"
 msgstr ""
 
 msgid "New CWUniqueTogetherConstraint"
@@ -664,6 +637,9 @@ msgstr "Passwort"
 
 msgid "Password_plural"
 msgstr "Passwörter"
+
+msgid "Persistent session. Used by cubicweb.pyramid to store the session data."
+msgstr ""
 
 msgid "Please note that this is only a shallow copy"
 msgstr "Achtung: dies ist nur eine flache Kopie!"
@@ -818,13 +794,13 @@ msgstr "Dieser Relationstyp:"
 msgid "This CWRelation:"
 msgstr "Diese Relation:"
 
+msgid "This CWSession:"
+msgstr ""
+
 msgid "This CWSource:"
 msgstr ""
 
 msgid "This CWSourceHostConfig:"
-msgstr ""
-
-msgid "This CWSourceSchemaConfig:"
 msgstr ""
 
 msgid "This CWUniqueTogetherConstraint:"
@@ -952,9 +928,6 @@ msgstr ""
 "Sie können entweder mit dem bouton\n"
 "\"Durchsuchen\" oberhalb eine neue Datei hochladen, oder den Datei-Inhalt "
 "mit dem Widget unterhalb editieren."
-
-msgid "You can't change this relation"
-msgstr ""
 
 msgid "You cannot remove the system source"
 msgstr ""
@@ -1173,13 +1146,13 @@ msgstr "einen Relationstyp hinzufügen"
 msgid "add a CWRelation"
 msgstr ""
 
+msgid "add a CWSession"
+msgstr ""
+
 msgid "add a CWSource"
 msgstr ""
 
 msgid "add a CWSourceHostConfig"
-msgstr ""
-
-msgid "add a CWSourceSchemaConfig"
 msgstr ""
 
 msgid "add a CWUniqueTogetherConstraint"
@@ -1287,15 +1260,8 @@ msgstr "Alias"
 msgid "allow to set a specific workflow for an entity"
 msgstr "erlaube, einen bestimmten Workflow für eine Entität zu setzen"
 
-msgid "allowed options depends on the source type"
-msgstr ""
-
 msgid "allowed transitions from this state"
 msgstr "erlaubte Übergänge von diesem Zustand"
-
-#, python-format
-msgid "allowed values for \"action\" are %s"
-msgstr ""
 
 msgid "allowed_transition"
 msgstr "erlaubter Übergang"
@@ -2020,20 +1986,6 @@ msgstr ""
 msgid "cw.users-management"
 msgstr ""
 
-msgid "cw_for_source"
-msgstr ""
-
-msgctxt "CWSourceSchemaConfig"
-msgid "cw_for_source"
-msgstr ""
-
-msgid "cw_for_source_object"
-msgstr ""
-
-msgctxt "CWSource"
-msgid "cw_for_source_object"
-msgstr ""
-
 msgid "cw_host_config_of"
 msgstr ""
 
@@ -2060,28 +2012,6 @@ msgstr ""
 
 msgctxt "CWSource"
 msgid "cw_import_of_object"
-msgstr ""
-
-msgid "cw_schema"
-msgstr ""
-
-msgctxt "CWSourceSchemaConfig"
-msgid "cw_schema"
-msgstr ""
-
-msgid "cw_schema_object"
-msgstr ""
-
-msgctxt "CWEType"
-msgid "cw_schema_object"
-msgstr ""
-
-msgctxt "CWRType"
-msgid "cw_schema_object"
-msgstr ""
-
-msgctxt "CWRelation"
-msgid "cw_schema_object"
 msgstr ""
 
 msgid "cw_source"
@@ -2117,13 +2047,17 @@ msgstr "Beschreibung"
 msgid "cwrtype-permissions"
 msgstr "Berechtigungen"
 
+msgid "cwsessiondata"
+msgstr ""
+
+msgctxt "CWSession"
+msgid "cwsessiondata"
+msgstr ""
+
 msgid "cwsource-imports"
 msgstr ""
 
 msgid "cwsource-main"
-msgstr ""
-
-msgid "cwsource-mapping"
 msgstr ""
 
 msgid "cwuri"
@@ -2463,9 +2397,6 @@ msgstr ""
 msgid "entities deleted"
 msgstr "Entitäten gelöscht"
 
-msgid "entity and relation types can't be mapped, only attributes or relations"
-msgstr ""
-
 msgid "entity copied"
 msgstr "Entität kopiert"
 
@@ -2500,9 +2431,6 @@ msgid "entity update"
 msgstr "Aktualisierung der Entität"
 
 msgid "entityview"
-msgstr ""
-
-msgid "error"
 msgstr ""
 
 msgid "error while publishing ReST text"
@@ -3450,10 +3378,6 @@ msgstr "offene Web-Sitzungen"
 msgid "options"
 msgstr "Optionen"
 
-msgctxt "CWSourceSchemaConfig"
-msgid "options"
-msgstr ""
-
 msgid "order"
 msgstr "Reihenfolge"
 
@@ -3645,24 +3569,6 @@ msgstr "Relation"
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
 msgstr "Relation %(relname)s von %(ent)s"
-
-#, python-format
-msgid ""
-"relation %(rtype)s with %(etype)s as %(role)s is supported but no target "
-"type supported"
-msgstr ""
-
-#, python-format
-msgid ""
-"relation %(type)s with %(etype)s as %(role)s and target type %(target)s is "
-"mandatory but not supported"
-msgstr ""
-
-#, python-format
-msgid ""
-"relation %s is supported but none of its definitions matches supported "
-"entities"
-msgstr ""
 
 msgid "relation add"
 msgstr "Relation hinzufügen"
@@ -4155,14 +4061,8 @@ msgstr "Achtung! Diese Aktion ist unumkehrbar."
 msgid "this entity is currently owned by"
 msgstr "Diese Entität gehört:"
 
-msgid "this parser doesn't use a mapping"
-msgstr ""
-
 msgid "this resource does not exist"
 msgstr "cette ressource est introuvable"
-
-msgid "this source doesn't use a mapping"
-msgstr ""
 
 msgid "thursday"
 msgstr "Donnerstag"
@@ -4564,6 +4464,9 @@ msgstr "Chronik ansehen"
 msgid "view identifier"
 msgstr "Nutzername"
 
+msgid "view original"
+msgstr ""
+
 msgid "view title"
 msgstr "Titel"
 
@@ -4575,9 +4478,6 @@ msgstr "Index-Seite"
 
 msgid "visible"
 msgstr "sichtbar"
-
-msgid "warning"
-msgstr ""
 
 msgid "we are not yet ready to handle this query"
 msgstr "Momentan können wir diese sparql-Anfrage noch nicht ausführen."
