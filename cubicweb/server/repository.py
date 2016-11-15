@@ -157,6 +157,7 @@ class Repository(object):
 
     def __init__(self, config, tasks_manager=None, vreg=None):
         self.config = config
+        self.sources_by_eid = {}
         if vreg is None:
             vreg = cwvreg.CWRegistryStore(config)
         self.vreg = vreg
@@ -264,7 +265,6 @@ class Repository(object):
     # internals ###############################################################
 
     def init_sources_from_database(self):
-        self.sources_by_eid = {}
         if self.config.quick_start or 'CWSource' not in self.schema:  # 3.10 migration
             self.system_source.init_creating()
             return
