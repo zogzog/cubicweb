@@ -1,3 +1,20 @@
+cubicweb (3.24.1-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+  * Rename binary packages to python-xxx (but cubicweb-ctl).
+
+  * New python-cubicweb-pyramid binary package.
+
+  * Remove cubicweb-mysql-support.
+
+  * Use dh_python and pybuild.
+
+  * Remove all daemon-related stuff from cubicweb-ctl package (since a
+    CubicWeb application should now be managed by a WSGI server).
+
+ -- David Douard <david.douard@logilab.fr>  Mon, 14 Nov 2016 17:34:06 +0100
+
 cubicweb (3.24.0-1) unstable; urgency=medium
 
   * New upstream release.

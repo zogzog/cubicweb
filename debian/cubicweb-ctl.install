@@ -1,3 +1,2 @@
-usr/bin/cubicweb-ctl usr/bin/
 usr/lib/python2*/*-packages/cubicweb/cwctl.py
-../cubicweb-ctl.bash_completion etc/bash_completion.d/cubicweb-ctl
+usr/bin/cubicweb-ctl

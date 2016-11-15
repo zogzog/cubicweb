@@ -9,6 +9,7 @@ include flake8-ok-files.txt
 
 include bin/cubicweb-*
 include man/cubicweb-ctl.1
+recursive-include extras *.bash_completion
 
 include doc/*.rst
 include doc/*.txt
