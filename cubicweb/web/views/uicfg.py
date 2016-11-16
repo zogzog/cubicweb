@@ -54,9 +54,6 @@ Actions box configuration
    uicfg.actionbox_appearsin_addmenu.tag_object_of(('*', 'entry_of', 'Blog'), True)
 """
 
-
-from warnings import warn
-
 from six import string_types
 
 from cubicweb import neg_role
@@ -92,6 +89,7 @@ class PrimaryViewSectionRelationTags(RelationTags):
                 else:
                     section = 'sideboxes'
             self.tag_relation((sschema, rschema, oschema, role), section)
+
 
 primaryview_section = PrimaryViewSectionRelationTags()
 
@@ -155,7 +153,7 @@ primaryview_display_ctrl = DisplayCtrlRelationTags()
 # * 'hidden'
 # * 'subobject' (not displayed by default)
 
-class InitializableDict(dict): # XXX not a rtag. Turn into an appobject?
+class InitializableDict(dict):  # XXX not a rtag. Turn into an appobject?
     def __init__(self, *args, **kwargs):
         super(InitializableDict, self).__init__(*args, **kwargs)
         self.__defaults = dict(self)
@@ -174,12 +172,13 @@ class InitializableDict(dict): # XXX not a rtag. Turn into an appobject?
             else:
                 self.setdefault(eschema, 'application')
 
+
 indexview_etype_section = InitializableDict(
     EmailAddress='subobject',
     Bookmark='system',
     # entity types in the 'system' table by default (managers only)
     CWUser='system', CWGroup='system',
-    )
+)
 
 
 # autoform.AutomaticEntityForm configuration ##################################
@@ -191,6 +190,7 @@ def _formsections_as_dict(formsections):
         result[formtype] = section
     return result
 
+
 def _card_and_comp(sschema, rschema, oschema, role):
     rdef = rschema.rdef(sschema, oschema)
     if role == 'subject':
@@ -200,6 +200,7 @@ def _card_and_comp(sschema, rschema, oschema, role):
         card = rdef.cardinality[1]
         composed = not rschema.final and rdef.composite == 'subject'
     return card, composed
+
 
 class AutoformSectionRelationTags(RelationTagsSet):
     """autoform relations'section"""
@@ -237,26 +238,26 @@ class AutoformSectionRelationTags(RelationTagsSet):
             sectdict.setdefault('muledit', 'hidden')
             sectdict.setdefault('inlined', 'hidden')
         # ensure we have a tag for each form type
-        if not 'main' in sectdict:
+        if 'main' not in sectdict:
             if sschema.is_metadata(rschema):
                 sectdict['main'] = 'metadata'
             else:
                 card, composed = _card_and_comp(sschema, rschema, oschema, role)
                 if card in '1+':
                     sectdict['main'] = 'attributes'
-                    if not 'muledit' in sectdict:
+                    if 'muledit' not in sectdict:
                         sectdict['muledit'] = 'attributes'
                 elif rschema.final:
                     sectdict['main'] = 'attributes'
                 else:
                     sectdict['main'] = 'relations'
-        if not 'muledit' in sectdict:
+        if 'muledit' not in sectdict:
             sectdict['muledit'] = 'hidden'
             if sectdict['main'] == 'attributes':
                 card, composed = _card_and_comp(sschema, rschema, oschema, role)
                 if card in '1+' and not composed:
                     sectdict['muledit'] = 'attributes'
-        if not 'inlined' in sectdict:
+        if 'inlined' not in sectdict:
             sectdict['inlined'] = sectdict['main']
         # recompute formsections and set it to avoid recomputing
         for formtype, section in sectdict.items():
@@ -268,11 +269,11 @@ class AutoformSectionRelationTags(RelationTagsSet):
                 self.tag_relation(key, ftype, section)
             return
         assert formtype in self._allowed_form_types, \
-               'formtype should be in (%s), not %s' % (
-            ','.join(self._allowed_form_types), formtype)
+            'formtype should be in (%s), not %s' % (
+                ','.join(self._allowed_form_types), formtype)
         assert section in self._allowed_values[formtype], \
-               'section for %s should be in (%s), not %s' % (
-            formtype, ','.join(self._allowed_values[formtype]), section)
+            'section for %s should be in (%s), not %s' % (
+                formtype, ','.join(self._allowed_values[formtype]), section)
         rtags = self._tagdefs.setdefault(_ensure_str_key(key),
                                          self.tag_container_cls())
         # remove previous section for this form type if any
@@ -293,8 +294,8 @@ class AutoformSectionRelationTags(RelationTagsSet):
                 section, value = tag.split('_', 1)
                 rtags[section] = value
         cls = self.tag_container_cls
-        rtags = cls('_'.join([section,value])
-                    for section,value in rtags.items())
+        rtags = cls('_'.join([section, value])
+                    for section, value in rtags.items())
         return rtags
 
     def get(self, *key):
@@ -310,9 +311,10 @@ class AutoformSectionRelationTags(RelationTagsSet):
           bool telling if having local role is enough (strict = False) or not
         """
         tag = '%s_%s' % (formtype, section)
-        eschema  = entity.e_schema
+        eschema = entity.e_schema
         cw = entity._cw
-        permsoverrides = cw.vreg['uicfg'].select('autoform_permissions_overrides', cw, entity=entity)
+        permsoverrides = cw.vreg['uicfg'].select('autoform_permissions_overrides', cw,
+                                                 entity=entity)
         if entity.has_eid():
             eid = entity.eid
         else:
@@ -329,7 +331,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
             for tschema in targetschemas:
                 # check section's tag first, potentially lower cost than
                 # checking permission which may imply rql queries
-                if not tag in self.etype_get(eschema, rschema, role, tschema):
+                if tag not in self.etype_get(eschema, rschema, role, tschema):
                     continue
                 rdef = rschema.role_rdef(eschema, tschema, role)
                 if rschema.final:
@@ -351,7 +353,8 @@ class AutoformSectionRelationTags(RelationTagsSet):
             # XXX tag allowing to hijack the permission machinery when
             # permission is not verifiable until the entity is actually
             # created...
-            if eid is None and '%s_on_new' % permission in permsoverrides.etype_get(eschema, rschema, role):
+            if eid is None and '%s_on_new' % permission in permsoverrides.etype_get(
+                    eschema, rschema, role):
                 yield (rschema, targetschemas, role)
                 continue
             if not rschema.final and role == 'subject':
@@ -481,6 +484,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
         for attr in attrs:
             self.edit_as_attr(self, etype, attr, formtype='muledit')
 
+
 autoform_section = AutoformSectionRelationTags()
 
 
@@ -499,6 +503,7 @@ class AutoformFieldTags(RelationTags):
 
         """
         self._tag_etype_attr(etype, attr, '*', field)
+
 
 autoform_field = AutoformFieldTags()
 
@@ -561,6 +566,7 @@ autoform_field_kwargs = AutoformFieldKwargsTags()
 class AutoFormPermissionsOverrides(RelationTagsSet):
     __regid__ = 'autoform_permissions_overrides'
 
+
 autoform_permissions_overrides = AutoFormPermissionsOverrides()
 
 
@@ -616,11 +622,12 @@ class ReleditTags(NoTargetRelationTagsDict):
                 edittarget = 'related' if composite else 'rtype'
                 self.tag_relation((sschema, rschema, oschema, role),
                                   {'edit_target': edittarget})
-        if not 'novalue_include_rtype' in values:
+        if 'novalue_include_rtype' not in values:
             showlabel = primaryview_display_ctrl.get(
                 sschema, rschema, oschema, role).get('showlabel', True)
             self.tag_relation((sschema, rschema, oschema, role),
                               {'novalue_include_rtype': not showlabel})
+
 
 reledit_ctrl = ReleditTags()
 
@@ -656,7 +663,8 @@ class ActionBoxUicfg(RelationTagsBool):
 
         :param etype: the entity type as a string
         :param attr: the name of the attribute or relation to hide
-        :param createdtype: the target type of the relation (optional, defaults to '*' (all possible types))
+        :param createdtype: the target type of the relation
+                            (optional, defaults to '*' (all possible types))
 
         `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
 
@@ -668,14 +676,15 @@ class ActionBoxUicfg(RelationTagsBool):
 
         :param etype: the entity type as a string
         :param attr: the name of the attribute or relation to hide
-        :param createdtype: the target type of the relation (optional, defaults to '*' (all possible types))
+        :param createdtype: the target type of the relation
+                            (optional, defaults to '*' (all possible types))
 
         `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
         """
         self._tag_etype_attr(etype, attr, createdtype, False)
 
-actionbox_appearsin_addmenu = ActionBoxUicfg()
 
+actionbox_appearsin_addmenu = ActionBoxUicfg()
 
 
 def registration_callback(vreg):

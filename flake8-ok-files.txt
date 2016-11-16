@@ -82,6 +82,7 @@ cubicweb/web/test/unittest_views_cwsources.py
 cubicweb/web/test/unittest_views_json.py
 cubicweb/web/views/json.py
 cubicweb/web/views/searchrestriction.py
+cubicweb/web/views/uicfg.py
 cubicweb/xy.py
 cubicweb/pyramid/auth.py
 cubicweb/pyramid/bwcompat.py
