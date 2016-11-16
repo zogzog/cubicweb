@@ -220,12 +220,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
         formsections = self.init_get(sschema, rschema, oschema, role)
         if formsections is None:
             formsections = self.tag_container_cls()
-        if not any(tag.startswith('inlined') for tag in formsections):
-            if not rschema.final:
-                negsects = self.init_get(sschema, rschema, oschema, neg_role(role))
-                if 'main_inlined' in negsects:
-                    formsections.add('inlined_hidden')
-        key = _ensure_str_key( (sschema, rschema, oschema, role) )
+        key = _ensure_str_key((sschema, rschema, oschema, role))
         self._tagdefs[key] = formsections
 
     def _initfunc_step2(self, sschema, rschema, oschema, role):
@@ -243,12 +238,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
             sectdict.setdefault('inlined', 'hidden')
         # ensure we have a tag for each form type
         if not 'main' in sectdict:
-            if not rschema.final and (
-                sectdict.get('inlined') == 'attributes' or
-                'inlined_attributes' in self.init_get(sschema, rschema, oschema,
-                                                      neg_role(role))):
-                sectdict['main'] = 'hidden'
-            elif sschema.is_metadata(rschema):
+            if sschema.is_metadata(rschema):
                 sectdict['main'] = 'metadata'
             else:
                 card, composed = _card_and_comp(sschema, rschema, oschema, role)
