@@ -569,8 +569,12 @@ def update_cube_catalogs(cubedir):
     cubedir = osp.abspath(osp.normpath(cubedir))
     workdir = tempfile.mkdtemp()
     try:
-        distname = osp.basename(cubedir)
-        cubename = distname.split('_')[-1]
+        cubename = osp.basename(cubedir)
+        if cubename.startswith('cubicweb_'):  # new layout
+            distname = cubename
+            cubename = cubename[len('cubicweb_'):]
+        else:
+            distname = 'cubicweb_' + cubename
         print('cubedir', cubedir)
         extract_cls = I18nCubeMessageExtractor
         try:
