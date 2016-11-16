@@ -208,6 +208,7 @@ class MockSMTP:
     def sendmail(self, fromaddr, recipients, msg):
         MAILBOX.append(Email(fromaddr, recipients, msg))
 
+
 cwconfig.SMTP = MockSMTP
 
 

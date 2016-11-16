@@ -337,6 +337,7 @@ class PyramidStartHandler(InstanceCommand):
             return 3
         return 0
 
+
 CWCTL.register(PyramidStartHandler)
 
 

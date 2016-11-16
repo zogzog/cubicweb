@@ -1034,4 +1034,5 @@ class Repository(object):
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
+
 set_log_methods(Repository, getLogger('cubicweb.repository'))

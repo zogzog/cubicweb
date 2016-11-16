@@ -168,6 +168,7 @@ class _security_enabled(object):
         if self.oldwrite is not None:
             self.cnx.write_security = self.oldwrite
 
+
 HOOKS_ALLOW_ALL = object()
 HOOKS_DENY_ALL = object()
 DEFAULT_SECURITY = object()  # evaluated to true by design

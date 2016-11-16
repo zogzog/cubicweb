@@ -157,6 +157,8 @@ class Binary(BytesIO):
 
 def check_password(eschema, value):
     return isinstance(value, (binary_type, Binary))
+
+
 BASE_CHECKERS['Password'] = check_password
 
 
@@ -164,6 +166,8 @@ def str_or_binary(value):
     if isinstance(value, Binary):
         return value
     return binary_type(value)
+
+
 BASE_CONVERTERS['Password'] = str_or_binary
 
 
@@ -223,6 +227,7 @@ class CubicWebEventManager(object):
                 callback(*args, **kwargs)
             else:
                 callback(context, *args, **kwargs)
+
 
 CW_EVENT_MANAGER = CubicWebEventManager()
 
