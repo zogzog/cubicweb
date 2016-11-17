@@ -1304,7 +1304,7 @@ the repository',
             try:
                 tr = translation('cubicweb', path, languages=[language])
                 self.translations[language] = (tr.ugettext, tr.upgettext)
-            except (ImportError, AttributeError, IOError):
+            except IOError:
                 if self.mode != 'test':
                     # in test contexts, data/i18n does not exist, hence
                     # logging will only pollute the logs
