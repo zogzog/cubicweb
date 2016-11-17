@@ -45,19 +45,21 @@ def cached_build_user(repo, eid):
     """
     with repo.internal_cnx() as cnx:
         if eid in _user_cache:
-            entity = clone_user(repo, _user_cache[eid])
+            user, lang = _user_cache[eid]
+            entity = clone_user(repo, user)
             # XXX the cnx is needed here so that the CWUser instance has an
             # access to the vreg, which it needs when its 'prefered_language'
             # property is accessed.
             # If this property did not need a cnx to access a vreg, we could
             # avoid the internal_cnx() and save more time.
             cnx_attach_entity(cnx, entity)
-            return entity
+            return entity, lang
 
         user = repo._build_user(cnx, eid)
+        lang = user.prefered_language()
         user.cw_clear_relation_cache()
-        _user_cache[eid] = clone_user(repo, user)
-        return user
+        _user_cache[eid] = (clone_user(repo, user), lang)
+        return user, lang
 
 
 def clear_cache():

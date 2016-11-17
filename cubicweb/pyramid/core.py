@@ -32,6 +32,7 @@ class Connection(cwsession.Connection):
     def __init__(self, session, *args, **kw):
         super(Connection, self).__init__(session, *args, **kw)
         self._session = session
+        self.lang = session._cached_lang
 
     def _get_session_data(self):
         return self._session.data
@@ -272,8 +273,9 @@ def repo_connect(request, repo, eid):
     """A lightweight version of
     :meth:`cubicweb.server.repository.Repository.connect` that does not keep
     track of opened sessions, removing the need of closing them"""
-    user = tools.cached_build_user(repo, eid)
+    user, lang = tools.cached_build_user(repo, eid)
     session = Session(request, user, repo)
+    session._cached_lang = lang
     tools.cnx_attach_entity(session, user)
     # Calling the hooks should be done only once, disabling it completely for
     # now

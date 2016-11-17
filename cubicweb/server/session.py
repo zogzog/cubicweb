@@ -384,6 +384,8 @@ class Connection(RequestSessionBase):
         assert not self._open
         self._open = True
         self.cnxset = self.repo._get_cnxset()
+        if self.lang is None:
+            self.set_language(self.user.prefered_language())
         return self
 
     def __exit__(self, exctype=None, excvalue=None, tb=None):

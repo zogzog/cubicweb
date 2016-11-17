@@ -74,6 +74,7 @@ class RequestSessionBase(object):
         # should be emptied on commit/rollback of the server session / web
         # connection
         self.user = None
+        self.lang = None
         self.local_perm_cache = {}
         self._ = text_type
 
