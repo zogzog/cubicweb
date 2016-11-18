@@ -1,3 +1,5 @@
+from unittest import SkipTest
+
 from cubicweb.devtools import qunit
 
 
@@ -6,6 +8,7 @@ def js(name):
 
 class QUnitTestCaseTC(qunit.QUnitTestCase):
 
+    timeout_error = SkipTest
     all_js_tests = (
                     (js('test_simple_success.js'),),
                     (js('test_with_dep.js'), (js('dep_1.js'),)),

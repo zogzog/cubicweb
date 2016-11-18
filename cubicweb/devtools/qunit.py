@@ -100,6 +100,7 @@ class QUnitTestCase(cwwebtest.CubicWebTestTC):
 
     # testfile, (dep_a, dep_b)
     all_js_tests = ()
+    timeout_error = RuntimeError
 
     def setUp(self):
         super(QUnitTestCase, self).setUp()
@@ -150,6 +151,13 @@ class QUnitTestCase(cwwebtest.CubicWebTestTC):
                     print(logf.read())
                 raise RuntimeError(*data)
 
+            def timeout_failure(test_file, timeout, test_count):
+                with open(browser.log_file) as logf:
+                    print(logf.read())
+                msg = '%s inactivity timeout (%is). %i test results received' % (
+                    test_file, timeout, test_count)
+                raise self.timeout_error(msg)
+
             while not error:
                 try:
                     result, test_name, msg = self.test_queue.get(timeout=timeout)
@@ -163,8 +171,7 @@ class QUnitTestCase(cwwebtest.CubicWebTestTC):
                         yield test_name, self.fail, (msg, )
                 except Empty:
                     error = True
-                    msg = '%s inactivity timeout (%is). %i test results received'
-                    yield test_file, runtime_error, (msg % (test_file, timeout, test_count), )
+                    yield test_file, timeout_failure, (test_file, timeout, test_count)
 
         if test_count <= 0 and not error:
             yield test_name, runtime_error, ('No test yielded by qunit for %s' % test_file, )
