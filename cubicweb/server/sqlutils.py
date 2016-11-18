@@ -16,9 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """SQL utilities functions and classes."""
+
 from __future__ import print_function
-
-
 
 import sys
 import re
@@ -458,6 +457,7 @@ class SQLAdapterMixIn(object):
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
+
 set_log_methods(SQLAdapterMixIn, getLogger('cubicweb.sqladapter'))
 
 
@@ -560,6 +560,7 @@ def _init_sqlite_connection(cnx):
     import yams.constraints
     yams.constraints.patch_sqlite_decimal()
 
+
 sqlite_hooks = SQL_CONNECT_HOOKS.setdefault('sqlite', [])
 sqlite_hooks.append(_init_sqlite_connection)
 
@@ -570,6 +571,7 @@ def _init_postgres_connection(cnx):
     # commit is needed, else setting are lost if the connection is first
     # rolled back
     cnx.commit()
+
 
 postgres_hooks = SQL_CONNECT_HOOKS.setdefault('postgres', [])
 postgres_hooks.append(_init_postgres_connection)

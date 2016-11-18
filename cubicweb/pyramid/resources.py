@@ -64,8 +64,17 @@ class ETypeResource(object):
         self.cls = vreg['etypes'].etype_class(self.etype)
 
     def __getitem__(self, value):
-        attrname = self.cls.cw_rest_attr_info()[0]
-        return EntityResource(self.request, self.cls, attrname, value)
+        # Try eid first, then rest attribute as for URL path evaluation
+        # mecanism in cubicweb.web.views.urlpublishing.
+        for attrname in ('eid', self.cls.cw_rest_attr_info()[0]):
+            resource = EntityResource(self.request, self.cls, attrname, value)
+            try:
+                rset = resource.rset
+            except HTTPNotFound:
+                continue
+            if rset.rowcount:
+                return resource
+        raise KeyError(value)
 
     @reify
     def rset(self):

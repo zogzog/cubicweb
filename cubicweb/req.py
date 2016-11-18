@@ -74,6 +74,7 @@ class RequestSessionBase(object):
         # should be emptied on commit/rollback of the server session / web
         # connection
         self.user = None
+        self.lang = None
         self.local_perm_cache = {}
         self._ = text_type
 
@@ -95,7 +96,15 @@ class RequestSessionBase(object):
         Raises :exc:`KeyError` if translation doesn't exist.
         """
         self.lang = lang
-        gettext, pgettext = self.vreg.config.translations[lang]
+        try:
+            gettext, pgettext = self.vreg.config.translations[lang]
+        except KeyError:
+            assert self.vreg.config.mode == 'test'
+            gettext = text_type
+
+            def pgettext(x, y):
+                return text_type(y)
+
         # use _cw.__ to translate a message without registering it to the catalog
         self._ = self.__ = gettext
         self.pgettext = pgettext

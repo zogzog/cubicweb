@@ -136,11 +136,11 @@ class I18nCollectorTest(BaseTestCase):
 
     @patch('pkg_resources.load_entry_point', return_value=FakeMessageExtractor)
     def test_cube_custom_extractor(self, mock_load_entry_point):
-        for distname, cubedir in [
-            ('cubicweb_i18ntestcube',
-             osp.join(DATADIR, 'libpython', 'cubicweb_i18ntestcube')),
+        distname = 'cubicweb_i18ntestcube'  # same for new and legacy layout
+        for cubedir in [
+            osp.join(DATADIR, 'libpython', 'cubicweb_i18ntestcube'),
             # Legacy cubes.
-            ('i18ntestcube', osp.join(DATADIR, 'cubes', 'i18ntestcube')),
+            osp.join(DATADIR, 'cubes', 'i18ntestcube'),
         ]:
             with self.subTest(cubedir=cubedir):
                 with capture_stdout() as stream:

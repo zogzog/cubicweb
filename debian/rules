@@ -3,82 +3,27 @@
 # GNU copyright 1997 to 1999 by Joey Hess.
 
 # Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+# export DH_VERBOSE=1
 
-build: build-stamp
-build-stamp:
-	dh_testdir
-	python setup.py build
-	# cubicweb.foo needs to be importable by sphinx, so create a cubicweb symlink to the source dir
-	mkdir -p debian/pythonpath
-	ln -sf $(CURDIR)/cubicweb debian/pythonpath
-	# documentation build is now made optional since it can break for old
-	# distributions and we don't want to block a new release of Cubicweb
-	# because of documentation issues.
-	-PYTHONPATH=$${PYTHONPATH:+$${PYTHONPATH}:}$(CURDIR)/debian/pythonpath $(MAKE) -C doc all
-	rm -rf debian/pythonpath
-	touch build-stamp
+export PYBUILD_NAME=cubicweb
+export PYBUILD_DISABLE_python2=test
 
-clean:
-	dh_testdir
-	rm -f build-stamp configure-stamp
-	rm -rf build
-	#rm -rf debian/cubicweb-*/
-	find . -name "*.pyc" -delete
-	-$(MAKE) -C doc clean
-	dh_clean
+%:
+	dh $@ --with python2,sphinxdoc --buildsystem=pybuild
 
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean
-	dh_installdirs
+override_dh_auto_build: export http_proxy=127.0.0.1:9
+override_dh_auto_build: export https_proxy=127.0.0.1:9
+override_dh_auto_build:
+	dh_auto_build
+ifeq (,$(findstring nodocs, $(DEB_BUILD_OPTIONS)))
+	PYTHONPATH=. sphinx-build -N -bhtml doc/ debian/cubicweb-doc/html
+endif
 
-	python setup.py -q install --no-compile --prefix=debian/tmp/usr
+override_dh_auto_install:
+	dh_auto_install
+	mv debian/python-${PYBUILD_NAME}/usr/bin/cubicweb-ctl \
+		debian/cubicweb-ctl/usr/bin/cubicweb-ctl
 
-	# Put all the python library and data in cubicweb-common
-	# and scripts in cubicweb-server
-	dh_install -vi --sourcedir=debian/tmp
-	# cwctl in the cubicweb-ctl package
-	rm -f debian/cubicweb-common/usr/lib/python*/*/cubicweb/cwctl.py
-        # wdoc in the cubicweb-web package
-	rm -rf debian/cubicweb-common/usr/share/cubicweb/cubes/shared/wdoc
-	rm -rf debian/cubicweb-common/usr/share/cubicweb/cubes/shared/data
-	dh_lintian
-
-	# Remove unittests directory (should be available in cubicweb-dev only)
-	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/dataimport/test
-	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/server/test
-	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/hooks/test
-	rm -rf debian/cubicweb-server/usr/lib/python2*/*-packages/cubicweb/sobjects/test
-	rm -rf debian/cubicweb-web/usr/lib/python2*/*-packages/cubicweb/web/test
-	rm -rf debian/cubicweb-twisted/usr/lib/python2*/*-packages/cubicweb/etwist/test
-	rm -rf debian/cubicweb-common/usr/lib/python2*/*-packages/cubicweb/ext/test
-	rm -rf debian/cubicweb-common/usr/lib/python2*/*-packages/cubicweb/entities/test
-	rm -rf debian/cubicweb-pyramid/usr/lib/python2*/*-packages/cubicweb/pyramid/tests
-
-
-# Build architecture-independent files here.
-binary-indep: build install
-	dh_testdir
-	dh_testroot -i
-	dh_python2 -i
-	dh_python2 -i /usr/share/cubicweb
-	dh_installinit -i -n --name cubicweb -u"defaults 99"
-	dh_installlogrotate -i
-	dh_installdocs -i -A README
-	dh_installman -i
-	dh_installchangelogs -i -Xdoc/changes
-	dh_link -i
-	dh_compress -i -X.py -X.ini -X.xml -X.js -X.rst -X.txt -Xchangelog.html
-	dh_fixperms -i
-	dh_installdeb -i
-	dh_gencontrol  -i
-	dh_md5sums -i
-	dh_builddeb -i
-
-binary-arch:
-
-binary: binary-indep
-.PHONY: build clean binary binary-indep binary-arch
+override_dh_installchangelogs:
+	dh_installchangelogs -Xdoc/changes
 

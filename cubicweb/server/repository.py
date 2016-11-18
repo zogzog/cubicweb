@@ -32,6 +32,7 @@ from warnings import warn
 from itertools import chain
 from time import time, localtime, strftime
 from contextlib import contextmanager
+from logging import getLogger
 
 from six.moves import range, queue
 
@@ -45,6 +46,7 @@ from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
                       BadConnectionId, ValidationError, Unauthorized,
                       UniqueTogetherError, onevent, ViolatedConstraint)
+from cubicweb import set_log_methods
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import ShuttingDown, utils, hook, querier, sources
 from cubicweb.server.session import Session, InternalManager
@@ -155,6 +157,7 @@ class Repository(object):
 
     def __init__(self, config, tasks_manager=None, vreg=None):
         self.config = config
+        self.sources_by_eid = {}
         if vreg is None:
             vreg = cwvreg.CWRegistryStore(config)
         self.vreg = vreg
@@ -262,7 +265,6 @@ class Repository(object):
     # internals ###############################################################
 
     def init_sources_from_database(self):
-        self.sources_by_eid = {}
         if self.config.quick_start or 'CWSource' not in self.schema:  # 3.10 migration
             self.system_source.init_creating()
             return
@@ -1033,6 +1035,4 @@ class Repository(object):
     info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
 
-from logging import getLogger
-from cubicweb import set_log_methods
 set_log_methods(Repository, getLogger('cubicweb.repository'))

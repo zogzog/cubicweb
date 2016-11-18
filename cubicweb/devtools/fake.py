@@ -55,12 +55,20 @@ class FakeConfig(dict, BaseApptestConfiguration):
         return {'system': {'db-driver': 'sqlite'}}
 
 
+class FakeCWRegistryStore(CWRegistryStore):
+
+    def property_value(self, key):
+        if key == 'ui.language':
+            return 'en'
+        assert False
+
+
 class FakeRequest(ConnectionCubicWebRequestBase):
     """test implementation of an cubicweb request object"""
 
     def __init__(self, *args, **kwargs):
         if not (args or 'vreg' in kwargs):
-            kwargs['vreg'] = CWRegistryStore(FakeConfig(), initlog=False)
+            kwargs['vreg'] = FakeCWRegistryStore(FakeConfig(), initlog=False)
         kwargs['https'] = False
         self._http_method = kwargs.pop('method', 'GET')
         self._url = kwargs.pop('url', None)
@@ -134,7 +142,7 @@ class FakeSession(RequestSessionBase):
         if vreg is None:
             vreg = getattr(self.repo, 'vreg', None)
         if vreg is None:
-            vreg = CWRegistryStore(FakeConfig(), initlog=False)
+            vreg = FakeCWRegistryStore(FakeConfig(), initlog=False)
         self.vreg = vreg
         self.cnxset = FakeConnectionsSet()
         self.user = user or FakeUser()
@@ -176,7 +184,7 @@ class FakeRepo(object):
         self._count = 0
         self.schema = schema
         self.config = config or FakeConfig()
-        self.vreg = vreg or CWRegistryStore(self.config, initlog=False)
+        self.vreg = vreg or FakeCWRegistryStore(self.config, initlog=False)
         self.vreg.schema = schema
 
     def internal_session(self):

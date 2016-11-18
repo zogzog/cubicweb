@@ -201,6 +201,13 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
         for eschema in self.cnx.repo.schema.entities():
             if not eschema.final:
                 clear_cache(eschema, 'ordered_relations')
+                # clear additional cached properties
+                try:
+                    # is_composite use composite_rdef_roles, hence one try except should be enough
+                    del eschema.composite_rdef_roles
+                    del eschema.is_composite
+                except AttributeError:
+                    pass
 
     def postcommit_event(self):
         repo = self.cnx.repo

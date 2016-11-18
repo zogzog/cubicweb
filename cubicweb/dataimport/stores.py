@@ -63,7 +63,7 @@ from datetime import datetime
 from copy import copy
 from itertools import count
 
-from six import text_type, add_metaclass
+from six import add_metaclass
 
 import pytz
 

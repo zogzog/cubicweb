@@ -28,6 +28,7 @@ def make_cubicweb_application(cwconfig, settings=None):
     config.include('cubicweb.pyramid')
     return config
 
+
 def settings_from_cwconfig(cwconfig):
     '''
     Extract settings from pyramid.ini and pyramid-debug.ini (if in debug)
@@ -42,21 +43,21 @@ def settings_from_cwconfig(cwconfig):
     if cwconfig.debugmode:
         settings_filenames.insert(
             0, os.path.join(cwconfig.apphome, 'pyramid-debug.ini'))
-    
+
         settings.update({
             'pyramid.debug_authorization': True,
             'pyramid.debug_notfound': True,
             'pyramid.debug_routematch': True,
             'pyramid.reload_templates': True,
         })
-    
+
     for fname in settings_filenames:
         if os.path.exists(fname):
             cp = SafeConfigParser()
             cp.read(fname)
             settings.update(cp.items('main'))
             break
-    
+
     return settings
 
 

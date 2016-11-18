@@ -1,9 +1,5 @@
 #!/bin/sh -e
 
-if [ "$1" = "remove" ]; then
-        update-rc.d cubicweb remove >/dev/null
-fi
- 
 if [ "$1" = "purge" ] ; then
         rm -rf /etc/cubicweb.d/
         rm -rf /var/log/cubicweb/

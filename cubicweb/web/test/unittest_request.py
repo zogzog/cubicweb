@@ -6,7 +6,7 @@ from functools import partial
 
 from six import text_type
 
-from cubicweb.devtools.fake import FakeConfig
+from cubicweb.devtools.fake import FakeConfig, FakeCWRegistryStore
 
 from cubicweb.web.request import (CubicWebRequestBase, _parse_accept_header,
                                   _mimetype_sort_key, _mimetype_parser, _charset_sort_key)
@@ -72,8 +72,7 @@ class AcceptParserTC(unittest.TestCase):
 class WebRequestTC(unittest.TestCase):
 
     def test_base_url(self):
-        dummy_vreg = type('DummyVreg', (object,), {})()
-        dummy_vreg.config = FakeConfig()
+        dummy_vreg = FakeCWRegistryStore(FakeConfig(), initlog=False)
         dummy_vreg.config['base-url'] = 'http://babar.com/'
         dummy_vreg.config['https-url'] = 'https://toto.com/'
 
@@ -88,8 +87,7 @@ class WebRequestTC(unittest.TestCase):
         self.assertEqual('https://toto.com/', req.base_url(True))
 
     def test_negotiated_language(self):
-        vreg = type('DummyVreg', (object,), {})()
-        vreg.config = FakeConfig()
+        vreg = FakeCWRegistryStore(FakeConfig(), initlog=False)
         vreg.config.translations = {'fr': (None, None), 'en': (None, None)}
         headers = {
             'Accept-Language': 'fr,fr-fr;q=0.8,en-us;q=0.5,en;q=0.3',
@@ -98,7 +96,7 @@ class WebRequestTC(unittest.TestCase):
         self.assertEqual(req.negotiated_language(), 'fr')
 
     def test_build_url_language_from_url(self):
-        vreg = type('DummyVreg', (object,), {'config': FakeConfig()})()
+        vreg = FakeCWRegistryStore(FakeConfig(), initlog=False)
         vreg.config['base-url'] = 'http://testing.fr/cubicweb/'
         vreg.config['language-mode'] = 'url-prefix'
         vreg.config.translations['fr'] = text_type, text_type

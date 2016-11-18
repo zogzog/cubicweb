@@ -3,12 +3,15 @@ Section: web
 Priority: optional
 Maintainer: Logilab S.A. <contact@logilab.fr>
 Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr>,
-           Adrien Di Mascio <Adrien.DiMascio@logilab.fr>,
-           Nicolas Chauvat <nicolas.chauvat@logilab.fr>
+           David Douard <david.douard@logilab.fr>,
 Build-Depends:
- debhelper (>= 7),
- python (>= 2.6),
+ debhelper (>= 9),
+ dh-python,
+ dh-systemd,
+ python-all,
+ python-setuptools,
  python-six (>= 1.4.0),
+ python-docutils,
  python-sphinx,
  python-logilab-common (>= 1.2.2),
  python-unittest2,
@@ -20,22 +23,93 @@ Build-Depends:
  python-lxml,
  python-setuptools,
  python-pyramid,
+ python-pyramid-multiauth,
  python-waitress,
-Standards-Version: 3.9.1
+ python-passlib,
+ python-wsgicors,
+ sphinx-common,
+Standards-Version: 3.9.6
 Homepage: https://www.cubicweb.org
-X-Python-Version: >= 2.6
+X-Python-Version: >= 2.7
 
-Package: cubicweb
+
+Package: python-cubicweb
 Architecture: all
 Depends:
  ${misc:Depends},
  ${python:Depends},
- cubicweb-server (= ${source:Version}),
- cubicweb-twisted (= ${source:Version})
+ python-six (>= 1.4.0),
+ python-logilab-mtconverter (>= 0.8.0),
+ python-logilab-common (>= 1.2.0),
+ python-logilab-database (>= 1.15.0),
+ python-yams (>= 0.44.0),
+ python-rql (>= 0.34.0),
+ python-lxml,
+ python-markdown,
+ python-passlib,
+ python-tz,
+ graphviz,
+ gettext,
 Recommends:
- postgresql
- | mysql
- | sqlite3
+ cubicweb-ctl (= ${source:Version}),
+ python-cubicweb-postgresql-support (= ${source:Version})
+ | sqlite3,
+ python-cubicweb-pyramid (= ${source:Version}),
+# common recommends
+ python-simpletal (>= 4.0),
+ python-crypto,
+# web recommends (mostly)
+ python-docutils (>= 0.6),
+ python-vobject,
+ fckeditor,
+ python-fyzz,
+ python-imaging,
+ python-rdflib,
+ python-werkzeug,
+# dev recommends
+ python-unittest2 (>= 0.7.0),
+ python-pysqlite2,
+Suggests:
+ python-zmq,
+ python-cwclientlib (>= 0.4.0),
+ python-cubicweb-twisted (= ${source:Version}),
+ python-cubicweb-documentation (= ${source:Version}),
+ w3c-dtd-xhtml,
+ xvfb,
+Replaces:
+ cubicweb (<< 3.24.0-1~),
+ cubicweb-server (<< 3.24.0-1~),
+ cubicweb-twisted (<< 3.24.0-1~),
+ cubicweb-web (<< 3.24.0-1~),
+ cubicweb-core,
+ cubicweb-common (<< 3.24.0-1~),
+Breaks:
+ cubicweb (<< 3.24.0-1~),
+ cubicweb-server (<< 3.24.0-1~),
+ cubicweb-twisted (<< 3.24.0-1~),
+ cubicweb-inlinedit (<< 1.1.1),
+ cubicweb-bootstrap (<< 0.6.6),
+ cubicweb-folder (<< 1.10.0),
+ cubicweb-web (<< 3.24.0-1~),
+ cubicweb-comment (<< 1.9.1),
+ cubicweb-person (<< 1.8.0),
+ cubicweb-geocoding (<< 0.2.0),
+ cubicweb-invoice (<< 0.6.1),
+ cubicweb-mercurial-server (<< 0.4.2),
+ cubicweb-forgotpwd (<< 0.4.3),
+ cubicweb-registration (<< 0.4.3),
+ cubicweb-vcsfile (<< 1.15.0),
+ cubicweb-bootstrap (<< 0.6),
+ cubicweb-common (<< 3.24.0-1~),
+Provides:
+ cubicweb,
+ cubicweb-server,
+ cubicweb-web-frontend,
+ cubicweb-web,
+ cubicweb-common,
+Conflicts:
+ cubicweb-multisources,
+ cubicweb-core,
 Description: the complete CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -44,39 +118,13 @@ Description: the complete CubicWeb framework
  on different computers, in which case you need to install the corresponding
  packages on the different hosts.
 
-Package: cubicweb-server
-Architecture: all
-Conflicts:
- cubicweb-multisources
-Replaces: cubicweb-multisources
-Provides: cubicweb-multisources
-Depends:
- ${misc:Depends},
- ${python:Depends},
- cubicweb-common (= ${source:Version}),
- cubicweb-ctl (= ${source:Version}),
- python-logilab-database (>= 1.15.0),
- cubicweb-postgresql-support
- | cubicweb-mysql-support
- | python-pysqlite2,
- python-passlib,
- python-tz,
-Recommends:
- cubicweb-documentation (= ${source:Version}),
-Suggests:
- python-zmq,
- python-cwclientlib (>= 0.4.0),
-Description: server part of the CubicWeb framework
- CubicWeb is a semantic web application framework.
- .
- This package provides the repository server part of the system.
- .
- This package provides the repository server part of the library and
- necessary shared data files such as the schema library.
 
-Package: cubicweb-postgresql-support
+Package: python-cubicweb-postgresql-support
 Architecture: all
 # postgresql-client packages for backup/restore of non local database
+Replaces: cubicweb-postgresql-support (<< 3.24.0-1~)
+Breaks: cubicweb-postgresql-support (<< 3.24.0-1~)
+Provides: cubicweb-postgresql-support
 Depends:
  ${misc:Depends},
  ${python:Depends},
@@ -85,51 +133,26 @@ Depends:
 Description: postgres support for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
- This virtual package provides dependencies to use postgres for the
- cubicweb repository.
-
-Package: cubicweb-mysql-support
-Architecture: all
-# mysql-client packages for backup/restore of non local database
-Depends:
- ${misc:Depends},
- ${python:Depends},
- python-mysqldb,
- mysql-client
-Description: mysql support for the CubicWeb framework
- CubicWeb is a semantic web application framework.
- .
- This virtual package provides dependencies to use mysql for the
+ This virtual package provides dependencies to use PostgreSQL for the
  cubicweb repository.
 
 
-Package: cubicweb-twisted
+Package: python-cubicweb-twisted
 Architecture: all
-Provides: cubicweb-web-frontend
 Depends:
- ${misc:Depends},
- ${python:Depends},
- cubicweb-web (= ${source:Version}),
- cubicweb-ctl (= ${source:Version}),
+ python-cubicweb (= ${source:Version}),
  python-twisted-web (<< 16.0.0),
-Recommends:
- cubicweb-documentation (= ${source:Version})
-Description: twisted-based web interface for the CubicWeb framework
+Description: meta package to use Twisted as HTTP server for CubicWeb
  CubicWeb is a semantic web application framework.
  .
- This package provides a twisted based HTTP server to serve
- the adaptative web interface (see cubicweb-web package).
- .
- This package provides only the twisted server part of the library.
+ This package includes dependencies to run a Twisted based HTTP server to serve
+ the adaptative web interface.
 
 
-Package: cubicweb-pyramid
+Package: python-cubicweb-pyramid
 Architecture: all
 Depends:
- ${misc:Depends},
- ${python:Depends},
- cubicweb-web (= ${source:Version}),
- cubicweb-ctl (= ${source:Version}),
+ python-cubicweb (= ${source:Version}),
  python-pyramid (>= 1.5.0),
  python-pyramid-multiauth,
  python-waitress (>= 0.8.9),
@@ -140,76 +163,9 @@ Conflicts:
  pyramid-cubicweb
 Replaces:
  pyramid-cubicweb
-Description: Integrate CubicWeb with a Pyramid application
+Description: meta package to use Pyramid as HTTP server for CubicWeb
  Provides pyramid extensions to load a CubicWeb instance and serve it through
  the pyramid stack.
- .
- It prefigures what CubicWeb 4.0 will be.
-
-
-Package: cubicweb-web
-Architecture: all
-Depends:
- ${misc:Depends},
- ${python:Depends},
- cubicweb-common (= ${source:Version}),
-Recommends:
- python-docutils (>= 0.6),
- python-vobject,
- fckeditor,
- python-fyzz,
- python-imaging,
- python-rdflib,
- python-werkzeug,
-Breaks:
- cubicweb-inlinedit (<< 1.1.1),
- cubicweb-bootstrap (<< 0.6.6),
- cubicweb-folder (<< 1.10.0),
-Description: web interface library for the CubicWeb framework
- CubicWeb is a semantic web application framework.
- .
- This package provides an adaptative web interface to the CubicWeb server.
- It also ships a WSGI interface for CubicWeb instances.
- Install the cubicweb-twisted package to serve this interface via HTTP.
- .
- This package provides the web interface part of the library and
- necessary shared data files such as defaut views, images...
-
-
-Package: cubicweb-common
-Architecture: all
-Depends:
- ${misc:Depends},
- ${python:Depends},
- graphviz,
- gettext,
- python-six (>= 1.4.0),
- python-logilab-mtconverter (>= 0.8.0),
- python-logilab-common (>= 1.2.0),
- python-markdown,
- python-yams (>= 0.44.0),
- python-rql (>= 0.34.0),
- python-lxml
-Recommends:
- python-simpletal (>= 4.0),
- python-crypto
-Conflicts: cubicweb-core
-Replaces: cubicweb-core
-Breaks:
- cubicweb-comment (<< 1.9.1),
- cubicweb-person (<< 1.8.0),
- cubicweb-geocoding (<< 0.2.0),
- cubicweb-invoice (<< 0.6.1),
- cubicweb-mercurial-server (<< 0.4.2),
- cubicweb-forgotpwd (<< 0.4.3),
- cubicweb-registration (<< 0.4.3),
- cubicweb-vcsfile (<< 1.15.0),
- cubicweb-bootstrap (<< 0.6),
-Description: common library for the CubicWeb framework
- CubicWeb is a semantic web application framework.
- .
- This package provides the common parts of the library used by both server
- code and web application code.
 
 
 Package: cubicweb-ctl
@@ -217,7 +173,7 @@ Architecture: all
 Depends:
  ${misc:Depends},
  ${python:Depends},
- cubicweb-common (= ${source:Version})
+ python-cubicweb (= ${source:Version})
 Description: tool to manage the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -226,33 +182,100 @@ Description: tool to manage the CubicWeb framework
  to automatically start and stop CubicWeb applications on boot or shutdown.
 
 
-Package: cubicweb-dev
+Package: python-cubicweb-documentation
 Architecture: all
+Section: doc
+Replaces: cubicweb-documentation (<< 3.24.0-1~)
+Breaks: cubicweb-documentation (<< 3.24.0-1~)
+Provides: cubicweb-documentation
 Depends:
  ${misc:Depends},
- ${python:Depends},
- cubicweb-server (= ${source:Version}),
- cubicweb-web (= ${source:Version}),
- cubicweb-twisted (= ${source:Version}),
- python-unittest2 (>= 0.7.0),
- python-pysqlite2
-Suggests:
- w3c-dtd-xhtml,
- xvfb
-Description: tests suite and development tools for the CubicWeb framework
- CubicWeb is a semantic web application framework.
- .
- This package provides the CubicWeb tests suite and some development tools
- helping in the creation of application.
-
-
-Package: cubicweb-documentation
-Architecture: all
-Depends:
- ${misc:Depends},
+ ${sphinxdoc:Depends},
 Recommends:
  doc-base
 Description: documentation for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
  This package provides the system's documentation.
+
+
+# Transitional packages after renaming of (most) binary packages
+
+Package: cubicweb
+Architecture: all
+Priority: extra
+Section: oldlibs
+Depends:
+ python-cubicweb, ${misc:Depends}
+Description: transitional package
+  This is a transitional package. It can safely be removed.
+
+
+Package: cubicweb-server
+Architecture: all
+Priority: extra
+Section: oldlibs
+Depends:
+ python-cubicweb, ${misc:Depends}
+Description: transitional package
+  This is a transitional package. It can safely be removed.
+
+
+Package: cubicweb-postgresql-support
+Architecture: all
+Priority: extra
+Section: oldlibs
+Depends:
+ python-cubicweb-postgresql-support, ${misc:Depends}
+Description: transitional package
+  This is a transitional package. It can safely be removed.
+
+
+Package: cubicweb-twisted
+Architecture: all
+Priority: extra
+Section: oldlibs
+Depends:
+ python-cubicweb-twisted, ${misc:Depends}
+Description: transitional package
+  This is a transitional package. It can safely be removed.
+
+
+Package: cubicweb-web
+Architecture: all
+Priority: extra
+Section: oldlibs
+Depends:
+ python-cubicweb, ${misc:Depends}
+Description: transitional package
+  This is a transitional package. It can safely be removed.
+
+
+Package: cubicweb-common
+Architecture: all
+Priority: extra
+Section: oldlibs
+Depends:
+ python-cubicweb, ${misc:Depends}
+Description: transitional package
+  This is a transitional package. It can safely be removed.
+
+
+Package: cubicweb-dev
+Architecture: all
+Priority: extra
+Section: oldlibs
+Depends:
+ python-cubicweb, ${misc:Depends}
+Description: transitional package
+  This is a transitional package. It can safely be removed.
+
+
+Package: cubicweb-documentation
+Architecture: all
+Priority: extra
+Section: oldlibs
+Depends:
+ python-cubicweb-documentation, ${misc:Depends}
+Description: transitional package
+  This is a transitional package. It can safely be removed.

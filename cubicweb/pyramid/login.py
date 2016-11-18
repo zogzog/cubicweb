@@ -47,6 +47,10 @@ def login_password_login(request):
             user = repo.authenticate_user(cnx, login, password=password)
             user_eid = user.eid
     except cubicweb.AuthenticationError:
+        if repo.vreg.config.get('language-mode') != '':
+            lang = request.cw_request.negotiated_language()
+            if lang is not None:
+                request.cw_request.set_language(lang)
         request.cw_request.set_message(request.cw_request._(
             "Authentication failed. Please check your credentials."))
         request.cw_request.post = dict(request.params)

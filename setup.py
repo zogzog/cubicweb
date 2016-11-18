@@ -228,7 +228,7 @@ setup(
         'Markdown',
         'unittest2 >= 0.7.0',
     ],
-    extra_requires={
+    extras_require={
         'captcha': [
             'Pillow',
         ],

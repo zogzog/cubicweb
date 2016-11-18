@@ -83,6 +83,13 @@ class REPOAPITC(CubicWebTC):
             rset = cnx.execute('Any X WHERE X is CWUser')
             self.assertTrue(rset)
 
+    def test_cnx_has_lang(self):
+        """check that client and repo cnx have .lang set"""
+        with self.admin_access.client_cnx() as cnx:
+            self.assertEqual(cnx.lang, 'en')
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertEqual(cnx.lang, 'en')
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

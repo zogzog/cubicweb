@@ -18,6 +18,8 @@
 
 import gettext
 
+from six import PY3
+
 
 class cwGNUTranslations(gettext.GNUTranslations):
     # The encoding of a msgctxt and a msgid in a .mo file is
@@ -82,6 +84,9 @@ class cwGNUTranslations(gettext.GNUTranslations):
                 return msgid1
             else:
                 return msgid2
+
+    if PY3:
+        ugettext = gettext.GNUTranslations.gettext
 
     def upgettext(self, context, message):
         ctxt_message_id = self.CONTEXT_ENCODING % (context, message)

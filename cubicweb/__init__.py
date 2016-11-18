@@ -29,23 +29,26 @@ import sys
 import warnings
 import zlib
 
-warnings.filterwarnings('ignore', category=UserWarning,
-                        message='.*was already imported',
-                        module='.*pygments')
-
-
 from six import PY2, binary_type, text_type
 from six.moves import builtins
+
+from logilab.common.deprecation import deprecated
+from logilab.common.logging_ext import set_log_methods
+from yams.constraints import BASE_CONVERTERS, BASE_CHECKERS
+from yams.schema import role_name as rname
+
+from cubicweb.__pkginfo__ import version as __version__   # noqa
+
+# make all exceptions accessible from the package
+from logilab.common.registry import ObjectNotFound, NoSelectableObject, RegistryNotFound  # noqa
+from yams import ValidationError
+from cubicweb._exceptions import *  # noqa
 
 if PY2:
     # http://bugs.python.org/issue10211
     from StringIO import StringIO as BytesIO
 else:
     from io import BytesIO
-
-from logilab.common.deprecation import deprecated
-from logilab.common.logging_ext import set_log_methods
-from yams.constraints import BASE_CONVERTERS, BASE_CHECKERS
 
 # ignore the pygments UserWarnings
 warnings.filterwarnings('ignore', category=UserWarning,
@@ -54,21 +57,12 @@ warnings.filterwarnings('ignore', category=UserWarning,
 
 # pre python 2.7.2 safety
 logging.basicConfig()
+set_log_methods(sys.modules[__name__], logging.getLogger('cubicweb'))
 
 # this is necessary for i18n devtools test where chdir is done while __path__ is relative, which
 # breaks later imports
-__path__[0] = os.path.abspath(__path__[0])
-CW_SOFTWARE_ROOT = __path__[0]
-
-
-from cubicweb.__pkginfo__ import version as __version__   # noqa
-
-
-set_log_methods(sys.modules[__name__], logging.getLogger('cubicweb'))
-
-# make all exceptions accessible from the package
-from cubicweb._exceptions import *  # noqa
-from logilab.common.registry import ObjectNotFound, NoSelectableObject, RegistryNotFound  # noqa
+__path__[0] = os.path.abspath(__path__[0])  # noqa
+CW_SOFTWARE_ROOT = __path__[0]  # noqa
 
 
 # '_' is available to mark internationalized string but should not be used to
@@ -163,6 +157,8 @@ class Binary(BytesIO):
 
 def check_password(eschema, value):
     return isinstance(value, (binary_type, Binary))
+
+
 BASE_CHECKERS['Password'] = check_password
 
 
@@ -170,6 +166,8 @@ def str_or_binary(value):
     if isinstance(value, Binary):
         return value
     return binary_type(value)
+
+
 BASE_CONVERTERS['Password'] = str_or_binary
 
 
@@ -230,6 +228,7 @@ class CubicWebEventManager(object):
             else:
                 callback(context, *args, **kwargs)
 
+
 CW_EVENT_MANAGER = CubicWebEventManager()
 
 
@@ -247,9 +246,6 @@ def onevent(event, *args, **kwargs):
         CW_EVENT_MANAGER.bind(event, func, *args, **kwargs)
         return func
     return _decorator
-
-
-from yams.schema import role_name as rname
 
 
 def validation_error(entity, errors, substitutions=None, i18nvalues=None):

@@ -1,5 +1,5 @@
-3.34 (UNRELEASED)
-=================
+3.24
+====
 
 New features
 ------------
@@ -13,3 +13,85 @@ New features
   discovery by CubicWeb is handled by a new setuptools entry point
   ``cubicweb.cubes``. A backward compatibility layer is kept for "legacy"
   cubes.
+
+* Pyramid support made it into CubicWeb core. Applications that use it
+  should now declare the `cubicweb[pyramid]` dependency instead of
+  `cubicweb-pyramid`.
+
+* New `NullStore` class in ``cubicweb.dataimport.stores`` as new base class for
+  every store, and allowing to test your dataimport chain without actually
+  importing anything.
+
+
+Major changes
+-------------
+
+There has been several important changes to the core internals of CubicWeb:
+
+* Dropped `asource` and `extid` columns from the `entities` table as well as the
+  index on the `type` column, for a sensible optimization on both massive data
+  insertion and database size / index rebuilding.
+
+* Dropped the `moved_entities` table and related mecanism to remember that an
+  entity has been moved from a source to the system database - this is now the
+  responsability of source's parser to detect this (usually by remembering its
+  original external id as `cwuri`).
+
+* Dropped the original 'give me an eid for this extid, but call me back on
+  another line if it has to be created' mecanism on which the ``cwxmlparser`` was
+  relying, in favor of parsers using the dataimport API. This includes dropping
+  the ``cwxmlparser``. If you're using it, you'll have to write a specific
+  parser, examples to come.
+
+* Dropped source mapping handling (schema, views, logic) with its client
+  the ``cwxmlparser``. This is not worth the burden, specific parsers should be
+  preferred.
+
+The above changes lead to the following API changes:
+
+* `req.entity_metas(eid)` doesn't return anymore a 'type' nor 'source' keys, use
+  `req.entity_type(eid)` instead or 'cw_source' relation to get those
+  information,
+
+* deprecated `entity.cw_metainformation()`, which doesn't return anymore it's
+  'source' key,
+
+* dropped `repository.type_and_source_from_eid(eid, cnx)`,
+  `repository.extid2eid(...)` and `source.eid_type_source(cnx, eid)`,
+
+* dropped `source.support_entity(etype)` and `source.support_relation(rtype)`,
+
+* dropped 'cw_source' key from default JSON representation of an entity,
+
+* dropped `source_uris()` and `handle_deletion(...)` method from datafeed parser
+  base class, deletion of entities is now the responsability of specific
+  implementation (see ``ldapparser`` for example),
+
+* entities from external source are always displayed in the UI with a link
+  to the local entity, not the original one simplifying `entity.absolute_url()`
+  implementation and allowing to drop `use_ext_eid` argument of
+  `entity.rest_path()` (though it's still supported for backward compat).
+
+
+Changes to the massive store
+-----------------------------
+
+Several improvments have been done to ``cubicweb.dataimport.massive_store``,
+with among the more important ones:
+
+* Extended store API to provide more control to end-users:
+  `fill_entities_table`, `fill_relation_table`, `fill_meta_relation_table`.
+
+* Dropped `on_commit` / `on_rollback` arguments of the constructor.
+
+* Use a slave specific temporary table for entities insertion as for relations
+  (should improve concurrency when using in master/slaves mode).
+
+* Delay dropping of constraint to the `finish` method, avoiding performance
+  problem that was occuring because indexes were dropped at store creation time.
+
+* Consider the given metadata generator when looking for which metadata tables
+  should have their constraints dropped.
+
+* Don't drop index on `entities.eid`, it's too costly to rebuild on database
+  with some million of entities.

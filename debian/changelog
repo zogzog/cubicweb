@@ -1,3 +1,20 @@
+cubicweb (3.24.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+  * Ship the CubicWeb library in a single binary package python-cubicweb. Yet
+    keep meta packages for dependencies on the HTTP server (Pyramid or
+    Twisted) and the database backend.
+
+  * Remove cubicweb-mysql-support.
+
+  * Use dh_python and pybuild.
+
+  * Remove all daemon-related stuff from cubicweb-ctl package (since a
+    CubicWeb application should now be managed by a WSGI server).
+
+ -- David Douard <david.douard@logilab.fr>  Fri, 18 Nov 2016 14:58:28 +0100
+
 cubicweb (3.24.0-1) unstable; urgency=medium
 
   * New upstream release.

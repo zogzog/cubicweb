@@ -159,8 +159,8 @@ def includeme(config):
                 defaults={
                     'hashalg': 'sha512',
                     'cookie_name': 'pauth_tkt',
-                    'max_age': 3600*24*30,
-                    'reissue_time': 3600*24,
+                    'max_age': 3600 * 24 * 30,
+                    'reissue_time': 3600 * 24,
                     'http_only': True,
                     'secure': True
                 },

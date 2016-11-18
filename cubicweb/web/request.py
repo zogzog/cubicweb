@@ -146,10 +146,9 @@ class _CubicWebRequestBase(RequestSessionBase):
         #: Header used for the final response
         self.headers_out = Headers()
         #: HTTP status use by the final response
-        self.status_out  = 200
-        # set up language based on request headers or site default (we don't
-        # have a user yet, and might not get one)
-        self.set_user_language(None)
+        self.status_out = 200
+        # set up language based on site default (we don't have a user yet, and might not get one)
+        self.set_language(vreg.property_value('ui.language'))
         #: dictionary that may be used to store request data that has to be
         #: shared among various components used to publish the request (views,
         #: controller, application...)
@@ -664,7 +663,7 @@ class _CubicWebRequestBase(RequestSessionBase):
     def build_url_path(self, *args):
         path = super(_CubicWebRequestBase, self).build_url_path(*args)
         lang_prefix = ''
-        if self.lang and self.vreg.config.get('language-mode') == 'url-prefix':
+        if self.lang is not None and self.vreg.config.get('language-mode') == 'url-prefix':
             lang_prefix = '%s/' % self.lang
         return lang_prefix + path
 
@@ -929,18 +928,6 @@ class _CubicWebRequestBase(RequestSessionBase):
                 return lang
         return None
 
-    def set_user_language(self, user):
-        vreg = self.vreg
-        if user is not None:
-            try:
-                lang = vreg.typed_value('ui.language', user.properties['ui.language'])
-                self.set_language(lang)
-                return
-            except KeyError:
-                pass
-        # site's default language
-        self.set_default_language(vreg)
-
 
 def _cnx_func(name):
     def proxy(req, *args, **kwargs):
@@ -993,24 +980,14 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
         self.cnx = cnx
         self.session = cnx.session
         self._set_user(cnx.user)
-        self.set_user_language(cnx.user)
+        # set language according to the one defined on the connection which consider user's
+        # preference
+        self.set_language(cnx.lang)
 
     def execute(self, *args, **kwargs):
         rset = self.cnx.execute(*args, **kwargs)
         rset.req = self
         return rset
-
-    def set_default_language(self, vreg):
-        try:
-            lang = vreg.property_value('ui.language')
-        except Exception: # property may not be registered
-            lang = 'en'
-        try:
-            self.set_language(lang)
-        except KeyError:
-            # this occurs usually during test execution
-            self._ = self.__ = text_type
-            self.pgettext = lambda x, y: text_type(y)
 
     entity_metas = _cnx_func('entity_metas')  # XXX deprecated
     entity_type = _cnx_func('entity_type')

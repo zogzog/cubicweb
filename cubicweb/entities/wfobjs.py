@@ -235,7 +235,7 @@ class BaseTransition(AnyEntity):
         # check one of the rql expression conditions matches if any
         if self.condition:
             if DBG:
-                print('my_be_fired: %r: %s' %
+                print('may_be_fired: %r: %s' %
                       (self.name, [(rqlexpr.expression,
                                     rqlexpr.check_expression(self._cw, eid))
                                     for rqlexpr in self.condition]))

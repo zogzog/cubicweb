@@ -28,7 +28,6 @@ from contextlib import contextmanager
 from inspect import isgeneratorfunction
 from itertools import chain
 from warnings import warn
-import tempfile
 
 from six import text_type, string_types, reraise
 from six.moves import range
@@ -45,7 +44,7 @@ from logilab.common.shellutils import getlogin
 
 from cubicweb import (ValidationError, NoSelectableObject, AuthenticationError,
                       BadConnectionId)
-from cubicweb import cwconfig, devtools, web, server, repoapi
+from cubicweb import cwconfig, devtools, web, server
 from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application, eid_param
@@ -53,6 +52,7 @@ from cubicweb.server.hook import SendMailOp
 from cubicweb.server.session import Session
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import fake, htmlparser, DEFAULT_EMPTY_DB_ID
+from cubicweb.devtools.fill import insert_entity_queries, make_relations_queries
 
 
 if sys.version_info[:2] < (3, 4):
@@ -207,6 +207,7 @@ class MockSMTP:
 
     def sendmail(self, fromaddr, recipients, msg):
         MAILBOX.append(Email(fromaddr, recipients, msg))
+
 
 cwconfig.SMTP = MockSMTP
 
@@ -852,7 +853,9 @@ class CubicWebTC(BaseTestCase):
             path = location
             params = {}
         else:
-            cleanup = lambda p: (p[0], urlunquote(p[1]))
+            def cleanup(p):
+                return (p[0], urlunquote(p[1]))
+
             params = dict(cleanup(p.split('=', 1)) for p in params.split('&') if p)
         if path.startswith(req.base_url()):  # may be relative
             path = path[len(req.base_url()):]
@@ -968,8 +971,11 @@ class CubicWebTC(BaseTestCase):
             viewfunc = view.render
         else:
             kwargs['view'] = view
-            viewfunc = lambda **k: viewsreg.main_template(req, template,
-                                                          rset=rset, **kwargs)
+
+            def viewfunc(**k):
+                return viewsreg.main_template(req, template,
+                                              rset=rset, **kwargs)
+
         return self._test_view(viewfunc, view, template, kwargs)
 
     def _test_view(self, viewfunc, view, template='main-template', kwargs={}):
@@ -1105,10 +1111,7 @@ class CubicWebTC(BaseTestCase):
 
 # auto-populating test classes and utilities ###################################
 
-from cubicweb.devtools.fill import insert_entity_queries, make_relations_queries
-
 # XXX cleanup unprotected_entities & all mess
-
 
 def how_many_dict(schema, cnx, how_many, skip):
     """given a schema, compute how many entities by type we need to be able to

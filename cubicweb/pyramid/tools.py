@@ -43,21 +43,17 @@ def cached_build_user(repo, eid):
     """Cached version of
     :meth:`cubicweb.server.repository.Repository._build_user`
     """
-    with repo.internal_cnx() as cnx:
-        if eid in _user_cache:
-            entity = clone_user(repo, _user_cache[eid])
-            # XXX the cnx is needed here so that the CWUser instance has an
-            # access to the vreg, which it needs when its 'prefered_language'
-            # property is accessed.
-            # If this property did not need a cnx to access a vreg, we could
-            # avoid the internal_cnx() and save more time.
-            cnx_attach_entity(cnx, entity)
-            return entity
+    if eid in _user_cache:
+        user, lang = _user_cache[eid]
+        entity = clone_user(repo, user)
+        return entity, lang
 
+    with repo.internal_cnx() as cnx:
         user = repo._build_user(cnx, eid)
+        lang = user.prefered_language()
         user.cw_clear_relation_cache()
-        _user_cache[eid] = clone_user(repo, user)
-        return user
+        _user_cache[eid] = (clone_user(repo, user), lang)
+        return user, lang
 
 
 def clear_cache():
@@ -72,5 +68,5 @@ def includeme(config):
     """
     repo = config.registry['cubicweb.repository']
     interval = int(config.registry.settings.get(
-        'cubicweb.usercache.expiration_time', 60*5))
+        'cubicweb.usercache.expiration_time', 60 * 5))
     repo.looping_task(interval, clear_cache)

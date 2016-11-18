@@ -103,7 +103,6 @@ class CubicWebPyramidHandler(object):
             if content is not None:
                 request.response.body = content
 
-
         except LogOut as ex:
             # The actual 'logging out' logic should be in separated function
             # that is accessible by the pyramid views
@@ -116,6 +115,11 @@ class CubicWebPyramidHandler(object):
                 content = vreg['views'].main_template(req, 'login')
                 request.response.status_code = 403
                 request.response.body = content
+        except cubicweb.web.NotFound as ex:
+            view = vreg['views'].select('404', req)
+            content = vreg['views'].main_template(req, view=view)
+            request.response.status_code = ex.status
+            request.response.body = content
         finally:
             # XXX CubicWebPyramidRequest.headers_out should
             # access directly the pyramid response headers.

@@ -248,8 +248,9 @@ class ApplicationTC(CubicWebTC):
         """Language negociated, normal case."""
         self.config.global_set_option('language-mode', 'http-negotiation')
         orig_translations = self.config.translations.copy()
-        self.config.translations = {'fr': (text_type, text_type),
-                                    'en': (text_type, text_type)}
+        self.config.translations = {
+            'fr': (text_type, lambda x, y: text_type(y)),
+            'en': (text_type, lambda x, y: text_type(y))}
         try:
             headers = {'Accept-Language': 'fr'}
             with self.admin_access.web_request(headers=headers) as req:
