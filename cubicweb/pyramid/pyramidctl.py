@@ -32,8 +32,6 @@ LOG_LEVELS = ('debug', 'info', 'warning', 'error')
 class PyramidStartHandler(InstanceCommand):
     """Start an interactive pyramid server.
 
-    This command requires http://hg.logilab.org/review/pyramid_cubicweb/
-
     <instance>
       identifier of the instance to configure.
     """
