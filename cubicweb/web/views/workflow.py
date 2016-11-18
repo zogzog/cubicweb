@@ -152,7 +152,8 @@ class WFHistoryView(EntityView):
         else:
             sel += ',WF'
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'))
-        rql = '%s %s, X eid %%(x)s' % (sel, rql)
+        sel += ',FSN,TSN,CF'
+        rql = '%s %s, FS name FSN, TS name TSN, WF comment_format CF, X eid %%(x)s' % (sel, rql)
         try:
             rset = self._cw.execute(rql, {'x': eid})
         except Unauthorized:
