@@ -1,6 +1,0 @@
-usr/lib/python2*/*-packages/cubicweb/dataimport/
-usr/lib/python2*/*-packages/cubicweb/server/
-usr/lib/python2*/*-packages/cubicweb/hooks/
-usr/lib/python2*/*-packages/cubicweb/sobjects/
-usr/lib/python2*/*-packages/cubicweb/schemas/
-usr/share/cubicweb/migration/

@@ -1,1 +1,2 @@
 missing-dep-for-interpreter make => make | build-essential | dpkg-dev (usr/*/cubicweb/skeleton/debian/rules)
+embedded-javascript-library usr/share/cubicweb/cubes/shared/data/jquery.js

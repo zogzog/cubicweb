@@ -2,9 +2,9 @@ cubicweb (3.24.1-1) UNRELEASED; urgency=medium
 
   * New upstream release.
 
-  * Rename binary packages to python-xxx (but cubicweb-ctl).
-
-  * New python-cubicweb-pyramid binary package.
+  * Ship the CubicWeb library in a single binary package python-cubicweb. Yet
+    keep meta packages for dependencies on the HTTP server (Pyramid or
+    Twisted) and the database backend.
 
   * Remove cubicweb-mysql-support.
 
