@@ -182,10 +182,15 @@ class EntityTC(CubicWebTC):
                 req.create_entity('Tag', name=tag)
             req.execute('SET X tags Y WHERE X is Tag, Y is Personne')
             self.assertEqual(len(p.related('tags', 'object', limit=2)), 2)
+            self.assertFalse(p.cw_relation_cached('tags', 'object'))
             self.assertEqual(len(p.related('tags', 'object')), 4)
+            self.assertTrue(p.cw_relation_cached('tags', 'object'))
             p.cw_clear_all_caches()
+            self.assertFalse(p.cw_relation_cached('tags', 'object'))
             self.assertEqual(len(p.related('tags', 'object', entities=True, limit=2)), 2)
+            self.assertFalse(p.cw_relation_cached('tags', 'object'))
             self.assertEqual(len(p.related('tags', 'object', entities=True)), 4)
+            self.assertTrue(p.cw_relation_cached('tags', 'object'))
 
     def test_related_targettypes(self):
         with self.admin_access.web_request() as req:

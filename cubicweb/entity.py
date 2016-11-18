@@ -985,11 +985,10 @@ class Entity(AppObject):
             if not safe:
                 raise
             rset = self._cw.empty_rset()
+        if cacheable:
+            self.cw_set_relation_cache(rtype, role, rset)
         if entities:
-            if cacheable:
-                self.cw_set_relation_cache(rtype, role, rset)
-                return self.related(rtype, role, entities=entities)
-            return list(rset.entities())
+            return tuple(rset.entities())
         else:
             return rset
 
@@ -1251,7 +1250,7 @@ class Entity(AppObject):
     def cw_set_relation_cache(self, rtype, role, rset):
         """set cached values for the given relation"""
         if rset:
-            related = list(rset.entities(0))
+            related = tuple(rset.entities(0))
             rschema = self._cw.vreg.schema.rschema(rtype)
             if role == 'subject':
                 rcard = rschema.rdef(self.e_schema, related[0].e_schema).cardinality[1]

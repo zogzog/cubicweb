@@ -503,7 +503,7 @@ class ApplicationTC(CubicWebTC):
             self.assertTrue(cnx.find('Directory', eid=subd.eid))
             self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
             self.assertEqual(cnx.find('Directory', eid=subd.eid).one().parent,
-                             [topd,])
+                             (topd,))
 
     def test_subject_mixed_composite_subentity_removal_2(self):
         """Editcontroller: detaching several subentities respects each rdef's
@@ -542,7 +542,7 @@ class ApplicationTC(CubicWebTC):
             self.assertTrue(cnx.find('Directory', eid=subd.eid))
             self.assertTrue(cnx.find('Filesystem', eid=fs.eid))
             self.assertEqual(cnx.find('Directory', eid=subd.eid).one().parent,
-                             [topd,])
+                             (topd,))
 
     def test_object_mixed_composite_subentity_removal_2(self):
         """Editcontroller: detaching several subentities respects each rdef's
