@@ -252,15 +252,18 @@ class CubicWebPublisher(object):
             return set_cnx
 
         req.set_cnx = wrap_set_cnx(req.set_cnx)
+        tstart, cstart = time(), clock()
         try:
             return self.main_handle_request(req)
         finally:
             cnx = req.cnx
-            if cnx:
+            if cnx and cnx.executed_queries:
                 with self._logfile_lock:
+                    tend, cend = time(), clock()
                     try:
                         result = ['\n' + '*' * 80]
-                        result.append(req.url())
+                        result.append('%s -- (%.3f sec, %.3f CPU sec)' % (
+                            req.url(), tend - tstart, cend - cstart))
                         result += ['%s %s -- (%.3f sec, %.3f CPU sec)' % q
                                    for q in cnx.executed_queries]
                         cnx.executed_queries = []
