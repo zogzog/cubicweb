@@ -48,7 +48,7 @@ class has_editable_relation(EntityPredicate):
         # display action anyway
         form = entity._cw.vreg['forms'].select('edition', entity._cw,
                                                entity=entity, mainform=False)
-        for dummy in form.editable_relations():
+        for dummy in form.iter_editable_relations():
             return 1
         for dummy in form.inlined_form_views():
             return 1

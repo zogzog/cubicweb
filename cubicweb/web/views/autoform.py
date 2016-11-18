@@ -861,24 +861,25 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """return a list of (relation schema, role) to edit for the entity"""
         if self.display_fields is not None:
             schema = self._cw.vreg.schema
-            return [(schema[rtype], role) for rtype, role in self.display_fields]
+            for rtype, role in self.display_fields:
+                yield (schema[rtype], role)
         if self.edited_entity.has_eid() and not self.edited_entity.cw_has_perm('update'):
-            return []
+            return
         action = 'update' if self.edited_entity.has_eid() else 'add'
-        return [(rtype, role) for rtype, _, role in self._relations_by_section(
-            'attributes', action, strict)]
+        for rtype, _, role in self._relations_by_section('attributes', action, strict):
+            yield (rtype, role)
 
     def editable_relations(self):
         """return a sorted list of (relation's label, relation'schema, role) for
         relations in the 'relations' section
         """
-        result = []
-        for rschema, _, role in self._relations_by_section('relations',
-                                                           strict=True):
-            result.append( (rschema.display_name(self.edited_entity._cw, role,
-                                                 self.edited_entity.cw_etype),
-                            rschema, role) )
-        return sorted(result)
+        return sorted(self.iter_editable_relations())
+
+    def iter_editable_relations(self):
+        for rschema, _, role in self._relations_by_section('relations', strict=True):
+            yield (rschema.display_name(self.edited_entity._cw, role,
+                                        self.edited_entity.cw_etype),
+                   rschema, role)
 
     def inlined_relations(self):
         """return a list of (relation schema, target schemas, role) matching
@@ -889,10 +890,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # inlined forms control ####################################################
 
     def inlined_form_views(self):
-        """compute and return list of inlined form views (hosting the inlined
-        form object)
+        """Yield inlined form views (hosting the inlined form object)
         """
-        allformviews = []
         entity = self.edited_entity
         for rschema, ttypes, role in self.inlined_relations():
             # show inline forms only if there's one possible target type
@@ -904,11 +903,15 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 continue
             tschema = ttypes[0]
             ttype = tschema.type
-            formviews = list(self.inline_edition_form_view(rschema, ttype, role))
+            existing = bool(entity.related(rschema, role)) if entity.has_eid() else False
+            for formview in self.inline_edition_form_view(rschema, ttype, role):
+                yield formview
+                existing = True
             card = rschema.role_rdef(entity.e_schema, ttype, role).role_cardinality(role)
-            existing = entity.related(rschema, role) if entity.has_eid() else formviews
             if self.should_display_inline_creation_form(rschema, existing, card):
-                formviews += self.inline_creation_form_view(rschema, ttype, role)
+                for formview in self.inline_creation_form_view(rschema, ttype, role):
+                    yield formview
+                    existing = True
             # we can create more than one related entity, we thus display a link
             # to add new related entities
             if self.must_display_add_new_relation_link(rschema, role, tschema,
@@ -918,9 +921,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                     etype=ttype, rtype=rschema, role=role, card=card,
                     peid=self.edited_entity.eid,
                     petype=self.edited_entity.e_schema, pform=self)
-                formviews.append(addnewlink)
-            allformviews += formviews
-        return allformviews
+                yield addnewlink
 
     def should_display_inline_creation_form(self, rschema, existing, card):
         """return true if a creation form should be inlined
