@@ -1,3 +1,5 @@
+from unittest import SkipTest
+
 from cubicweb.devtools import qunit
 
 from os import path as osp
@@ -5,6 +7,7 @@ from os import path as osp
 
 class JScript(qunit.QUnitTestCase):
 
+    timeout_error = SkipTest
     all_js_tests = (
         ("/static/jstests/test_utils.js", (
             "/data/cubicweb.js",
