@@ -348,7 +348,9 @@ class RQLExpression(object):
         if keyarg is None:
             kwargs.setdefault('u', _cw.user.eid)
             try:
-                rset = _cw.execute(rql, kwargs, build_descr=True)
+                # ensure security is disabled
+                with getattr(_cw, 'cnx', _cw).security_enabled(read=False):
+                    rset = _cw.execute(rql, kwargs, build_descr=True)
             except NotImplementedError:
                 self.critical('cant check rql expression, unsupported rql %s', rql)
                 if self.eid is not None:
