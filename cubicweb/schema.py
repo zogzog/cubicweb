@@ -325,6 +325,7 @@ class RQLExpression(object):
                 keyarg = None
             rqlst.recover()
             return rql, found, keyarg
+        rqlst.where = nodes.Exists(rqlst.where)
         return rqlst.as_string(), None, None
 
     def _check(self, _cw, **kwargs):
