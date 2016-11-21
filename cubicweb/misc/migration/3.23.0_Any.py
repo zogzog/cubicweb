@@ -16,18 +16,18 @@ for table, cstr in sql('''
     SELECT DISTINCT tc.table_name, tc.constraint_name
     FROM information_schema.table_constraints tc,
          information_schema.key_column_usage kc
-    WHERE tc.constraint_type IN 'PRIMARY KEY'
+    WHERE tc.constraint_type = 'PRIMARY KEY'
           AND kc.table_name = tc.table_name
           AND kc.table_name LIKE '%\_relation'
           AND kc.table_schema = tc.table_schema
           AND kc.constraint_name = tc.constraint_name;
 '''):
-    sql('ALTER TABLE %s DROP CONSTRAINT' % (table, cstr))
+    sql('ALTER TABLE %s DROP CONSTRAINT %s' % (table, cstr))
 
 for table, cstr in sql("""
     SELECT DISTINCT table_name, constraint_name FROM information_schema.constraint_column_usage
     WHERE table_name LIKE 'cw\_%' AND constraint_name LIKE '%\_key'"""):
-    sql("ALTER TABLE %(table)s DROP CONSTRAINT %(cstr)s" % locals())
+    sql('ALTER TABLE %s DROP CONSTRAINT %s' % (table, cstr))
 
 for rschema in schema.relations():
     if rschema.rule or rschema in PURE_VIRTUAL_RTYPES:
@@ -36,10 +36,6 @@ for rschema in schema.relations():
         for rdef in rschema.rdefs.values():
             table = 'cw_{0}'.format(rdef.subject)
             column = 'cw_{0}'.format(rdef.rtype)
-            if any(isinstance(cstr, UniqueConstraint) for cstr in rdef.constraints):
-                old_name = '%s_%s_key' % (table.lower(), column.lower())
-                sql('ALTER TABLE %s DROP CONSTRAINT %s' % (table, old_name))
-                source.create_index(cnx, table, column, unique=True)
             if rschema.inlined or rdef.indexed:
                 old_name = '%s_%s_idx' % (table.lower(), column.lower())
                 sql('DROP INDEX IF EXISTS %s' % old_name)
