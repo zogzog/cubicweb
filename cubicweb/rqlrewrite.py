@@ -580,6 +580,7 @@ class RQLRewriter(object):
                     done.add(rel)
                     rschema = get_rschema(rel.r_type)
                     if rschema.final or rschema.inlined:
+                        subselect_vrefs = []
                         rel.children[0].name = varname # XXX explain why
                         subselect.add_restriction(rel.copy(subselect))
                         for vref in rel.children[1].iget_nodes(n.VariableRef):
@@ -592,6 +593,7 @@ class RQLRewriter(object):
                                     "least uninline %s" % rel.r_type)
                             subselect.append_selected(vref.copy(subselect))
                             aliases.append(vref.name)
+                            subselect_vrefs.append(vref)
                         self.select.remove_node(rel)
                         # when some inlined relation has to be copied in the
                         # subquery and that relation is optional, we need to
@@ -602,14 +604,15 @@ class RQLRewriter(object):
                         # also, if some attributes or inlined relation of the
                         # object variable are accessed, we need to get all those
                         # from the subquery as well
-                        if vref.name not in done and rschema.inlined:
-                            # we can use vref here define in above for loop
-                            ostinfo = vref.variable.stinfo
-                            for orel in iter_relations(ostinfo):
-                                orschema = get_rschema(orel.r_type)
-                                if orschema.final or orschema.inlined:
-                                    todo.append( (vref.name, ostinfo) )
-                                    break
+                        for vref in subselect_vrefs:
+                            if vref.name not in done and rschema.inlined:
+                                # we can use vref here define in above for loop
+                                ostinfo = vref.variable.stinfo
+                                for orel in iter_relations(ostinfo):
+                                    orschema = get_rschema(orel.r_type)
+                                    if orschema.final or orschema.inlined:
+                                        todo.append( (vref.name, ostinfo) )
+                                        break
             if need_null_test:
                 snippetrqlst = n.Or(
                     n.make_relation(subselect.get_variable(selectvar), 'is',

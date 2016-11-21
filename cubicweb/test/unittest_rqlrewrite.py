@@ -215,6 +215,12 @@ class RQLRewriteTC(TestCase):
         self.assertEqual(rqlst.as_string(),
                          u'Any A,AR,X,CD WHERE A concerne X?, A ref AR, A eid %(a)s WITH X,CD BEING (Any X,CD WHERE X creation_date CD, EXISTS(X created_by B), B eid %(A)s, X is IN(Division, Note, Societe))')
 
+    def test_ambiguous_optional_same_exprs_constant(self):
+        rqlst = parse(u'Any A,AR,X WHERE A concerne X?, A ref AR, A eid %(a)s, X creation_date TODAY')
+        rewrite(rqlst, {('X', 'X'): ('X created_by U',),}, {'a': 3})
+        self.assertEqual(rqlst.as_string(),
+                         u'Any A,AR,X WHERE A concerne X?, A ref AR, A eid %(a)s WITH X BEING (Any X WHERE X creation_date TODAY, EXISTS(X created_by B), B eid %(A)s, X is IN(Division, Note, Societe))')
+
     def test_optional_var_inlined(self):
         c1 = ('X require_permission P')
         c2 = ('X inlined_card O, O require_permission P')
