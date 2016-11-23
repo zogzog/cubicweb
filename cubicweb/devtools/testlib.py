@@ -1289,7 +1289,7 @@ class AutoPopulateTest(CubicWebTC):
                 self._test_action(action)
         for box in self.list_boxes_for(rset):
             w = [].append
-            with self.subTest(self._testname(rset, box.__regid__, 'box')):
+            with self.subTest(name=self._testname(rset, box.__regid__, 'box')):
                 box.render(w)
 
     @staticmethod
