@@ -208,7 +208,7 @@ class TheMainTemplate(MainTemplate):
         self.w(u'</td>\n')
         self.nav_column(view, 'right')
         self.w(u'</tr></table></div>\n')
-        self.wview('footer', rset=self.cw_rset)
+        self.wview('footer', rset=self.cw_rset, view=view)
         self.w(u'</body>')
 
     def nav_column(self, view, context):
@@ -395,7 +395,8 @@ class HTMLPageFooter(View):
 
     def footer_content(self):
         actions = self._cw.vreg['actions'].possible_actions(self._cw,
-                                                            rset=self.cw_rset)
+                                                            rset=self.cw_rset,
+                                                            view=self.cw_extra_kwargs['view'])
         footeractions = actions.get('footer', ())
         for i, action in enumerate(footeractions):
             self.w(u'<a href="%s">%s</a>' % (action.url(),

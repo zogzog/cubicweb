@@ -169,7 +169,8 @@ class AuthenticatedUserStatus(AnonUserStatusLink):
     def render(self, w):
         # display useractions and siteactions
         self._cw.add_css('cubicweb.pictograms.css')
-        actions = self._cw.vreg['actions'].possible_actions(self._cw, rset=self.cw_rset)
+        actions = self._cw.vreg['actions'].possible_actions(self._cw, rset=self.cw_rset,
+                                                            view=self.cw_extra_kwargs['view'])
         box = MenuWidget('', 'userActionsBox', _class='', islist=False)
         menu = PopupBoxMenu(self._cw.user.login, isitem=False, link_class='icon-user')
         box.append(menu)

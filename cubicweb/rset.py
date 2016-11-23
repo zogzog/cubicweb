@@ -73,7 +73,7 @@ class ResultSet(object):
         # set by the cursor which returned this resultset
         self.req = None
         # actions cache
-        self._rsetactions = None
+        self._actions_cache = None
 
     def __str__(self):
         if not self.rows:
@@ -100,19 +100,20 @@ class ResultSet(object):
                                     for r, d in zip(rows, self.description)))
 
     def possible_actions(self, **kwargs):
-        if self._rsetactions is None:
-            self._rsetactions = {}
-        if kwargs:
-            key = tuple(sorted(kwargs.items()))
-        else:
-            key = None
-        try:
-            return self._rsetactions[key]
-        except KeyError:
+        """Return possible actions on this result set. Should always be called with the same
+        arguments so it may be computed only once.
+        """
+        key = tuple(sorted(kwargs.items()))
+        if self._actions_cache is None:
             actions = self.req.vreg['actions'].poss_visible_objects(
                 self.req, rset=self, **kwargs)
-            self._rsetactions[key] = actions
+            self._actions_cache = (key, actions)
             return actions
+        else:
+            assert key == self._actions_cache[0], \
+                'unexpected new arguments for possible actions (%s vs %s)' % (
+                    key, self._actions_cache[0])
+            return self._actions_cache[1]
 
     def __len__(self):
         """returns the result set's size"""

@@ -684,7 +684,8 @@ class CubicWebTC(BaseTestCase):
     def list_boxes_for(self, rset):
         """returns the list of boxes that can be applied on `rset`"""
         req = rset.req
-        for box in self.vreg['ctxcomponents'].possible_objects(req, rset=rset):
+        for box in self.vreg['ctxcomponents'].possible_objects(req, rset=rset,
+                                                               view=None):
             yield box
 
     def list_startup_views(self):

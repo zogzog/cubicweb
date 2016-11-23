@@ -576,6 +576,13 @@ class ResultSetTC(CubicWebTC):
                               '(Any X,N WHERE X is CWGroup, X name N)'
                               ')')
 
+    def test_possible_actions_cache(self):
+        with self.admin_access.web_request() as req:
+            rset = req.execute('Any D, COUNT(U) GROUPBY D WHERE U is CWUser, U creation_date D')
+            rset.possible_actions(argument='Value')
+            self.assertRaises(AssertionError, rset.possible_actions, argument='OtherValue')
+            self.assertRaises(AssertionError, rset.possible_actions, other_argument='Value')
+
     def test_count_users_by_date(self):
         with self.admin_access.web_request() as req:
             rset = req.execute('Any D, COUNT(U) GROUPBY D WHERE U is CWUser, U creation_date D')

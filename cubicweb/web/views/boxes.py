@@ -67,7 +67,7 @@ class EditBox(component.CtxComponent):
         self._menus_by_id = {}
         # build list of actions
         actions = self._cw.vreg['actions'].possible_actions(self._cw, self.cw_rset,
-                                                            **self.cw_extra_kwargs)
+                                                            view=self.cw_extra_kwargs['view'])
         other_menu = self._get_menu('moreactions', _('more actions'))
         for category, defaultmenu in (('mainactions', self),
                                       ('moreactions', other_menu),
