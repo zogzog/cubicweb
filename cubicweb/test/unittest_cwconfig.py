@@ -208,7 +208,7 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
         from cubes import file
         self.assertEqual(file.__path__, [join(self.custom_cubes_dir, 'file')])
 
-    def test_config_value_from_environment(self):
+    def test_config_value_from_environment_str(self):
         self.assertIsNone(self.config['base-url'])
         os.environ['CW_BASE_URL'] = 'https://www.cubicweb.org'
         try:
@@ -217,6 +217,24 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
         finally:
             del os.environ['CW_BASE_URL']
 
+    def test_config_value_from_environment_int(self):
+        self.assertEqual(self.config['connections-pool-size'], 4)
+        os.environ['CW_CONNECTIONS_POOL_SIZE'] = '6'
+        try:
+            self.assertEqual(self.config['connections-pool-size'], 6)
+        finally:
+            del os.environ['CW_CONNECTIONS_POOL_SIZE']
+
+    def test_config_value_from_environment_yn(self):
+        self.assertEqual(self.config['allow-email-login'], False)
+        try:
+            for val, result in (('yes', True), ('no', False),
+                                ('y', True), ('n', False),):
+                os.environ['CW_ALLOW_EMAIL_LOGIN'] = val
+            self.assertEqual(self.config['allow-email-login'], result)
+        finally:
+            del os.environ['CW_ALLOW_EMAIL_LOGIN']
+            
 
 class FindPrefixTC(unittest.TestCase):
 

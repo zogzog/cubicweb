@@ -202,7 +202,8 @@ from logilab.common.decorators import cached, classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods, init_log
 from logilab.common.configuration import (Configuration, Method,
-                                          ConfigurationMixIn, merge_options)
+                                          ConfigurationMixIn, merge_options,
+                                          _validate as lgc_validate)
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       ConfigurationError, Binary, _)
@@ -420,7 +421,11 @@ this option is set to yes",
     def __getitem__(self, key):
         """Get configuration option, by first looking at environmnent."""
         file_value = super(CubicWebNoAppConfiguration, self).__getitem__(key)
-        return option_value_from_env(key, file_value)
+        value = option_value_from_env(key, file_value)
+        if value is not None:
+            option_def = self.get_option_def(key)
+            value = lgc_validate(value, option_def)
+        return value
 
     # static and class methods used to get instance independant resources ##
     @staticmethod
