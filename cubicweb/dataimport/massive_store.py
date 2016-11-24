@@ -72,7 +72,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
         self.uuid = text_type(uuid4()).replace('-', '')
         self.slave_mode = slave_mode
-        self.eids_seq_range = eids_seq_range
         if metagen is None:
             metagen = stores.MetadataGenerator(cnx)
         self.metagen = metagen
@@ -81,7 +80,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self.sql = cnx.system_sql
         self.schema = cnx.vreg.schema
         self.default_values = get_default_values(self.schema)
-        self.get_next_eid = lambda g=self._get_eid_gen(): next(g)
+        self.get_next_eid = lambda g=self._get_eid_gen(eids_seq_range): next(g)
         self._source_dbhelper = cnx.repo.system_source.dbhelper
         self._dbh = PGHelper(cnx)
 
@@ -89,13 +88,13 @@ class MassiveObjectStore(stores.RQLObjectStore):
         self._data_relations = defaultdict(list)
         self._initialized = {}
 
-    def _get_eid_gen(self):
+    def _get_eid_gen(self, eids_seq_range):
         """ Function getting the next eid. This is done by preselecting
         a given number of eids from the 'entities_id_seq', and then
         storing them"""
         while True:
-            last_eid = self._cnx.repo.system_source.create_eid(self._cnx, self.eids_seq_range)
-            for eid in range(last_eid - self.eids_seq_range + 1, last_eid + 1):
+            last_eid = self._cnx.repo.system_source.create_eid(self._cnx, eids_seq_range)
+            for eid in range(last_eid - eids_seq_range + 1, last_eid + 1):
                 yield eid
 
     # master/slaves specific API
