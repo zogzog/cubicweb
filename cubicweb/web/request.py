@@ -1009,11 +1009,8 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
     def cached_entities(self):
         return self.transaction_data.get('req_ecache', {}).values()
 
-    def drop_entity_cache(self, eid=None):
-        if eid is None:
-            self.transaction_data.pop('req_ecache', None)
-        else:
-            del self.transaction_data['req_ecache'][eid]
+    def drop_entity_cache(self):
+        self.transaction_data.pop('req_ecache', None)
 
 
 CubicWebRequestBase = ConnectionCubicWebRequestBase

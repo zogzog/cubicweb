@@ -504,14 +504,11 @@ class Connection(RequestSessionBase):
         return self.transaction_data.get('ecache', {}).values()
 
     @_open_only
-    def drop_entity_cache(self, eid=None):
-        """drop entity from the cache
-
-        If eid is None, the whole cache is dropped"""
-        if eid is None:
-            self.transaction_data.pop('ecache', None)
-        else:
-            del self.transaction_data['ecache'][eid]
+    def drop_entity_cache(self):
+        """Drop the whole entity cache."""
+        for entity in self.cached_entities():
+            entity.cw_clear_all_caches()
+        self.transaction_data.pop('ecache', None)
 
     # relations handling #######################################################
 

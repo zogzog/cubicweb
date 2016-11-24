@@ -156,8 +156,6 @@ class ResultSetTC(CubicWebTC):
 
     def test_limit_2(self):
         with self.admin_access.web_request() as req:
-            # drop user from cache for the sake of this test
-            req.drop_entity_cache(req.user.eid)
             rs = req.execute('Any E,U WHERE E is CWEType, E created_by U')
             # get entity on row 9. This will fill its created_by relation cache,
             # with cwuser on row 9 as well
