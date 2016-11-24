@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,23 +19,23 @@
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb import ObjectNotFound
 from cubicweb.req import RequestSessionBase, FindEntityError
-from cubicweb.devtools import ApptestConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import Unauthorized
+
 
 class RequestTC(TestCase):
     def test_rebuild_url(self):
         rebuild_url = RequestSessionBase(None).rebuild_url
         self.assertEqual(rebuild_url('http://logilab.fr?__message=pouet', __message='hop'),
-                          'http://logilab.fr?__message=hop')
+                         'http://logilab.fr?__message=hop')
         self.assertEqual(rebuild_url('http://logilab.fr', __message='hop'),
-                          'http://logilab.fr?__message=hop')
+                         'http://logilab.fr?__message=hop')
         self.assertEqual(rebuild_url('http://logilab.fr?vid=index', __message='hop'),
-                          'http://logilab.fr?__message=hop&vid=index')
+                         'http://logilab.fr?__message=hop&vid=index')
 
     def test_build_url(self):
         req = RequestSessionBase(None)
-        req.from_controller = lambda : 'view'
+        req.from_controller = lambda: 'view'
         req.relative_path = lambda includeparams=True: None
         req.base_url = lambda secure=None: 'http://testing.fr/cubicweb/'
         self.assertEqual(req.build_url(), u'http://testing.fr/cubicweb/view')
@@ -49,8 +49,10 @@ class RequestTC(TestCase):
         req = RequestSessionBase(None)
         self.assertEqual(req.ensure_ro_rql('Any X WHERE X is CWUser'), None)
         self.assertEqual(req.ensure_ro_rql('  Any X WHERE X is CWUser  '), None)
-        self.assertRaises(Unauthorized, req.ensure_ro_rql, 'SET X login "toto" WHERE X is CWUser')
-        self.assertRaises(Unauthorized, req.ensure_ro_rql, '   SET X login "toto" WHERE X is CWUser   ')
+        self.assertRaises(Unauthorized, req.ensure_ro_rql,
+                          'SET X login "toto" WHERE X is CWUser')
+        self.assertRaises(Unauthorized, req.ensure_ro_rql,
+                          '   SET X login "toto" WHERE X is CWUser   ')
 
 
 class RequestCWTC(CubicWebTC):

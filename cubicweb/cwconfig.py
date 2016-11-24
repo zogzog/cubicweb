@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -177,9 +177,8 @@ Here are all environment variables that may be used to configure *CubicWeb*:
 
    Directory where pid files will be written
 """
+
 from __future__ import print_function
-
-
 
 import importlib
 import logging
@@ -194,7 +193,7 @@ from smtplib import SMTP
 import stat
 import sys
 from threading import Lock
-from warnings import warn, filterwarnings
+from warnings import filterwarnings
 
 from six import text_type
 
@@ -220,12 +219,14 @@ def configuration_cls(name):
     except IndexError:
         raise ConfigurationError('no such config %r (check it exists with "cubicweb-ctl list")' % name)
 
+
 def possible_configurations(directory):
     """return a list of installed configurations in a directory
     according to \*-ctl files
     """
     return [name for name in ('repository', 'all-in-one')
             if exists(join(directory, '%s.conf' % name))]
+
 
 def guess_configuration(directory):
     """try to guess the configuration to use for a directory. If multiple
@@ -236,6 +237,7 @@ def guess_configuration(directory):
         raise ConfigurationError('unable to guess configuration from %r %s'
                                  % (directory, modes))
     return modes[0]
+
 
 def _find_prefix(start_path=None):
     """Return the prefix path of CubicWeb installation.

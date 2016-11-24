@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -38,7 +38,7 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
             # 3.16.4 backward compat
             if len(self.form[key]) == 1:
                 self.form[key] = self.form[key][0]
-        self.content = self._twreq.content # stream
+        self.content = self._twreq.content  # stream
 
     def http_method(self):
         """returns 'POST', 'GET', 'HEAD', etc."""
@@ -52,7 +52,7 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         :param includeparams:
            boolean indicating if GET form parameters should be kept in the path
         """
-        path = self._twreq.uri[1:] # remove the root '/'
+        path = self._twreq.uri[1:]  # remove the root '/'
         if not includeparams:
             path = path.split('?', 1)[0]
         return path

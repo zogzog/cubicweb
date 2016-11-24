@@ -1,3 +1,5 @@
+cubicweb/__init__.py
+cubicweb/__main__.py
 cubicweb/dataimport/csv.py
 cubicweb/dataimport/importer.py
 cubicweb/dataimport/massive_store.py
@@ -20,14 +22,15 @@ cubicweb/devtools/webtest.py
 cubicweb/entities/adapters.py
 cubicweb/entities/test/unittest_base.py
 cubicweb/etwist/__init__.py
+cubicweb/etwist/request.py
+cubicweb/etwist/service.py
 cubicweb/ext/__init__.py
 cubicweb/hooks/test/data/hooks.py
 cubicweb/hooks/test/unittest_notification.py
 cubicweb/hooks/test/unittest_security.py
 cubicweb/hooks/test/unittest_syncsession.py
-cubicweb/__init__.py
-cubicweb/__main__.py
 cubicweb/pylintext.py
+cubicweb/rset.py
 cubicweb/server/repository.py
 cubicweb/server/rqlannotation.py
 cubicweb/server/schema2sql.py
@@ -71,6 +74,7 @@ cubicweb/test/data/views.py
 cubicweb/test/unittest_binary.py
 cubicweb/test/unittest_mail.py
 cubicweb/test/unittest_repoapi.py
+cubicweb/test/unittest_req.py
 cubicweb/test/unittest_schema.py
 cubicweb/test/unittest_toolsutils.py
 cubicweb/test/unittest_utils.py
@@ -80,8 +84,10 @@ cubicweb/web/test/unittest_http_headers.py
 cubicweb/web/test/unittest_views_basetemplates.py
 cubicweb/web/test/unittest_views_cwsources.py
 cubicweb/web/test/unittest_views_json.py
+cubicweb/web/views/editcontroller.py
 cubicweb/web/views/json.py
 cubicweb/web/views/searchrestriction.py
+cubicweb/web/views/staticcontrollers.py
 cubicweb/web/views/uicfg.py
 cubicweb/xy.py
 cubicweb/pyramid/auth.py

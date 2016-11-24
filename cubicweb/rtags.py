@@ -38,15 +38,16 @@ Three primitives are defined:
 
 
 import logging
-from warnings import warn
 
 from six import string_types
 
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.registry import RegistrableInstance, yes
 
+
 def _ensure_str_key(key):
     return tuple(str(k) for k in key)
+
 
 class RegistrableRtags(RegistrableInstance):
     __registry__ = 'uicfg'

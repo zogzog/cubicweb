@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -110,6 +110,7 @@ def vocab_sort(vocab):
             partresult.append((label, value))
     result += sorted(partresult)
     return result
+
 
 _MARKER = nullobject()
 
@@ -361,7 +362,6 @@ class Field(object):
             if callable(self.value):
                 return self.value(form, self)
             return self.value
-        formattr = '%s_%s_default' % (self.role, self.name)
         if self.eidparam and self.role is not None:
             if form._cw.vreg.schema.rschema(self.name).final:
                 return form.edited_entity.e_schema.default(self.name)

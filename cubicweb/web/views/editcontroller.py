@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """The edit controller, automatically handling entity form submitting"""
 
-
-
 from warnings import warn
 from collections import defaultdict
 
@@ -26,16 +24,14 @@ from datetime import datetime
 
 from six import text_type
 
-from logilab.common.deprecation import deprecated
 from logilab.common.graph import ordered_nodes
 
 from rql.utils import rqlvar_maker
 
-from cubicweb import _, Binary, ValidationError, UnknownEid
+from cubicweb import _, ValidationError, UnknownEid
 from cubicweb.view import EntityAdapter
 from cubicweb.predicates import is_instance
-from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
-                          ProcessFormError)
+from cubicweb.web import RequestError, NothingToEdit, ProcessFormError
 from cubicweb.web.views import basecontrollers, autoform
 
 
@@ -73,6 +69,7 @@ def valerror_eid(eid):
         return int(eid)
     except (ValueError, TypeError):
         return eid
+
 
 class RqlQuery(object):
     def __init__(self):
@@ -198,7 +195,7 @@ class EditController(basecontrollers.ViewController):
         req.data['pending_composite_delete'] = set()
         try:
             for formparams in self._ordered_formparams():
-                eid = self.edit_entity(formparams)
+                self.edit_entity(formparams)
         except (RequestError, NothingToEdit) as ex:
             if '__linkto' in req.form and 'eid' in req.form:
                 self.execute_linkto()
@@ -236,7 +233,7 @@ class EditController(basecontrollers.ViewController):
             neweid = entity.eid
         except ValidationError as ex:
             self._to_create[eid] = ex.entity
-            if self._cw.ajax_request: # XXX (syt) why?
+            if self._cw.ajax_request:  # XXX (syt) why?
                 ex.entity = eid
             raise
         self._to_create[eid] = neweid
@@ -268,7 +265,7 @@ class EditController(basecontrollers.ViewController):
         form = req.vreg['forms'].select(formid, req, entity=entity)
         eid = form.actual_eid(entity.eid)
         editedfields = formparams['_cw_entity_fields']
-        form.formvalues = {} # init fields value cache
+        form.formvalues = {}  # init fields value cache
         for field in form.iter_modified_fields(editedfields, entity):
             self.handle_formfield(form, field, rqlquery)
         # if there are some inlined field which were waiting for this entity's
@@ -279,9 +276,9 @@ class EditController(basecontrollers.ViewController):
             if self.errors:
                 errors = dict((f.role_name(), text_type(ex)) for f, ex in self.errors)
                 raise ValidationError(valerror_eid(entity.eid), errors)
-            if eid is None: # creation or copy
+            if eid is None:  # creation or copy
                 entity.eid = eid = self._insert_entity(etype, formparams['eid'], rqlquery)
-            elif rqlquery.edited: # edition of an existant entity
+            elif rqlquery.edited:  # edition of an existant entity
                 self.check_concurrent_edition(formparams, eid)
                 self._update_entity(eid, rqlquery)
         else:
@@ -294,7 +291,7 @@ class EditController(basecontrollers.ViewController):
             autoform.delete_relations(req, todelete)
         if '__cloned_eid' in formparams:
             entity.copy_relations(int(formparams['__cloned_eid']))
-        if is_main_entity: # only execute linkto for the main entity
+        if is_main_entity:  # only execute linkto for the main entity
             self.execute_linkto(entity.eid)
         return eid
 
@@ -303,10 +300,9 @@ class EditController(basecontrollers.ViewController):
         eschema = entity.e_schema
         try:
             for field, value in field.process_posted(form):
-                if not (
-                    (field.role == 'subject' and field.name in eschema.subjrels)
-                    or
-                    (field.role == 'object' and field.name in eschema.objrels)):
+                if not ((field.role == 'subject' and field.name in eschema.subjrels)
+                        or
+                        (field.role == 'object' and field.name in eschema.objrels)):
                     continue
 
                 rschema = self._cw.vreg.schema.rschema(field.name)
@@ -315,11 +311,11 @@ class EditController(basecontrollers.ViewController):
                     continue
 
                 if entity.has_eid():
-                    origvalues = set(data[0] for data in entity.related(field.name, field.role).rows)
+                    origvalues = set(row[0] for row in entity.related(field.name, field.role).rows)
                 else:
                     origvalues = set()
                 if value is None or value == origvalues:
-                    continue # not edited / not modified / to do later
+                    continue  # not edited / not modified / to do later
 
                 unlinked_eids = origvalues - value
 
@@ -333,7 +329,7 @@ class EditController(basecontrollers.ViewController):
                 elif form.edited_entity.has_eid():
                     self.handle_relation(form, field, value, origvalues)
                 else:
-                    form._cw.data['pending_others'].add( (form, field) )
+                    form._cw.data['pending_others'].add((form, field))
 
         except ProcessFormError as exc:
             self.errors.append((field, exc))
@@ -387,15 +383,10 @@ class EditController(basecontrollers.ViewController):
     def handle_relation(self, form, field, values, origvalues):
         """handle edition for the (rschema, x) relation of the given entity
         """
-        etype = form.edited_entity.e_schema
         rschema = self._cw.vreg.schema.rschema(field.name)
         if field.role == 'subject':
-            desttype = rschema.objects(etype)[0]
-            card = rschema.rdef(etype, desttype).cardinality[0]
             subjvar, objvar = 'X', 'Y'
         else:
-            desttype = rschema.subjects(etype)[0]
-            card = rschema.rdef(desttype, etype).cardinality[1]
             subjvar, objvar = 'Y', 'X'
         eid = form.edited_entity.eid
         if field.role == 'object' or not rschema.inlined or not values:
@@ -419,7 +410,7 @@ class EditController(basecontrollers.ViewController):
         for eid, etype in eidtypes:
             entity = self._cw.entity_from_eid(eid, etype)
             path, params = entity.cw_adapt_to('IEditControl').after_deletion_path()
-            redirect_info.add( (path, tuple(params.items())) )
+            redirect_info.add((path, tuple(params.items())))
             entity.cw_delete()
         if len(redirect_info) > 1:
             # In the face of ambiguity, refuse the temptation to guess.
@@ -430,7 +421,6 @@ class EditController(basecontrollers.ViewController):
             self._cw.set_message(self._cw._('entities deleted'))
         else:
             self._cw.set_message(self._cw._('entity deleted'))
-
 
     def check_concurrent_edition(self, formparams, eid):
         req = self._cw
@@ -446,7 +436,7 @@ class EditController(basecontrollers.ViewController):
             msg = _("Entity %(eid)s has changed since you started to edit it."
                     " Reload the page and reapply your changes.")
             # ... this is why we pass the formats' dict as a third argument.
-            raise ValidationError(eid, {None: msg}, {'eid' : eid})
+            raise ValidationError(eid, {None: msg}, {'eid': eid})
 
     def _action_apply(self):
         self._default_publish()

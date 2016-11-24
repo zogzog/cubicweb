@@ -20,15 +20,13 @@ provide a pluggable commands system.
 """
 from __future__ import print_function
 
-
-
 # *ctl module should limit the number of import to be imported as quickly as
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.
 import sys
 from warnings import warn, filterwarnings
 from os import remove, listdir, system, pathsep
-from os.path import exists, join, isfile, isdir, dirname, abspath
+from os.path import exists, join, isdir, dirname, abspath
 
 try:
     from os import kill, getpgid
@@ -43,7 +41,6 @@ from six.moves.urllib.parse import urlparse
 from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
 from logilab.common.configuration import merge_options
-from logilab.common.deprecation import deprecated
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
@@ -54,6 +51,7 @@ from cubicweb.__pkginfo__ import version
 CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
                     version=version, check_duplicated_command=False)
 
+
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""
     import signal
@@ -62,18 +60,20 @@ def wait_process_end(pid, maxtry=10, waittime=1):
     while nbtry < maxtry:
         try:
             kill(pid, signal.SIGUSR1)
-        except (OSError, AttributeError): # XXX win32
+        except (OSError, AttributeError):  # XXX win32
             break
         nbtry += 1
         sleep(waittime)
     else:
         raise ExecutionError('can\'t kill process %s' % pid)
 
+
 def list_instances(regdir):
     if isdir(regdir):
         return sorted(idir for idir in listdir(regdir) if isdir(join(regdir, idir)))
     else:
         return []
+
 
 def detect_available_modes(templdir):
     modes = []

@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -41,9 +41,6 @@ Actually there exists a third form class:
 
 but you'll use this one rarely.
 """
-
-
-
 
 import time
 import inspect
@@ -177,8 +174,10 @@ class FieldsForm(form.Form):
             return self._onsubmit
         except AttributeError:
             return "return freezeFormButtons('%(domid)s');" % dictattr(self)
+
     def _set_onsubmit(self, value):
         self._onsubmit = value
+
     onsubmit = property(_get_onsubmit, _set_onsubmit)
 
     def add_media(self):
@@ -210,6 +209,7 @@ class FieldsForm(form.Form):
             rset=self.cw_rset, row=self.cw_row, col=self.cw_col or 0)
 
     formvalues = None
+
     def build_context(self, formvalues=None):
         """build form context values (the .context attribute which is a
         dictionary with field instance as key associated to a dictionary
@@ -217,7 +217,7 @@ class FieldsForm(form.Form):
         a string).
         """
         if self.formvalues is not None:
-            return # already built
+            return  # already built
         self.formvalues = formvalues or {}
         # use a copy in case fields are modified while context is built (eg
         # __linkto handling for instance)
@@ -239,6 +239,7 @@ class FieldsForm(form.Form):
                             eidparam=True)
 
     _default_form_action_path = 'edit'
+
     def form_action(self):
         action = self.action
         if action is None:
@@ -256,7 +257,7 @@ class FieldsForm(form.Form):
                 editedfields = self._cw.form['_cw_fields']
             except KeyError:
                 raise RequestError(self._cw._('no edited fields specified'))
-        entityform = entity and len(inspect.getargspec(self.field_by_name)) == 4 # XXX
+        entityform = entity and len(inspect.getargspec(self.field_by_name)) == 4  # XXX
         for editedfield in splitstrip(editedfields):
             try:
                 name, role = editedfield.split('-')
@@ -275,7 +276,7 @@ class FieldsForm(form.Form):
         will return a dictionary with field names as key and typed value as
         associated value.
         """
-        with tempattr(self, 'formvalues', {}): # init fields value cache
+        with tempattr(self, 'formvalues', {}):  # init fields value cache
             errors = []
             processed = {}
             for field in self.iter_modified_fields():
@@ -441,7 +442,7 @@ class EntityFieldsForm(FieldsForm):
     def actual_eid(self, eid):
         # should be either an int (existant entity) or a variable (to be
         # created entity)
-        assert eid or eid == 0, repr(eid) # 0 is a valid eid
+        assert eid or eid == 0, repr(eid)  # 0 is a valid eid
         try:
             return int(eid)
         except ValueError:
@@ -470,8 +471,8 @@ class CompositeFormMixIn(object):
 
     def build_context(self, formvalues=None):
         super(CompositeFormMixIn, self).build_context(formvalues)
-        for form in self.forms:
-            form.build_context(formvalues)
+        for form_ in self.forms:
+            form_.build_context(formvalues)
 
 
 class CompositeForm(CompositeFormMixIn, FieldsForm):
@@ -479,5 +480,6 @@ class CompositeForm(CompositeFormMixIn, FieldsForm):
     at once.
     """
 
+
 class CompositeEntityForm(CompositeFormMixIn, EntityFieldsForm):
-    pass # XXX why is this class necessary?
+    pass  # XXX why is this class necessary?

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -94,10 +94,10 @@ class ResultSet(object):
 
         if not self.description:
             return pattern % (self.rql, len(self.rows),
-                                                     '\n'.join(str(r) for r in rows))
+                              '\n'.join(str(r) for r in rows))
         return pattern % (self.rql, len(self.rows),
-                                                 '\n'.join('%s (%s)' % (r, d)
-                                                           for r, d in zip(rows, self.description)))
+                          '\n'.join('%s (%s)' % (r, d)
+                                    for r, d in zip(rows, self.description)))
 
     def possible_actions(self, **kwargs):
         if self._rsetactions is None:
@@ -120,7 +120,7 @@ class ResultSet(object):
 
     def __getitem__(self, i):
         """returns the ith element of the result set"""
-        return self.rows[i] #ResultSetRow(self.rows[i])
+        return self.rows[i]
 
     def __iter__(self):
         """Returns an iterator over rows"""
@@ -132,7 +132,7 @@ class ResultSet(object):
         # at least rql could be fixed now that we have union and sub-queries
         # but I tend to think that since we have that, we should not need this
         # method anymore (syt)
-        rset = ResultSet(self.rows+rset.rows, self.rql, self.args,
+        rset = ResultSet(self.rows + rset.rows, self.rql, self.args,
                          self.description + rset.description)
         rset.req = self.req
         return rset
@@ -163,7 +163,7 @@ class ResultSet(object):
         rset = self.copy(rows, descr)
         for row, desc in zip(self.rows, self.description):
             nrow, ndesc = transformcb(row, desc)
-            if ndesc: # transformcb returns None for ndesc to skip that row
+            if ndesc:  # transformcb returns None for ndesc to skip that row
                 rows.append(nrow)
                 descr.append(ndesc)
         rset.rowcount = len(rows)
@@ -191,7 +191,6 @@ class ResultSet(object):
             descr.append(self.description[i])
         rset.rowcount = len(rows)
         return rset
-
 
     def sorted_rset(self, keyfunc, reverse=False, col=0):
         """sorts the result set according to a given keyfunc
@@ -308,7 +307,7 @@ class ResultSet(object):
             newselect = stmts.Select()
             newselect.limit = limit
             newselect.offset = offset
-            aliases = [nodes.VariableRef(newselect.get_variable(chr(65+i), i))
+            aliases = [nodes.VariableRef(newselect.get_variable(chr(65 + i), i))
                        for i in range(len(rqlst.children[0].selection))]
             for vref in aliases:
                 newselect.append_selected(nodes.VariableRef(vref.variable))
@@ -336,7 +335,7 @@ class ResultSet(object):
 
         :rtype: `ResultSet`
         """
-        stop = limit+offset
+        stop = limit + offset
         rows = self.rows[offset:stop]
         descr = self.description[offset:stop]
         if inplace:
@@ -592,7 +591,7 @@ class ResultSet(object):
             if row != last:
                 if last is not None:
                     result[-1][1] = i - 1
-                result.append( [i, None, row] )
+                result.append([i, None, row])
                 last = row
         if last is not None:
             result[-1][1] = i
@@ -665,7 +664,7 @@ class ResultSet(object):
                 try:
                     entity = self.get_entity(row, index)
                     return entity, rel.r_type
-                except NotAnEntity as exc:
+                except NotAnEntity:
                     return None, None
         return None, None
 
@@ -683,11 +682,13 @@ class ResultSet(object):
                 return rhs.eval(self.args)
         return None
 
+
 def _get_variable(term):
     # XXX rewritten const
     # use iget_nodes for (hack) case where we have things like MAX(V)
     for vref in term.iget_nodes(nodes.VariableRef):
         return vref.variable
+
 
 def attr_desc_iterator(select, selectidx, rootidx):
     """return an iterator on a list of 2-uple (index, attr_relation)

@@ -18,19 +18,19 @@
 """default templates for CubicWeb web client"""
 
 
-from cubicweb import _
-
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed
 from logilab.common.registry import objectify_predicate
 from logilab.common.decorators import classproperty
 
-from cubicweb.predicates import match_kwargs, no_cnx, anonymous_user
+from cubicweb import _
+from cubicweb.predicates import match_kwargs, anonymous_user
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW, StartupView
 from cubicweb.utils import UStringIO
 from cubicweb.schema import display_name
-from cubicweb.web import component, formfields as ff, formwidgets as fw
+from cubicweb.web import formfields as ff, formwidgets as fw
 from cubicweb.web.views import forms
+
 
 # main templates ##############################################################
 
@@ -91,6 +91,7 @@ class LoggedOutTemplate(StartupView):
 def modal_view(cls, req, rset, *args, **kwargs):
     if req.form.get('__modal', None):
         return 1
+
 
 @objectify_predicate
 def templatable_view(cls, req, rset, *args, **kwargs):
@@ -176,7 +177,6 @@ class TheMainTemplate(MainTemplate):
 
     def template_html_header(self, content_type, page_title, additional_headers=()):
         w = self.whead
-        lang = self._cw.lang
         self.write_doctype()
         self._cw.html_headers.define_var('BASE_URL', self._cw.base_url())
         self._cw.html_headers.define_var('DATA_URL', self._cw.datadir_url)
@@ -215,7 +215,6 @@ class TheMainTemplate(MainTemplate):
         boxes = list(self._cw.vreg['ctxcomponents'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=view, context=context))
         if boxes:
-            getlayout = self._cw.vreg['components'].select
             self.w(u'<td id="navColumn%s"><div class="navboxes">\n' % context.capitalize())
             for box in boxes:
                 box.render(w=self.w, view=view)
@@ -248,7 +247,6 @@ class ErrorTemplate(TheMainTemplate):
 
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
         w = self.whead
-        lang = self._cw.lang
         self.write_doctype()
         w(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'
           % (content_type, self._cw.encoding))
@@ -269,7 +267,6 @@ class SimpleMainTemplate(TheMainTemplate):
         page_title = page_title or view.page_title()
         additional_headers = additional_headers or view.html_headers()
         whead = self.whead
-        lang = self._cw.lang
         self.write_doctype()
         whead(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'
               % (content_type, self._cw.encoding))
@@ -337,10 +334,10 @@ class HTMLHeader(View):
 
     def alternates(self):
         urlgetter = self._cw.vreg['components'].select_or_none('rss_feed_url',
-                                                           self._cw, rset=self.cw_rset)
+                                                               self._cw, rset=self.cw_rset)
         if urlgetter is not None:
             self.whead(u'<link rel="alternate" type="application/rss+xml" title="RSS feed" href="%s"/>\n'
-                       %  xml_escape(urlgetter.feed_url()))
+                       % xml_escape(urlgetter.feed_url()))
 
 
 class HTMLPageHeader(View):
@@ -406,6 +403,7 @@ class HTMLPageFooter(View):
             if i < (len(footeractions) - 1):
                 self.w(u' | ')
 
+
 class HTMLContentHeader(View):
     """default html page content header:
     * include message component if selectable for this request
@@ -439,6 +437,7 @@ class HTMLContentFooter(View):
                 comp.render(w=self.w, view=view)
             self.w(u'</div>')
 
+
 class BaseLogForm(forms.FieldsForm):
     """Abstract Base login form to be used by any login form
     """
@@ -461,7 +460,7 @@ class BaseLogForm(forms.FieldsForm):
                         fw.ResetButton(label=_('cancel'),
                                        attrs={'class': 'loginButton',
                                               'onclick': onclick}),]
-        ## Can't shortcut next access because __dict__ is a "dictproxy" which 
+        ## Can't shortcut next access because __dict__ is a "dictproxy" which
         ## does not support items assignement.
         # cls.__dict__['form_buttons'] = form_buttons
         return form_buttons
@@ -477,6 +476,7 @@ class BaseLogForm(forms.FieldsForm):
             return self._cw.build_url('login', __secure__=True, **url_args)
         return super(BaseLogForm, self).form_action()
 
+
 class LogForm(BaseLogForm):
     """Simple login form that send username and password
     """
@@ -488,7 +488,7 @@ class LogForm(BaseLogForm):
     __password = ff.StringField('__password', label=_('password'),
                                 widget=fw.PasswordSingleInput({'class': 'data'}))
 
-    onclick_args =  ('popupLoginBox', '__login')
+    onclick_args = ('popupLoginBox', '__login')
 
 
 class LogFormView(View):
@@ -530,5 +530,6 @@ class LogFormView(View):
         form.field_by_name('__login').label = label
         form.render(w=self.w, table_class='', display_progress_div=False)
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
+
 
 LogFormTemplate = class_renamed('LogFormTemplate', LogFormView)

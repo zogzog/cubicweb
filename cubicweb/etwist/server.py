@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,14 +17,10 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """twisted server for CubicWeb web instances"""
 
-
 import sys
-import select
 import traceback
 import threading
 from cgi import FieldStorage, parse_header
-
-from six.moves.urllib.parse import urlsplit, urlunsplit
 
 from cubicweb.statsd_logger import statsd_timeit
 
@@ -43,6 +39,7 @@ from cubicweb.web import DirectResponse
 from cubicweb.web.application import CubicWebPublisher
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
 from cubicweb.etwist.http import HTTPResponse
+
 
 def start_task(interval, func):
     lc = task.LoopingCall(func)
