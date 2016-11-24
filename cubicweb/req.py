@@ -327,9 +327,9 @@ class RequestSessionBase(object):
         necessary encoding / decoding. Also it's designed to quote each
         part of a url path and so the '/' character will be encoded as well.
         """
-        if PY2 and isinstance(value, unicode):
+        if PY2 and isinstance(value, text_type):
             quoted = urlquote(value.encode(self.encoding), safe=safe)
-            return unicode(quoted, self.encoding)
+            return text_type(quoted, self.encoding)
         return urlquote(str(value), safe=safe)
 
     def url_unquote(self, quoted):
@@ -340,12 +340,12 @@ class RequestSessionBase(object):
         """
         if PY3:
             return urlunquote(quoted)
-        if isinstance(quoted, unicode):
+        if isinstance(quoted, text_type):
             quoted = quoted.encode(self.encoding)
         try:
-            return unicode(urlunquote(quoted), self.encoding)
+            return text_type(urlunquote(quoted), self.encoding)
         except UnicodeDecodeError:  # might occurs on manually typed URLs
-            return unicode(urlunquote(quoted), 'iso-8859-1')
+            return text_type(urlunquote(quoted), 'iso-8859-1')
 
     def url_parse_qsl(self, querystring):
         """return a list of (key, val) found in the url quoted query string"""
@@ -353,13 +353,13 @@ class RequestSessionBase(object):
             for key, val in parse_qsl(querystring):
                 yield key, val
             return
-        if isinstance(querystring, unicode):
+        if isinstance(querystring, text_type):
             querystring = querystring.encode(self.encoding)
         for key, val in parse_qsl(querystring):
             try:
-                yield unicode(key, self.encoding), unicode(val, self.encoding)
+                yield text_type(key, self.encoding), text_type(val, self.encoding)
             except UnicodeDecodeError:  # might occurs on manually typed URLs
-                yield unicode(key, 'iso-8859-1'), unicode(val, 'iso-8859-1')
+                yield text_type(key, 'iso-8859-1'), text_type(val, 'iso-8859-1')
 
     def rebuild_url(self, url, **newparams):
         """return the given url with newparams inserted. If any new params
@@ -367,7 +367,7 @@ class RequestSessionBase(object):
 
         newparams may only be mono-valued.
         """
-        if PY2 and isinstance(url, unicode):
+        if PY2 and isinstance(url, text_type):
             url = url.encode(self.encoding)
         schema, netloc, path, query, fragment = urlsplit(url)
         query = parse_qs(query)
@@ -439,7 +439,7 @@ class RequestSessionBase(object):
             as_string = formatters[attrtype]
         except KeyError:
             self.error('given bad attrtype %s', attrtype)
-            return unicode(value)
+            return text_type(value)
         return as_string(value, self, props, displaytime)
 
     def format_date(self, date, date_format=None, time=False):

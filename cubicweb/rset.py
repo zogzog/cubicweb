@@ -20,7 +20,7 @@
 
 from warnings import warn
 
-from six import PY3
+from six import PY3, text_type
 from six.moves import range
 
 from logilab.common import nullobject
@@ -375,11 +375,11 @@ class ResultSet(object):
             return rqlstr
         # sounds like we get encoded or unicode string due to a bug in as_string
         if not encoded:
-            if isinstance(rqlstr, unicode):
+            if isinstance(rqlstr, text_type):
                 return rqlstr
-            return unicode(rqlstr, encoding)
+            return text_type(rqlstr, encoding)
         else:
-            if isinstance(rqlstr, unicode):
+            if isinstance(rqlstr, text_type):
                 return rqlstr.encode(encoding)
             return rqlstr
 

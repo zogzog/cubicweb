@@ -17,8 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Twisted request handler for CubicWeb"""
 
-
-
+from six import text_type
 
 from cubicweb.web.request import CubicWebRequestBase
 
@@ -34,7 +33,7 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         for key, name_stream_list in req.files.items():
             for name, stream in name_stream_list:
                 if name is not None:
-                    name = unicode(name, self.encoding)
+                    name = text_type(name, self.encoding)
                 self.form.setdefault(key, []).append((name, stream))
             # 3.16.4 backward compat
             if len(self.form[key]) == 1:
