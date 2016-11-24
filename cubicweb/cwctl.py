@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -102,13 +102,6 @@ class InstanceCommand(Command):
          ),
         )
     actionverb = None
-
-    @deprecated('[3.22] startorder is not used any more')
-    def ordered_instances(self):
-        """return list of known instances
-        """
-        regdir = cwcfg.instances_dir()
-        return list_instances(regdir)
 
     def run(self, args):
         """run the <command>_method on each argument (a list of instance

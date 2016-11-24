@@ -15,7 +15,7 @@ import time
 import threading
 import subprocess
 
-from cubicweb import BadCommandUsage, ExecutionError
+from cubicweb import ExecutionError
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
 from cubicweb.pyramid import wsgi_application_from_cwconfig
@@ -98,15 +98,6 @@ class PyramidStartHandler(InstanceCommand):
 
     def info(self, msg):
         print('INFO - %s' % msg)
-
-    def ordered_instances(self):
-        instances = super(PyramidStartHandler, self).ordered_instances()
-        if (self['debug-mode'] or self['debug'] or self['reload']) \
-                and len(instances) > 1:
-            raise BadCommandUsage(
-                '--debug-mode, --debug and --reload can be used on a single '
-                'instance only')
-        return instances
 
     def quote_first_command_arg(self, arg):
         """
