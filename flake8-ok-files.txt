@@ -43,6 +43,7 @@ cubicweb/server/test/data-migractions/migratedapp/__init__.py
 cubicweb/server/test/data-schema2sql/__init__.py
 cubicweb/server/test/unittest_checkintegrity.py
 cubicweb/server/test/unittest_ldapsource.py
+cubicweb/server/test/unittest_rqlannotation.py
 cubicweb/skeleton/test/pytestconf.py
 cubicweb/sobjects/test/unittest_notification.py
 cubicweb/sobjects/test/unittest_register_user.py

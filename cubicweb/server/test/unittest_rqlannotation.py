@@ -67,8 +67,8 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
             self.assertTrue(rqlst.defined_vars['B'].stinfo['attrvar'])
             self.assertEqual(rqlst.defined_vars['C']._q_invariant, False)
             self.assertEqual(rqlst.solutions, [{'A': 'TrInfo', 'B': 'String', 'C': 'Affaire'},
-                                          {'A': 'TrInfo', 'B': 'String', 'C': 'CWUser'},
-                                          {'A': 'TrInfo', 'B': 'String', 'C': 'Note'}])
+                                               {'A': 'TrInfo', 'B': 'String', 'C': 'CWUser'},
+                                               {'A': 'TrInfo', 'B': 'String', 'C': 'Note'}])
 
     def test_0_5(self):
         with self.session.new_cnx() as cnx:
@@ -93,7 +93,6 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         with self.session.new_cnx() as cnx:
             rqlst = self._prepare(cnx, 'Any P WHERE X eid 0, NOT X connait P')
             self.assertEqual(rqlst.defined_vars['P']._q_invariant, False)
-            #self.assertEqual(rqlst.defined_vars['X']._q_invariant, True)
             self.assertEqual(len(rqlst.solutions), 1, rqlst.solutions)
 
     def test_0_10(self):
@@ -400,11 +399,13 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         with self.session.new_cnx() as cnx:
             rqlst = self._prepare(cnx, 'Any COUNT(S),CS GROUPBY CS ORDERBY 1 DESC LIMIT 10 '
                                   'WHERE C is Societe, S concerne C, C nom CS, '
-                                  '(EXISTS(S owned_by D)) OR (EXISTS(S documented_by N, N title "published"))')
+                                  '(EXISTS(S owned_by D)) '
+                                  'OR (EXISTS(S documented_by N, N title "published"))')
             self.assertEqual(rqlst.defined_vars['S']._q_invariant, True)
             rqlst = self._prepare(cnx, 'Any COUNT(S),CS GROUPBY CS ORDERBY 1 DESC LIMIT 10 '
                                   'WHERE S is Affaire, C is Societe, S concerne C, C nom CS, '
-                                  '(EXISTS(S owned_by D)) OR (EXISTS(S documented_by N, N title "published"))')
+                                  '(EXISTS(S owned_by D)) '
+                                  'OR (EXISTS(S documented_by N, N title "published"))')
             self.assertEqual(rqlst.defined_vars['S']._q_invariant, True)
 
     def test_nonregr_ambiguity(self):
@@ -416,7 +417,8 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
 
     def test_nonregr_ambiguity_2(self):
         with self.session.new_cnx() as cnx:
-            rqlst = self._prepare(cnx, 'Any S,SN WHERE X has_text "tot", X in_state S, S name SN, X is CWUser')
+            rqlst = self._prepare(cnx, 'Any S,SN WHERE X has_text "tot", '
+                                  'X in_state S, S name SN, X is CWUser')
             # X use has_text but should not be invariant as ambiguous, and has_text
             # may not be its principal
             self.assertEqual(rqlst.defined_vars['X']._q_invariant, False)
@@ -425,7 +427,7 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
     def test_remove_from_deleted_source_1(self):
         with self.session.new_cnx() as cnx:
             rqlst = self._prepare(cnx, 'Note X WHERE X eid 999998, NOT X cw_source Y')
-            self.assertNotIn('X', rqlst.defined_vars) # simplified
+            self.assertNotIn('X', rqlst.defined_vars)  # simplified
             self.assertEqual(rqlst.defined_vars['Y']._q_invariant, True)
 
     def test_remove_from_deleted_source_2(self):
@@ -439,6 +441,7 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
             rqlst = self._prepare(cnx, 'Any X WHERE X has_text "toto" WITH X BEING '
                                   '(Any C WHERE C is Societe, C nom CS)')
             self.assertTrue(rqlst.parent.has_text_query)
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
