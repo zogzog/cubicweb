@@ -164,7 +164,7 @@ def parseDateTime(dateString):
     """Convert an HTTP date string (one of three formats) to seconds since epoch."""
     parts = dateString.split()
 
-    if not parts[0][0:3].lower() in weekdayname_lower:
+    if parts and not parts[0][0:3].lower() in weekdayname_lower:
         # Weekday is stupid. Might have been omitted.
         try:
             return parseDateTime("Sun, "+dateString)
