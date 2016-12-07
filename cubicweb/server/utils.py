@@ -66,7 +66,7 @@ def crypt_password(passwd, salt=None):
     """return the encrypted password using the given salt or a generated one
     """
     if salt is None:
-        return _CRYPTO_CTX.encrypt(passwd).encode('ascii')
+        return _CRYPTO_CTX.hash(passwd).encode('ascii')
     # empty hash, accept any password for backwards compat
     if salt == '':
         return salt
