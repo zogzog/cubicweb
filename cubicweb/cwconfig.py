@@ -185,7 +185,7 @@ import importlib
 import logging
 import logging.config
 import os
-from os.path import (exists, join, expanduser, abspath, normpath,
+from os.path import (exists, join, expanduser, abspath, normpath, realpath,
                      basename, isdir, dirname, splitext)
 import pkgutil
 import pkg_resources
@@ -378,7 +378,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
         mode = _forced_mode or 'system'
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
 
-    CUBES_DIR = abspath(os.environ.get('CW_CUBES_DIR', _CUBES_DIR))
+    CUBES_DIR = realpath(abspath(os.environ.get('CW_CUBES_DIR', _CUBES_DIR)))
     CUBES_PATH = os.environ.get('CW_CUBES_PATH', '').split(os.pathsep)
 
     options = (
@@ -513,7 +513,7 @@ this option is set to yes",
     @classmethod
     def cubes_search_path(cls):
         """return the path of directories where cubes should be searched"""
-        path = [abspath(normpath(directory)) for directory in cls.CUBES_PATH
+        path = [realpath(abspath(normpath(directory))) for directory in cls.CUBES_PATH
                 if directory.strip() and exists(directory.strip())]
         if not cls.CUBES_DIR in path and exists(cls.CUBES_DIR):
             path.append(cls.CUBES_DIR)
