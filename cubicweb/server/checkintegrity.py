@@ -411,7 +411,7 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
         cnx.commit()
 
 
-SYSTEM_INDICES = {
+SYSTEM_INDEXES = {
     # see cw/server/sources/native.py
     'transactions_tx_time_idx': ('transactions', 'tx_time'),
     'transactions_tx_user_idx': ('transactions', 'tx_user'),
@@ -428,24 +428,20 @@ SYSTEM_INDICES = {
 }
 
 
-def check_indexes(cnx):
-    """Check indexes of a system database: output missing expected indexes as well as unexpected ones.
+def expected_indexes(cnx):
+    """Return a dictionary describing indexes expected by the schema {index name: (table, column)}.
 
-    Return 0 if there is no differences, else 1.
+    This doesn't include primary key indexes.
     """
     source = cnx.repo.system_source
     dbh = source.dbhelper
     schema = cnx.repo.schema
-    schema_indices = SYSTEM_INDICES.copy()
+    schema_indexes = SYSTEM_INDEXES.copy()
     if source.dbdriver == 'postgres':
-        schema_indices.update({'appears_words_idx': ('appears', 'words')})
-        index_filter = lambda idx: not (idx.startswith('pg_') or idx.endswith('_pkey'))
+        schema_indexes.update({'appears_words_idx': ('appears', 'words')})
     else:
-        schema_indices.update({'appears_uid': ('appears', 'uid'),
+        schema_indexes.update({'appears_uid': ('appears', 'uid'),
                                'appears_word_id': ('appears', 'word_id')})
-        index_filter = lambda idx: not idx.startswith('sqlite_')
-    db_indices = set(idx for idx in dbh.list_indices(cnx.cnxset.cu)
-                     if index_filter(idx))
     for rschema in schema.relations():
         if rschema.rule or rschema in PURE_VIRTUAL_RTYPES:
             continue  # computed relation
@@ -454,44 +450,74 @@ def check_indexes(cnx):
                 table = 'cw_{0}'.format(rdef.subject)
                 column = 'cw_{0}'.format(rdef.rtype)
                 if any(isinstance(cstr, UniqueConstraint) for cstr in rdef.constraints):
-                    schema_indices[dbh._index_name(table, column, unique=True)] = (
+                    schema_indexes[dbh._index_name(table, column, unique=True)] = (
                         table, [column])
                 if rschema.inlined or rdef.indexed:
-                    schema_indices[dbh._index_name(table, column)] = (table, [column])
+                    schema_indexes[dbh._index_name(table, column)] = (table, [column])
         else:
             table = '{0}_relation'.format(rschema)
             if source.dbdriver == 'postgres':
                 # index built after the primary key constraint
-                schema_indices[build_index_name(table, ['eid_from', 'eid_to'], 'key_')] = (
+                schema_indexes[build_index_name(table, ['eid_from', 'eid_to'], 'key_')] = (
                     table, ['eid_from', 'eid_to'])
-            schema_indices[build_index_name(table, ['eid_from'], 'idx_')] = (
+            schema_indexes[build_index_name(table, ['eid_from'], 'idx_')] = (
                 table, ['eid_from'])
-            schema_indices[build_index_name(table, ['eid_to'], 'idx_')] = (
+            schema_indexes[build_index_name(table, ['eid_to'], 'idx_')] = (
                 table, ['eid_to'])
     for eschema in schema.entities():
         if eschema.final:
             continue
         table = 'cw_{0}'.format(eschema)
         for columns, index_name in iter_unique_index_names(eschema):
-            schema_indices[index_name] = (table, columns)
+            schema_indexes[index_name] = (table, columns)
 
-    missing_indices = set(schema_indices) - db_indices
-    if missing_indices:
-        print(underline_title('Missing indices'))
+    return schema_indexes
+
+
+def database_indexes(cnx):
+    """Return a set of indexes found in the database, excluding primary key indexes."""
+    source = cnx.repo.system_source
+    dbh = source.dbhelper
+    if source.dbdriver == 'postgres':
+
+        def index_filter(idx):
+            return not (idx.startswith('pg_') or idx.endswith('_pkey'))
+    else:
+
+        def index_filter(idx):
+            return not idx.startswith('sqlite_')
+
+    return set(idx for idx in dbh.list_indices(cnx.cnxset.cu)
+               if index_filter(idx))
+
+
+def check_indexes(cnx):
+    """Check indexes of a system database: output missing expected indexes as well as unexpected ones.
+
+    Return 0 if there is no differences, else 1.
+    """
+    schema_indexes = expected_indexes(cnx)
+    db_indexes = database_indexes(cnx)
+
+    missing_indexes = set(schema_indexes) - db_indexes
+    if missing_indexes:
+        print(underline_title('Missing indexes'))
         print('index expected by the schema but not found in the database:\n')
-        missing = ['{0} ON {1[0]} {1[1]}'.format(idx, schema_indices[idx])
-                   for idx in missing_indices]
+        missing = ['{0} ON {1[0]} {1[1]}'.format(idx, schema_indexes[idx])
+                   for idx in missing_indexes]
         print('\n'.join(sorted(missing)))
         print()
         status = 1
-    additional_indices = db_indices - set(schema_indices)
-    if additional_indices:
-        print(underline_title('Additional indices'))
+
+    additional_indexes = db_indexes - set(schema_indexes)
+    if additional_indexes:
+        print(underline_title('Additional indexes'))
         print('index in the database but not expected by the schema:\n')
-        print('\n'.join(sorted(additional_indices)))
+        print('\n'.join(sorted(additional_indexes)))
         print()
         status = 1
-    if not (missing_indices or additional_indices):
+
+    if not (missing_indexes or additional_indexes):
         print('Everything is Ok')
         status = 0
 
