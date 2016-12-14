@@ -481,7 +481,8 @@ def database_indexes(cnx):
     if source.dbdriver == 'postgres':
 
         def index_filter(idx):
-            return not (idx.startswith('pg_') or idx.endswith('_pkey'))
+            return not (idx.startswith('pg_') or '_pkey' in idx or '_p_key' in idx
+                        or idx.endswith('_key'))
     else:
 
         def index_filter(idx):
