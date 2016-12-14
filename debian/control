@@ -25,7 +25,7 @@ Build-Depends:
  python-pyramid,
  python-pyramid-multiauth,
  python-waitress,
- python-passlib,
+ python-passlib (>= 1.7.0),
  python-wsgicors,
  sphinx-common,
 Standards-Version: 3.9.6

@@ -27,7 +27,7 @@ Requires:       %{python}-logilab-mtconverter >= 0.8.0
 Requires:       %{python}-rql >= 0.34.0
 Requires:       %{python}-yams >= 0.44.0
 Requires:       %{python}-logilab-database >= 1.15.0
-Requires:       %{python}-passlib
+Requires:       %{python}-passlib => 1.7.0
 Requires:       %{python}-lxml
 Requires:       %{python}-twisted-web < 16.0.0
 Requires:       %{python}-markdown
