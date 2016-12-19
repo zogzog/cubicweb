@@ -28,6 +28,8 @@ def unsafe_cnx_context_manager(request):
 
     If request has an attached connection, its security will be deactived in the context manager's
     scope, else a new internal connection is returned.
+
+    This should be used for read-only queries, not if you intend to commit/rollback some data.
     """
     cnx = request.cw_cnx
     if cnx is None:
@@ -134,7 +136,7 @@ def CWSessionFactory(
             data = Binary(pickle.dumps(dict(self)))
             sessioneid = self.sessioneid
 
-            with unsafe_cnx_context_manager(self.request) as cnx:
+            with self.request.registry['cubicweb.repository'].internal_cnx() as cnx:
                 if not sessioneid:
                     session = cnx.create_entity(
                         'CWSession', cwsessiondata=data)
