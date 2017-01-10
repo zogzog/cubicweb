@@ -98,57 +98,15 @@ class AnyEntity(Entity):
 
     # meta data api ###########################################################
 
-    def dc_title(self):
-        """return a suitable *unicode* title for this entity"""
-        for rschema, attrschema in self.e_schema.attribute_definitions():
-            if rschema.meta:
-                continue
-            value = self.cw_attr_value(rschema.type)
-            if value is not None:
-                # make the value printable (dates, floats, bytes, etc.)
-                return self.printable_value(rschema.type, value, attrschema.type,
-                                            format='text/plain')
-        return u'%s #%s' % (self.dc_type(), self.eid)
-
-    def dc_long_title(self):
-        """return a more detailled title for this entity"""
-        return self.dc_title()
-
-    def dc_description(self, format='text/plain'):
-        """return a suitable description for this entity"""
-        if 'description' in self.e_schema.subjrels:
-            return self.printable_value('description', format=format)
-        return u''
-
-    def dc_authors(self):
-        """return a suitable description for the author(s) of the entity"""
-        try:
-            return ', '.join(u.name() for u in self.owned_by)
-        except Unauthorized:
-            return u''
-
-    def dc_creator(self):
-        """return a suitable description for the creator of the entity"""
-        if self.creator:
-            return self.creator.name()
-        return u''
-
-    def dc_date(self, date_format=None):# XXX default to ISO 8601 ?
-        """return latest modification date of this entity"""
-        return self._cw.format_date(self.modification_date, date_format=date_format)
-
-    def dc_type(self, form=''):
-        """return the display name for the type of this entity (translated)"""
-        return self.e_schema.display_name(self._cw, form)
-
-    def dc_language(self):
-        """return language used by this entity (translated)"""
-        # check if entities has internationalizable attributes
-        # XXX one is enough or check if all String attributes are internationalizable?
-        for rschema, attrschema in self.e_schema.attribute_definitions():
-            if rschema.rdef(self.e_schema, attrschema).internationalizable:
-                return self._cw._(self._cw.user.property_value('ui.language'))
-        return self._cw._(self._cw.vreg.property_value('ui.language'))
+    def __getattr__(self, name):
+        prefix = 'dc_'
+        if name.startswith(prefix):
+            # Proxy to IDublinCore adapter for bw compat.
+            adapted = self.cw_adapt_to('IDublinCore')
+            method = name[len(prefix):]
+            if hasattr(adapted, method):
+                return getattr(adapted, method)
+        raise AttributeError(name)
 
     @property
     def creator(self):

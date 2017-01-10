@@ -25,8 +25,69 @@ from itertools import chain
 from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
 
-from cubicweb import ValidationError, view, ViolatedConstraint, UniqueTogetherError
+from cubicweb import (Unauthorized, ValidationError, view, ViolatedConstraint,
+                      UniqueTogetherError)
 from cubicweb.predicates import is_instance, relation_possible, match_exception
+
+
+class IDublinCoreAdapter(view.EntityAdapter):
+    __regid__ = 'IDublinCore'
+    __select__ = is_instance('Any')
+
+    def title(self):
+        """Return a suitable *unicode* title for entity"""
+        entity = self.entity
+        for rschema, attrschema in entity.e_schema.attribute_definitions():
+            if rschema.meta:
+                continue
+            value = entity.cw_attr_value(rschema.type)
+            if value is not None:
+                # make the value printable (dates, floats, bytes, etc.)
+                return entity.printable_value(
+                    rschema.type, value, attrschema.type, format='text/plain')
+        return u'%s #%s' % (self.type(), entity.eid)
+
+    def long_title(self):
+        """Return a more detailled title for entity"""
+        return self.title()
+
+    def description(self, format='text/plain'):
+        """Return a suitable description for entity"""
+        if 'description' in self.entity.e_schema.subjrels:
+            return self.entity.printable_value('description', format=format)
+        return u''
+
+    def authors(self):
+        """Return a suitable description for the author(s) of the entity"""
+        try:
+            return u', '.join(u.name() for u in self.entity.owned_by)
+        except Unauthorized:
+            return u''
+
+    def creator(self):
+        """Return a suitable description for the creator of the entity"""
+        if self.entity.creator:
+            return self.entity.creator.name()
+        return u''
+
+    def date(self, date_format=None):  # XXX default to ISO 8601 ?
+        """Return latest modification date of entity"""
+        return self._cw.format_date(self.entity.modification_date,
+                                    date_format=date_format)
+
+    def type(self, form=''):
+        """Return the display name for the type of entity (translated)"""
+        return self.entity.e_schema.display_name(self._cw, form)
+
+    def language(self):
+        """Return language used by this entity (translated)"""
+        eschema = self.entity.e_schema
+        # check if entities has internationalizable attributes
+        # XXX one is enough or check if all String attributes are internationalizable?
+        for rschema, attrschema in eschema.attribute_definitions():
+            if rschema.rdef(eschema, attrschema).internationalizable:
+                return self._cw._(self._cw.user.property_value('ui.language'))
+        return self._cw._(self._cw.vreg.property_value('ui.language'))
 
 
 class IEmailableAdapter(view.EntityAdapter):
