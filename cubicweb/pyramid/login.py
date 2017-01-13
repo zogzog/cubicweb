@@ -81,5 +81,13 @@ def login_already_loggedin(request):
 
 def includeme(config):
     """ Create the 'login' route ('/login') and load this module views"""
+    cwconfig = config.registry['cubicweb.config']
     config.add_route('login', '/login')
+    if cwconfig.get('language-mode') == 'url-prefix':
+        config.add_route('login-lang', '/{lang}/login')
+        config.add_view(login_already_loggedin, route_name='login-lang',
+                        effective_principals=security.Authenticated)
+        config.add_view(login_form, route_name='login-lang')
+        config.add_view(login_password_login, route_name='login-lang',
+                        request_param=('__login', '__password'))
     config.scan('cubicweb.pyramid.login')
