@@ -161,7 +161,7 @@ class CubicWebPyramidRequest(CubicWebRequestBase):
         return self._request.scheme == 'https'
 
     def relative_path(self, includeparams=True):
-        path = self._request.path[1:]
+        path = self._request.path_info[1:]
         if includeparams and self._request.query_string:
             return '%s?%s' % (path, self._request.query_string)
         return path
