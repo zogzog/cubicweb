@@ -778,7 +778,7 @@ class CWConstraintDelOp(MemSchemaOperation):
             syssource.update_rdef_unique(self.cnx, self.rdef)
 
 
-class CWConstraintAddOp(CWConstraintDelOp):
+class CWConstraintAddOp(hook.LateOperation, CWConstraintDelOp):
     """actually update constraint of a relation definition"""
     entity = None  # make pylint happy
 
@@ -886,11 +886,9 @@ class MemSchemaCWETypeDel(MemSchemaOperation):
 
 
 class MemSchemaCWRTypeAdd(MemSchemaOperation):
-    """actually add the relation type to the instance's schema"""
+    """Revert addition of the relation type from the instance's schema if something goes wrong.
+    """
     rtypedef = None  # make pylint happy
-
-    def precommit_event(self):
-        self.cnx.vreg.schema.add_relation_type(self.rtypedef)
 
     def revertprecommit_event(self):
         self.cnx.vreg.schema.del_relation_type(self.rtypedef.name)
@@ -1101,6 +1099,10 @@ class AfterAddCWRTypeHook(SyncSchemaHook):
 
     def __call__(self):
         rtypedef = self.rtype_def()
+        # modify the instance's schema now since we'll usually need the type definition to do
+        # further thing (e.g. add relation def of this type) but register and operation to revert
+        # this if necessary
+        self._cw.vreg.schema.add_relation_type(rtypedef)
         MemSchemaCWRTypeAdd(self._cw, rtypedef=rtypedef)
 
     def rtype_def(self):

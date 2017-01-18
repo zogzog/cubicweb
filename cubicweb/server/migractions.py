@@ -1,4 +1,4 @@
-# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2017 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -814,12 +814,12 @@ class ServerMigrationHelper(MigrationHelper):
             if attrschema.type not in instschema:
                 self.cmd_add_entity_type(attrschema.type, False, False)
             if rschema.type not in instschema:
-                # need to add the relation type and to commit to get it
-                # actually in the schema
-                self.cmd_add_relation_type(rschema.type, False, commit=True)
+                # need to add the relation type
+                self.cmd_add_relation_type(rschema.type, False, commit=False)
             # register relation definition
             rdef = self._get_rdef(rschema, eschema, eschema.destination(rschema))
             ss.execschemarql(execute, rdef, ss.rdef2rql(rdef, cstrtypemap, groupmap),)
+        self.commit()
         # take care to newly introduced base class
         # XXX some part of this should probably be under the "if auto" block
         for spschema in eschema.specialized_by(recursive=False):

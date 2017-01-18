@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2017 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,7 +20,7 @@ import datetime as dt
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation, Bytes,
                             RichString, String, Int, Boolean, Datetime, Date, Float)
-from yams.constraints import SizeConstraint, UniqueConstraint
+from yams.constraints import SizeConstraint, UniqueConstraint, BoundaryConstraint, Attribute
 from cubicweb import _
 from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
                              RQLVocabularyConstraint,
@@ -216,3 +216,10 @@ class inlined_rel(RelationDefinition):
     subject = object = 'Folder2'
     inlined = True
     cardinality = '??'
+
+
+class Activity(EntityType):
+    start = Datetime(constraints=[BoundaryConstraint('<=', Attribute('end'))],
+                     description=_('when the activity started'))
+    end = Datetime(constraints=[BoundaryConstraint('>=', Attribute('start'))],
+                   description=_('when the activity ended'))
