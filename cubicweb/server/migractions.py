@@ -675,6 +675,8 @@ class ServerMigrationHelper(MigrationHelper):
             new.add(eschema.type)
         # check if attributes has been added to existing entities
         for rschema in newcubes_schema.relations():
+            if rschema.type in VIRTUAL_RTYPES:
+                continue
             existingschema = self.repo.schema.rschema(rschema.type)
             for (fromtype, totype) in rschema.rdefs:
                 # if rdef already exists or is infered from inheritance,
