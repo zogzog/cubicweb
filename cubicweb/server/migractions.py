@@ -666,7 +666,7 @@ class ServerMigrationHelper(MigrationHelper):
         # add new entity and relation types
         for rschema in newcubes_schema.relations():
             if rschema not in self.repo.schema:
-                self.cmd_add_relation_type(rschema.type)
+                self.cmd_add_relation_type(rschema.type, commit=False)
                 new.add(rschema.type)
         toadd = [eschema for eschema in newcubes_schema.entities()
                  if eschema not in self.repo.schema]
@@ -873,7 +873,7 @@ class ServerMigrationHelper(MigrationHelper):
                         # need to add the relation type and to commit to get it
                         # actually in the schema
                         added.append(rschema.type)
-                        self.cmd_add_relation_type(rschema.type, False, commit=True)
+                        self.cmd_add_relation_type(rschema.type, False, commit=False)
                         rtypeadded = True
                     # register relation definition
                     # remember this two avoid adding twice non symmetric relation
@@ -897,7 +897,7 @@ class ServerMigrationHelper(MigrationHelper):
                     if not rtypeadded:
                         # need to add the relation type and to commit to get it
                         # actually in the schema
-                        self.cmd_add_relation_type(rschema.type, False, commit=True)
+                        self.cmd_add_relation_type(rschema.type, False, commit=False)
                         rtypeadded = True
                     elif (targettype, rschema.type, etype) in added:
                         continue
@@ -1096,7 +1096,7 @@ class ServerMigrationHelper(MigrationHelper):
                                 ' do you really want to drop it?' % oldname,
                                 default='n'):
                 return
-        self.cmd_add_relation_type(newname, commit=True)
+        self.cmd_add_relation_type(newname, commit=False)
         if not self.repo.schema[oldname].rule:
             self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
                          ask_confirm=self.verbosity >= 2)
@@ -1111,7 +1111,7 @@ class ServerMigrationHelper(MigrationHelper):
             raise ExecutionError('Cannot add a relation definition for a '
                                  'computed relation (%s)' % rschema)
         if rtype not in self.repo.schema:
-            self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
+            self.cmd_add_relation_type(rtype, addrdef=False, commit=False)
         if (subjtype, objtype) in self.repo.schema.rschema(rtype).rdefs:
             print('warning: relation %s %s %s is already known, skip addition' % (
                 subjtype, rtype, objtype))
