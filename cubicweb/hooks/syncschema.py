@@ -1,4 +1,4 @@
-# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2017 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -1088,44 +1088,41 @@ class DelCWRTypeHook(SyncSchemaHook):
         MemSchemaCWRTypeDel(self._cw, rtype=name)
 
 
-class AfterAddCWComputedRTypeHook(SyncSchemaHook):
-    """after a CWComputedRType entity has been added:
-    * register an operation to add the relation type to the instance's
-      schema on commit
-
-    We don't know yet this point if a table is necessary
-    """
-    __regid__ = 'syncaddcwcomputedrtype'
-    __select__ = SyncSchemaHook.__select__ & is_instance('CWComputedRType')
-    events = ('after_add_entity',)
-
-    def __call__(self):
-        entity = self.entity
-        rtypedef = ybo.ComputedRelation(name=entity.name,
-                                        eid=entity.eid,
-                                        rule=entity.rule)
-        MemSchemaCWRTypeAdd(self._cw, rtypedef=rtypedef)
-
-
 class AfterAddCWRTypeHook(SyncSchemaHook):
-    """after a CWRType entity has been added:
-    * register an operation to add the relation type to the instance's
-      schema on commit
+    """After a CWRType entity has been added, register an operation to add the
+    relation type to the instance's schema on commit.
 
-    We don't know yet this point if a table is necessary
+    We don't know yet at this point if a table is necessary, it will depend on
+    further addition of relation definitions.
     """
     __regid__ = 'syncaddcwrtype'
     __select__ = SyncSchemaHook.__select__ & is_instance('CWRType')
     events = ('after_add_entity',)
 
     def __call__(self):
-        entity = self.entity
-        rtypedef = ybo.RelationType(name=entity.name,
-                                    description=entity.description,
-                                    inlined=entity.cw_edited.get('inlined', False),
-                                    symmetric=entity.cw_edited.get('symmetric', False),
-                                    eid=entity.eid)
+        rtypedef = self.rtype_def()
         MemSchemaCWRTypeAdd(self._cw, rtypedef=rtypedef)
+
+    def rtype_def(self):
+        entity = self.entity
+        return ybo.RelationType(name=entity.name,
+                                description=entity.description,
+                                inlined=entity.cw_edited.get('inlined', False),
+                                symmetric=entity.cw_edited.get('symmetric', False),
+                                eid=entity.eid)
+
+
+class AfterAddCWComputedRTypeHook(AfterAddCWRTypeHook):
+    """After a CWComputedRType entity has been added, register an operation to
+    add the relation type to the instance's schema on commit.
+    """
+    __select__ = SyncSchemaHook.__select__ & is_instance('CWComputedRType')
+
+    def rtype_def(self):
+        entity = self.entity
+        return ybo.ComputedRelation(name=entity.name,
+                                    eid=entity.eid,
+                                    rule=entity.rule)
 
 
 class BeforeUpdateCWRTypeHook(SyncSchemaHook):
