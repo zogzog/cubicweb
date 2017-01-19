@@ -185,7 +185,7 @@ import logging
 import logging.config
 import os
 from os.path import (exists, join, expanduser, abspath, normpath,
-                     basename, isdir, dirname, splitext)
+                     basename, isdir, dirname, splitext, realpath)
 import pkgutil
 import pkg_resources
 import re
@@ -273,6 +273,40 @@ def _cube_pkgname(cube):
     if not cube.startswith('cubicweb_'):
         return 'cubicweb_' + cube
     return cube
+
+
+def _expand_modname(modname):
+    """expand modules names `modname` if exists by walking non package submodules
+    and yield (submodname, filepath) including `modname` itself
+
+    If the file ends with .pyc or .pyo (python bytecode) also check that the
+    corresponding source .py file exists before yielding.
+    """
+    try:
+        loader = pkgutil.find_loader(modname)
+    except ImportError:
+        return
+    if not loader:
+        return
+
+    def check_source_file(filepath):
+        if filepath[-4:] in ('.pyc', '.pyo'):
+            if not exists(filepath[:-1]):
+                return False
+        return True
+
+    filepath = loader.get_filename()
+    if not check_source_file(filepath):
+        return
+    yield modname, filepath
+    if loader.is_package(modname):
+        path = dirname(filepath)
+        for subloader, subname, ispkg in pkgutil.walk_packages([path]):
+            # ignore subpackages (historical behavior)
+            if not ispkg:
+                filepath = subloader.find_module(subname).get_filename()
+                if check_source_file(filepath):
+                    yield modname + '.' + subname, filepath
 
 
 # persistent options definition
@@ -774,6 +808,20 @@ this option is set to yes",
             init_log(self.debugmode, syslog, logthreshold, logfile, self.log_format)
         # configure simpleTal logger
         logging.getLogger('simpleTAL').setLevel(logging.ERROR)
+
+    def schema_modnames(self):
+        modnames = []
+        for name in ('bootstrap', 'base', 'workflow', 'Bookmark'):
+            modnames.append(('cubicweb', 'cubicweb.schemas.' + name))
+        for cube in reversed(self.cubes()):
+            for modname, filepath in _expand_modname('cubes.{0}.schema'.format(cube)):
+                modnames.append((cube, modname))
+        if self.apphome:
+            apphome = realpath(self.apphome)
+            for modname, filepath in _expand_modname('schema'):
+                if realpath(filepath).startswith(apphome):
+                    modnames.append(('data', modname))
+        return modnames
 
     def appobjects_path(self):
         """return a list of files or directories where the registry will look

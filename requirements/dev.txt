@@ -1,1 +1,3 @@
 pytest
+http://hg.logilab.org/master/logilab/common/archive/default.tar.bz2#egg=logilab-common
+http://hg.logilab.org/master/yams/archive/default.tar.bz2#egg=yams

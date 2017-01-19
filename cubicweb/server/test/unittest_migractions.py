@@ -19,6 +19,7 @@
 
 import os
 import os.path as osp
+import sys
 from datetime import date
 from contextlib import contextmanager
 import tempfile
@@ -77,13 +78,25 @@ class MigrationTC(CubicWebTC):
         # we have to read schema from the database to get eid for schema entities
         self.repo.set_schema(self.repo.deserialize_schema(), resetvreg=False)
         # hack to read the schema from data/migrschema
-        config = self.config
-        config.appid = osp.join(self.appid, 'migratedapp')
-        config._apphome = osp.join(HERE, config.appid)
-        global migrschema
-        migrschema = config.load_schema()
-        config.appid = self.appid
-        config._apphome = osp.join(HERE, self.appid)
+
+        @contextmanager
+        def temp_app(config, appid, apphome):
+            old = config.apphome, config.appid
+            sys.path.remove(old[0])
+            sys.path.insert(0, apphome)
+            config._apphome, config.appid = apphome, appid
+            try:
+                yield config
+            finally:
+                sys.path.remove(apphome)
+                sys.path.insert(0, old[0])
+                config._apphome, config.appid = old
+
+        appid = osp.join(self.appid, 'migratedapp')
+        apphome = osp.join(HERE, appid)
+        with temp_app(self.config, appid, apphome) as config:
+            global migrschema
+            migrschema = config.load_schema()
 
     def setUp(self):
         self.configcls.cls_adjust_sys_path()

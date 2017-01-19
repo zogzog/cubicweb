@@ -402,7 +402,7 @@ class BadSchemaTC(TestCase):
         self.loader.post_build_callbacks = []
 
     def _test(self, schemafile, msg):
-        self.loader.handle_file(join(DATADIR, schemafile))
+        self.loader.handle_file(join(DATADIR, schemafile), None)
         sch = self.loader.schemacls('toto')
         with self.assertRaises(BadSchemaDefinition) as cm:
             fill_schema(sch, self.loader.defined, False)

@@ -19,6 +19,7 @@
 
 from __future__ import print_function
 
+import pkgutil
 import re
 from os.path import join, basename
 from hashlib import md5
@@ -1369,19 +1370,12 @@ class BootstrapSchemaLoader(SchemaLoader):
     """
     schemacls = CubicWebSchema
 
-    def load(self, config, path=(), **kwargs):
+    def load(self, config, modnames=(['cubicweb', 'cubicweb.schemas.bootstrap'],), **kwargs):
         """return a Schema instance from the schema definition read
         from <directory>
         """
         return super(BootstrapSchemaLoader, self).load(
-            path, config.appid, register_base_types=False, **kwargs)
-
-    def _load_definition_files(self, cubes=None):
-        # bootstraping, ignore cubes
-        filepath = join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'bootstrap.py')
-        self.info('loading %s', filepath)
-        with tempattr(ybo, 'PACKAGE', 'cubicweb'):  # though we don't care here
-            self.handle_file(filepath)
+            modnames, name=config.appid, register_base_types=False, **kwargs)
 
     def unhandled_file(self, filepath):
         """called when a file without handler associated has been found"""
@@ -1402,29 +1396,11 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
         from <directory>
         """
         self.info('loading %s schemas', ', '.join(config.cubes()))
-        self.extrapath = config.extrapath
-        if config.apphome:
-            path = tuple(reversed([config.apphome] + config.cubes_path()))
-        else:
-            path = tuple(reversed(config.cubes_path()))
         try:
-            return super(CubicWebSchemaLoader, self).load(config, path=path, **kwargs)
+            return super(CubicWebSchemaLoader, self).load(config, config.schema_modnames(), **kwargs)
         finally:
             # we've to cleanup modules imported from cubicweb.schemas as well
             cleanup_sys_modules([join(cubicweb.CW_SOFTWARE_ROOT, 'schemas')])
-
-    def _load_definition_files(self, cubes):
-        for filepath in (join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'bootstrap.py'),
-                         join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'base.py'),
-                         join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'workflow.py'),
-                         join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'Bookmark.py')):
-            self.info('loading %s', filepath)
-            with tempattr(ybo, 'PACKAGE', 'cubicweb'):
-                self.handle_file(filepath)
-        for cube in cubes:
-            for filepath in self.get_schema_files(cube):
-                with tempattr(ybo, 'PACKAGE', basename(cube)):
-                    self.handle_file(filepath)
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
