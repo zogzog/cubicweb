@@ -37,6 +37,7 @@ from pytz import UTC
 from six.moves import input
 
 from logilab.common import STD_BLACKLIST
+from logilab.common.modutils import clean_sys_modules
 from logilab.common.fileutils import ensure_fs_mode
 from logilab.common.shellutils import find
 
@@ -100,24 +101,6 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
         return None
 
 
-def cleanup_sys_modules(config):
-    # cleanup sys.modules, required when we're updating multiple cubes
-    appobjects_path = config.appobjects_path()
-    for name, mod in list(sys.modules.items()):
-        if mod is None:
-            # duh ? logilab.common.os for instance
-            del sys.modules[name]
-            continue
-        if not hasattr(mod, '__file__'):
-            continue
-        if mod.__file__ is None:
-            # odd/rare but real
-            continue
-        for path in appobjects_path:
-            if mod.__file__.startswith(path):
-                del sys.modules[name]
-                break
-
 def generate_schema_pot(w, cubedir=None):
     """generate a pot file with schema specific i18n messages
 
@@ -136,7 +119,7 @@ def generate_schema_pot(w, cubedir=None):
     else:
         config = DevConfiguration()
         cube = libconfig = None
-    cleanup_sys_modules(config)
+    clean_sys_modules(config.appobjects_modnames())
     schema = config.load_schema(remove_unused_rtypes=False)
     vreg = CWRegistryStore(config)
     # set_schema triggers objects registrations
@@ -161,7 +144,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
         # (cubicweb incl.)
         from cubicweb.cwvreg import CWRegistryStore
         libschema = libconfig.load_schema(remove_unused_rtypes=False)
-        cleanup_sys_modules(libconfig)
+        clean_sys_modules(libconfig.appobjects_modnames())
         libvreg = CWRegistryStore(libconfig)
         libvreg.set_schema(libschema) # trigger objects registration
         libafss = libvreg['uicfg']['autoform_section']

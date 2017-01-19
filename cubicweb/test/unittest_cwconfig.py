@@ -178,17 +178,6 @@ class CubicWebConfigurationTC(BaseTestCase):
         self.assertEqual(self.config.expand_cubes(('email', 'comment')),
                           ['email', 'comment', 'file'])
 
-    def test_appobjects_path(self):
-        path = [unabsolutize(p) for p in self.config.appobjects_path()]
-        self.assertEqual(path[0], 'entities')
-        self.assertCountEqual(path[1:4], ['web/views', 'sobjects', 'hooks'])
-        self.assertEqual(path[4], 'file/entities')
-        self.assertCountEqual(path[5:7],
-                              ['file/views.py', 'file/hooks'])
-        self.assertEqual(path[7], 'email/entities.py')
-        self.assertCountEqual(path[8:10],
-                              ['email/views', 'email/hooks.py'])
-        self.assertEqual(path[10:], ['test/data/entities.py', 'test/data/views.py'])
 
     def test_init_cubes_ignore_pyramid_cube(self):
         warning_msg = 'cubicweb-pyramid got integrated into CubicWeb'
@@ -463,7 +452,48 @@ class ModnamesTC(unittest.TestCase):
                              join(libdir, 'schema.py'))
             self.assertEqual(config.schema_modnames(), expected)
 
-
+    @templibdir
+    def test_appobjects_modnames(self, libdir):
+        for filepath in (
+            join(libdir, 'entities.py'),
+            join(libdir, 'cubicweb_foo', '__init__.py'),
+            join(libdir, 'cubicweb_foo', 'entities', '__init__.py'),
+            join(libdir, 'cubicweb_foo', 'entities', 'a.py'),
+            join(libdir, 'cubicweb_foo', 'hooks.py'),
+            join(libdir, 'cubes', '__init__.py'),
+            join(libdir, 'cubes', 'bar', '__init__.py'),
+            join(libdir, 'cubes', 'bar', 'hooks.py'),
+            join(libdir, '_instance_dir', 'data1', 'entities.py'),
+            join(libdir, '_instance_dir', 'data2', 'hooks.py'),
+        ):
+            create_filepath(filepath)
+        instance_dir, cubes_dir = (
+            join(libdir, '_instance_dir'), join(libdir, 'cubes'))
+        expected = [
+            'cubicweb.entities',
+            'cubicweb.entities.adapters',
+            'cubicweb.entities.authobjs',
+            'cubicweb.entities.lib',
+            'cubicweb.entities.schemaobjs',
+            'cubicweb.entities.sources',
+            'cubicweb.entities.wfobjs',
+            'cubes.bar.hooks',
+            'cubes.foo.entities',
+            'cubes.foo.entities.a',
+            'cubes.foo.hooks',
+        ]
+        # data1 has entities
+        with temp_config('data1', instance_dir, cubes_dir,
+                         ('foo', 'bar')) as config:
+            config.cube_appobject_path = set(['entities', 'hooks'])
+            self.assertEqual(config.appobjects_modnames(),
+                             expected + ['entities'])
+        # data2 has hooks
+        with temp_config('data2', instance_dir, cubes_dir,
+                         ('foo', 'bar')) as config:
+            config.cube_appobject_path = set(['entities', 'hooks'])
+            self.assertEqual(config.appobjects_modnames(),
+                             expected + ['hooks'])
 
 
 if __name__ == '__main__':

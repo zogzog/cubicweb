@@ -29,7 +29,7 @@ from six import text_type, binary_type
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import class_deprecated
-from logilab.common.modutils import cleanup_sys_modules
+from logilab.common.modutils import clean_sys_modules
 from logilab.common.registry import RegistryStore, Registry, ObjectNotFound, RegistryNotFound
 
 from rql import RQLHelper
@@ -417,7 +417,7 @@ class CWRegistryStore(RegistryStore):
         """set instance'schema and load application objects"""
         self._set_schema(schema)
         # now we can load application's web objects
-        self.reload(self.config.appobjects_path(), force_reload=False)
+        self.reload(self.config.appobjects_modnames(), force_reload=False)
         # map lowered entity type names to their actual name
         self.case_insensitive_etypes = {}
         for eschema in self.schema.entities():
@@ -426,13 +426,28 @@ class CWRegistryStore(RegistryStore):
             clear_cache(eschema, 'ordered_relations')
             clear_cache(eschema, 'meta_attributes')
 
-    def reload_if_needed(self):
-        path = self.config.appobjects_path()
-        if self.is_reload_needed(path):
-            self.reload(path)
+    def is_reload_needed(self, modnames):
+        """overriden to handle modules names instead of directories"""
+        lastmodifs = self._lastmodifs
+        for modname in modnames:
+            if modname not in sys.modules:
+                # new module to load
+                return True
+            filepath = sys.modules[modname].__file__
+            if filepath.endswith('.py'):
+                mdate = self._mdate(filepath)
+                if filepath not in lastmodifs or lastmodifs[filepath] < mdate:
+                    self.info('File %s changed since last visit', filepath)
+                    return True
+        return False
 
-    def _cleanup_sys_modules(self, path):
-        """Remove submodules of `directories` from `sys.modules` and cleanup
+    def reload_if_needed(self):
+        modnames = self.config.appobjects_modnames()
+        if self.is_reload_needed(modnames):
+            self.reload(modnames)
+
+    def _cleanup_sys_modules(self, modnames):
+        """Remove modules and submodules of `modnames` from `sys.modules` and cleanup
         CW_EVENT_MANAGER accordingly.
 
         We take care to properly remove obsolete registry callbacks.
@@ -446,18 +461,18 @@ class CWRegistryStore(RegistryStore):
                 # for non-function callable, we do nothing interesting
                 module = getattr(func, '__module__', None)
                 caches[id(callback)] = module
-        deleted_modules = set(cleanup_sys_modules(path))
+        deleted_modules = set(clean_sys_modules(modnames))
         for callbacklist in callbackdata:
             for callback in callbacklist[:]:
                 module = caches[id(callback)]
                 if module and module in deleted_modules:
                     callbacklist.remove(callback)
 
-    def reload(self, path, force_reload=True):
+    def reload(self, modnames, force_reload=True):
         """modification detected, reset and reload the vreg"""
         CW_EVENT_MANAGER.emit('before-registry-reload')
         if force_reload:
-            self._cleanup_sys_modules(path)
+            self._cleanup_sys_modules(modnames)
             cubes = self.config.cubes()
             # if the fs code use some cubes not yet registered into the instance
             # we should cleanup sys.modules for those as well to avoid potential
@@ -465,9 +480,9 @@ class CWRegistryStore(RegistryStore):
             cfg = self.config
             for cube in cfg.expand_cubes(cubes, with_recommends=True):
                 if not cube in cubes:
-                    cpath = cfg.build_appobjects_cube_path([cfg.cube_dir(cube)])
-                    self._cleanup_sys_modules(cpath)
-        self.register_objects(path)
+                    cube_modnames = cfg.appobjects_cube_modnames(cube)
+                    self._cleanup_sys_modules(cube_modnames)
+        self.register_modnames(modnames)
         CW_EVENT_MANAGER.emit('after-registry-reload')
 
     def load_file(self, filepath, modname):

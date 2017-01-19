@@ -823,56 +823,11 @@ this option is set to yes",
                     modnames.append(('data', modname))
         return modnames
 
-    def appobjects_path(self):
-        """return a list of files or directories where the registry will look
-        for application objects. By default return nothing in NoApp config.
+    def appobjects_modnames(self):
+        """return a list of modules where the registry will look for
+        application objects. By default return nothing in NoApp config.
         """
         return []
-
-    def build_appobjects_path(self, templpath, evobjpath=None, tvobjpath=None):
-        """given a list of directories, return a list of sub files and
-        directories that should be loaded by the instance objects registry.
-
-        :param evobjpath:
-          optional list of sub-directories (or files without the .py ext) of
-          the cubicweb library that should be tested and added to the output list
-          if they exists. If not give, default to `cubicweb_appobject_path` class
-          attribute.
-        :param tvobjpath:
-          optional list of sub-directories (or files without the .py ext) of
-          directories given in `templpath` that should be tested and added to
-          the output list if they exists. If not give, default to
-          `cube_appobject_path` class attribute.
-        """
-        vregpath = self.build_appobjects_cubicweb_path(evobjpath)
-        vregpath += self.build_appobjects_cube_path(templpath, tvobjpath)
-        return vregpath
-
-    def build_appobjects_cubicweb_path(self, evobjpath=None):
-        vregpath = []
-        if evobjpath is None:
-            evobjpath = self.cubicweb_appobject_path
-        # NOTE: for the order, see http://www.cubicweb.org/ticket/2330799
-        #       it is clearly a workaround
-        for subdir in sorted(evobjpath, key=lambda x:x != 'entities'):
-            path = join(CW_SOFTWARE_ROOT, subdir)
-            if exists(path):
-                vregpath.append(path)
-        return vregpath
-
-    def build_appobjects_cube_path(self, templpath, tvobjpath=None):
-        vregpath = []
-        if tvobjpath is None:
-            tvobjpath = self.cube_appobject_path
-        for directory in templpath:
-            # NOTE: for the order, see http://www.cubicweb.org/ticket/2330799
-            for subdir in sorted(tvobjpath, key=lambda x:x != 'entities'):
-                path = join(directory, subdir)
-                if exists(path):
-                    vregpath.append(path)
-                elif exists(path + '.py'):
-                    vregpath.append(path + '.py')
-        return vregpath
 
     apphome = None
 
@@ -1361,14 +1316,42 @@ the repository',
                     self.exception('localisation support error for language %s',
                                    language)
 
-    def appobjects_path(self):
-        """return a list of files or directories where the registry will look
-        for application objects
-        """
-        templpath = list(reversed(self.cubes_path()))
-        if self.apphome: # may be unset in tests
-            templpath.append(self.apphome)
-        return self.build_appobjects_path(templpath)
+    @staticmethod
+    def _sorted_appobjects(appobjects):
+        appobjects = sorted(appobjects)
+        try:
+            index = appobjects.index('entities')
+        except ValueError:
+            pass
+        else:
+            # put entities first
+            appobjects.insert(0, appobjects.pop(index))
+        return appobjects
+
+    def _appobjects_cube_modnames(self, cube):
+        modnames = []
+        cube_submodnames = self._sorted_appobjects(self.cube_appobject_path)
+        for name in cube_submodnames:
+            for modname, filepath in _expand_modname('.'.join(['cubes', cube, name])):
+                modnames.append(modname)
+        return modnames
+
+    def appobjects_modnames(self):
+        modnames = []
+        for name in self._sorted_appobjects(self.cubicweb_appobject_path):
+            for modname, filepath in _expand_modname('cubicweb.' + name):
+                modnames.append(modname)
+        for cube in reversed(self.cubes()):
+            modnames.extend(self._appobjects_cube_modnames(cube))
+        if self.apphome:
+            cube_submodnames = self._sorted_appobjects(self.cube_appobject_path)
+            apphome = realpath(self.apphome)
+            for name in cube_submodnames:
+                for modname, filepath in _expand_modname(name):
+                    # ensure file is in apphome
+                    if realpath(filepath).startswith(apphome):
+                        modnames.append(modname)
+        return modnames
 
     def set_sources_mode(self, sources):
         if not 'all' in sources:
