@@ -20,10 +20,10 @@
 import os
 import os.path as osp
 import sys
-import tempfile
-import shutil
 from subprocess import Popen, PIPE, STDOUT, check_output
 from unittest import TestCase
+
+from cubicweb.devtools.testlib import TemporaryDirectory
 
 
 def newcube(directory, name):
@@ -51,8 +51,7 @@ class DevCtlTC(TestCase):
         expected_package_content = ['i18n', 'hooks.py', 'views.py',
                                     'migration', 'entities.py', 'schema.py',
                                     '__init__.py', 'data', '__pkginfo__.py']
-        tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube")
-        try:
+        with TemporaryDirectory(prefix="temp-cwctl-newcube") as tmpdir:
             retcode, stdout = newcube(tmpdir, 'foo')
             self.assertEqual(retcode, 0, msg=to_unicode(stdout))
             project_dir = osp.join(tmpdir, 'cubicweb-foo')
@@ -61,27 +60,21 @@ class DevCtlTC(TestCase):
             package_content = os.listdir(package_dir)
             self.assertItemsEqual(project_content, expected_project_content)
             self.assertItemsEqual(package_content, expected_package_content)
-        finally:
-            shutil.rmtree(tmpdir, ignore_errors=True)
 
     def test_flake8(self):
         """Ensure newcube built from skeleton is flake8-compliant"""
-        tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube-flake8")
-        try:
+        with TemporaryDirectory(prefix="temp-cwctl-newcube-flake8") as tmpdir:
             newcube(tmpdir, 'foo')
             cmd = [sys.executable, '-m', 'flake8',
                    osp.join(tmpdir, 'cubicweb-foo', 'cubicweb_foo')]
             proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
             retcode = proc.wait()
-        finally:
-            shutil.rmtree(tmpdir, ignore_errors=True)
         self.assertEqual(retcode, 0,
                          msg=to_unicode(proc.stdout.read()))
 
     def test_newcube_sdist(self):
         """Ensure sdist can be built from a new cube"""
-        tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube-sdist")
-        try:
+        with TemporaryDirectory(prefix="temp-cwctl-newcube-sdist") as tmpdir:
             newcube(tmpdir, 'foo')
             projectdir = osp.join(tmpdir, 'cubicweb-foo')
             cmd = [sys.executable, 'setup.py', 'sdist']
@@ -91,13 +84,10 @@ class DevCtlTC(TestCase):
             self.assertEqual(retcode, 0, stdout)
             distfpath = osp.join(projectdir, 'dist', 'cubicweb-foo-0.1.0.tar.gz')
             self.assertTrue(osp.isfile(distfpath))
-        finally:
-            shutil.rmtree(tmpdir, ignore_errors=True)
 
     def test_newcube_install(self):
         """Ensure a new cube can be installed"""
-        tmpdir = tempfile.mkdtemp(prefix="temp-cwctl-newcube-install")
-        try:
+        with TemporaryDirectory(prefix="temp-cwctl-newcube-install") as tmpdir:
             newcube(tmpdir, 'foo')
             projectdir = osp.join(tmpdir, 'cubicweb-foo')
             env = os.environ.copy()
@@ -120,8 +110,6 @@ class DevCtlTC(TestCase):
             self.assertItemsEqual(pkgcontent,
                                   [b'schema.py', b'entities.py', b'hooks.py', b'__init__.py',
                                    b'__pkginfo__.py', b'views.py'])
-        finally:
-            shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 if __name__ == '__main__':

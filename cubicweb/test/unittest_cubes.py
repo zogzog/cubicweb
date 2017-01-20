@@ -20,33 +20,31 @@
 from contextlib import contextmanager
 import os
 from os import path
-import shutil
 import sys
-import tempfile
 import unittest
 
 from six import PY2
 
 from cubicweb import _CubesImporter
 from cubicweb.cwconfig import CubicWebConfiguration
+from cubicweb.devtools.testlib import TemporaryDirectory
 
 
 @contextmanager
 def temp_cube():
-    tempdir = tempfile.mkdtemp()
-    try:
-        libdir = path.join(tempdir, 'libpython')
-        cubedir = path.join(libdir, 'cubicweb_foo')
-        os.makedirs(cubedir)
-        with open(path.join(cubedir, '__init__.py'), 'w') as f:
-            f.write('"""cubicweb_foo application package"""')
-        with open(path.join(cubedir, 'bar.py'), 'w') as f:
-            f.write('baz = 1')
-        sys.path.append(libdir)
-        yield cubedir
-    finally:
-        shutil.rmtree(tempdir)
-        sys.path.remove(libdir)
+    with TemporaryDirectory() as tempdir:
+        try:
+            libdir = path.join(tempdir, 'libpython')
+            cubedir = path.join(libdir, 'cubicweb_foo')
+            os.makedirs(cubedir)
+            with open(path.join(cubedir, '__init__.py'), 'w') as f:
+                f.write('"""cubicweb_foo application package"""')
+            with open(path.join(cubedir, 'bar.py'), 'w') as f:
+                f.write('baz = 1')
+            sys.path.append(libdir)
+            yield cubedir
+        finally:
+            sys.path.remove(libdir)
 
 
 class CubesImporterTC(unittest.TestCase):
