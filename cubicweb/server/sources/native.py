@@ -716,10 +716,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         rtypes = [c.split('.', 1)[1].strip()[3:] for c in columns]
                         raise UniqueTogetherError(cnx, rtypes=rtypes)
 
-                    mo = re.search('"cstr[a-f0-9]{32}"', arg)
+                    mo = re.search(r'\bcstr[a-f0-9]{32}\b', arg)
                     if mo is not None:
                         # postgresql
-                        raise ViolatedConstraint(cnx, cstrname=mo.group(0)[1:-1])
+                        raise ViolatedConstraint(cnx, cstrname=mo.group(0))
                     if arg.startswith('CHECK constraint failed:'):
                         # sqlite3 (new)
                         raise ViolatedConstraint(cnx, cstrname=arg.split(':', 1)[1].strip())
