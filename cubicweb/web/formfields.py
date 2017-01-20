@@ -1235,8 +1235,19 @@ def guess_field(eschema, rschema, role='subject', req=None, **kwargs):
         kwargs.setdefault('label', (eschema.type, rschema.type))
     kwargs.setdefault('help', rdef.description)
     if rschema.final:
-        fieldclass = FIELDS[targetschema]
-        if fieldclass is StringField:
+        fieldclass = kwargs.pop('fieldclass', FIELDS[targetschema])
+        if issubclass(fieldclass, FileField):
+            if req:
+                aff_kwargs = req.vreg['uicfg'].select('autoform_field_kwargs', req)
+            else:
+                aff_kwargs = _AFF_KWARGS
+            for metadata in KNOWN_METAATTRIBUTES:
+                metaschema = eschema.has_metadata(rschema, metadata)
+                if metaschema is not None:
+                    metakwargs = aff_kwargs.etype_get(eschema, metaschema, 'subject')
+                    kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,
+                                                                req=req, **metakwargs)
+        elif issubclass(fieldclass, StringField):
             if eschema.has_metadata(rschema, 'format'):
                 # use RichTextField instead of StringField if the attribute has
                 # a "format" metadata. But getting information from constraints
@@ -1253,18 +1264,6 @@ def guess_field(eschema, rschema, role='subject', req=None, **kwargs):
             for cstr in rdef.constraints:
                 if isinstance(cstr, SizeConstraint) and cstr.max is not None:
                     kwargs['max_length'] = cstr.max
-            return StringField(**kwargs)
-        if fieldclass is FileField:
-            if req:
-                aff_kwargs = req.vreg['uicfg'].select('autoform_field_kwargs', req)
-            else:
-                aff_kwargs = _AFF_KWARGS
-            for metadata in KNOWN_METAATTRIBUTES:
-                metaschema = eschema.has_metadata(rschema, metadata)
-                if metaschema is not None:
-                    metakwargs = aff_kwargs.etype_get(eschema, metaschema, 'subject')
-                    kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,
-                                                                req=req, **metakwargs)
         return fieldclass(**kwargs)
     return RelationField.fromcardinality(card, **kwargs)
 

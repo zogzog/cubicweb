@@ -20,6 +20,8 @@ from logilab.common import tempattr, attrdict
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.views.autoform import InlinedFormField
+from cubicweb.web.views.forms import EntityFieldsForm
+
 
 class InlinedFormTC(CubicWebTC):
 
@@ -67,6 +69,20 @@ class InlinedFormTC(CubicWebTC):
                 formview.pform = attrdict(fields=[InlinedFormField(view=fakeview),
                                                   InlinedFormField(view=formview)])
                 self.assertTrue(formview._get_removejs())
+
+    def test_field_by_name_consider_aff(self):
+        class MyField(object):
+            def __init__(self, *args, **kwargs):
+                pass
+
+        EntityFieldsForm.uicfg_aff.tag_attribute(('CWUser', 'firstname'), MyField)
+        try:
+            with self.admin_access.web_request() as req:
+                form = req.vreg['forms'].select('base', req, entity=req.user)
+                self.assertIsInstance(form.field_by_name('firstname', 'subject', req.user.e_schema),
+                                      MyField)
+        finally:
+            EntityFieldsForm.uicfg_aff.del_rtag('CWUser', 'firstname', '*', 'subject')
 
 
 if __name__ == '__main__':

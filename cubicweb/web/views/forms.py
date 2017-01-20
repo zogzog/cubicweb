@@ -318,16 +318,16 @@ class EntityFieldsForm(FieldsForm):
             rschema = eschema.schema.rschema(name)
             # XXX use a sample target type. Document this.
             tschemas = rschema.targets(eschema, role)
-            fieldcls = cls_or_self.uicfg_aff.etype_get(
+            fieldclass = cls_or_self.uicfg_aff.etype_get(
                 eschema, rschema, role, tschemas[0])
             kwargs = cls_or_self.uicfg_affk.etype_get(
                 eschema, rschema, role, tschemas[0])
             if kwargs is None:
                 kwargs = {}
-            if fieldcls:
-                if not isinstance(fieldcls, type):
-                    return fieldcls  # already and instance
-                return fieldcls(name=name, role=role, eidparam=True, **kwargs)
+            if fieldclass:
+                if not isinstance(fieldclass, type):
+                    return fieldclass  # already an instance
+                kwargs['fieldclass'] = fieldclass
             if isinstance(cls_or_self, type):
                 req = None
             else:
