@@ -25,9 +25,9 @@ if PY2:
 else:
     from io import StringIO
 
-from cubicweb import devtools
-from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.server.checkintegrity import check, check_indexes, reindex_entities
+from cubicweb import devtools  # noqa: E402
+from cubicweb.devtools.testlib import CubicWebTC  # noqa: E402
+from cubicweb.server.checkintegrity import check, check_indexes, reindex_entities  # noqa: E402
 
 
 class CheckIntegrityTC(unittest.TestCase):

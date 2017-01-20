@@ -13,6 +13,7 @@ class TestGenerators(unittest.TestCase):
         with self.assertRaises(ValueError):
             http_headers.generateTrueFalse('any value')
 
+
 if __name__ == '__main__':
     from unittest import main
     main()

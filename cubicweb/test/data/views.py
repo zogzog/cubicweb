@@ -15,12 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-from cubicweb.web.views import xmlrss
-xmlrss.RSSIconBox.visible = True
-
 
 from cubicweb.predicates import match_user_groups
 from cubicweb.server import Service
+from cubicweb.web.views import xmlrss
+
+
+xmlrss.RSSIconBox.visible = True
 
 
 class TestService(Service):

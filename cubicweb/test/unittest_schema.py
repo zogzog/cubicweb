@@ -601,5 +601,6 @@ class CWShemaTC(CubicWebTC):
             self.assertEqual(found, None)
             self.assertEqual(keyarg, None)
 
+
 if __name__ == '__main__':
     unittest_main()
