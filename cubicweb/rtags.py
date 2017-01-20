@@ -77,7 +77,8 @@ class RelationTags(RegistrableRtags):
     # function given as __init__ argument and kept for bw compat
     _init = _initfunc = None
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, __module__=None):
+        super(RelationTags, self).__init__(__module__)
         self._tagdefs = {}
         self._parent = parent
         if parent is not None:
@@ -143,7 +144,7 @@ class RelationTags(RegistrableRtags):
 
         >>> class_afs = uicfg.autoform_section.derive(__name__, is_instance('Class'))
         """
-        copied = self.__class__(self)
+        copied = self.__class__(self, __module__=__name__)
         copied.__module__ = module
         copied.__select__ = select
         return copied

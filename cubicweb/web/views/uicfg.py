@@ -91,7 +91,7 @@ class PrimaryViewSectionRelationTags(RelationTags):
             self.tag_relation((sschema, rschema, oschema, role), section)
 
 
-primaryview_section = PrimaryViewSectionRelationTags()
+primaryview_section = PrimaryViewSectionRelationTags(__module__=__name__)
 
 
 class DisplayCtrlRelationTags(NoTargetRelationTagsDict):
@@ -142,7 +142,7 @@ class DisplayCtrlRelationTags(NoTargetRelationTagsDict):
                 self.tag_object_of(('*', rtype, etype), {'order': index})
 
 
-primaryview_display_ctrl = DisplayCtrlRelationTags()
+primaryview_display_ctrl = DisplayCtrlRelationTags(__module__=__name__)
 
 
 # index view configuration ####################################################
@@ -485,7 +485,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
             self.edit_as_attr(self, etype, attr, formtype='muledit')
 
 
-autoform_section = AutoformSectionRelationTags()
+autoform_section = AutoformSectionRelationTags(__module__=__name__)
 
 
 # relations'field class
@@ -505,7 +505,7 @@ class AutoformFieldTags(RelationTags):
         self._tag_etype_attr(etype, attr, '*', field)
 
 
-autoform_field = AutoformFieldTags()
+autoform_field = AutoformFieldTags(__module__=__name__)
 
 
 # relations'field explicit kwargs (given to field's __init__)
@@ -557,7 +557,7 @@ class AutoformFieldKwargsTags(RelationTagsDict):
         self._tag_etype_attr(etype, attr, '*', kwargs)
 
 
-autoform_field_kwargs = AutoformFieldKwargsTags()
+autoform_field_kwargs = AutoformFieldKwargsTags(__module__=__name__)
 
 
 # set of tags of the form <action>_on_new on relations. <action> is a
@@ -567,7 +567,7 @@ class AutoFormPermissionsOverrides(RelationTagsSet):
     __regid__ = 'autoform_permissions_overrides'
 
 
-autoform_permissions_overrides = AutoFormPermissionsOverrides()
+autoform_permissions_overrides = AutoFormPermissionsOverrides(__module__=__name__)
 
 
 class ReleditTags(NoTargetRelationTagsDict):
@@ -629,7 +629,7 @@ class ReleditTags(NoTargetRelationTagsDict):
                               {'novalue_include_rtype': not showlabel})
 
 
-reledit_ctrl = ReleditTags()
+reledit_ctrl = ReleditTags(__module__=__name__)
 
 
 # boxes.EditBox configuration #################################################
@@ -684,7 +684,7 @@ class ActionBoxUicfg(RelationTagsBool):
         self._tag_etype_attr(etype, attr, createdtype, False)
 
 
-actionbox_appearsin_addmenu = ActionBoxUicfg()
+actionbox_appearsin_addmenu = ActionBoxUicfg(__module__=__name__)
 
 
 def registration_callback(vreg):
