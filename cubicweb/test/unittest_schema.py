@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.schema"""
 
-from os.path import join, dirname
+from os.path import join, dirname, splitext
 
 from logilab.common.testlib import TestCase, unittest_main
 
@@ -402,7 +402,8 @@ class BadSchemaTC(TestCase):
         self.loader.post_build_callbacks = []
 
     def _test(self, schemafile, msg):
-        self.loader.handle_file(join(DATADIR, schemafile), None)
+        self.loader.handle_file(join(DATADIR, schemafile),
+                                splitext(schemafile)[0])
         sch = self.loader.schemacls('toto')
         with self.assertRaises(BadSchemaDefinition) as cm:
             fill_schema(sch, self.loader.defined, False)
