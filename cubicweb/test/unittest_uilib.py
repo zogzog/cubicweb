@@ -174,8 +174,10 @@ quis nostrud exercitation ullamco laboris nisi"),
                           'cw.pouet(1,"2").pouet(null)')
         self.assertEqual(str(uilib.js.cw.pouet(1, cwutils.JSString("$")).pouet(None)),
                          'cw.pouet(1,$).pouet(null)')
-        self.assertEqual(str(uilib.js.cw.pouet(1, {'callback': cwutils.JSString("cw.cb")}).pouet(None)),
-                         'cw.pouet(1,{callback: cw.cb}).pouet(null)')
+        self.assertEqual(
+            str(uilib.js.cw.pouet(
+                1, {'call back': cwutils.JSString("cw.cb")}).pouet(None)),
+            'cw.pouet(1,{"call back": cw.cb}).pouet(null)')
 
 
     def test_embedded_css(self):
