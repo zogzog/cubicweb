@@ -698,14 +698,8 @@ this option is set to yes",
         """update python path if necessary"""
         from cubicweb import _CubesImporter
         _CubesImporter.install()
-        cubes_parent_dir = normpath(join(cls.CUBES_DIR, '..'))
-        if not cubes_parent_dir in sys.path:
-            sys.path.insert(0, cubes_parent_dir)
-        try:
-            import cubes
-            cubes.__path__ = cls.cubes_search_path()
-        except ImportError:
-            return # cubes dir doesn't exists
+        import cubes
+        cubes.__path__ = cls.cubes_search_path()
 
     @classmethod
     def load_available_configs(cls):

@@ -26,6 +26,7 @@ import os
 import pickle
 import pkgutil
 import sys
+import types
 import warnings
 import zlib
 
@@ -294,7 +295,9 @@ class _CubesImporter(object):
             sys.meta_path.append(self)
 
     def find_module(self, fullname, path=None):
-        if fullname.startswith('cubes.'):
+        if fullname == 'cubes':
+            return self
+        elif fullname.startswith('cubes.'):
             modname = 'cubicweb_' + fullname.split('.', 1)[1]
             try:
                 modinfo = imp.find_module(modname)
@@ -302,3 +305,9 @@ class _CubesImporter(object):
                 return None
             else:
                 return pkgutil.ImpLoader(fullname, *modinfo)
+
+    def load_module(self, fullname):
+        if fullname != 'cubes':
+            raise ImportError('No module named {0}'.format(fullname))
+        mod = sys.modules[fullname] = types.ModuleType(fullname, doc='CubicWeb cubes')
+        return mod

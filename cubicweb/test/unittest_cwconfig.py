@@ -241,7 +241,8 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
         from cubes import mycube
         self.assertEqual(mycube.__path__, [join(self.custom_cubes_dir, 'mycube')])
         # file cube should be overriden by the one found in data/cubes
-        if sys.modules.pop('cubes.file', None) and PY3:
+        sys.modules.pop('cubes.file')
+        if hasattr(cubes, 'file'):
             del cubes.file
         from cubes import file
         self.assertEqual(file.__path__, [join(self.custom_cubes_dir, 'file')])

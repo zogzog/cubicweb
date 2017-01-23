@@ -149,40 +149,16 @@ class MyInstallLib(install_lib.install_lib):
                 dest = join(self.install_dir, src)
                 export(src, dest, verbose=self.verbose)
 
-# write required share/cubicweb/cubes/__init__.py
-class MyInstallData(install_data.install_data):
-    """A class That manages data files installation"""
-    def run(self):
-        """overridden from install_data class"""
-        install_data.install_data.run(self)
-        path = join(self.install_dir, 'share', 'cubicweb', 'cubes', '__init__.py')
-        ini = open(path, 'w')
-        ini.write('# Cubicweb cubes directory\n')
-        ini.close()
-
-
-class CWDevelop(develop.develop):
-    """Custom "develop" command warning about (legacy) cubes directory not
-    installed.
-    """
-
-    def run(self):
-        cubespath = join(sys.prefix, 'share', 'cubicweb', 'cubes')
-        self.warn('develop command does not install (legacy) cubes directory (%s)'
-                  % cubespath)
-        return develop.develop.run(self)
-
 
 # re-enable copying data files in sys.prefix
-# overwrite MyInstallData to use sys.prefix instead of the egg directory
-MyInstallMoreData = MyInstallData
-class MyInstallData(MyInstallMoreData): # pylint: disable=E0102
+# overwrite install_data to use sys.prefix instead of the egg directory
+class MyInstallData(install_data.install_data):
     """A class that manages data files installation"""
     def run(self):
         _old_install_dir = self.install_dir
         if self.install_dir.endswith('egg'):
             self.install_dir = sys.prefix
-        MyInstallMoreData.run(self)
+        install_data.install_data.run(self)
         self.install_dir = _old_install_dir
 try:
     import setuptools.command.easy_install # only if easy_install available
@@ -263,7 +239,6 @@ setup(
     cmdclass={
         'install_lib': MyInstallLib,
         'install_data': MyInstallData,
-        'develop': CWDevelop,
     },
     zip_safe=False,
 )
