@@ -57,7 +57,6 @@ class CubicWebRootResource(resource.Resource):
         # checks done before daemonization (eg versions consistency)
         self.appli = CubicWebPublisher(repo, config)
         self.base_url = config['base-url']
-        self.https_url = config['https-url']
         global MAX_POST_LENGTH
         MAX_POST_LENGTH = config['max-post-length']
 
@@ -104,8 +103,6 @@ class CubicWebRootResource(resource.Resource):
         # reload modified files in debug mode
         if self.config.debugmode:
             self.config.uiprops.reload_if_needed()
-            if self.https_url:
-                self.config.https_uiprops.reload_if_needed()
             self.appli.vreg.reload_if_needed()
         if self.config['profile']: # default profiler don't trace threads
             return self.render_request(request)
@@ -130,18 +127,11 @@ class CubicWebRootResource(resource.Resource):
     def _render_request(self, request):
         origpath = request.path
         host = request.host
-        # dual http/https access handling: expect a rewrite rule to prepend
-        # 'https' to the path to detect https access
-        https = False
-        if origpath.split('/', 2)[1] == 'https':
-            origpath = origpath[6:]
-            request.uri = request.uri[6:]
-            https = True
         if self.url_rewriter is not None:
             # XXX should occur before authentication?
             path = self.url_rewriter.rewrite(host, origpath, request)
             request.uri.replace(origpath, path, 1)
-        req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https)
+        req = CubicWebTwistedRequestAdapter(request, self.appli.vreg)
         try:
             ### Try to generate the actual request content
             content = self.appli.handle_request(req)

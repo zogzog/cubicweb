@@ -105,28 +105,19 @@ class _CubicWebRequestBase(RequestSessionBase):
     """
     ajax_request = False # to be set to True by ajax controllers
 
-    def __init__(self, vreg, https=False, form=None, headers=None):
+    def __init__(self, vreg, form=None, headers=None):
         """
         :vreg: Vregistry,
-        :https: boolean, s this a https request
         :form: Forms value
         :headers: dict, request header
         """
         super(_CubicWebRequestBase, self).__init__(vreg)
-        #: (Boolean) Is this an https request.
-        self.https = https
-        #: User interface property (vary with https) (see :ref:`uiprops`)
+        #: User interface property (see :ref:`uiprops`)
         self.uiprops = None
-        #: url for serving datadir (vary with https) (see :ref:`resources`)
+        #: url for serving datadir (see :ref:`resources`)
         self.datadir_url = None
-        if https and vreg.config.https_uiprops is not None:
-            self.uiprops = vreg.config.https_uiprops
-        else:
-            self.uiprops = vreg.config.uiprops
-        if https and vreg.config.https_datadir_url is not None:
-            self.datadir_url = vreg.config.https_datadir_url
-        else:
-            self.datadir_url = vreg.config.datadir_url
+        self.uiprops = vreg.config.uiprops
+        self.datadir_url = vreg.config.datadir_url
         #: enable UStringIO's write tracing
         self.tracehtml = False
         if vreg.config.debugmode:
@@ -178,22 +169,6 @@ class _CubicWebRequestBase(RequestSessionBase):
              DeprecationWarning, stacklevel=2)
         self.ajax_request = value
     json_request = property(_get_json_request, _set_json_request)
-
-    def _base_url(self, secure=None):
-        """return the root url of the instance
-
-        secure = False -> base-url
-        secure = None  -> https-url if req.https
-        secure = True  -> https if it exist
-        """
-        if secure is None:
-            secure = self.https
-        base_url = None
-        if secure:
-            base_url = self.vreg.config.get('https-url')
-        if base_url is None:
-            base_url = super(_CubicWebRequestBase, self)._base_url()
-        return base_url
 
     @property
     def authmode(self):
@@ -952,7 +927,7 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
     cnx = None
     session = None
 
-    def __init__(self, vreg, https=False, form=None, headers={}):
+    def __init__(self, vreg, form=None, headers={}):
         """"""
         self.vreg = vreg
         try:
@@ -960,8 +935,7 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
             self.translations = vreg.config.translations
         except AttributeError:
             self.translations = {}
-        super(ConnectionCubicWebRequestBase, self).__init__(vreg, https=https,
-                                                       form=form, headers=headers)
+        super(ConnectionCubicWebRequestBase, self).__init__(vreg, form=form, headers=headers)
         self.session = _MockAnonymousSession()
         self.cnx = self.user = _NeedAuthAccessMock()
 

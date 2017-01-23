@@ -474,7 +474,7 @@ class BaseLogForm(forms.FieldsForm):
             url_args = {}
             if target and target != '/':
                 url_args['postlogin_path'] = target
-            return self._cw.build_url('login', __secure__=True, **url_args)
+            return self._cw.build_url('login', **url_args)
         return super(BaseLogForm, self).form_action()
 
 

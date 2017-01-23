@@ -37,7 +37,7 @@ class RequestTC(TestCase):
         req = RequestSessionBase(None)
         req.from_controller = lambda: 'view'
         req.relative_path = lambda includeparams=True: None
-        req.base_url = lambda secure=None: 'http://testing.fr/cubicweb/'
+        req.base_url = lambda: 'http://testing.fr/cubicweb/'
         self.assertEqual(req.build_url(), u'http://testing.fr/cubicweb/view')
         self.assertEqual(req.build_url(None), u'http://testing.fr/cubicweb/view')
         self.assertEqual(req.build_url('one'), u'http://testing.fr/cubicweb/one')
@@ -61,11 +61,15 @@ class RequestCWTC(CubicWebTC):
         base_url = self.config['base-url']
         with self.admin_access.repo_cnx() as session:
             self.assertEqual(session.base_url(), base_url)
-            assert 'https-url' not in self.config
-            self.assertEqual(session.base_url(secure=True), base_url)
-            secure_base_url = base_url.replace('http', 'https')
-            self.config.global_set_option('https-url', secure_base_url)
-            self.assertEqual(session.base_url(secure=True), secure_base_url)
+
+    def test_secure_deprecated(self):
+        with self.admin_access.cnx() as cnx:
+            with self.assertWarns(DeprecationWarning):
+                cnx.base_url(secure=True)
+            with self.assertRaises(TypeError):
+                cnx.base_url(thing=42)
+            with self.assertWarns(DeprecationWarning):
+                cnx.build_url('ah', __secure__='whatever')
 
     def test_view_catch_ex(self):
         with self.admin_access.web_request() as req:

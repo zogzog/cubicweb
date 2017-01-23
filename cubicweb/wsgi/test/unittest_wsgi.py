@@ -27,30 +27,6 @@ class WSGIAppTC(CubicWebTestTC):
 
         self.assertEqual(b'some content', req.content.read())
 
-    def test_http_scheme(self):
-        r = webtest.app.TestRequest.blank('/', {
-            'wsgi.url_scheme': 'http'})
-
-        req = CubicWebWsgiRequest(r.environ, self.vreg)
-
-        self.assertFalse(req.https)
-
-    def test_https_scheme(self):
-        r = webtest.app.TestRequest.blank('/', {
-            'wsgi.url_scheme': 'https'})
-
-        req = CubicWebWsgiRequest(r.environ, self.vreg)
-
-        self.assertTrue(req.https)
-
-    def test_https_prefix(self):
-        r = webtest.app.TestRequest.blank('/https/', {
-            'wsgi.url_scheme': 'http'})
-
-        req = CubicWebWsgiRequest(r.environ, self.vreg)
-
-        self.assertTrue(req.https)
-
     def test_big_content(self):
         content = b'x'*100001
         r = webtest.app.TestRequest.blank('/', {

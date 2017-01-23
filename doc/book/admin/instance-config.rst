@@ -42,12 +42,9 @@ Configuring the Web server
 :`main.base-url`:
     url base site to be used to generate the urls of web pages
 
-Https configuration
-```````````````````
-It is possible to make a site accessible for anonymous http connections
-and https for authenticated users. This requires to
-use apache (for example) for redirection and the variable `main.https-url`
-of configuration file.
+Apache configuration
+````````````````````
+It is possible to use apache (for example) as proxy.
 
 For this to work you have to activate the following apache modules :
 
@@ -62,9 +59,8 @@ The command on Debian based systems for that is ::
 
 :Example:
 
-   For an apache redirection of a site accessible via `http://localhost/demo`
-   and `https://localhost/demo` and actually running on port 8080, it
-   takes to the http:::
+   For an apache redirection of a site accessible via `http://localhost/demo` while cubicweb is
+   actually running on port 8080:::
 
      ProxyPreserveHost On
      RewriteEngine On
@@ -72,24 +68,11 @@ The command on Debian based systems for that is ::
      RewriteRule ^/demo$ /demo/
      RewriteRule ^/demo/(.*) http://127.0.0.1:8080/$1 [L,P]
 
-   and for the https:::
-
-     ProxyPreserveHost On
-     RewriteEngine On
-     RewriteCond %{REQUEST_URI} ^/ demo
-     RewriteRule ^/demo$/demo/
-     RewriteRule ^/demo/(.*) http://127.0.0.1:8080/https/$1 [L,P]
-
 
    and we will file in the all-in-one.conf of the instance:::
 
      base-url = http://localhost/demo
-     https-url = https://localhost/demo
 
-Notice that if you simply want a site accessible through https, not *both* http
-and https, simply set `base-url` to the https url and the first section into your
-apache configuration (as you would have to do for an http configuration with an
-apache front-end).
 
 Setting up the web client
 -------------------------

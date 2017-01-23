@@ -80,7 +80,6 @@ class StaticFileController(Controller):
         self._cw.set_header('last-modified', generateDateTime(os.stat(path).st_mtime))
         if self._cw.is_client_cache_valid():
             return ''
-        # XXX elif uri.startswith('/https/'): uri = uri[6:]
         mimetype, encoding = mimetypes.guess_type(path)
         if mimetype is None:
             mimetype = 'application/octet-stream'
@@ -225,11 +224,7 @@ class FCKEditorController(StaticFileController):
     __regid__ = 'fckeditor'
 
     def publish(self, rset=None):
-        config = self._cw.vreg.config
-        if self._cw.https:
-            uiprops = config.https_uiprops
-        else:
-            uiprops = config.uiprops
+        uiprops = self._cw.vreg.config.uiprops
         relpath = self.relpath
         if relpath.startswith('fckeditor/'):
             relpath = relpath[len('fckeditor/'):]

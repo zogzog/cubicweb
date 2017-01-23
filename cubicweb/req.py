@@ -278,9 +278,6 @@ class RequestSessionBase(object):
         parameters. Values are automatically URL quoted, and the
         publishing method to use may be specified or will be guessed.
 
-        if ``__secure__`` argument is True, the request will try to build a
-        https url.
-
         raises :exc:`ValueError` if None is found in arguments
         """
         # use *args since we don't want first argument to be "anonymous" to
@@ -295,8 +292,10 @@ class RequestSessionBase(object):
         #     not try to process it and directly call req.build_url()
         base_url = kwargs.pop('base_url', None)
         if base_url is None:
-            secure = kwargs.pop('__secure__', None)
-            base_url = self.base_url(secure=secure)
+            if kwargs.pop('__secure__', None) is not None:
+                warn('[3.25] __secure__ argument is deprecated',
+                     DeprecationWarning, stacklevel=2)
+            base_url = self.base_url()
         path = self.build_url_path(method, kwargs)
         if not kwargs:
             return u'%s%s' % (base_url, path)
@@ -502,13 +501,12 @@ class RequestSessionBase(object):
             raise ValueError(self._('can\'t parse %(value)r (expected %(format)s)')
                              % {'value': value, 'format': format})
 
-    def _base_url(self, secure=None):
-        if secure:
-            return self.vreg.config.get('https-url') or self.vreg.config['base-url']
-        return self.vreg.config['base-url']
-
-    def base_url(self, secure=None):
-        """return the root url of the instance
-        """
-        url = self._base_url(secure=secure)
+    def base_url(self, **kwargs):
+        """Return the root url of the instance."""
+        secure = kwargs.pop('secure', None)
+        if secure is not None:
+            warn('[3.25] secure argument is deprecated', DeprecationWarning, stacklevel=2)
+        if kwargs:
+            raise TypeError('base_url got unexpected keyword arguments %s' % ', '.join(kwargs))
+        url = self.vreg.config['base-url']
         return url if url is None else url.rstrip('/') + '/'

@@ -82,8 +82,7 @@ class CWService(object, win32serviceutil.ServiceFramework):
             config.debugmode = False
             logger.info('starting cubicweb instance %s ', self.instance)
             config.info('clear ui caches')
-            for cachedir in ('uicache', 'uicachehttps'):
-                rm(join(config.appdatahome, cachedir, '*'))
+            rm(join(config.appdatahome, 'uicache', '*'))
             root_resource = CubicWebRootResource(config, config.repository())
             website = server.Site(root_resource)
             # serve it via standard HTTP on port set in the configuration

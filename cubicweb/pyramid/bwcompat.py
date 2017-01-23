@@ -53,10 +53,6 @@ class CubicWebPyramidHandler(object):
         CubicWebPublisher.core_handle do
         """
 
-        # XXX The main handler of CW forbid anonymous https connections
-        # I guess we can drop this "feature" but in doubt I leave this comment
-        # so we don't forget about it. (cdevienne)
-
         req = request.cw_request
         vreg = request.registry['cubicweb.registry']
 
@@ -170,10 +166,6 @@ class TweenHandler(object):
         self.cwhandler = registry['cubicweb.handler']
 
     def __call__(self, request):
-        if request.path.startswith('/https/'):
-            request.environ['PATH_INFO'] = request.environ['PATH_INFO'][6:]
-            assert not request.path.startswith('/https/')
-            request.scheme = 'https'
         try:
             response = self.handler(request)
         except httpexceptions.HTTPNotFound:

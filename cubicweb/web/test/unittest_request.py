@@ -71,28 +71,13 @@ class AcceptParserTC(unittest.TestCase):
 
 class WebRequestTC(unittest.TestCase):
 
-    def test_base_url(self):
-        dummy_vreg = FakeCWRegistryStore(FakeConfig(), initlog=False)
-        dummy_vreg.config['base-url'] = 'http://babar.com/'
-        dummy_vreg.config['https-url'] = 'https://toto.com/'
-
-        req = CubicWebRequestBase(dummy_vreg, https=False)
-        self.assertEqual('http://babar.com/', req.base_url())
-        self.assertEqual('http://babar.com/', req.base_url(False))
-        self.assertEqual('https://toto.com/', req.base_url(True))
-
-        req = CubicWebRequestBase(dummy_vreg, https=True)
-        self.assertEqual('https://toto.com/', req.base_url())
-        self.assertEqual('http://babar.com/', req.base_url(False))
-        self.assertEqual('https://toto.com/', req.base_url(True))
-
     def test_negotiated_language(self):
         vreg = FakeCWRegistryStore(FakeConfig(), initlog=False)
         vreg.config.translations = {'fr': (None, None), 'en': (None, None)}
         headers = {
             'Accept-Language': 'fr,fr-fr;q=0.8,en-us;q=0.5,en;q=0.3',
         }
-        req = CubicWebRequestBase(vreg, https=False, headers=headers)
+        req = CubicWebRequestBase(vreg, headers=headers)
         self.assertEqual(req.negotiated_language(), 'fr')
 
     def test_build_url_language_from_url(self):
@@ -100,7 +85,7 @@ class WebRequestTC(unittest.TestCase):
         vreg.config['base-url'] = 'http://testing.fr/cubicweb/'
         vreg.config['language-mode'] = 'url-prefix'
         vreg.config.translations['fr'] = text_type, text_type
-        req = CubicWebRequestBase(vreg, https=False)
+        req = CubicWebRequestBase(vreg)
         # Override from_controller to avoid getting into relative_path method,
         # which is not implemented in CubicWebRequestBase.
         req.from_controller = lambda : 'not view'

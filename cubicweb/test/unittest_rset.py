@@ -119,17 +119,6 @@ class ResultSetTC(CubicWebTC):
             #                  '%stask/title/go' % baseurl)
             # empty _restpath should not crash
             self.compare_urls(req.build_url('view', _restpath=''), baseurl)
-            self.assertNotIn('https', req.build_url('view', vid='foo', rql='yo',
-                                                      __secure__=True))
-            try:
-                self.config.global_set_option('https-url', 'https://testing.fr/')
-                self.assertTrue('https', req.build_url('view', vid='foo', rql='yo',
-                                                         __secure__=True))
-                self.compare_urls(req.build_url('view', vid='foo', rql='yo',
-                                                __secure__=True),
-                                  '%sview?vid=foo&rql=yo' % req.base_url(secure=True))
-            finally:
-                self.config.global_set_option('https-url', None)
 
 
     def test_build(self):

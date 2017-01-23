@@ -33,24 +33,6 @@ class WSGIAppTest(PyramidCWTest):
 
         self.assertEqual(b'some content', req.content.read())
 
-    def test_http_scheme(self):
-        req = CubicWebPyramidRequest(
-            self.make_request('/', {
-                'wsgi.url_scheme': 'http'}))
-
-        self.assertFalse(req.https)
-
-    def test_https_scheme(self):
-        req = CubicWebPyramidRequest(
-            self.make_request('/', {
-                'wsgi.url_scheme': 'https'}))
-
-        self.assertTrue(req.https)
-
-    def test_https_prefix(self):
-        r = self.webapp.get('/https/')
-        self.assertIn('https://', r.text)
-
     def test_big_content(self):
         content = b'x' * 100001
 

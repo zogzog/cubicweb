@@ -187,7 +187,7 @@ class NotificationView(EntityView):
         kwargs.update({'user': self.user_data['login'],
                        'eid': entity.eid,
                        'etype': entity.dc_type(),
-                       'url': entity.absolute_url(__secure__=True),
+                       'url': entity.absolute_url(),
                        'title': entity.dc_long_title(),})
         return kwargs
 

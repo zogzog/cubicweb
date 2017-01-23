@@ -34,7 +34,6 @@ from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 class FakeConfig(dict, BaseApptestConfiguration):
     translations = {}
     uiprops = {}
-    https_uiprops = {}
     apphome = None
     debugmode = False
     def __init__(self, appid='data', apphome=None, cubes=()):
@@ -46,7 +45,6 @@ class FakeConfig(dict, BaseApptestConfiguration):
         self['base-url'] = BASE_URL
         self['rql-cache-size'] = 3000
         self.datadir_url = BASE_URL + 'data/'
-        self.https_datadir_url = (BASE_URL + 'data/').replace('http://', 'https://')
 
     def cubes(self, expand=False):
         return self._cubes
@@ -69,7 +67,6 @@ class FakeRequest(ConnectionCubicWebRequestBase):
     def __init__(self, *args, **kwargs):
         if not (args or 'vreg' in kwargs):
             kwargs['vreg'] = FakeCWRegistryStore(FakeConfig(), initlog=False)
-        kwargs['https'] = False
         self._http_method = kwargs.pop('method', 'GET')
         self._url = kwargs.pop('url', None)
         if self._url is None:

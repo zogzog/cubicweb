@@ -113,19 +113,6 @@ class WebConfiguration(CubicWebConfiguration):
           'group': 'web', 'level': 3,
           }),
         # web configuration
-        ('https-url',
-         {'type' : 'string',
-          'default': None,
-          'help': 'web server root url on https. By specifying this option your '\
-          'site can be available as an http and https site. Authenticated users '\
-          'will in this case be authenticated and once done navigate through the '\
-          'https site. IMPORTANTE NOTE: to do this work, you should have your '\
-          'apache redirection include "https" as base url path so cubicweb can '\
-          'differentiate between http vs https access. For instance: \n'\
-          'RewriteRule ^/demo/(.*) http://127.0.0.1:8080/https/$1 [L,P]\n'\
-          'where the cubicweb web server is listening on port 8080.',
-          'group': 'main', 'level': 3,
-          }),
         ('datadir-url',
          {'type': 'string', 'default': None,
           'help': ('base url for static data, if different from "${base-url}/data/".  '
@@ -269,9 +256,7 @@ have the python imaging library installed to use captcha)',
     def __init__(self, *args, **kwargs):
         super(WebConfiguration, self).__init__(*args, **kwargs)
         self.uiprops = None
-        self.https_uiprops = None
         self.datadir_url = None
-        self.https_datadir_url = None
 
     def fckeditor_installed(self):
         if self.uiprops is None:
@@ -390,16 +375,8 @@ have the python imaging library installed to use captcha)',
                 self.datadir_url += '/'
             if self.mode != 'test':
                 self.datadir_url += '%s/' % self.instance_md5_version()
-            self.https_datadir_url = self.datadir_url
             return
-        httpsurl = self['https-url']
         data_relpath = self.data_relpath()
-        if httpsurl:
-            if httpsurl[-1] != '/':
-                httpsurl += '/'
-                if not self.repairing:
-                    self.global_set_option('https-url', httpsurl)
-            self.https_datadir_url = httpsurl + data_relpath
         self.datadir_url = baseurl + data_relpath
 
     def data_relpath(self):
@@ -417,14 +394,6 @@ have the python imaging library installed to use captcha)',
             data=lambda x: self.datadir_url + x,
             datadir_url=self.datadir_url[:-1])
         self._init_uiprops(self.uiprops)
-        if self['https-url']:
-            cachedir = join(self.appdatahome, 'uicachehttps')
-            self.check_writeable_uid_directory(cachedir)
-            self.https_uiprops = PropertySheet(
-                cachedir,
-                data=lambda x: self.https_datadir_url + x,
-                datadir_url=self.https_datadir_url[:-1])
-            self._init_uiprops(self.https_uiprops)
 
     def _init_uiprops(self, uiprops):
         libuiprops = join(self.shared_dir(), 'data', 'uiprops.py')

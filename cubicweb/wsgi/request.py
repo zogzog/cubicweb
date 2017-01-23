@@ -69,15 +69,10 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
                           if k.startswith('HTTP_'))
         if 'CONTENT_TYPE' in environ:
             headers_in['Content-Type'] = environ['CONTENT_TYPE']
-        https = self.is_secure()
-        if self.path.startswith('/https/'):
-            self.path = self.path[6:]
-            self.environ['PATH_INFO'] = self.path
-            https = True
 
         post, files = self.get_posted_data()
 
-        super(CubicWebWsgiRequest, self).__init__(vreg, https, post,
+        super(CubicWebWsgiRequest, self).__init__(vreg, post,
                                                   headers= headers_in)
         self.content = environ['wsgi.input']
         if files is not None:
@@ -120,9 +115,6 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         return path
 
     ## wsgi request helpers ###################################################
-
-    def is_secure(self):
-        return self.environ['wsgi.url_scheme'] == 'https'
 
     def get_posted_data(self):
         # The WSGI spec says 'QUERY_STRING' may be absent.
