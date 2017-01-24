@@ -1328,7 +1328,7 @@ the repository',
             appobjects.insert(0, appobjects.pop(index))
         return appobjects
 
-    def _appobjects_cube_modnames(self, cube):
+    def appobjects_cube_modnames(self, cube):
         modnames = []
         cube_submodnames = self._sorted_appobjects(self.cube_appobject_path)
         for name in cube_submodnames:
@@ -1342,7 +1342,7 @@ the repository',
             for modname, filepath in _expand_modname('cubicweb.' + name):
                 modnames.append(modname)
         for cube in reversed(self.cubes()):
-            modnames.extend(self._appobjects_cube_modnames(cube))
+            modnames.extend(self.appobjects_cube_modnames(cube))
         if self.apphome:
             cube_submodnames = self._sorted_appobjects(self.cube_appobject_path)
             apphome = realpath(self.apphome)
