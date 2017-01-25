@@ -201,6 +201,9 @@ msgstr "Información del Sistema"
 msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
 msgstr "Relación agregada : %(entity_from)s %(rtype)s %(entity_to)s"
 
+msgid "And more composite entities"
+msgstr ""
+
 msgid "Attributes permissions:"
 msgstr "Permisos de atributos:"
 

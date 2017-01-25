@@ -71,11 +71,23 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
     # don't use navigation, all entities asked to be deleted should be displayed
     # else we will only delete the displayed page
     paginable = False
+    # show first level of composite relations in a treeview
+    show_composite = False
+
+    @staticmethod
+    def _iter_composite_entities(entity, limit=None):
+        for rdef, role in entity.e_schema.composite_rdef_roles:
+            for centity in entity.related(
+                rdef.rtype, role, limit=limit
+            ).entities():
+                yield centity
 
     def call(self, onsubmit=None):
         """ask for confirmation before real deletion"""
         req, w = self._cw, self.w
         _ = req._
+        if self.show_composite:
+            req.add_css(('jquery-treeview/jquery.treeview.css', 'cubicweb.treeview.css'))
         w(u'<script type="text/javascript">updateMessage(\'%s\');</script>\n'
           % _('this action is not reversible!'))
         # XXX above message should have style of a warning
@@ -84,11 +96,30 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
                                              rset=self.cw_rset,
                                              onsubmit=onsubmit)
         w(u'<ul>\n')
+        page_size = req.property_value('navigation.page-size')
         for entity in self.cw_rset.entities():
             # don't use outofcontext view or any other that may contain inline
             # edition form
-            w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
-                                      href=entity.absolute_url()))
+            w(u'<li>%s' % tags.a(entity.view('textoutofcontext'),
+                                 href=entity.absolute_url()))
+            if self.show_composite:
+                content = None
+                for count, centity in enumerate(self._iter_composite_entities(
+                    entity, limit=page_size,
+                )):
+                    if count == 0:
+                        w(u'<ul class="treeview">')
+                    if content is not None:
+                        w(u'<li>%s</li>' % content)
+                    if count == page_size - 1:
+                        w(u'<li class="last">%s</li></ul>' % _(
+                            'And more composite entities'))
+                        break
+                    content = tags.a(centity.view('textoutofcontext'),
+                                     href=centity.absolute_url())
+                else:
+                    w(u'<li class="last">%s</li></ul>' % content)
+            w(u'</li>\n')
         w(u'</ul>\n')
         form.render(w=self.w)
 

@@ -20,7 +20,9 @@ from logilab.common.testlib import unittest_main, mock_object
 from logilab.common import tempattr
 
 from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.predicates import is_instance
 from cubicweb.web.views import uicfg
+from cubicweb.web.views.editforms import DeleteConfFormView
 from cubicweb.web.formwidgets import AutoCompletionWidget
 from cubicweb.schema import RRQLExpression
 
@@ -238,6 +240,59 @@ class FormViewsTC(CubicWebTC):
         with self.admin_access.web_request() as req:
             rset = req.execute('CWGroup X')
             self.view('deleteconf', rset, template=None, req=req).source
+
+    def test_delete_conf_formview_composite(self):
+        with self.admin_access.cnx() as cnx:
+            d1 = cnx.create_entity('Directory', name=u'dtest1')
+            d2 = cnx.create_entity('Directory', name=u'dtest2', parent=d1)
+            d3 = cnx.create_entity('Directory', name=u'dtest3', parent=d2)
+            d4 = cnx.create_entity('Directory', name=u'dtest4', parent=d1)
+            for i in range(3):
+                cnx.create_entity('Directory', name=u'child%s' % (i,),
+                                  parent=d3)
+            cnx.commit()
+
+        class DirectoryDeleteView(DeleteConfFormView):
+            __select__ = (DeleteConfFormView.__select__ &
+                          is_instance('Directory'))
+            show_composite = True
+
+        self.vreg['propertyvalues']['navigation.page-size'] = 3
+        with self.admin_access.web_request() as req, \
+                self.temporary_appobjects(DirectoryDeleteView):
+            rset = req.execute('Directory X WHERE X name "dtest1"')
+            source = self.view('deleteconf', rset,
+                               template=None, req=req).source.decode('utf-8')
+            # Show composite object at depth 1
+            # Don't display "And more composite entities" since their are equal
+            # to page size
+            expected = (
+                '<li>'
+                '<a href="http://testing.fr/cubicweb/directory/%s">dtest1</a>'
+                '<ul class="treeview"><li>'
+                '<a href="http://testing.fr/cubicweb/directory/%s">dtest4</a>'
+                '</li><li class="last">'
+                '<a href="http://testing.fr/cubicweb/directory/%s">dtest2</a>'
+                '</li></ul></li>') % (d1.eid, d4.eid, d2.eid)
+            self.assertIn(expected, source)
+
+            # Page size is reached, show "And more composite entities"
+            rset = req.execute('Directory X WHERE X name "dtest3"')
+            source = self.view('deleteconf', rset,
+                               template=None, req=req).source.decode('utf-8')
+            expected = (
+                '<li>'
+                '<a href="http://testing.fr/cubicweb/directory/%s">dtest3</a>'
+                '<ul class="treeview"><li>'
+                '<a href="http://testing.fr/cubicweb/directory/%s">child2</a>'
+                '</li><li>'
+                '<a href="http://testing.fr/cubicweb/directory/%s">child1</a>'
+                '</li><li class="last">And more composite entities</li>'
+                '</ul></li>') % (
+                    d3.eid,
+                    req.find('Directory', name='child2').one().eid,
+                    req.find('Directory', name='child1').one().eid)
+            self.assertIn(expected, source)
 
     def test_automatic_edition_formview(self):
         with self.admin_access.web_request() as req:

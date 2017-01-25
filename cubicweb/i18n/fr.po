@@ -195,6 +195,9 @@ msgstr "À propos de ce site"
 msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
 msgstr "Relation ajoutée : %(entity_from)s %(rtype)s %(entity_to)s"
 
+msgid "And more composite entities"
+msgstr "Et d'autres entités"
+
 msgid "Attributes permissions:"
 msgstr "Permissions des attributs"
 
