@@ -265,9 +265,12 @@ detach attached file
 <p><b>You can either submit a new file using the browse button above, or choose to remove already uploaded file by checking the "detach attached file" check-box, or edit file content online with the widget below.</b></p>
 <textarea cols="80" name="data-subject:%(eid)s" onkeyup="autogrow(this)" rows="3" tabindex="4">new widgets system</textarea>''' % {'eid': file.eid})
 
-    def _modified_tzdatenaiss(self, eid, datestr, timestr):
-        ctx = {'tzdatenaiss-subjectdate:%d' % eid: datestr,
-               'tzdatenaiss-subjecttime:%d' % eid: timestr}
+    def _modified_tzdatenaiss(self, eid, date_and_time_str=None):
+        ctx = {}
+        if date_and_time_str:
+            datestr, timestr = date_and_time_str
+            ctx['tzdatenaiss-subjectdate:%d' % eid] = datestr
+            ctx['tzdatenaiss-subjecttime:%d' % eid] = timestr
         with self.admin_access.web_request(**ctx) as req:
             form = EntityFieldsForm(req, None, entity=req.entity_from_eid(eid))
             field = TZDatetimeField(name='tzdatenaiss', eidparam=True,
@@ -285,10 +288,13 @@ detach attached file
             eid = req.create_entity('Personne', nom=u'Flo', tzdatenaiss=tzd).eid
             req.cnx.commit()
 
-        modified = self._modified_tzdatenaiss(eid, datestr, timestr)
+        modified = self._modified_tzdatenaiss(eid, (datestr, timestr))
         self.assertFalse(modified)
 
-        modified = self._modified_tzdatenaiss(eid, '2016/05/04', '15:07')
+        modified = self._modified_tzdatenaiss(eid, ('2016/05/04', '15:07'))
+        self.assertTrue(modified)
+
+        modified = self._modified_tzdatenaiss(eid, None)
         self.assertTrue(modified)
 
     def test_passwordfield(self):
