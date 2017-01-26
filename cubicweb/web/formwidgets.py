@@ -801,8 +801,12 @@ class JQueryDateTimePicker(FieldWidget):
 
     def process_field_data(self, form, field):
         req = form._cw
-        datestr = req.form.get(field.input_name(form, 'date')).strip() or None
-        timestr = req.form.get(field.input_name(form, 'time')).strip() or None
+        datestr = req.form.get(field.input_name(form, 'date'))
+        if datestr:
+            datestr = datestr.strip() or None
+        timestr = req.form.get(field.input_name(form, 'time'))
+        if timestr:
+            timestr = timestr.strip() or None
         if datestr is None:
             return None
         try:
