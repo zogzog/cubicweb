@@ -265,7 +265,7 @@ class ExtEntitiesImporter(object):
     :param extid2eid: optional {extid: eid} dictionary giving information on existing entities. It
         will be completed during import. You may want to use :func:`cwuri2eid` to build it.
 
-    :param existing_relation: optional {rtype: set((subj eid, obj eid))} mapping giving information
+    :param existing_relations: optional {rtype: set((subj eid, obj eid))} mapping giving information
         on existing relations of a given type. You may want to use :class:`RelationMapping` to build
         it.
 
