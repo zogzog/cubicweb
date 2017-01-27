@@ -209,7 +209,7 @@ def render_view(request, vid, **kwargs):
 
     :param request: A pyramid request
     :param vid: A CubicWeb view id
-    :param **kwargs: Keyword arguments to select and instanciate the view
+    :param kwargs: Keyword arguments to select and instanciate the view
     :returns: The rendered view content
     """
     vreg = request.registry['cubicweb.registry']

@@ -108,7 +108,7 @@ API
 .. toctree::
     :maxdepth: 1
 
-    js_api/index
+    book/en/devweb/js_api/index
 
 Developpers
 ~~~~~~~~~~~

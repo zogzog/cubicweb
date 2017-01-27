@@ -1,7 +1,7 @@
 .. _tools_module:
 
 :mod:`cubicweb.pyramid.tools`
-----------------------------
+-----------------------------
 
 .. automodule:: cubicweb.pyramid.tools
 

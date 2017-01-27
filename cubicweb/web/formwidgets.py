@@ -671,9 +671,12 @@ class JQueryDatePicker(FieldWidget):
     choose a date anterior(/posterior) to this DatePicker.
 
     example:
-    start and end are two JQueryDatePicker and start must always be before end
+
+    start and end are two JQueryDatePicker and start must always be before end::
+
         affk.set_field_kwargs(etype, 'start_date', widget=JQueryDatePicker(min_of='end_date'))
         affk.set_field_kwargs(etype, 'end_date', widget=JQueryDatePicker(max_of='start_date'))
+
     That way, on change of end(/start) value a new max(/min) will be set for start(/end)
     The invalid dates will be gray colored in the datepicker
     """
