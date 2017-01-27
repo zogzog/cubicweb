@@ -47,7 +47,7 @@ class DevCtlTC(TestCase):
         expected_project_content = ['setup.py', 'test', 'MANIFEST.in',
                                     'cubicweb_foo',
                                     'cubicweb-foo.spec', 'debian', 'README',
-                                    'tox.ini']
+                                    'tox.ini', 'development.ini']
         expected_package_content = ['i18n', 'hooks.py', 'views.py',
                                     'migration', 'entities.py', 'schema.py',
                                     '__init__.py', 'data', '__pkginfo__.py']

@@ -2,3 +2,12 @@
 
 %(longdesc)s
 """
+
+
+def pyramid_main(global_config, **settings):
+    """Return a Pyramid WSGI application bound to a CubicWeb repository."""
+    from pyramid.config import Configurator
+    config = Configurator(settings=settings)
+    config.include('cubicweb.pyramid')
+    config.scan()
+    return config.make_wsgi_app()

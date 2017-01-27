@@ -57,3 +57,17 @@ In a pyramid application
 
 -   Configure the base-url and https-url in all-in-one.conf to match the ones
     of the pyramid configuration (this is a temporary limitation).
+
+
+Usage with pserve
+-----------------
+
+To run a Pyramid application using pserve_:
+
+::
+
+    pserve /path/to/development.ini instance=<appid>
+
+
+.. _pserve: \
+    http://docs.pylonsproject.org/projects/pyramid/en/latest/pscripts/pserve.html
