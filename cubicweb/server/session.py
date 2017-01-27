@@ -376,7 +376,7 @@ class Connection(RequestSessionBase):
     def __enter__(self):
         assert not self._open
         self._open = True
-        self.cnxset = self.repo._get_cnxset()
+        self.cnxset = self.repo.cnxsets.get()
         if self.lang is None:
             self.set_language(self.user.prefered_language())
         return self
@@ -386,7 +386,7 @@ class Connection(RequestSessionBase):
         self.rollback()
         self._open = False
         self.cnxset.cnxset_freed()
-        self.repo._free_cnxset(self.cnxset)
+        self.repo.cnxsets.release(self.cnxset)
         self.cnxset = None
 
     @contextmanager

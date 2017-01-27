@@ -380,7 +380,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # check full text index availibility
         if self.do_fti:
             if cnxset is None:
-                _cnxset = self.repo._get_cnxset()
+                _cnxset = self.repo.cnxsets.get()
             else:
                 _cnxset = cnxset
             if not self.dbhelper.has_fti_table(_cnxset.cu):
@@ -389,7 +389,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 self.do_fti = False
             if cnxset is None:
                 _cnxset.cnxset_freed()
-                self.repo._free_cnxset(_cnxset)
+                self.repo.cnxsets.release(_cnxset)
 
     def backup(self, backupfile, confirm, format='native'):
         """method called to create a backup of the source's data"""

@@ -54,7 +54,7 @@ class StatsService(Service):
         results['nb_active_threads'] = threading.activeCount()
         looping_tasks = repo._tasks_manager._looping_tasks
         results['looping_tasks'] = [(t.name, t.interval) for t in looping_tasks]
-        results['available_cnxsets'] = repo._cnxsets_pool.qsize()
+        results['available_cnxsets'] = repo.cnxsets.qsize()
         results['threads'] = [t.name for t in threading.enumerate()]
         return results
 
