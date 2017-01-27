@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2017 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,9 +27,10 @@ try:
 except ImportError:  # Python3
     from unittest import TestCase
 
+from six import PY2
 from six.moves import range
 
-from cubicweb import Binary
+from cubicweb import Binary, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import (make_uid, UStringIO, RepeatList, HTMLHead,
                             QueryCache, parse_repo_uri)
@@ -39,6 +40,7 @@ try:
     from cubicweb.utils import CubicWebJsonEncoder, json
 except ImportError:
     json = None
+
 
 class MakeUidTC(TestCase):
     def test_1(self):
@@ -323,6 +325,26 @@ class HTMLHeadTC(CubicWebTC):
             self.assertEqual(result, expected)
         finally:
             self.config.global_set_option('concat-resources', True)
+
+
+def UnauthorizedTC(TestCase):
+
+    def _test(self, func):
+        self.assertEqual(func(Unauthorized()),
+                         'You are not allowed to perform this operation')
+        self.assertEqual(func(Unauthorized('a')),
+                         'a')
+        self.assertEqual(func(Unauthorized('a', 'b')),
+                         'You are not allowed to perform a operation on b')
+        self.assertEqual(func(Unauthorized('a', 'b', 'c')),
+                         'a b c')
+
+    def test_str(self):
+        self._test(str)
+
+    if PY2:
+        def test_unicode(self):
+            self._test(unicode)
 
 
 def load_tests(loader, tests, ignore):

@@ -1,3 +1,21 @@
+cubicweb (3.24.4-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Sylvain Thenault <sylvain.thenault@logilab.fr>  Fri, 27 Jan 2017 13:28:56 +0100
+
+cubicweb (3.24.3-1) unstable; urgency=medium
+
+  * New upstream release. 
+
+ -- David Douard <david.douard@logilab.fr>  Wed, 23 Nov 2016 18:36:14 +0100
+
+cubicweb (3.24.2-1) unstable; urgency=medium
+
+  * new upstream release.
+
+ -- Denis Laxalde <denis.laxalde@logilab.fr>  Mon, 21 Nov 2016 13:46:43 +0100
+
 cubicweb (3.24.1-1) unstable; urgency=medium
 
   * New upstream release.

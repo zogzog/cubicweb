@@ -318,8 +318,8 @@ It's a list of triplets "subject relation object", e.g. `V1 relation
     ``owned_by``".
 
   * ``Any X WHERE NOT X owned_by U, U login "syt"`` means "the entity have no
-     relation ``owned_by`` with the user syt". They may have a relation "owned_by"
-     with another user.
+    relation ``owned_by`` with the user syt". They may have a relation "owned_by"
+    with another user.
 
 In this clause, you can also use ``EXISTS`` when you want to know if some
 expression is true and do not need the complete set of elements that make it

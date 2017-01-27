@@ -204,6 +204,10 @@ class Repository(object):
     def init_cnxset_pool(self):
         """should be called bootstrap_repository, as this is what it does"""
         config = self.config
+        # copy pool size here since config.init_cube() and config.load_schema()
+        # reload configuration from file and could reset a manually set pool
+        # size.
+        pool_size = config['connections-pool-size']
         self._cnxsets_pool = queue.Queue()
         # 0. init a cnxset that will be used to fetch bootstrap information from
         #    the database
@@ -224,7 +228,7 @@ class Repository(object):
             config.cube_appobject_path = set(('hooks', 'entities'))
             config.cubicweb_appobject_path = set(('hooks', 'entities'))
             # limit connections pool to 1
-            config['connections-pool-size'] = 1
+            pool_size = 1
         if config.quick_start or config.creating or not config.read_instance_schema:
             # load schema from the file system
             if not config.creating:
@@ -258,7 +262,7 @@ class Repository(object):
         self._get_cnxset().close(True)
         # list of available cnxsets (can't iterate on a Queue)
         self.cnxsets = []
-        for i in range(config['connections-pool-size']):
+        for i in range(pool_size):
             self.cnxsets.append(self.system_source.wrapped_connection())
             self._cnxsets_pool.put_nowait(self.cnxsets[-1])
 

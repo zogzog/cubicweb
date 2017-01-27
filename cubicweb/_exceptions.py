@@ -21,7 +21,7 @@
 
 from warnings import warn
 
-from six import PY3, text_type
+from six import PY2, text_type
 
 from logilab.common.decorators import cachedproperty
 
@@ -40,7 +40,13 @@ class CubicWebException(Exception):
                 return self.msg
         else:
             return u' '.join(text_type(arg) for arg in self.args)
-    __str__ = __unicode__ if PY3 else lambda self: self.__unicode__().encode('utf-8')
+
+    def __str__(self):
+        res = self.__unicode__()
+        if PY2:
+            res = res.encode('utf-8')
+        return res
+
 
 class ConfigurationError(CubicWebException):
     """a misconfiguration error"""

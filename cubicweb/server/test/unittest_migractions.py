@@ -1,4 +1,4 @@
-# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2017 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -325,6 +325,12 @@ class MigrationCommandsTC(MigrationTC):
             eschema = self.schema.eschema('Folder2')
             for cstr in eschema.rdef('name').constraints:
                 self.assertTrue(hasattr(cstr, 'eid'))
+
+    def test_add_entity_type_with_constraint(self):
+        with self.mh() as (cnx, mh):
+            mh.cmd_add_entity_type('Activity')
+            constraints = self.table_constraints(mh, 'cw_Activity')
+            self.assertEqual(len(constraints), 2, constraints)
 
     def test_add_cube_with_custom_final_type(self):
         with self.mh() as (cnx, mh):

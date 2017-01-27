@@ -149,14 +149,6 @@ class WebConfiguration(CubicWebConfiguration):
           'transparent to the user. Default to 5min.',
           'group': 'web', 'level': 3,
           }),
-        ('embed-allowed',
-         {'type' : 'regexp',
-          'default': None,
-          'help': 'regular expression matching URLs that may be embeded. \
-leave it blank if you don\'t want the embedding feature, or set it to ".*" \
-if you want to allow everything',
-          'group': 'web', 'level': 3,
-          }),
         ('submit-mail',
          {'type' : 'string',
           'default': None,

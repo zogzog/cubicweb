@@ -201,7 +201,8 @@ from logilab.common.decorators import cached, classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods, init_log
 from logilab.common.configuration import (Configuration, Method,
-                                          ConfigurationMixIn, merge_options)
+                                          ConfigurationMixIn, merge_options,
+                                          _validate as lgc_validate)
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP,
                       ConfigurationError, Binary, _)
@@ -413,7 +414,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
         mode = _forced_mode or 'system'
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
 
-    CUBES_DIR = abspath(os.environ.get('CW_CUBES_DIR', _CUBES_DIR))
+    CUBES_DIR = realpath(abspath(os.environ.get('CW_CUBES_DIR', _CUBES_DIR)))
     CUBES_PATH = os.environ.get('CW_CUBES_PATH', '').split(os.pathsep)
 
     options = (
@@ -456,7 +457,11 @@ this option is set to yes",
     def __getitem__(self, key):
         """Get configuration option, by first looking at environmnent."""
         file_value = super(CubicWebNoAppConfiguration, self).__getitem__(key)
-        return option_value_from_env(key, file_value)
+        value = option_value_from_env(key, file_value)
+        if value is not None:
+            option_def = self.get_option_def(key)
+            value = lgc_validate(value, option_def)
+        return value
 
     # static and class methods used to get instance independant resources ##
     @staticmethod
@@ -544,7 +549,7 @@ this option is set to yes",
     @classmethod
     def cubes_search_path(cls):
         """return the path of directories where cubes should be searched"""
-        path = [abspath(normpath(directory)) for directory in cls.CUBES_PATH
+        path = [realpath(abspath(normpath(directory))) for directory in cls.CUBES_PATH
                 if directory.strip() and exists(directory.strip())]
         if not cls.CUBES_DIR in path and exists(cls.CUBES_DIR):
             path.append(cls.CUBES_DIR)

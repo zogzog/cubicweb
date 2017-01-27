@@ -534,7 +534,7 @@ def _dict2js(d, predictable=False):
         it = sorted(d.items())
     else:
         it = d.items()
-    res = [key + ': ' + js_dumps(val, predictable)
+    res = [js_dumps(key, predictable) + ': ' + js_dumps(val, predictable)
            for key, val in it]
     return '{%s}' % ', '.join(res)
 

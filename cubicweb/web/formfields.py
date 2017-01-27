@@ -1027,6 +1027,8 @@ class TZDatetimeField(DateTimeField):
     def _ensure_correctly_typed(self, form, value):
         tz_naive = super(TZDatetimeField, self)._ensure_correctly_typed(
             form, value)
+        if not tz_naive:
+            return None
         return tz_naive.replace(tzinfo=pytz.utc)
 
 

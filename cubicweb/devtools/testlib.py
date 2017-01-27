@@ -413,11 +413,6 @@ class CubicWebTC(BaseTestCase):
         config.global_set_option('sender-addr', 'cubicweb-test@logilab.fr')
         # default_base_url on config class isn't enough for TestServerConfiguration
         config.global_set_option('base-url', config.default_base_url())
-        # web resources
-        try:
-            config.global_set_option('embed-allowed', re.compile('.*'))
-        except Exception:  # not in server only configuration
-            pass
 
     @property
     def vreg(self):
@@ -1290,7 +1285,7 @@ class AutoPopulateTest(CubicWebTC):
                 self._test_action(action)
         for box in self.list_boxes_for(rset):
             w = [].append
-            with self.subTest(self._testname(rset, box.__regid__, 'box')):
+            with self.subTest(name=self._testname(rset, box.__regid__, 'box')):
                 box.render(w)
 
     @staticmethod

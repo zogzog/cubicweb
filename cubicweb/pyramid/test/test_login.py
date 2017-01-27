@@ -4,7 +4,24 @@ from shutil import rmtree
 from cubicweb.pyramid.test import PyramidCWTest
 
 
+class LoginTestLangUrlPrefix(PyramidCWTest):
+
+    @classmethod
+    def setUpClass(cls):
+        super(LoginTestLangUrlPrefix, cls).setUpClass()
+        cls.config.global_set_option('language-mode', 'url-prefix')
+
+    def test_login_password_login_lang_prefix(self):
+        res = self.webapp.post('/fr/login', {
+            '__login': self.admlogin, '__password': self.admpassword})
+        self.assertEqual(res.status_int, 303)
+
+        res = self.webapp.get('/fr/login')
+        self.assertEqual(res.status_int, 303)
+
+
 class LoginTest(PyramidCWTest):
+
     def test_login_form(self):
         res = self.webapp.get('/login')
         self.assertIn('__login', res.text)
