@@ -722,7 +722,9 @@ this option is set to yes",
                        'devtools.devctl', 'pyramid.pyramidctl'):
             try:
                 __import__('cubicweb.%s' % ctlmod)
-            except ImportError:
+            except ImportError as exc:
+                cls.warning('failed to load cubicweb-ctl plugin %s (%s)',
+                            ctlmod, exc)
                 continue
             cls.info('loaded cubicweb-ctl plugin %s', ctlmod)
         for cube in cls.available_cubes():
