@@ -154,17 +154,27 @@ class _CnxSetPool(object):
 
     def __init__(self, source, size):
         self._cnxsets = []
-        self._queue = queue.Queue()
-        for i in range(size):
-            cnxset = source.wrapped_connection()
-            self._cnxsets.append(cnxset)
-            self._queue.put_nowait(cnxset)
+        if size is not None:
+            self._queue = queue.Queue()
+            for i in range(size):
+                cnxset = source.wrapped_connection()
+                self._cnxsets.append(cnxset)
+                self._queue.put_nowait(cnxset)
+        else:
+            self._queue = None
+            self._source = source
         super(_CnxSetPool, self).__init__()
 
     def qsize(self):
-        return self._queue.qsize()
+        q = self._queue
+        if q is None:
+            return None
+        return q.qsize()
 
     def get(self):
+        q = self._queue
+        if q is None:
+            return self._source.wrapped_connection()
         try:
             return self._queue.get(True, timeout=5)
         except queue.Empty:
@@ -175,7 +185,11 @@ class _CnxSetPool(object):
                             'connections pool size)')
 
     def release(self, cnxset):
-        self._queue.put_nowait(cnxset)
+        q = self._queue
+        if q is None:
+            cnxset.close(True)
+        else:
+            self._queue.put_nowait(cnxset)
 
     def __iter__(self):
         for cnxset in self._cnxsets:
@@ -183,12 +197,13 @@ class _CnxSetPool(object):
 
     def close(self):
         q = self._queue
-        while not q.empty():
-            cnxset = q.get_nowait()
-            try:
-                cnxset.close(True)
-            except Exception:
-                self.exception('error while closing %s' % cnxset)
+        if q is not None:
+            while not q.empty():
+                cnxset = q.get_nowait()
+                try:
+                    cnxset.close(True)
+                except Exception:
+                    self.exception('error while closing %s' % cnxset)
 
 
 class Repository(object):
@@ -248,10 +263,13 @@ class Repository(object):
         # copy pool size here since config.init_cube() and config.load_schema()
         # reload configuration from file and could reset a manually set pool
         # size.
-        pool_size = config['connections-pool-size']
-        # 0. init a cnxset of size 1 that will be used to fetch bootstrap information from
+        if config['connections-pooler-enabled']:
+            pool_size, min_pool_size = config['connections-pool-size'], 1
+        else:
+            pool_size = min_pool_size = None
+        # 0. init a cnxset that will be used to fetch bootstrap information from
         #    the database
-        self.cnxsets = _CnxSetPool(self.system_source, 1)
+        self.cnxsets = _CnxSetPool(self.system_source, min_pool_size)
         # 1. set used cubes
         if config.creating or not config.read_instance_schema:
             config.bootstrap_cubes()
@@ -267,8 +285,8 @@ class Repository(object):
             # the registry
             config.cube_appobject_path = set(('hooks', 'entities'))
             config.cubicweb_appobject_path = set(('hooks', 'entities'))
-            # limit connections pool to 1
-            pool_size = 1
+            # limit connections pool size
+            pool_size = min_pool_size
         if config.quick_start or config.creating or not config.read_instance_schema:
             # load schema from the file system
             if not config.creating:
