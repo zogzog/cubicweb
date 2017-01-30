@@ -149,6 +149,7 @@ class NullEventBus(object):
     def stop(self):
         pass
 
+
 class _CnxSetPool(object):
 
     def __init__(self, source, size):
