@@ -14,10 +14,10 @@ for rschema in schema.relations():
             column = 'cw_{0}'.format(rdef.rtype)
             if any(isinstance(cstr, UniqueConstraint) for cstr in rdef.constraints):
                 source.create_index(cnx, table, column, unique=True)
-                commit()
+                commit(ask_confirm=False)
             if rschema.inlined or rdef.indexed:
                 source.create_index(cnx, table, column)
-                commit()
+                commit(ask_confirm=False)
 
 schema_indices = expected_indexes(cnx)
 db_indices = database_indexes(cnx)
