@@ -16,17 +16,11 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-if sys.version_info[:2] < (3, 2):
-    # assertWarns appears in 3.2
-    import unittest2 as unittest
-else:
-    import unittest
-
+from cubicweb.devtools.testlib import BaseTestCase
 from cubicweb.rtags import RelationTags, RelationTagsSet, RelationTagsDict
 
 
-class RelationTagsTC(unittest.TestCase):
+class RelationTagsTC(BaseTestCase):
 
     def setUp(self):
         self.rtags = RelationTags(__module__=__name__)
@@ -66,7 +60,7 @@ class RelationTagsTC(unittest.TestCase):
                          'hidden')
 
 
-class RelationTagsSetTC(unittest.TestCase):
+class RelationTagsSetTC(BaseTestCase):
 
     def setUp(self):
         self.rtags = RelationTagsSet(__module__=__name__)
@@ -99,7 +93,7 @@ class RelationTagsSetTC(unittest.TestCase):
                          set())
 
 
-class RelationTagsDictTC(unittest.TestCase):
+class RelationTagsDictTC(BaseTestCase):
 
     def setUp(self):
         self.rtags = RelationTagsDict(__module__=__name__)
@@ -143,7 +137,7 @@ class RelationTagsDictTC(unittest.TestCase):
                          {'key0': 'val00', 'key4': 'val4'})
 
 
-class DeprecatedInstanceWithoutModule(unittest.TestCase):
+class DeprecatedInstanceWithoutModule(BaseTestCase):
 
     def test_deprecated_instance_without_module(self):
         class SubRelationTags(RelationTags):
@@ -156,4 +150,5 @@ class DeprecatedInstanceWithoutModule(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
