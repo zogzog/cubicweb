@@ -140,6 +140,19 @@ def reindex_entities(schema, cnx, withpb=True, etypes=None):
         pb.finish()
 
 
+_CHECKERS = {}
+
+
+def _checker(func):
+    """Decorator to register a function as a checker for check()."""
+    fname = func.__name__
+    prefix = 'check_'
+    assert fname.startswith(prefix), 'cannot register %s as a checker' % func
+    _CHECKERS[fname[len(prefix):]] = func
+    return func
+
+
+@_checker
 def check_schema(schema, cnx, eids, fix=1):
     """check serialized schema"""
     print('Checking serialized schema')
@@ -157,6 +170,7 @@ def check_schema(schema, cnx, eids, fix=1):
                 print('dunno how to fix, do it yourself')
 
 
+@_checker
 def check_text_index(schema, cnx, eids, fix=1):
     """check all entities registered in the text index"""
     print('Checking text index')
@@ -171,6 +185,7 @@ def check_text_index(schema, cnx, eids, fix=1):
             notify_fixed(fix)
 
 
+@_checker
 def check_entities(schema, cnx, eids, fix=1):
     """check all entities registered in the repo system table"""
     print('Checking entities system table')
@@ -259,6 +274,7 @@ def bad_inlined_msg(rtype, parent_eid, eid, fix):
     notify_fixed(fix)
 
 
+@_checker
 def check_relations(schema, cnx, eids, fix=1):
     """check that eids referenced by relations are registered in the repo system
     table
@@ -308,6 +324,7 @@ def check_relations(schema, cnx, eids, fix=1):
                     cnx.system_sql(sql)
 
 
+@_checker
 def check_mandatory_relations(schema, cnx, eids, fix=1):
     """check entities missing some mandatory relation"""
     print('Checking mandatory relations')
@@ -335,6 +352,7 @@ def check_mandatory_relations(schema, cnx, eids, fix=1):
                     notify_fixed(fix)
 
 
+@_checker
 def check_mandatory_attributes(schema, cnx, eids, fix=1):
     """check for entities stored in the system source missing some mandatory
     attribute
@@ -355,6 +373,7 @@ def check_mandatory_attributes(schema, cnx, eids, fix=1):
                     notify_fixed(fix)
 
 
+@_checker
 def check_metadata(schema, cnx, eids, fix=1):
     """check entities has required metadata
 
@@ -397,7 +416,7 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
         eids_cache = {}
         with cnx.security_enabled(read=False, write=False): # ensure no read security
             for check in checks:
-                check_func = globals()['check_%s' % check]
+                check_func = _CHECKERS[check]
                 check_func(repo.schema, cnx, eids_cache, fix=fix)
         if fix:
             cnx.commit()

@@ -37,6 +37,7 @@ from cubicweb import AuthenticationError, ExecutionError, ConfigurationError, So
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
 from cubicweb.cwctl import CWCTL, check_options_consistency, ConfigureInstanceCommand
 from cubicweb.server import SOURCE_TYPES
+from cubicweb.server import checkintegrity
 from cubicweb.server.serverconfig import (
     USER_OPTIONS, ServerConfiguration, SourceConfiguration,
     ask_source_config, generate_source_config)
@@ -902,12 +903,8 @@ class CheckRepositoryCommand(Command):
     options = (
         ('checks',
          {'short': 'c', 'type': 'csv', 'metavar': '<check list>',
-          'default': ('entities', 'relations',
-                      'mandatory_relations', 'mandatory_attributes',
-                      'metadata', 'schema', 'text_index'),
-          'help': 'Comma separated list of check to run. By default run all \
-checks, i.e. entities, relations, mandatory_relations, mandatory_attributes, \
-metadata, text_index and schema.'}
+          'default': sorted(checkintegrity._CHECKERS),
+          'help': 'Comma separated list of check to run. By default run all checks.'}
          ),
 
         ('autofix',
@@ -930,13 +927,12 @@ option is set to "y" or "yes" (may be long for large database).'}
     )
 
     def run(self, args):
-        from cubicweb.server.checkintegrity import check
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
         config.repairing = self.config.force
         repo, _cnx = repo_cnx(config)
         with repo.internal_cnx() as cnx:
-            check(repo, cnx,
+            checkintegrity.check(repo, cnx,
                   self.config.checks,
                   self.config.reindex,
                   self.config.autofix)
@@ -953,11 +949,10 @@ class DBIndexSanityCheckCommand(Command):
     min_args = 1
 
     def run(self, args):
-        from cubicweb.server.checkintegrity import check_indexes
         config = ServerConfiguration.config_for(args[0])
         repo, cnx = repo_cnx(config)
         with cnx:
-            status = check_indexes(cnx)
+            status = checkintegrity.check_indexes(cnx)
         sys.exit(status)
 
 
