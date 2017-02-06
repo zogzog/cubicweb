@@ -281,7 +281,7 @@ def check_relations(schema, cnx, eids, fix=1):
     """
     print('Checking relations')
     for rschema in schema.relations():
-        if rschema.final or rschema.type in PURE_VIRTUAL_RTYPES:
+        if rschema.final or rschema.rule or rschema.type in PURE_VIRTUAL_RTYPES:
             continue
         if rschema.inlined:
             for subjtype in rschema.subjects():
