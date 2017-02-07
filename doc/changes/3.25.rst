@@ -1,0 +1,13 @@
+3.25 (UNRELEASED)
+=================
+
+New features
+------------
+
+* A new option `connections-pooler-enabled` (default yes) has been added. This
+  allow to switch off internal connection pooling for use with others poolers
+  such as pgbouncer_.
+
+
+.. _pgbouncer: https://pgbouncer.github.io/
+
