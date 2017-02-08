@@ -174,7 +174,8 @@ def check_schema(schema, cnx, eids, fix=1):
 def check_text_index(schema, cnx, eids, fix=1):
     """check all entities registered in the text index"""
     print('Checking text index')
-    msg = '  Entity with eid %s exists in the text index but in no source (autofix will remove from text index)'
+    msg = ('  Entity with eid %s exists in the text index but not in any '
+           'entity type table (autofix will remove from text index)')
     cursor = cnx.system_sql('SELECT uid FROM appears;')
     for row in cursor.fetchall():
         eid = row[0]
@@ -190,7 +191,8 @@ def check_entities(schema, cnx, eids, fix=1):
     """check all entities registered in the repo system table"""
     print('Checking entities system table')
     # system table but no source
-    msg = '  Entity %s with eid %s exists in the system table but in no source (autofix will delete the entity)'
+    msg = ('  Entity %s with eid %s exists in "entities" table but not in any '
+           'entity type table (autofix will delete the entity)')
     cursor = cnx.system_sql('SELECT eid,type FROM entities;')
     for row in cursor.fetchall():
         eid, etype = row
@@ -243,7 +245,8 @@ def check_entities(schema, cnx, eids, fix=1):
                            '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
         notify_fixed(True)
     print('Checking entities tables')
-    msg = '  Entity with eid %s exists in the %s table but not in the system table (autofix will delete the entity)'
+    msg = ('  Entity with eid %s exists in the %s table but not in "entities" '
+           'table (autofix will delete the entity)')
     for eschema in schema.entities():
         if eschema.final:
             continue
@@ -262,8 +265,9 @@ def check_entities(schema, cnx, eids, fix=1):
 
 
 def bad_related_msg(rtype, target, eid, fix):
-    msg = '  A relation %s with %s eid %s exists but no such entity in sources'
-    sys.stderr.write(msg % (rtype, target, eid))
+    msg = ('  A relation %(rtype)s with %(target)s eid %(eid)d exists but '
+           'entity #(eid)d does not exist')
+    sys.stderr.write(msg % {'rtype': rtype, 'target': target, 'eid': eid})
     notify_fixed(fix)
 
 
