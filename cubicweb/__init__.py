@@ -307,6 +307,13 @@ class _CubesImporter(object):
                 return pkgutil.ImpLoader(fullname, *modinfo)
 
     def load_module(self, fullname):
+        try:
+            # If there is an existing module object named 'fullname' in
+            # sys.modules , the loader must use that existing module.
+            # Otherwise, the reload() builtin will not work correctly.
+            return sys.modules[fullname]
+        except KeyError:
+            pass
         if fullname != 'cubes':
             raise ImportError('No module named {0}'.format(fullname))
         mod = sys.modules[fullname] = types.ModuleType(fullname, doc='CubicWeb cubes')

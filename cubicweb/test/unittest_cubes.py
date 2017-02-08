@@ -93,6 +93,17 @@ class CubesImporterTC(unittest.TestCase):
             from cubes.foo import bar
             self.assertEqual(bar.baz, 1)
 
+    def test_reload_cube(self):
+        """reloading cubes twice should return the same module"""
+        CubicWebConfiguration.cls_adjust_sys_path()
+        import cubes
+        if PY2:
+            new = reload(cubes)
+        else:
+            import importlib
+            new = importlib.reload(cubes)
+        self.assertIs(new, cubes)
+
     def test_import_legacy_cube(self):
         """Check that importing a legacy cube works when sys.path got adjusted.
         """
