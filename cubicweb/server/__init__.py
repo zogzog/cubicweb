@@ -206,7 +206,7 @@ def create_user(session, login, pwd, *groups):
 
 def init_repository(config, interactive=True, drop=False, vreg=None,
                     init_config=None):
-    """initialise a repository database by creating tables add filling them
+    """Initialise a repository database by creating tables and filling them
     with the minimal set of entities (ie at least the schema, base groups and
     a initial user)
     """
