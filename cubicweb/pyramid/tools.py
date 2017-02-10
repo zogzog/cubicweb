@@ -64,7 +64,7 @@ def clear_cache():
 def includeme(config):
     """Start the cache maintenance loop task.
 
-    Automatically included by :func:`cubicweb.pyramid.make_cubicweb_application`.
+    Automatically included by :mod:`cubicweb.pyramid`.
     """
     repo = config.registry['cubicweb.repository']
     interval = int(config.registry.settings.get(

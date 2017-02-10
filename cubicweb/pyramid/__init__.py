@@ -12,11 +12,9 @@ except ImportError:
     from ConfigParser import SafeConfigParser
 
 
-def make_cubicweb_application(cwconfig, settings=None):
-    """
-    Create a pyramid-based CubicWeb instance from a cubicweb configuration.
-
-    It is initialy meant to be used by the 'pyramid' command of cubicweb-ctl.
+def config_from_cwconfig(cwconfig, settings=None):
+    """Return a Pyramid Configurator instance built from a CubicWeb config and
+    Pyramid-specific configuration files (pyramid.ini).
 
     :param cwconfig: A CubicWeb configuration
     :returns: A Pyramid config object
@@ -74,7 +72,7 @@ def wsgi_application_from_cwconfig(
 
     :returns: A fully operationnal WSGI application
     """
-    config = make_cubicweb_application(cwconfig)
+    config = config_from_cwconfig(cwconfig)
     profile = profile or asbool(config.registry.settings.get(
         'cubicweb.profile.enable', False))
     if profile:

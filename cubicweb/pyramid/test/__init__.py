@@ -2,7 +2,7 @@ import webtest
 
 from cubicweb.devtools.webtest import CubicWebTestTC
 
-from cubicweb.pyramid import make_cubicweb_application
+from cubicweb.pyramid import config_from_cwconfig
 
 
 class PyramidCWTest(CubicWebTestTC):
@@ -16,7 +16,7 @@ class PyramidCWTest(CubicWebTestTC):
     def setUp(self):
         # Skip CubicWebTestTC setUp
         super(CubicWebTestTC, self).setUp()
-        config = make_cubicweb_application(self.config, self.settings)
+        config = config_from_cwconfig(self.config, self.settings)
         self.includeme(config)
         self.pyr_registry = config.registry
         self.webapp = webtest.TestApp(
