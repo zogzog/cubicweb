@@ -185,7 +185,6 @@ def includeme(config):
         config.include(name)
 
     config.include('cubicweb.pyramid.tools')
-    config.include('cubicweb.pyramid.predicates')
     config.include('cubicweb.pyramid.core')
     config.include('cubicweb.pyramid.syncsession')
 
