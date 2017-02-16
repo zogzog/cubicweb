@@ -92,7 +92,11 @@ class WebConfiguration(CubicWebConfiguration):
           'help': 'see `cubicweb.dbapi.connect` documentation for possible value',
           'group': 'web', 'level': 2,
           }),
-
+        ('use-uicache',
+         {'type': 'yn', 'default': True,
+          'help': _('should css be compiled and store in uicache'),
+          'group': 'ui',
+          }),
         ('anonymous-user',
          {'type' : 'string',
           'default': None,
@@ -328,7 +332,7 @@ have the python imaging library installed to use captcha)',
         directory = self._fs_path_locate(rid, rdirectory)
         if directory is None:
             return None, None
-        if rdirectory == 'data' and rid.endswith('.css'):
+        if self['use-uicache'] and rdirectory == 'data' and rid.endswith('.css'):
             if rid == 'cubicweb.old.css':
                 # @import('cubicweb.css') in css
                 warn('[3.20] cubicweb.old.css has been renamed back to cubicweb.css',
