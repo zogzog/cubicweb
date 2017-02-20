@@ -44,7 +44,7 @@ from rql.utils import rqlvar_maker
 
 from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
-                      BadConnectionId, ValidationError, Unauthorized,
+                      BadConnectionId,
                       UniqueTogetherError, onevent, ViolatedConstraint)
 from cubicweb import set_log_methods
 from cubicweb import cwvreg, schema, server
@@ -823,21 +823,7 @@ class Repository(object):
                         rql = 'DELETE X %s Y WHERE X eid IN (%s)' % (rtype, in_eids)
                     else:
                         rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
-                    try:
-                        cnx.execute(rql, build_descr=False)
-                    except ValidationError:
-                        raise
-                    except Unauthorized:
-                        self.exception(
-                            'Unauthorized exception while cascading delete for entity %s. '
-                            'RQL: %s.\nThis should not happen since security is disabled here.',
-                            entities, rql)
-                        raise
-                    except Exception:
-                        if self.config.mode == 'test':
-                            raise
-                        self.exception('error while cascading delete for entity %s. RQL: %s',
-                                       entities, rql)
+                    cnx.execute(rql, build_descr=False)
 
     def init_entity_caches(self, cnx, entity, source):
         """Add entity to connection entities cache and repo's cache."""
