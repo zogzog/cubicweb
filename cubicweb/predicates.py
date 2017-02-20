@@ -868,7 +868,7 @@ class has_related_entities(EntityPredicate):
 
 
 class partial_has_related_entities(PartialPredicateMixIn, has_related_entities):
-    """Same as :class:~`cubicweb.predicates.has_related_entity`, but will look
+    """Same as :class:~`cubicweb.predicates.has_related_entities`, but will look
     for attributes of the selected class to get information which is otherwise
     expected by the initializer.
 
