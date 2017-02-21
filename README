@@ -35,3 +35,16 @@ Look in the doc/ subdirectory or read https://cubicweb.readthedocs.io/en/3.25/
 
 
 CubicWeb includes the Entypo pictograms by Daniel Bruce — http://www.entypo.com
+
+Contributing
+------------
+
+Patches should be submitted by email at the cubicweb-devel@lists.cubicweb.org
+mailing list in order to get reviewed by project integrators or any community
+member.
+The simplest way of send patches is to use the ``hg email`` command available
+through the *patchbomb* extension of Mercurial. Preferably, patches should be
+*in the message body* of emails. When submitting a revised version of a patch
+series, a prefix indicating the iteration number ``<n>`` of the series should
+be added to email subject prefixes; this can be achieved by specifying a
+``--flag v<n>`` option to ``hg email`` command.
