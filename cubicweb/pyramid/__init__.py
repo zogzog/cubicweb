@@ -26,6 +26,7 @@ import wsgicors
 
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from pyramid.config import Configurator
+from pyramid.exceptions import ConfigurationError
 from pyramid.settings import asbool, aslist
 
 try:
@@ -178,6 +179,12 @@ def includeme(config):
 
     The CubicWeb instance can be set in several ways:
 
+    -   Provide an already loaded CubicWeb repository in the registry:
+
+        .. code-block:: python
+
+            config.registry['cubicweb.repository'] = your_repo_instance
+
     -   Provide an already loaded CubicWeb config instance in the registry:
 
         .. code-block:: python
@@ -187,8 +194,24 @@ def includeme(config):
     -   Provide an instance name in the pyramid settings with
         :confval:`cubicweb.instance`.
 
+    A CubicWeb repository is instantiated and attached in
+    'cubicweb.repository' registry key if not already present.
+
+    The CubicWeb instance registry is attached in 'cubicweb.registry' registry
+    key.
     """
     cwconfig = config.registry.get('cubicweb.config')
+    repo = config.registry.get('cubicweb.repository')
+
+    if repo is not None:
+        if cwconfig is None:
+            config.registry['cubicweb.config'] = cwconfig = repo.config
+        elif cwconfig is not repo.config:
+            raise ConfigurationError(
+                'CubicWeb config instance (found in "cubicweb.config" '
+                'registry key) mismatches with that of the repository '
+                '(registry["cubicweb.repository"])'
+            )
 
     if cwconfig is None:
         debugmode = asbool(
@@ -197,7 +220,8 @@ def includeme(config):
             config.registry.settings['cubicweb.instance'], debugmode=debugmode)
         config.registry['cubicweb.config'] = cwconfig
 
-    config.registry['cubicweb.repository'] = repo = cwconfig.repository()
+    if repo is None:
+        repo = config.registry['cubicweb.repository'] = cwconfig.repository()
     config.registry['cubicweb.registry'] = repo.vreg
 
     if asbool(config.registry.settings.get('cubicweb.defaults', True)):
