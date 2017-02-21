@@ -1,3 +1,4 @@
+mock
 psycopg2
 ldap3 < 2
 cubicweb-basket

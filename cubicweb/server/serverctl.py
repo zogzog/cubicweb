@@ -980,6 +980,45 @@ class RebuildFTICommand(Command):
             cnx.commit()
 
 
+class RepositorySchedulerCommand(Command):
+    """Start a repository tasks scheduler.
+
+    Initialize a repository and start its tasks scheduler that would run
+    registered "looping tasks".
+
+    This is maintenance command that should be kept running along with a web
+    instance of a CubicWeb WSGI application (e.g. embeded into a Pyramid
+    application).
+
+    <instance>
+      the identifier of the instance
+    """
+    name = 'scheduler'
+    arguments = '<instance>'
+    min_args = max_args = 1
+    options = (
+        ('loglevel',
+         {'short': 'l', 'type': 'choice', 'metavar': '<log level>',
+          'default': 'info', 'choices': ('debug', 'info', 'warning', 'error')},
+         ),
+    )
+
+    def run(self, args):
+        from cubicweb.cwctl import init_cmdline_log_threshold
+        from cubicweb.server.repository import Repository
+        from cubicweb.server.utils import scheduler
+        config = ServerConfiguration.config_for(args[0])
+        # Log to stdout, since the this command runs in the foreground.
+        config.global_set_option('log-file', None)
+        init_cmdline_log_threshold(config, self['loglevel'])
+        repo = Repository(config, scheduler())
+        repo.bootstrap()
+        try:
+            repo.run_scheduler()
+        finally:
+            repo.shutdown()
+
+
 class SynchronizeSourceCommand(Command):
     """Force sources synchronization.
 
@@ -1090,6 +1129,7 @@ for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
                  DBDumpCommand, DBRestoreCommand, DBCopyCommand, DBIndexSanityCheckCommand,
                  AddSourceCommand, CheckRepositoryCommand, RebuildFTICommand,
                  SynchronizeSourceCommand, SchemaDiffCommand,
+                 RepositorySchedulerCommand,
                  ):
     CWCTL.register(cmdclass)
 

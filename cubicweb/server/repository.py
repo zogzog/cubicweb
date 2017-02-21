@@ -460,6 +460,7 @@ class Repository(object):
             # then, the system source is still available
             self.hm.call_hooks('before_server_shutdown', repo=self)
         self.shutting_down = True
+        self.info('shutting down repository')
         self.system_source.shutdown()
         if not (self.config.creating or self.config.repairing
                 or self.config.quick_start):

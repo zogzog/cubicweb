@@ -1,9 +1,15 @@
 import os.path as osp
 import shutil
 
+from mock import patch
+
 from cubicweb import ExecutionError
 from cubicweb.devtools import testlib, ApptestConfiguration
-from cubicweb.server.serverctl import DBDumpCommand, SynchronizeSourceCommand
+from cubicweb.server.serverctl import (
+    DBDumpCommand,
+    RepositorySchedulerCommand,
+    SynchronizeSourceCommand,
+)
 from cubicweb.server.serverconfig import ServerConfiguration
 
 
@@ -25,6 +31,26 @@ class ServerCTLTC(testlib.CubicWebTC):
     def test_dump(self):
         DBDumpCommand(None).run([self.appid])
         shutil.rmtree(osp.join(self.config.apphome, 'backup'))
+
+    def test_scheduler(self):
+        cmd = RepositorySchedulerCommand(None)
+        with patch('sched.scheduler.run',
+                   side_effect=RuntimeError('boom')) as patched_run:
+            with self.assertRaises(RuntimeError) as exc_cm:
+                with self.assertLogs('cubicweb.repository', level='INFO') as log_cm:
+                    cmd.run([self.appid])
+        # make sure repository scheduler started
+        scheduler_start_message = (
+            'INFO:cubicweb.repository:starting repository scheduler with '
+            'tasks: update_feeds, clean_sessions, expire_dataimports'
+        )
+        self.assertIn(scheduler_start_message, log_cm.output)
+        # and that scheduler's run method got called
+        self.assertIn('boom', str(exc_cm.exception))
+        patched_run.assert_called_once_with()
+        # make sure repository's shutdown method got called
+        repo_shutdown_message = 'INFO:cubicweb.repository:shutting down repository'
+        self.assertIn(repo_shutdown_message, log_cm.output)
 
     def test_source_sync(self):
         with self.admin_access.repo_cnx() as cnx:
