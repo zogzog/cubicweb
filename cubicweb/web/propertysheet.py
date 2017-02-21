@@ -19,6 +19,7 @@
 
 
 
+import errno
 import re
 import os
 import os.path as osp
@@ -109,7 +110,9 @@ class PropertySheet(dict):
                 stream.write(content)
             try:
                 os.rename(tmpfile, cachefile)
-            except IOError:
+            except OSError as err:
+                if err.errno != errno.EEXIST:
+                    raise
                 # Under windows, os.rename won't overwrite an existing file
                 os.unlink(cachefile)
                 os.rename(tmpfile, cachefile)
