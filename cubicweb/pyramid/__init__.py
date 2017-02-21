@@ -197,13 +197,6 @@ def includeme(config):
             config.registry.settings['cubicweb.instance'], debugmode=debugmode)
         config.registry['cubicweb.config'] = cwconfig
 
-    if cwconfig.debugmode:
-        try:
-            config.include('pyramid_debugtoolbar')
-        except ImportError:
-            warn('pyramid_debugtoolbar package not available, install it to '
-                 'get UI debug features', RuntimeWarning)
-
     config.registry['cubicweb.repository'] = repo = cwconfig.repository()
     config.registry['cubicweb.registry'] = repo.vreg
 
@@ -219,3 +212,10 @@ def includeme(config):
 
     if asbool(config.registry.settings.get('cubicweb.bwcompat', True)):
         config.include('cubicweb.pyramid.bwcompat')
+
+    if cwconfig.debugmode:
+        try:
+            config.include('pyramid_debugtoolbar')
+        except ImportError:
+            warn('pyramid_debugtoolbar package not available, install it to '
+                 'get UI debug features', RuntimeWarning)
