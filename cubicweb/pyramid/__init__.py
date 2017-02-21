@@ -166,6 +166,13 @@ def wsgi_application(instance_name=None, debug=None):
     return wsgi_application_from_cwconfig(cwconfig)
 
 
+def pyramid_app(global_config, **settings):
+    """Return a Pyramid WSGI application bound to a CubicWeb repository."""
+    config = Configurator(settings=settings)
+    config.include('cubicweb.pyramid')
+    return config.make_wsgi_app()
+
+
 def includeme(config):
     """Set-up a CubicWeb instance.
 

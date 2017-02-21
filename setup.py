@@ -204,6 +204,11 @@ setup(
         'Markdown',
         'unittest2 >= 0.7.0',
     ],
+    entry_points={
+        'paste.app_factory': [
+            'main=cubicweb.pyramid:pyramid_app',
+        ],
+    },
     extras_require={
         'captcha': [
             'Pillow',
