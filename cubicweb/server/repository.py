@@ -211,7 +211,7 @@ class Repository(object):
     entities and relations
     """
 
-    def __init__(self, config, tasks_manager=None, vreg=None, bootstrap=True):
+    def __init__(self, config, tasks_manager=None, vreg=None):
         self.config = config
         self.sources_by_eid = {}
         if vreg is None:
@@ -230,7 +230,7 @@ class Repository(object):
         self.schema = schema.CubicWebSchema(config.appid)
         self.vreg.schema = self.schema  # until actual schema is loaded...
         # shutdown flag
-        self.shutting_down = False
+        self.shutting_down = None
         # sources (additional sources info in the system database)
         self.system_source = self.get_source('native', 'system',
                                              config.system_source_config.copy())
@@ -239,9 +239,6 @@ class Repository(object):
         self.querier = querier.QuerierHelper(self, self.schema)
         # cache eid -> type
         self._type_cache = {}
-        # open some connection sets
-        if bootstrap:
-            self.bootstrap()
         # the hooks manager
         self.hm = hook.HooksManager(self.vreg)
 
@@ -258,6 +255,7 @@ class Repository(object):
 
     def bootstrap(self):
         self.info('starting repository from %s', self.config.apphome)
+        self.shutting_down = False
         config = self.config
         # copy pool size here since config.init_cube() and config.load_schema()
         # reload configuration from file and could reset a manually set pool

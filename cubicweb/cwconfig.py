@@ -1119,9 +1119,12 @@ the repository',
     # config -> repository
 
     def repository(self, vreg=None):
+        """Return a new bootstrapped repository."""
         from cubicweb.server.repository import Repository
         from cubicweb.server.utils import TasksManager
-        return Repository(self, TasksManager(), vreg=vreg)
+        repo = Repository(self, TasksManager(), vreg=vreg)
+        repo.bootstrap()
+        return repo
 
     # instance methods used to get instance specific resources #############
 

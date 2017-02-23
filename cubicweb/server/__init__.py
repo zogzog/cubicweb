@@ -223,6 +223,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
     config.cube_appobject_path = set(('hooks', 'entities'))
     # only enable the system source at initialization time
     repo = Repository(config, vreg=vreg)
+    repo.bootstrap()
     if init_config is not None:
         # further config initialization once it has been bootstrapped
         init_config(config)

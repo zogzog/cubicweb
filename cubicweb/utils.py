@@ -61,6 +61,7 @@ def admincnx(appid):
     password = config.default_admin_config['password']
 
     repo = Repository(config, TasksManager())
+    repo.bootstrap()
     session = repo.new_session(login, password=password)
     return session.new_cnx()
 

@@ -168,6 +168,7 @@ def run(args):
     # get local access to the repository
     print("Creating repo", prof_file)
     repo = Repository(config, prof_file)
+    repo.bootstrap()
     session = repo.new_session(user, password=password)
     reporter = ProfileReporter(queries)
     if threads > 1:
