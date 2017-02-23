@@ -58,7 +58,7 @@ from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
 from cubicweb.cwvreg import CW_EVENT_MANAGER
 from cubicweb import repoapi
 from cubicweb.migration import MigrationHelper, yes
-from cubicweb.server import hook, schemaserial as ss
+from cubicweb.server import hook, schemaserial as ss, repository
 from cubicweb.server.schema2sql import eschema2sql, rschema2sql, unique_index_name, sql_type
 from cubicweb.server.utils import manager_userpasswd
 from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
@@ -269,7 +269,7 @@ class ServerMigrationHelper(MigrationHelper):
                 if written_format in ('portable', 'native'):
                     format = written_format
         self.config.init_cnxset_pool = False
-        repo = self.repo = self.config.repository()
+        repo = self.repo = repository.Repository(self.config)
         source = repo.system_source
         try:
             source.restore(osp.join(tmpdir, source.uri), self.confirm, drop, format)
