@@ -290,7 +290,7 @@ class Repository(object):
         if config.quick_start or config.creating or not config.read_instance_schema:
             # load schema from the file system
             if not config.creating:
-                self.info("set fs instance'schema")
+                self.info("set fs instance's schema")
             self.set_schema(config.load_schema(expand_cubes=True))
             if not config.creating:
                 # set eids on entities schema
