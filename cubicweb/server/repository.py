@@ -241,7 +241,7 @@ class Repository(object):
         self._type_cache = {}
         # open some connection sets
         if bootstrap:
-            self.init_cnxset_pool()
+            self.bootstrap()
         # the hooks manager
         self.hm = hook.HooksManager(self.vreg)
 
@@ -256,8 +256,7 @@ class Repository(object):
                 if not isinstance(session.user, InternalManager):
                     session.user.__class__ = usercls
 
-    def init_cnxset_pool(self):
-        """should be called bootstrap_repository, as this is what it does"""
+    def bootstrap(self):
         self.info('starting repository from %s', self.config.apphome)
         config = self.config
         # copy pool size here since config.init_cube() and config.load_schema()

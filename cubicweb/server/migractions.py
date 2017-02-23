@@ -278,7 +278,7 @@ class ServerMigrationHelper(MigrationHelper):
                 raise SystemExit(1)
         shutil.rmtree(tmpdir)
         # call hooks
-        repo.init_cnxset_pool()
+        repo.bootstrap()
         repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
         print('-> database restored.')
 
