@@ -268,8 +268,7 @@ class ServerMigrationHelper(MigrationHelper):
                 written_format = format_file.readline().strip()
                 if written_format in ('portable', 'native'):
                     format = written_format
-        self.config.init_cnxset_pool = False
-        repo = self.repo = repository.Repository(self.config)
+        repo = self.repo = repository.Repository(self.config, bootstrap=False)
         source = repo.system_source
         try:
             source.restore(osp.join(tmpdir, source.uri), self.confirm, drop, format)

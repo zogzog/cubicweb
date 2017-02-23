@@ -220,10 +220,6 @@ notified of every changes.',
            }),
         ) + CubicWebConfiguration.options)
 
-    # should we init the connections pool (eg connect to sources). This is
-    # usually necessary...
-    init_cnxset_pool = True
-
     # read the schema from the database
     read_instance_schema = True
     # set this to true to get a minimal repository, for instance to get cubes

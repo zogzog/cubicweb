@@ -211,7 +211,7 @@ class Repository(object):
     entities and relations
     """
 
-    def __init__(self, config, tasks_manager=None, vreg=None):
+    def __init__(self, config, tasks_manager=None, vreg=None, bootstrap=True):
         self.config = config
         self.sources_by_eid = {}
         if vreg is None:
@@ -240,7 +240,7 @@ class Repository(object):
         # cache eid -> type
         self._type_cache = {}
         # open some connection sets
-        if config.init_cnxset_pool:
+        if bootstrap:
             self.init_cnxset_pool()
         # the hooks manager
         self.hm = hook.HooksManager(self.vreg)
