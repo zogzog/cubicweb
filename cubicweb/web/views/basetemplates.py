@@ -406,9 +406,7 @@ class HTMLPageFooter(View):
 
 
 class HTMLContentHeader(View):
-    """default html page content header:
-    * include message component if selectable for this request
-    * include selectable content navigation components
+    """default html page content header: include selectable content navigation components
     """
     __regid__ = 'contentheader'
 
