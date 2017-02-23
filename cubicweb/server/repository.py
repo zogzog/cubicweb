@@ -220,7 +220,6 @@ class Repository(object):
         self._tasks_manager = tasks_manager
 
         self.app_instances_bus = NullEventBus()
-        self.info('starting repository from %s', self.config.apphome)
         # dictionary of opened sessions
         self._sessions = {}
 
@@ -259,6 +258,7 @@ class Repository(object):
 
     def init_cnxset_pool(self):
         """should be called bootstrap_repository, as this is what it does"""
+        self.info('starting repository from %s', self.config.apphome)
         config = self.config
         # copy pool size here since config.init_cube() and config.load_schema()
         # reload configuration from file and could reset a manually set pool
