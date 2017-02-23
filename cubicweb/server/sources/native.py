@@ -417,19 +417,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def restore(self, backupfile, confirm, drop, format='native'):
         """method called to restore a backup of source's data"""
-        if self.repo.config.init_cnxset_pool:
-            self.close_source_connections()
-        try:
-            if format == 'portable':
-                helper = DatabaseIndependentBackupRestore(self)
-                helper.restore(backupfile)
-            elif format == 'native':
-                self.restore_from_file(backupfile, confirm, drop=drop)
-            else:
-                raise ValueError('Unknown format %r' % format)
-        finally:
-            if self.repo.config.init_cnxset_pool:
-                self.open_source_connections()
+        if format == 'portable':
+            helper = DatabaseIndependentBackupRestore(self)
+            helper.restore(backupfile)
+        elif format == 'native':
+            self.restore_from_file(backupfile, confirm, drop=drop)
+        else:
+            raise ValueError('Unknown format %r' % format)
 
     def init(self, activated, source_entity):
         super(NativeSQLSource, self).init(activated, source_entity)
