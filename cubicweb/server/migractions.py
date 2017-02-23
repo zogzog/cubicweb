@@ -276,7 +276,8 @@ class ServerMigrationHelper(MigrationHelper):
             print('-> error trying to restore %s [%s]' % (source.uri, exc))
             if not self.confirm('Continue anyway?', default='n'):
                 raise SystemExit(1)
-        shutil.rmtree(tmpdir)
+        finally:
+            shutil.rmtree(tmpdir)
         # call hooks
         repo.bootstrap()
         repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
