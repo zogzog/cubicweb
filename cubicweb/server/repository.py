@@ -413,8 +413,7 @@ class Repository(object):
                 self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
                 assert self.cleanup_session_time > 0
                 cleanup_session_interval = min(60 * 60, self.cleanup_session_time / 3)
-                self._tasks_manager.add_looping_task(cleanup_session_interval,
-                                                     self.clean_sessions)
+                self.looping_task(cleanup_session_interval, self.clean_sessions)
 
     def start_looping_tasks(self):
         """Actual "Repository as a server" startup.
