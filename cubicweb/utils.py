@@ -54,13 +54,12 @@ random.seed()
 def admincnx(appid):
     from cubicweb.cwconfig import CubicWebConfiguration
     from cubicweb.server.repository import Repository
-    from cubicweb.server.utils import TasksManager
     config = CubicWebConfiguration.config_for(appid)
 
     login = config.default_admin_config['login']
     password = config.default_admin_config['password']
 
-    repo = Repository(config, TasksManager())
+    repo = Repository(config)
     repo.bootstrap()
     session = repo.new_session(login, password=password)
     return session.new_cnx()
