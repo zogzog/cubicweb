@@ -211,6 +211,7 @@ class ListCommand(Command):
             print()
 
         if mode in ('all', 'config', 'configurations'):
+            cwcfg.load_available_configs()
             print('Available configurations:')
             for config in CONFIGURATIONS:
                 print('*', config.name)
