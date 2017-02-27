@@ -128,20 +128,10 @@ def includeme(config):
         session_prefix = 'cubicweb.auth.authtkt.session.'
         persistent_prefix = 'cubicweb.auth.authtkt.persistent.'
 
-        try:
-            secret = config.registry['cubicweb.config']['pyramid-auth-secret']
-            warnings.warn(
-                "pyramid-auth-secret from all-in-one is now "
-                "cubicweb.auth.authtkt.[session|persistent].secret",
-                DeprecationWarning)
-        except:
-            secret = 'notsosecret'
-
         session_secret = settings.get(
-            session_prefix + 'secret', secret)
+            session_prefix + 'secret', 'notsosecret')
         persistent_secret = settings.get(
-            persistent_prefix + 'secret', secret)
-
+            persistent_prefix + 'secret', 'notsosecret')
         if 'notsosecret' in (session_secret, persistent_secret):
             warnings.warn('''
 

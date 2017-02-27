@@ -187,15 +187,9 @@ def includeme(config):
     See also :ref:`defaults_module`
     """
     settings = config.registry.settings
-    secret = settings.get('cubicweb.session.secret', '')
-    if not secret:
-        secret = config.registry['cubicweb.config'].get('pyramid-session-secret')
-        warnings.warn('''
-        Please migrate pyramid-session-secret from
-        all-in-one.conf to cubicweb.session.secret config entry in
-        your pyramid.ini file.
-        ''')
-    if not secret:
+    try:
+        secret = settings['cubicweb.session.secret']
+    except KeyError:
         secret = 'notsosecret'
         warnings.warn('''
 
