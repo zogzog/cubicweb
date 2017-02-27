@@ -28,6 +28,7 @@ from os.path import join
 from logilab.common.configuration import Method, merge_options
 
 from cubicweb.cwconfig import CONFIGURATIONS
+from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.web.webconfig import WebConfiguration
 
 
@@ -96,20 +97,14 @@ much greater than connection-poolsize",
         return 'http://%s:%s/' % (self['host'] or getfqdn().lower(), self['port'] or 8080)
 
 
-try:
-    from cubicweb.server.serverconfig import ServerConfiguration
+class AllInOneConfiguration(WebConfigurationBase, ServerConfiguration):
+    """repository and web instance in the same twisted process"""
+    name = 'all-in-one'
+    options = merge_options(WebConfigurationBase.options
+                            + ServerConfiguration.options)
 
-    class AllInOneConfiguration(WebConfigurationBase, ServerConfiguration):
-        """repository and web instance in the same twisted process"""
-        name = 'all-in-one'
-        options = merge_options(WebConfigurationBase.options
-                                + ServerConfiguration.options)
-
-        cubicweb_appobject_path = WebConfigurationBase.cubicweb_appobject_path | ServerConfiguration.cubicweb_appobject_path
-        cube_appobject_path = WebConfigurationBase.cube_appobject_path | ServerConfiguration.cube_appobject_path
+    cubicweb_appobject_path = WebConfigurationBase.cubicweb_appobject_path | ServerConfiguration.cubicweb_appobject_path
+    cube_appobject_path = WebConfigurationBase.cube_appobject_path | ServerConfiguration.cube_appobject_path
 
 
-    CONFIGURATIONS.append(AllInOneConfiguration)
-
-except ImportError:
-    pass
+CONFIGURATIONS.append(AllInOneConfiguration)

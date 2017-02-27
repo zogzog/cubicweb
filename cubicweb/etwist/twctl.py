@@ -19,6 +19,7 @@
 
 from cubicweb.toolsutils import CommandHandler
 from cubicweb.web.webctl import WebCreateHandler, WebUpgradeHandler
+from cubicweb.server import serverctl
 
 # trigger configuration registration
 import cubicweb.etwist.twconfig # pylint: disable=W0611
@@ -45,35 +46,30 @@ class TWUpgradeHandler(WebUpgradeHandler):
     cfgname = 'twisted'
 
 
-try:
-    from cubicweb.server import serverctl
-    class AllInOneCreateHandler(serverctl.RepositoryCreateHandler,
-                                TWCreateHandler):
-        """configuration to get an instance running in a twisted web server
-        integrating a repository server in the same process
-        """
-        cfgname = 'all-in-one'
+class AllInOneCreateHandler(serverctl.RepositoryCreateHandler,
+                            TWCreateHandler):
+    """configuration to get an instance running in a twisted web server
+    integrating a repository server in the same process
+    """
+    cfgname = 'all-in-one'
 
-        def bootstrap(self, cubes, automatic=False, inputlevel=0):
-            """bootstrap this configuration"""
-            serverctl.RepositoryCreateHandler.bootstrap(self, cubes, automatic, inputlevel)
-            TWCreateHandler.bootstrap(self, cubes, automatic, inputlevel)
+    def bootstrap(self, cubes, automatic=False, inputlevel=0):
+        """bootstrap this configuration"""
+        serverctl.RepositoryCreateHandler.bootstrap(self, cubes, automatic, inputlevel)
+        TWCreateHandler.bootstrap(self, cubes, automatic, inputlevel)
 
-    class AllInOneStartHandler(TWStartHandler):
-        cmdname = 'start'
-        cfgname = 'all-in-one'
-        subcommand = 'cubicweb-twisted'
+class AllInOneStartHandler(TWStartHandler):
+    cmdname = 'start'
+    cfgname = 'all-in-one'
+    subcommand = 'cubicweb-twisted'
 
-    class AllInOneStopHandler(CommandHandler):
-        cmdname = 'stop'
-        cfgname = 'all-in-one'
-        subcommand = 'cubicweb-twisted'
+class AllInOneStopHandler(CommandHandler):
+    cmdname = 'stop'
+    cfgname = 'all-in-one'
+    subcommand = 'cubicweb-twisted'
 
-        def poststop(self):
-            pass
+    def poststop(self):
+        pass
 
-    class AllInOneUpgradeHandler(TWUpgradeHandler):
-        cfgname = 'all-in-one'
-
-except ImportError:
-    pass
+class AllInOneUpgradeHandler(TWUpgradeHandler):
+    cfgname = 'all-in-one'
