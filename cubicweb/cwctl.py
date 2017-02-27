@@ -513,8 +513,8 @@ running.'}),
             msg = (
                 "Twisted is required by the 'start' command\n"
                 "Either install it, or use one of the alternative commands:\n"
-                "- '{ctl} wsgi {appid}'\n"
-                "- '{ctl} pyramid {appid}'\n")
+                "- '{ctl} pyramid {appid}'\n"
+                "- '{ctl} wsgi {appid}'\n")
             raise ExecutionError(msg.format(ctl='cubicweb-ctl', appid=appid))
         config = cwcfg.config_for(appid, debugmode=self['debug'])
         # override config file values with cmdline options
