@@ -713,9 +713,9 @@ this option is set to yes",
                         'server.serverconfig',):
             try:
                 __import__('cubicweb.%s' % confmod)
-            except ImportError:
+            except ImportError as exc:
                 cls.warning('failed to load config module %s (%s)',
-                            ctlmod, exc)
+                            confmod, exc)
 
     @classmethod
     def load_cwctl_plugins(cls):
