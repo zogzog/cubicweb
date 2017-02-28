@@ -316,6 +316,8 @@ class Repository(object):
         #    proper initialization
         self.cnxsets.close()
         self.cnxsets = _CnxSetPool(self.system_source, pool_size)
+        # 5. call instance level initialisation hooks
+        self.hm.call_hooks('server_startup', repo=self)
 
     # internals ###############################################################
 
@@ -402,13 +404,10 @@ class Repository(object):
     def _prepare_startup(self):
         """Prepare "Repository as a server" for startup.
 
-        * trigger server startup hook,
         * register session clean up task.
         """
         if not (self.config.creating or self.config.repairing
                 or self.config.quick_start):
-            # call instance level initialisation hooks
-            self.hm.call_hooks('server_startup', repo=self)
             # register a task to cleanup expired session
             if self._tasks_manager is not None:
                 self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
