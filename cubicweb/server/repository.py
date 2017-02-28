@@ -410,13 +410,12 @@ class Repository(object):
             # call instance level initialisation hooks
             self.hm.call_hooks('server_startup', repo=self)
             # register a task to cleanup expired session
-            self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
-            assert self.cleanup_session_time > 0
-            cleanup_session_interval = min(60 * 60, self.cleanup_session_time / 3)
-            assert self._tasks_manager is not None, \
-                "This Repository is not intended to be used as a server"
-            self._tasks_manager.add_looping_task(cleanup_session_interval,
-                                                 self.clean_sessions)
+            if self._tasks_manager is not None:
+                self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
+                assert self.cleanup_session_time > 0
+                cleanup_session_interval = min(60 * 60, self.cleanup_session_time / 3)
+                self._tasks_manager.add_looping_task(cleanup_session_interval,
+                                                     self.clean_sessions)
 
     def start_looping_tasks(self):
         """Actual "Repository as a server" startup.
