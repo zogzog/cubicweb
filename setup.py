@@ -230,6 +230,7 @@ setup(
             'waitress >= 0.8.9',
             'wsgicors >= 0.3',
             'pyramid_multiauth',
+            'repoze.lru',
         ],
         'rdf': [
             'rdflib',

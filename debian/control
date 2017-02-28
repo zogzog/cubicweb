@@ -26,6 +26,7 @@ Build-Depends:
  python-pyramid-multiauth,
  python-waitress,
  python-passlib (>= 1.7.0),
+ python-repoze.lru,
  python-wsgicors,
  sphinx-common,
 Standards-Version: 3.9.6
@@ -157,6 +158,7 @@ Depends:
  python-pyramid-multiauth,
  python-waitress (>= 0.8.9),
  python-wsgicors,
+ python-repoze.lru,
 Recommends:
  python-pyramid-debugtoolbar
 Conflicts:

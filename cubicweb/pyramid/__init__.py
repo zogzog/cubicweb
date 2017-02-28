@@ -230,7 +230,6 @@ def includeme(config):
     for name in aslist(config.registry.settings.get('cubicweb.includes', [])):
         config.include(name)
 
-    config.include('cubicweb.pyramid.tools')
     config.include('cubicweb.pyramid.core')
     config.include('cubicweb.pyramid.syncsession')
 
