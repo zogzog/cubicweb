@@ -29,6 +29,8 @@ class TransactionsCleanupStartupHook(hook.Hook):
     events = ('server_startup',)
 
     def __call__(self):
+        if self.repo._tasks_manager is None:
+            return
         # XXX use named args and inner functions to avoid referencing globals
         # which may cause reloading pb
         lifetime = timedelta(days=self.repo.config['keep-transaction-lifetime'])
@@ -49,6 +51,8 @@ class UpdateFeedsStartupHook(hook.Hook):
     events = ('server_startup',)
 
     def __call__(self):
+        if self.repo._tasks_manager is None:
+            return
         def update_feeds(repo):
             # take a list to avoid iterating on a dictionary whose size may
             # change
@@ -71,6 +75,8 @@ class DataImportsCleanupStartupHook(hook.Hook):
     events = ('server_startup',)
 
     def __call__(self):
+        if self.repo._tasks_manager is None:
+            return
         def expire_dataimports(repo=self.repo):
             for uri, source in repo.sources_by_uri.items():
                 if (uri == 'system'
