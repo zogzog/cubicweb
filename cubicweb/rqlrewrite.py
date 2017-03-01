@@ -905,22 +905,18 @@ class RQLRelationRewriter(RQLRewriter):
 
     This class *isn't thread safe*.
     """
-    def __init__(self, session):
-        super(RQLRelationRewriter, self).__init__(session)
-        self.rules = {}
-        for rschema in self.schema.iter_computed_relations():
-            self.rules[rschema.type] = RRQLExpression(rschema.rule)
 
     def rewrite(self, union, kwargs=None):
         self.kwargs = kwargs
         self.removing_ambiguity = False
         self.existingvars = None
         self.pending_keys = None
+        rules = self.schema.rules_rqlexpr_mapping
         for relation in union.iget_nodes(n.Relation):
-            if relation.r_type in self.rules:
+            if relation.r_type in rules:
                 self.select = relation.stmt
                 self.solutions = solutions = self.select.solutions[:]
-                self.current_expr = self.rules[relation.r_type]
+                self.current_expr = rules[relation.r_type]
                 self._insert_scope = relation.scope
                 self.rewritten = {}
                 lhs, rhs = relation.get_variable_parts()
