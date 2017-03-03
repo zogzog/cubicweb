@@ -27,7 +27,7 @@ from logilab.common import nullobject
 from logilab.common.decorators import cached, clear_cache, copy_cache
 from rql import nodes, stmts
 
-from cubicweb import NotAnEntity, NoResultError, MultipleResultsError
+from cubicweb import NotAnEntity, NoResultError, MultipleResultsError, UnknownEid
 
 
 _MARKER = nullobject()
@@ -560,11 +560,21 @@ class ResultSet(object):
 
     @cached
     def syntax_tree(self):
-        """return the syntax tree (:class:`rql.stmts.Union`) for the
-        originating query. You can expect it to have solutions
-        computed and it will be properly annotated.
+        """Return the **cached** syntax tree (:class:`rql.stmts.Union`) for the
+        originating query.
+
+        You can expect it to have solutions computed and it will be properly annotated.
+        Since this is a cached shared object, **you must not modify it**.
         """
-        return self.req.vreg.parse(self.req, self.rql, self.args)
+        cnx = getattr(self.req, 'cnx', self.req)
+        try:
+            rqlst = cnx.repo.querier.rql_cache.get(cnx, self.rql, self.args)[0]
+            if not rqlst.annotated:
+                self.req.vreg.rqlhelper.annotate(rqlst)
+            return rqlst
+        except UnknownEid:
+            # unknown eid in args prevent usage of rql cache, but we still need a rql st
+            return self.req.vreg.parse(self.req, self.rql, self.args)
 
     @cached
     def column_types(self, col):

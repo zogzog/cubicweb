@@ -89,7 +89,7 @@ class ResultSetTC(CubicWebTC):
         self.rset = ResultSet([[12, 'adim'], [13, 'syt']],
                               'Any U,L where U is CWUser, U login L',
                               description=[['CWUser', 'String'], ['Bar', 'String']])
-        self.rset.req = mock_object(vreg=self.vreg)
+        self.rset.req = mock_object(vreg=self.vreg, repo=self.repo)
 
     def compare_urls(self, url1, url2):
         info1 = urlsplit(url1)
