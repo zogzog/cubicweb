@@ -125,7 +125,7 @@ def turn_repo_on(repo):
         for cnxset in repo.cnxsets:
             cnxset.reconnect()
         repo._type_cache = {}
-        repo.querier._rql_cache = {}
+        repo.querier.set_schema(repo.schema)
         repo.system_source.reset_caches()
         repo._needs_refresh = False
 

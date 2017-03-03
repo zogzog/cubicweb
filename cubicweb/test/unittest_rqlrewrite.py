@@ -512,9 +512,9 @@ class RewriteFullTC(CubicWebTC):
         if args is None:
             args = {}
         querier = self.repo.querier
-        union = querier.parse(rql)
+        union = parse(rql) # self.vreg.parse(rql, annotate=True)
         with self.admin_access.repo_cnx() as cnx:
-            querier.solutions(cnx, union, args)
+            self.vreg.solutions(cnx, union, args)
             querier._annotate(union)
             plan = querier.plan_factory(union, args, cnx)
             plan.preprocess(union)

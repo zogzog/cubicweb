@@ -478,32 +478,13 @@ class QuerierHelper(object):
     def set_schema(self, schema):
         self.schema = schema
         repo = self._repo
-        # rql st and solution cache.
-        self._rql_cache = QueryCache(repo.config['rql-cache-size'])
-        # rql cache key cache. Don't bother using a Cache instance: we should
-        # have a limited number of queries in there, since there are no entries
-        # in this cache for user queries (which have no args)
-        self._rql_ck_cache = {}
-        # some cache usage stats
-        self.cache_hit, self.cache_miss = 0, 0
-        # rql parsing / analysing helper
-        self.solutions = repo.vreg.solutions
+        self.rql_cache = RQLCache(repo, schema)
         rqlhelper = repo.vreg.rqlhelper
-        # set backend on the rql helper, will be used for function checking
-        rqlhelper.backend = repo.config.system_source_config['db-driver']
-        self._parse = rqlhelper.parse
         self._annotate = rqlhelper.annotate
         # rql planner
         self._planner = SSPlanner(schema, rqlhelper)
         # sql generation annotator
         self.sqlgen_annotate = SQLGenAnnotator(schema).annotate
-
-    def parse(self, rql, annotate=False):
-        """return a rql syntax tree for the given rql"""
-        try:
-            return self._parse(text_type(rql), annotate=annotate)
-        except UnicodeError:
-            raise RQLSyntaxError(rql)
 
     def plan_factory(self, rqlst, args, cnx):
         """create an execution plan for an INSERT RQL query"""
@@ -535,44 +516,12 @@ class QuerierHelper(object):
             if server.DEBUG & (server.DBG_MORE | server.DBG_SQL):
                 print('*'*80)
             print('querier input', repr(rql), repr(args))
-        # parse the query and binds variables
-        cachekey = (rql,)
         try:
-            if args:
-                # search for named args in query which are eids (hence
-                # influencing query's solutions)
-                eidkeys = self._rql_ck_cache[rql]
-                if eidkeys:
-                    # if there are some, we need a better cache key, eg (rql +
-                    # entity type of each eid)
-                    try:
-                        cachekey = _rql_cache_key(cnx, rql, args, eidkeys)
-                    except UnknownEid:
-                        # we want queries such as "Any X WHERE X eid 9999"
-                        # return an empty result instead of raising UnknownEid
-                        return empty_rset(rql, args)
-            rqlst = self._rql_cache[cachekey]
-            self.cache_hit += 1
-            statsd_c('cache_hit')
-        except KeyError:
-            self.cache_miss += 1
-            statsd_c('cache_miss')
-            rqlst = self.parse(rql)
-            try:
-                # compute solutions for rqlst and return named args in query
-                # which are eids. Notice that if you may not need `eidkeys`, we
-                # have to compute solutions anyway (kept as annotation on the
-                # tree)
-                eidkeys = self.solutions(cnx, rqlst, args)
-            except UnknownEid:
-                # we want queries such as "Any X WHERE X eid 9999" return an
-                # empty result instead of raising UnknownEid
-                return empty_rset(rql, args)
-            if args and rql not in self._rql_ck_cache:
-                self._rql_ck_cache[rql] = eidkeys
-                if eidkeys:
-                    cachekey = _rql_cache_key(cnx, rql, args, eidkeys)
-            self._rql_cache[cachekey] = rqlst
+            rqlst, cachekey = self.rql_cache.get(cnx, rql, args)
+        except UnknownEid:
+            # we want queries such as "Any X WHERE X eid 9999"
+            # return an empty result instead of raising UnknownEid
+            return empty_rset(rql, args)
         if rqlst.TYPE != 'select':
             if cnx.read_security:
                 check_no_password_selected(rqlst)
@@ -643,6 +592,74 @@ class QuerierHelper(object):
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
+
+class RQLCache(object):
+
+    def __init__(self, repo, schema):
+        # rql st and solution cache.
+        self._cache = QueryCache(repo.config['rql-cache-size'])
+        # rql cache key cache. Don't bother using a Cache instance: we should
+        # have a limited number of queries in there, since there are no entries
+        # in this cache for user queries (which have no args)
+        self._ck_cache = {}
+        # some cache usage stats
+        self.cache_hit, self.cache_miss = 0, 0
+        # rql parsing / analysing helper
+        self.solutions = repo.vreg.solutions
+        rqlhelper = repo.vreg.rqlhelper
+        # set backend on the rql helper, will be used for function checking
+        rqlhelper.backend = repo.config.system_source_config['db-driver']
+
+        def parse(rql, annotate=False, parse=rqlhelper.parse):
+            """Return a freshly parsed syntax tree for the given RQL."""
+            try:
+                return parse(text_type(rql), annotate=annotate)
+            except UnicodeError:
+                raise RQLSyntaxError(rql)
+        self._parse = parse
+
+    def __len__(self):
+        return len(self._cache)
+
+    def get(self, cnx, rql, args):
+        """Return syntax tree and cache key for the given RQL.
+
+        Returned syntax tree is cached and must not be modified
+        """
+        # parse the query and binds variables
+        cachekey = (rql,)
+        try:
+            if args:
+                # search for named args in query which are eids (hence
+                # influencing query's solutions)
+                eidkeys = self._ck_cache[rql]
+                if eidkeys:
+                    # if there are some, we need a better cache key, eg (rql +
+                    # entity type of each eid)
+                    cachekey = _rql_cache_key(cnx, rql, args, eidkeys)
+            rqlst = self._cache[cachekey]
+            self.cache_hit += 1
+            statsd_c('cache_hit')
+        except KeyError:
+            self.cache_miss += 1
+            statsd_c('cache_miss')
+            rqlst = self._parse(rql)
+            # compute solutions for rqlst and return named args in query
+            # which are eids. Notice that if you may not need `eidkeys`, we
+            # have to compute solutions anyway (kept as annotation on the
+            # tree)
+            eidkeys = self.solutions(cnx, rqlst, args)
+            if args and rql not in self._ck_cache:
+                self._ck_cache[rql] = eidkeys
+                if eidkeys:
+                    cachekey = _rql_cache_key(cnx, rql, args, eidkeys)
+            self._cache[cachekey] = rqlst
+        return rqlst, cachekey
+
+    def pop(self, key, *args):
+        """Pop a key from the cache."""
+        self._cache.pop(key, *args)
 
 
 def _rql_cache_key(cnx, rql, args, eidkeys):

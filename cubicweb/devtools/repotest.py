@@ -277,8 +277,8 @@ class BasePlannerTC(BaseQuerierTC):
         undo_monkey_patch()
 
     def _prepare_plan(self, cnx, rql, kwargs=None):
-        rqlst = self.o.parse(rql, annotate=True)
-        self.o.solutions(cnx, rqlst, kwargs)
+        rqlst = self.repo.vreg.rqlhelper.parse(rql, annotate=True)
+        self.repo.vreg.solutions(cnx, rqlst, kwargs)
         if rqlst.TYPE == 'select':
             self.repo.vreg.rqlhelper.annotate(rqlst)
             for select in rqlst.children:

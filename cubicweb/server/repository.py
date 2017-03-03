@@ -436,7 +436,7 @@ class Repository(object):
             thread.join()
             self.info('thread %s finished', thread.getName())
         self.cnxsets.close()
-        hits, misses = self.querier.cache_hit, self.querier.cache_miss
+        hits, misses = self.querier.rql_cache.cache_hit, self.querier.rql_cache.cache_miss
         try:
             self.info('rql st cache hit/miss: %s/%s (%s%% hits)', hits, misses,
                       (hits * 100) / (hits + misses))
@@ -662,7 +662,7 @@ class Repository(object):
 
     def clear_caches(self, eids):
         etcache = self._type_cache
-        rqlcache = self.querier._rql_cache
+        rqlcache = self.querier.rql_cache
         for eid in eids:
             try:
                 etype = etcache.pop(int(eid))  # may be a string in some cases

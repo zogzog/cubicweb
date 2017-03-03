@@ -39,8 +39,8 @@ class StatsService(Service):
         querier = repo.querier
         source = repo.system_source
         for size, maxsize, hits, misses, title in (
-            (len(querier._rql_cache), repo.config['rql-cache-size'],
-             querier.cache_hit, querier.cache_miss, 'rqlt_st'),
+            (len(querier.rql_cache), repo.config['rql-cache-size'],
+             querier.rql_cache.cache_hit, querier.rql_cache.cache_miss, 'rqlt_st'),
             (len(source._cache), repo.config['rql-cache-size'],
              source.cache_hit, source.cache_miss, 'sql'),
         ):

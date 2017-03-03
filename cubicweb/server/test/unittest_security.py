@@ -521,9 +521,9 @@ class SecurityTC(BaseSecurityTC):
         with self.temporary_permissions(Division={'read': ('managers',
                                                            ERQLExpression('X owned_by U'))}):
             with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
+                rqlst = self.repo.vreg.rqlhelper.parse('Any X WHERE X is_instance_of Societe')
+                self.repo.vreg.solutions(cnx, rqlst, {})
                 querier = cnx.repo.querier
-                rqlst = querier.parse('Any X WHERE X is_instance_of Societe')
-                querier.solutions(cnx, rqlst, {})
                 querier._annotate(rqlst)
                 plan = querier.plan_factory(rqlst, {}, cnx)
                 plan.preprocess(rqlst)
