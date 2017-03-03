@@ -685,21 +685,6 @@ class Repository(object):
             self._type_cache[eid] = etype
             return etype
 
-    def querier_cache_key(self, cnx, rql, args, eidkeys):
-        cachekey = [rql]
-        for key in sorted(eidkeys):
-            try:
-                etype = self.type_from_eid(args[key], cnx)
-            except KeyError:
-                raise QueryError('bad cache key %s (no value)' % key)
-            except TypeError:
-                raise QueryError('bad cache key %s (value: %r)' % (
-                    key, args[key]))
-            cachekey.append(etype)
-            # ensure eid is correctly typed in args
-            args[key] = int(args[key])
-        return tuple(cachekey)
-
     def add_info(self, cnx, entity, source):
         """add type and source info for an eid into the system table,
         and index the entity with the full text index

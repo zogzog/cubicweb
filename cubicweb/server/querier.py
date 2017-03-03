@@ -30,7 +30,7 @@ from rql.stmts import Union
 from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj, Relation, Exists, Not
 from yams import BASE_TYPES
 
-from cubicweb import ValidationError, Unauthorized, UnknownEid
+from cubicweb import ValidationError, Unauthorized, UnknownEid, QueryError
 from cubicweb.rqlrewrite import RQLRelationRewriter
 from cubicweb import Binary, server
 from cubicweb.rset import ResultSet
@@ -546,8 +546,7 @@ class QuerierHelper(object):
                     # if there are some, we need a better cache key, eg (rql +
                     # entity type of each eid)
                     try:
-                        cachekey = self._repo.querier_cache_key(cnx, rql,
-                                                                args, eidkeys)
+                        cachekey = _rql_cache_key(cnx, rql, args, eidkeys)
                     except UnknownEid:
                         # we want queries such as "Any X WHERE X eid 9999"
                         # return an empty result instead of raising UnknownEid
@@ -572,8 +571,7 @@ class QuerierHelper(object):
             if args and rql not in self._rql_ck_cache:
                 self._rql_ck_cache[rql] = eidkeys
                 if eidkeys:
-                    cachekey = self._repo.querier_cache_key(cnx, rql, args,
-                                                            eidkeys)
+                    cachekey = _rql_cache_key(cnx, rql, args, eidkeys)
             self._rql_cache[cachekey] = rqlst
         if rqlst.TYPE != 'select':
             if cnx.read_security:
@@ -645,6 +643,24 @@ class QuerierHelper(object):
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
+
+def _rql_cache_key(cnx, rql, args, eidkeys):
+    cachekey = [rql]
+    type_from_eid = cnx.repo.type_from_eid
+    for key in sorted(eidkeys):
+        try:
+            etype = type_from_eid(args[key], cnx)
+        except KeyError:
+            raise QueryError('bad cache key %s (no value)' % key)
+        except TypeError:
+            raise QueryError('bad cache key %s (value: %r)' % (
+                key, args[key]))
+        cachekey.append(etype)
+        # ensure eid is correctly typed in args
+        args[key] = int(args[key])
+    return tuple(cachekey)
+
 
 from logging import getLogger
 from cubicweb import set_log_methods
