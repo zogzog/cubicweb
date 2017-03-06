@@ -211,13 +211,13 @@ class Repository(object):
     entities and relations
     """
 
-    def __init__(self, config, tasks_manager=None, vreg=None):
+    def __init__(self, config, scheduler=None, vreg=None):
         self.config = config
         self.sources_by_eid = {}
         if vreg is None:
             vreg = cwvreg.CWRegistryStore(config)
         self.vreg = vreg
-        self._tasks_manager = tasks_manager
+        self._scheduler = scheduler
 
         self.app_instances_bus = NullEventBus()
         # dictionary of opened sessions
@@ -409,26 +409,29 @@ class Repository(object):
         if not (self.config.creating or self.config.repairing
                 or self.config.quick_start):
             # register a task to cleanup expired session
-            if self._tasks_manager is not None:
+            if self._scheduler is not None:
                 self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
                 assert self.cleanup_session_time > 0
                 cleanup_session_interval = min(60 * 60, self.cleanup_session_time / 3)
                 self.looping_task(cleanup_session_interval, self.clean_sessions)
 
-    def start_looping_tasks(self):
-        """Actual "Repository as a server" startup.
+    def run_scheduler(self):
+        """Start repository scheduler after preparing the repository for that.
 
         * trigger server startup hook,
         * register session clean up task,
-        * start all tasks.
+        * start the scheduler *and block*.
 
         XXX Other startup related stuffs are done elsewhere. In Repository
         XXX __init__ or in external codes (various server managers).
         """
         self._prepare_startup()
-        assert self._tasks_manager is not None,\
+        assert self._scheduler is not None, \
             "This Repository is not intended to be used as a server"
-        self._tasks_manager.start()
+        self.info(
+            'starting repository scheduler with tasks: %s',
+            ', '.join(e.action.__name__ for e in self._scheduler.queue))
+        self._scheduler.run()
 
     def looping_task(self, interval, func, *args):
         """register a function to be called every `interval` seconds.
@@ -436,9 +439,12 @@ class Repository(object):
         looping tasks can only be registered during repository initialization,
         once done this method will fail.
         """
-        assert self._tasks_manager is not None,\
+        assert self._scheduler is not None, \
             "This Repository is not intended to be used as a server"
-        self._tasks_manager.add_looping_task(interval, func, *args)
+        event = utils.schedule_periodic_task(
+            self._scheduler, interval, func, *args)
+        self.info('scheduled periodic task %s (interval: %.2fs)',
+                  event.action.__name__, interval)
 
     def threaded_task(self, func):
         """start function in a separated thread"""
@@ -455,8 +461,6 @@ class Repository(object):
             self.hm.call_hooks('before_server_shutdown', repo=self)
         self.shutting_down = True
         self.system_source.shutdown()
-        if self._tasks_manager is not None:
-            self._tasks_manager.stop()
         if not (self.config.creating or self.config.repairing
                 or self.config.quick_start):
             self.hm.call_hooks('server_shutdown', repo=self)

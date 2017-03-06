@@ -91,7 +91,6 @@ class ProcessInformationView(StartupView):
         w(u'<h2>%s</h2>' % _('Repository'))
         w(u'<h3>%s</h3>' % _('resources usage'))
         stats = self._cw.call_service('repo_stats')
-        stats['looping_tasks'] = ', '.join('%s (%s seconds)' % (n, i) for n, i in stats['looping_tasks'])
         stats['threads'] = ', '.join(sorted(stats['threads']))
         for k in stats:
             if k == 'type_cache_size':
