@@ -19,7 +19,8 @@
 from __future__ import print_function
 
 
-
+from functools import wraps
+import sched
 import sys
 import logging
 from threading import Timer, Thread
@@ -111,6 +112,48 @@ def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
             passwd = getpass('password: ')
     # XXX decode password using stdin encoding then encode it using appl'encoding
     return user, passwd
+
+
+if PY2:
+    import time  # noqa
+
+    class scheduler(sched.scheduler):
+        """Python2 version of sched.scheduler that matches Python3 API."""
+
+        def __init__(self, **kwargs):
+            kwargs.setdefault('timefunc', time.time)
+            kwargs.setdefault('delayfunc', time.sleep)
+            # sched.scheduler is an old-style class.
+            sched.scheduler.__init__(self, **kwargs)
+
+else:
+    scheduler = sched.scheduler
+
+
+def schedule_periodic_task(scheduler, interval, func, *args):
+    """Enter a task with `func(*args)` as a periodic event in `scheduler`
+    executing at `interval` seconds. Once executed, the task would re-schedule
+    itself unless a BaseException got raised.
+    """
+    @wraps(func)
+    def task(*args):
+        restart = True
+        try:
+            func(*args)
+        except Exception:
+            logger = logging.getLogger('cubicweb.scheduler')
+            logger.exception('Unhandled exception in periodic task "%s"',
+                             func.__name__)
+        except BaseException as exc:
+            logger = logging.getLogger('cubicweb.scheduler')
+            logger.error('periodic task "%s" not re-scheduled due to %r',
+                         func.__name__, exc)
+            restart = False
+        finally:
+            if restart:
+                scheduler.enter(interval, 1, task, argument=args)
+
+    return scheduler.enter(interval, 1, task, argument=args)
 
 
 _MARKER = object()

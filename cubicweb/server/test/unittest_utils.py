@@ -17,12 +17,11 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Tests for cubicweb.server.utils module."""
 
-from unittest import TestCase
-
+from cubicweb.devtools import testlib
 from cubicweb.server import utils
 
 
-class UtilsTC(TestCase):
+class UtilsTC(testlib.BaseTestCase):
 
     def test_crypt(self):
         for hash in (
@@ -39,6 +38,29 @@ class UtilsTC(TestCase):
         # accept any password for empty hashes (is it a good idea?)
         self.assertEqual(utils.crypt_password('xxx', ''), '')
         self.assertEqual(utils.crypt_password('yyy', ''), '')
+
+    def test_schedule_periodic_task(self):
+        scheduler = utils.scheduler()
+        this = []
+
+        def fill_this(x):
+            this.append(x)
+            if len(this) > 2:
+                raise SystemExit()
+            elif len(this) > 1:
+                raise RuntimeError()
+
+        event = utils.schedule_periodic_task(scheduler, 0.01, fill_this, 1)
+        self.assertEqual(event.action.__name__, 'fill_this')
+        self.assertEqual(len(scheduler.queue), 1)
+
+        with self.assertLogs('cubicweb.scheduler', level='ERROR') as cm:
+            scheduler.run()
+        self.assertEqual(this, [1] * 3)
+        self.assertEqual(len(cm.output), 2)
+        self.assertIn('Unhandled exception in periodic task "fill_this"',
+                      cm.output[0])
+        self.assertIn('"fill_this" not re-scheduled', cm.output[1])
 
 
 if __name__ == '__main__':
