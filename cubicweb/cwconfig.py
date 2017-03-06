@@ -1121,8 +1121,7 @@ the repository',
     def repository(self, vreg=None):
         """Return a new bootstrapped repository."""
         from cubicweb.server.repository import Repository
-        from cubicweb.server.utils import scheduler
-        repo = Repository(self, scheduler=scheduler(), vreg=vreg)
+        repo = Repository(self, vreg=vreg)
         repo.bootstrap()
         return repo
 
