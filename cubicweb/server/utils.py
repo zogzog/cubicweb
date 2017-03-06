@@ -26,7 +26,7 @@ import logging
 from threading import Thread
 from getpass import getpass
 
-from six import PY2, text_type
+from six import PY2
 from six.moves import input
 
 from passlib.utils import handlers as uh, to_hash_str
@@ -59,9 +59,11 @@ class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
         return md5crypt(secret, self.salt.encode('ascii')).decode('utf-8')
     _calc_checksum = calc_checksum
 
+
 _CRYPTO_CTX = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt', 'ldap_salted_sha1'],
                            deprecated=['cubicwebmd5crypt', 'des_crypt'])
 verify_and_update = _CRYPTO_CTX.verify_and_update
+
 
 def crypt_password(passwd, salt=None):
     """return the encrypted password using the given salt or a generated one
@@ -74,10 +76,11 @@ def crypt_password(passwd, salt=None):
     try:
         if _CRYPTO_CTX.verify(passwd, salt):
             return salt
-    except ValueError: # e.g. couldn't identify hash
+    except ValueError:  # e.g. couldn't identify hash
         pass
     # wrong password
     return b''
+
 
 @deprecated('[3.22] no more necessary, directly get eschema.eid')
 def eschema_eid(cnx, eschema):
@@ -92,6 +95,7 @@ def eschema_eid(cnx, eschema):
 
 DEFAULT_MSG = 'we need a manager connection on the repository \
 (the server doesn\'t have to run, even should better not)'
+
 
 def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
                        passwdmsg='password'):
@@ -157,6 +161,8 @@ def schedule_periodic_task(scheduler, interval, func, *args):
 
 
 _MARKER = object()
+
+
 def func_name(func):
     name = getattr(func, '__name__', _MARKER)
     if name is _MARKER:

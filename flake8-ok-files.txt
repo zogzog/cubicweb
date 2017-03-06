@@ -37,6 +37,7 @@ cubicweb/server/rqlannotation.py
 cubicweb/server/schema2sql.py
 cubicweb/server/session.py
 cubicweb/server/sqlutils.py
+cubicweb/server/utils.py
 cubicweb/server/test/datacomputed/migratedapp/schema.py
 cubicweb/server/test/datacomputed/schema.py
 cubicweb/server/test/data/entities.py
