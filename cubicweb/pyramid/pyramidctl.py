@@ -35,6 +35,7 @@ import sys
 import time
 import threading
 import subprocess
+import warnings
 
 from cubicweb import ExecutionError
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
@@ -338,8 +339,11 @@ class PyramidStartHandler(InstanceCommand):
         host = cwconfig['interface']
         port = cwconfig['port'] or 8080
         repo = app.application.registry['cubicweb.repository']
+        warnings.warn(
+            'the "pyramid" command does not start repository "looping tasks" '
+            'anymore; use the standalone "scheduler" command if needed'
+        )
         try:
-            repo.start_looping_tasks()
             waitress.serve(app, host=host, port=port)
         finally:
             repo.shutdown()
