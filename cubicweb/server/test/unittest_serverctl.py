@@ -3,14 +3,19 @@ import shutil
 
 from cubicweb import ExecutionError
 from cubicweb.devtools import testlib, ApptestConfiguration
-from cubicweb.server.serverctl import _local_dump, DBDumpCommand, SynchronizeSourceCommand
+from cubicweb.server.serverctl import DBDumpCommand, SynchronizeSourceCommand
 from cubicweb.server.serverconfig import ServerConfiguration
 
+
 class ServerCTLTC(testlib.CubicWebTC):
+
     def setUp(self):
         super(ServerCTLTC, self).setUp()
         self.orig_config_for = ServerConfiguration.config_for
-        config_for = lambda appid: ApptestConfiguration(appid, __file__)
+
+        def config_for(appid):
+            return ApptestConfiguration(appid, __file__)
+
         ServerConfiguration.config_for = staticmethod(config_for)
 
     def tearDown(self):
