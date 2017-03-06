@@ -38,7 +38,6 @@ def run(config):
     app = CubicWebWSGIApplication(config)
     repo = app.appli.repo
     try:
-        repo.start_looping_tasks()
         LOGGER.info('starting http server on %s', config['base-url'])
         run_simple(interface, port, app,
                    threaded=True,

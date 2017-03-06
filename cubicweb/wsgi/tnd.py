@@ -40,7 +40,6 @@ def run(config):
     http_server.listen(port, interface)
     repo = app.appli.repo
     try:
-        repo.start_looping_tasks()
         LOGGER.info('starting http server on %s', config['base-url'])
         ioloop.IOLoop.instance().start()
     finally:

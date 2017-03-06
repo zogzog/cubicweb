@@ -39,7 +39,6 @@ def run(config):
     httpd.set_app(app)
     repo = app.appli.repo
     try:
-        repo.start_looping_tasks()
         LOGGER.info('starting http server on %s', config['base-url'])
         httpd.serve_forever()
     finally:
