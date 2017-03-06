@@ -22,6 +22,7 @@ import traceback
 import threading
 from cgi import FieldStorage, parse_header
 from functools import partial
+import warnings
 
 from cubicweb.statsd_logger import statsd_timeit
 
@@ -68,7 +69,10 @@ class CubicWebRootResource(resource.Resource):
             if config.mode != 'test':
                 reactor.addSystemEventTrigger('before', 'shutdown',
                                               self.shutdown_event)
-                self.appli.repo.start_looping_tasks()
+                warnings.warn(
+                    'twisted server does not start repository looping tasks anymore; '
+                    'use the standalone "scheduler" command if needed'
+                )
         self.set_url_rewriter()
         CW_EVENT_MANAGER.bind('after-registry-reload', self.set_url_rewriter)
 
