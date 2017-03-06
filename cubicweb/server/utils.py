@@ -23,7 +23,7 @@ from functools import wraps
 import sched
 import sys
 import logging
-from threading import Timer, Thread
+from threading import Thread
 from getpass import getpass
 
 from six import PY2, text_type
@@ -165,46 +165,6 @@ def func_name(func):
         name = repr(func)
     return name
 
-class LoopTask(object):
-    """threaded task restarting itself once executed"""
-    def __init__(self, tasks_manager, interval, func, args):
-        if interval < 0:
-            raise ValueError('Loop task interval must be >= 0 '
-                             '(current value: %f for %s)' % \
-                             (interval, func_name(func)))
-        self._tasks_manager = tasks_manager
-        self.interval = interval
-        def auto_restart_func(self=self, func=func, args=args):
-            restart = True
-            try:
-                func(*args)
-            except Exception:
-                logger = logging.getLogger('cubicweb.repository')
-                logger.exception('Unhandled exception in LoopTask %s', self.name)
-                raise
-            except BaseException:
-                restart = False
-            finally:
-                if restart and tasks_manager.running:
-                    self.start()
-        self.func = auto_restart_func
-        self.name = func_name(func)
-
-    def __str__(self):
-        return '%s (%s seconds)' % (self.name, self.interval)
-
-    def start(self):
-        self._t = Timer(self.interval, self.func)
-        self._t.setName('%s-%s[%d]' % (self._t.getName(), self.name, self.interval))
-        self._t.start()
-
-    def cancel(self):
-        self._t.cancel()
-
-    def join(self):
-        if self._t.isAlive():
-            self._t.join()
-
 
 class RepoThread(Thread):
     """subclass of thread so it auto remove itself from a given list once
@@ -231,56 +191,3 @@ class RepoThread(Thread):
 
     def getName(self):
         return '%s(%s)' % (self._name, Thread.getName(self))
-
-class TasksManager(object):
-    """Object dedicated manage background task"""
-
-    def __init__(self):
-        self.running = False
-        self._tasks = []
-        self._looping_tasks = []
-
-    def add_looping_task(self, interval, func, *args):
-        """register a function to be called every `interval` seconds.
-
-        If interval is negative, no looping task is registered.
-        """
-        if interval < 0:
-            self.debug('looping task %s ignored due to interval %f < 0',
-                       func_name(func), interval)
-            return
-        task = LoopTask(self, interval, func, args)
-        if self.running:
-            self._start_task(task)
-        else:
-            self._tasks.append(task)
-
-    def _start_task(self, task):
-        self._looping_tasks.append(task)
-        self.info('starting task %s with interval %.2fs', task.name,
-                  task.interval)
-        task.start()
-
-    def start(self):
-        """Start running looping task"""
-        assert self.running == False # bw compat purpose maintly
-        while self._tasks:
-            task = self._tasks.pop()
-            self._start_task(task)
-        self.running = True
-
-    def stop(self):
-        """Stop all running task.
-
-        returns when all task have been cancel and none are running anymore"""
-        if self.running:
-            while self._looping_tasks:
-                looptask = self._looping_tasks.pop()
-                self.info('canceling task %s...', looptask.name)
-                looptask.cancel()
-                looptask.join()
-                self.info('task %s finished', looptask.name)
-
-from logging import getLogger
-from cubicweb import set_log_methods
-set_log_methods(TasksManager, getLogger('cubicweb.repository'))
