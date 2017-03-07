@@ -123,7 +123,8 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
                     content = tags.a(centity.view('textoutofcontext'),
                                      href=centity.absolute_url())
                 else:
-                    w(u'<li class="last">%s</li></ul>' % content)
+                    if content is not None:
+                        w(u'<li class="last">%s</li></ul>' % content)
             w(u'</li>\n')
         w(u'</ul>\n')
         form.render(w=self.w)

@@ -294,6 +294,14 @@ class FormViewsTC(CubicWebTC):
                     req.find('Directory', name='child1').one().eid)
             self.assertIn(expected, source)
 
+            # No composite entities
+            rset = req.execute('Directory X WHERE X name "dtest4"')
+            source = self.view('deleteconf', rset,
+                               template=None, req=req).source.decode('utf-8')
+            expected = ('<li><a href="http://testing.fr/cubicweb/directory/%s">'
+                        'dtest4</a></li>') % (d4.eid,)
+            self.assertIn(expected, source)
+
     def test_automatic_edition_formview(self):
         with self.admin_access.web_request() as req:
             rset = req.execute('CWUser X')
