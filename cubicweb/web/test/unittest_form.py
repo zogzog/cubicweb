@@ -18,14 +18,12 @@
 
 import time
 from datetime import datetime
-import pytz
-
-from xml.etree.ElementTree import fromstring
-from lxml import html
 
 from six import text_type
 
-from logilab.common.testlib import unittest_main
+import pytz
+
+from lxml import html
 
 from cubicweb import Binary, ValidationError
 from cubicweb.mttransforms import HAS_TAL
@@ -34,7 +32,7 @@ from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      PasswordField, DateTimeField,
                                      FileField, EditableFileField,
                                      TZDatetimeField)
-from cubicweb.web.formwidgets import PasswordInput, Input, DateTimePicker
+from cubicweb.web.formwidgets import DateTimePicker
 from cubicweb.web.views.forms import EntityFieldsForm, FieldsForm
 from cubicweb.web.views.workflow import ChangeStateForm
 from cubicweb.web.views.formrenderers import FormRenderer
@@ -319,4 +317,5 @@ detach attached file
     #     self.assertEqual(init, cur)
 
 if __name__ == '__main__':
-    unittest_main()
+    import unittest
+    unittest.main()
