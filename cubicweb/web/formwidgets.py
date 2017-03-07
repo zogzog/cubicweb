@@ -795,17 +795,17 @@ class JQueryDateTimePicker(FieldWidget):
         req = form._cw
         datestr = req.form.get(field.input_name(form, 'date'))
         if datestr:
-            datestr = datestr.strip() or None
-        timestr = req.form.get(field.input_name(form, 'time'))
-        if timestr:
-            timestr = timestr.strip() or None
-        if datestr is None:
+            datestr = datestr.strip()
+        if not datestr:
             return None
         try:
             date = todatetime(req.parse_datetime(datestr, 'Date'))
         except ValueError as exc:
             raise ProcessFormError(text_type(exc))
-        if timestr is None:
+        timestr = req.form.get(field.input_name(form, 'time'))
+        if timestr:
+            timestr = timestr.strip()
+        if not timestr:
             return date
         try:
             time = req.parse_datetime(timestr, 'Time')

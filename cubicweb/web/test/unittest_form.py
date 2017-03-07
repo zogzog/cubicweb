@@ -32,7 +32,7 @@ from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      PasswordField, DateTimeField,
                                      FileField, EditableFileField,
                                      TZDatetimeField)
-from cubicweb.web.formwidgets import DateTimePicker
+from cubicweb.web.formwidgets import DateTimePicker, JQueryDateTimePicker
 from cubicweb.web.views.forms import EntityFieldsForm, FieldsForm
 from cubicweb.web.views.workflow import ChangeStateForm
 from cubicweb.web.views.formrenderers import FormRenderer
@@ -61,6 +61,15 @@ class FieldsFormTC(CubicWebTC):
         with self.admin_access.web_request(anint='1a', astring='2b', _cw_fields='anint,astring') as req:
             form = AForm(req)
             self.assertRaises(ValidationError, form.process_posted)
+
+    def test_jqdt_process_data(self):
+        widget = JQueryDateTimePicker()
+        field = DateTimeField('jqdt')
+        with self.admin_access.web_request(**{'jqdt-date': '', 'jqdt-time': '00:00'}) as req:
+            self._cw = req
+            self.formvalues = {}
+            date = widget.process_field_data(self, field)
+            self.assertIsNone(date)
 
 
 class EntityFieldsFormTC(CubicWebTC):
