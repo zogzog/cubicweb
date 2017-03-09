@@ -41,7 +41,8 @@ from cubicweb import ExecutionError
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
 from cubicweb.pyramid import wsgi_application_from_cwconfig
-from cubicweb.server import set_debug
+from cubicweb.server import serverctl, set_debug
+from cubicweb.web.webctl import WebCreateHandler
 
 import waitress
 
@@ -49,6 +50,17 @@ MAXFD = 1024
 
 DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE')
 LOG_LEVELS = ('debug', 'info', 'warning', 'error')
+
+
+class PyramidCreateHandler(serverctl.RepositoryCreateHandler,
+                           WebCreateHandler):
+    cfgname = 'pyramid'
+
+    def bootstrap(self, cubes, automatic=False, inputlevel=0):
+        serverctl.RepositoryCreateHandler.bootstrap(self, cubes, automatic, inputlevel)
+        # Call WebCreateHandler.bootstrap to prompt about get anonymous-user.
+        WebCreateHandler.bootstrap(self, cubes, automatic, inputlevel)
+        self.config.write_development_ini(cubes)
 
 
 class PyramidStartHandler(InstanceCommand):

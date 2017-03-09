@@ -24,6 +24,7 @@ import unittest
 from six import PY2
 
 from cubicweb.cwconfig import CubicWebConfiguration
+from cubicweb.cwctl import ListCommand
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.migractions import ServerMigrationHelper
 
@@ -38,8 +39,14 @@ class CubicWebCtlTC(unittest.TestCase):
         sys.stdout = sys.__stdout__
 
     def test_list(self):
-        from cubicweb.cwctl import ListCommand
         ListCommand(None).run([])
+
+    def test_list_configurations(self):
+        ListCommand(None).run(['configurations'])
+        configs = [l[2:].strip() for l in self.stream.getvalue().splitlines()
+                   if l.startswith('* ')]
+        self.assertIn('all-in-one', configs)
+        self.assertIn('pyramid', configs)
 
 
 class CubicWebShellTC(CubicWebTC):

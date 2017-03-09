@@ -225,7 +225,7 @@ def possible_configurations(directory):
     """return a list of installed configurations in a directory
     according to \*-ctl files
     """
-    return [name for name in ('repository', 'all-in-one')
+    return [name for name in ('repository', 'all-in-one', 'pyramid')
             if exists(join(directory, '%s.conf' % name))]
 
 
@@ -710,7 +710,7 @@ this option is set to yes",
     @classmethod
     def load_available_configs(cls):
         for confmod in ('web.webconfig',  'etwist.twconfig',
-                        'server.serverconfig',):
+                        'server.serverconfig', 'pyramid.config'):
             try:
                 __import__('cubicweb.%s' % confmod)
             except ImportError as exc:

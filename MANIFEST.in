@@ -62,6 +62,8 @@ include cubicweb/web/test/testutils.js
 recursive-include cubicweb/web/test/data bootstrap_cubes pouet.css *.py
 recursive-include cubicweb/web/test/data/static/jstests *.js *.html *.json
 
+include cubicweb/pyramid/development.ini.tmpl
+
 include cubicweb/web/data/jquery-treeview/*.md
 
 recursive-include cubicweb/skeleton *.py *.css *.js *.po compat *.tmpl rules

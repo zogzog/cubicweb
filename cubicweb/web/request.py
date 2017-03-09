@@ -116,8 +116,10 @@ class _CubicWebRequestBase(RequestSessionBase):
         self.uiprops = None
         #: url for serving datadir (see :ref:`resources`)
         self.datadir_url = None
-        self.uiprops = vreg.config.uiprops
-        self.datadir_url = vreg.config.datadir_url
+        # some config (i.e. "pyramid") do not have "uiprops" nor "datadir_url"
+        # attributes)
+        self.uiprops = getattr(vreg.config, 'uiprops', None)
+        self.datadir_url = getattr(vreg.config, 'datadir_url', None)
         #: enable UStringIO's write tracing
         self.tracehtml = False
         if vreg.config.debugmode:

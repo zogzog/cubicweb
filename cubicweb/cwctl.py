@@ -326,7 +326,7 @@ class CreateInstanceCommand(Command):
           }),
         ('config',
          {'short': 'c', 'type' : 'choice', 'metavar': '<install type>',
-          'choices': ('all-in-one', 'repository'),
+          'choices': ('all-in-one', 'repository', 'pyramid'),
           'default': 'all-in-one',
           'help': 'installation type, telling which part of an instance '
           'should be installed. You can list available configurations using the'

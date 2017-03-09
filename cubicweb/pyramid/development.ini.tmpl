@@ -23,14 +23,14 @@ pyramid.includes =
 # CubicWeb instance settings
 # http://cubicweb.readthedocs.io/en/latest/book/pyramid/settings/
 ##
-cubicweb.instance = %%(instance)s
-cubicweb.bwcompat = False
-cubicweb.debug = True
-# cubicweb.session.secret =
-# cubicweb.auth.authtkt.persistent.secret =
-cubicweb.auth.authtkt.persistent.secure = False
-# cubicweb.auth.authtkt.session.secret =
-cubicweb.auth.authtkt.session.secure = False
+cubicweb.instance = %(instance)s
+cubicweb.bwcompat = false
+cubicweb.debug = true
+cubicweb.session.secret = %(session-secret)s
+cubicweb.auth.authtkt.persistent.secure = false
+cubicweb.auth.authtkt.persistent.secret = %(auth-authtkt-persistent-secret)s
+cubicweb.auth.authtkt.session.secure = false
+cubicweb.auth.authtkt.session.secret = %(auth-authtkt-session-secret)s
 
 ###
 # wsgi server configuration

@@ -106,6 +106,7 @@ cubicweb/web/views/uicfg.py
 cubicweb/xy.py
 cubicweb/pyramid/auth.py
 cubicweb/pyramid/bwcompat.py
+cubicweb/pyramid/config.py
 cubicweb/pyramid/core.py
 cubicweb/pyramid/defaults.py
 cubicweb/pyramid/__init__.py
@@ -118,6 +119,7 @@ cubicweb/pyramid/session.py
 cubicweb/pyramid/tools.py
 cubicweb/pyramid/test/__init__.py
 cubicweb/pyramid/test/test_bw_request.py
+cubicweb/pyramid/test/test_config.py
 cubicweb/pyramid/test/test_core.py
 cubicweb/pyramid/test/test_login.py
 cubicweb/pyramid/test/test_rest_api.py
