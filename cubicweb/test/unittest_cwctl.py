@@ -27,8 +27,6 @@ from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.migractions import ServerMigrationHelper
 
-CubicWebConfiguration.load_cwctl_plugins() # XXX necessary?
-
 
 class CubicWebCtlTC(unittest.TestCase):
 
