@@ -78,10 +78,8 @@ register_persistent_options( (
     ))
 
 
-class WebConfiguration(CubicWebConfiguration):
-    """the WebConfiguration is a singleton object handling instance's
-    configuration and preferences
-    """
+class BaseWebConfiguration(CubicWebConfiguration):
+    """Base class for web configurations"""
     cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['web.views'])
     cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['views'])
 
@@ -116,6 +114,40 @@ class WebConfiguration(CubicWebConfiguration):
           'help': 'web instance query log file',
           'group': 'web', 'level': 3,
           }),
+        ('cleanup-anonymous-session-time',
+         {'type' : 'time',
+          'default': '5min',
+          'help': 'Same as cleanup-session-time but specific to anonymous '
+          'sessions. You can have a much smaller timeout here since it will be '
+          'transparent to the user. Default to 5min.',
+          'group': 'web', 'level': 3,
+          }),
+    ))
+
+    def anonymous_user(self):
+        """return a login and password to use for anonymous users.
+
+        None may be returned for both if anonymous connection is not
+        allowed or if an empty login is used in configuration
+        """
+        try:
+            user   = self['anonymous-user'] or None
+            passwd = self['anonymous-password']
+            if user:
+                user = text_type(user)
+        except KeyError:
+            user, passwd = None, None
+        except UnicodeDecodeError:
+            raise ConfigurationError("anonymous information should only contains ascii")
+        return user, passwd
+
+
+
+class WebConfiguration(BaseWebConfiguration):
+    """the WebConfiguration is a singleton object handling instance's
+    configuration and preferences
+    """
+    options = merge_options(BaseWebConfiguration.options + (
         # web configuration
         ('datadir-url',
          {'type': 'string', 'default': None,
@@ -144,14 +176,6 @@ class WebConfiguration(CubicWebConfiguration):
           "If 0, the cookie will expire when the user exist its browser. "
           "Should be 0 or greater than repository\'s session-time.",
           'group': 'web', 'level': 2,
-          }),
-        ('cleanup-anonymous-session-time',
-         {'type' : 'time',
-          'default': '5min',
-          'help': 'Same as cleanup-session-time but specific to anonymous '
-          'sessions. You can have a much smaller timeout here since it will be '
-          'transparent to the user. Default to 5min.',
-          'group': 'web', 'level': 3,
           }),
         ('submit-mail',
          {'type' : 'string',
@@ -268,23 +292,6 @@ have the python imaging library installed to use captcha)',
     @deprecated('[3.22] call req.cnx.repo.get_versions() directly')
     def vc_config(self):
         return self.repository().get_versions()
-
-    def anonymous_user(self):
-        """return a login and password to use for anonymous users.
-
-        None may be returned for both if anonymous connection is not
-        allowed or if an empty login is used in configuration
-        """
-        try:
-            user   = self['anonymous-user'] or None
-            passwd = self['anonymous-password']
-            if user:
-                user = text_type(user)
-        except KeyError:
-            user, passwd = None, None
-        except UnicodeDecodeError:
-            raise ConfigurationError("anonymous information should only contains ascii")
-        return user, passwd
 
     @cachedproperty
     def _instance_salt(self):
