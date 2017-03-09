@@ -15,23 +15,25 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
+"""Tests for cubicweb.server.utils module."""
 
-"""
-from logilab.common.testlib import TestCase, unittest_main
+from unittest import TestCase
 
 from cubicweb.server import utils
 
+
 class UtilsTC(TestCase):
+
     def test_crypt(self):
         for hash in (
-            utils.crypt_password('xxx'), # default sha512
-            b'ab$5UsKFxRKKN.d8iBIFBnQ80', # custom md5
-            b'ab4Vlm81ZUHlg', # DES
-            ):
+            utils.crypt_password('xxx'),  # default sha512
+            b'ab$5UsKFxRKKN.d8iBIFBnQ80',  # custom md5
+            b'ab4Vlm81ZUHlg',  # DES
+        ):
             self.assertEqual(utils.crypt_password('xxx', hash), hash)
             self.assertEqual(utils.crypt_password(u'xxx', hash), hash)
-            self.assertEqual(utils.crypt_password(u'xxx', hash.decode('ascii')), hash.decode('ascii'))
+            self.assertEqual(utils.crypt_password(u'xxx', hash.decode('ascii')),
+                             hash.decode('ascii'))
             self.assertEqual(utils.crypt_password('yyy', hash), b'')
 
         # accept any password for empty hashes (is it a good idea?)
@@ -40,4 +42,5 @@ class UtilsTC(TestCase):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    import unittest
+    unittest.main()
