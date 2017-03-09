@@ -100,7 +100,6 @@ cubicweb/pyramid/auth.py
 cubicweb/pyramid/bwcompat.py
 cubicweb/pyramid/core.py
 cubicweb/pyramid/defaults.py
-cubicweb/pyramid/init_instance.py
 cubicweb/pyramid/__init__.py
 cubicweb/pyramid/login.py
 cubicweb/pyramid/predicates.py
