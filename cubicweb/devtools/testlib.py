@@ -44,7 +44,7 @@ from logilab.common.shellutils import getlogin
 
 from cubicweb import (ValidationError, NoSelectableObject, AuthenticationError,
                       BadConnectionId)
-from cubicweb import cwconfig, devtools, web, server
+from cubicweb import cwconfig, devtools, repoapi, server, web
 from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application, eid_param
@@ -229,25 +229,14 @@ class RepoAccess(object):
         self._repo = repo
         self._login = login
         self.requestcls = requestcls
-        self._session = self._unsafe_connect(login)
-
-    def _unsafe_connect(self, login, **kwargs):
-        """ a completely unsafe connect method for the tests """
-        # use an internal connection
-        with self._repo.internal_cnx() as cnx:
-            # try to get a user object
-            user = cnx.find('CWUser', login=login).one()
-            user.groups
-            user.properties
-            user.login
-            session = Session(user, self._repo)
-            user._cw = user.cw_rset.req = session
-        return session
+        with repo.internal_cnx() as cnx:
+            self._user = cnx.find('CWUser', login=login).one()
+            self._user.cw_attr_cache['login'] = login
 
     @contextmanager
     def cnx(self):
         """Context manager returning a server side connection for the user"""
-        with self._session.new_cnx() as cnx:
+        with repoapi.Connection(self._repo, self._user) as cnx:
             yield cnx
 
     # aliases for bw compat
@@ -264,14 +253,16 @@ class RepoAccess(object):
         """
         req = self.requestcls(self._repo.vreg, url=url, headers=headers,
                               method=method, form=kwargs)
-        with self._session.new_cnx() as cnx:
+        with self.cnx() as cnx:
+            # web request expect a session attribute on cnx referencing the web session
+            cnx.session = Session(self._repo, self._user)
             req.set_cnx(cnx)
             yield req
 
     @contextmanager
     def shell(self):
         from cubicweb.server.migractions import ServerMigrationHelper
-        with self._session.new_cnx() as cnx:
+        with self.cnx() as cnx:
             mih = ServerMigrationHelper(None, repo=self._repo, cnx=cnx,
                                         interactive=False,
                                         # hack so it don't try to load fs schema
