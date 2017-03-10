@@ -68,8 +68,6 @@ class GcStatsService(Service):
         """Return a dictionary containing some statistics about the repository
         memory usage.
 
-        This is a public method, not requiring a session id.
-
         nmax is the max number of (most) referenced object returned as
         the 'referenced' result
         """
