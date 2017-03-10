@@ -20,8 +20,10 @@
 
 """Pyramid interface to CubicWeb"""
 
+import atexit
 import os
 from warnings import warn
+
 import wsgicors
 
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
@@ -223,6 +225,8 @@ def includeme(config):
     if repo is None:
         repo = config.registry['cubicweb.repository'] = cwconfig.repository()
     config.registry['cubicweb.registry'] = repo.vreg
+
+    atexit.register(repo.shutdown)
 
     if asbool(config.registry.settings.get('cubicweb.defaults', True)):
         config.include('cubicweb.pyramid.defaults')
