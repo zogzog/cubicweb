@@ -39,12 +39,6 @@ from yams import BASE_GROUPS
 from cubicweb.appobject import AppObject
 
 
-class ShuttingDown(BaseException):
-    """raised when trying to access some resources while the repository is
-    shutting down. Inherit from BaseException so that `except Exception` won't
-    catch it.
-    """
-
 # server-side services #########################################################
 
 class Service(AppObject):
