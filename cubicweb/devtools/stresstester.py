@@ -54,19 +54,23 @@ from time import clock
 
 from logilab.common.fileutils import lines
 from logilab.common.ureports import Table, TextWriter
+
+from cubicweb import repoapi
 from cubicweb.server.repository import Repository
 
 TB_LOCK = threading.Lock()
 
+
 class QueryExecutor:
-    def __init__(self, session, times, queries, reporter = None):
-        self._session = session
+
+    def __init__(self, cnx, times, queries, reporter = None):
+        self._cnx = cnx
         self._times = times
         self._queries = queries
         self._reporter = reporter
 
     def run(self):
-        with self._session.new_cnx() as cnx:
+        with self._cnx as cnx:
             times = self._times
             while times:
                 for index, query in enumerate(self._queries):
@@ -169,12 +173,12 @@ def run(args):
     print("Creating repo", prof_file)
     repo = Repository(config, prof_file)
     repo.bootstrap()
-    session = repo.new_session(user, password=password)
+    cnx = repoapi.connect(repo, user, password=password)
     reporter = ProfileReporter(queries)
     if threads > 1:
         executors = []
         while threads:
-            qe = QueryExecutor(session, repeat, queries, reporter = reporter)
+            qe = QueryExecutor(cnx, repeat, queries, reporter=reporter)
             executors.append(qe)
             thread = threading.Thread(target=qe.run)
             qe.thread = thread
@@ -185,7 +189,7 @@ def run(args):
 ##         for qe in executors:
 ##             print qe.thread, repeat - qe._times, 'times'
     else:
-        QueryExecutor(session, repeat, queries, reporter = reporter).run()
+        QueryExecutor(cnx, repeat, queries, reporter=reporter).run()
     reporter.dump_report(report_output)
 
 
