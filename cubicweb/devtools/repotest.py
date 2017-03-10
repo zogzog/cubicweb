@@ -135,7 +135,7 @@ from logilab.database import get_db_helper
 from rql import RQLHelper
 
 from cubicweb.devtools.testlib import BaseTestCase
-from cubicweb.devtools.fake import FakeRepo, FakeConfig, FakeSession, FakeRequest
+from cubicweb.devtools.fake import FakeRepo, FakeConfig, FakeRequest, FakeConnection
 from cubicweb.server import set_debug, debugged
 from cubicweb.server.querier import QuerierHelper
 from cubicweb.server.session import Session
@@ -182,7 +182,7 @@ class RQLGeneratorTC(BaseTestCase):
         #print '********* solutions', solutions
         self.rqlhelper.simplify(union)
         #print '********* simplified', union.as_string()
-        plan = self.qhelper.plan_factory(union, {}, FakeSession(self.repo))
+        plan = self.qhelper.plan_factory(union, {}, FakeConnection(self.repo))
         plan.preprocess(union)
         for select in union.children:
             select.solutions.sort(key=lambda x: list(x.items()))

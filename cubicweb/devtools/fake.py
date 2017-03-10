@@ -132,7 +132,7 @@ class FakeUser(object):
         return True
 
 
-class FakeSession(RequestSessionBase):
+class FakeConnection(RequestSessionBase):
 
     def __init__(self, repo=None, user=None, vreg=None):
         self.repo = repo

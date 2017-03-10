@@ -112,7 +112,7 @@ class HooksRegistryTC(unittest.TestCase):
     def test_call_hook(self):
         self.o.register(AddAnyHook)
         dis = set()
-        cw = fake.FakeSession()
+        cw = fake.FakeConnection()
         cw.is_hook_activated = lambda cls: cls.category not in dis
         self.assertRaises(HookCalled,
                           self.o.call_hooks, 'before_add_entity', cw)
