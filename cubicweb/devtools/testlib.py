@@ -309,7 +309,6 @@ class CubicWebTC(BaseTestCase):
         cls.config.mode = 'test'
 
     def __init__(self, *args, **kwargs):
-        self._admin_session = None
         self.repo = None
         self._open_access = set()
         super(CubicWebTC, self).__init__(*args, **kwargs)
@@ -340,11 +339,6 @@ class CubicWebTC(BaseTestCase):
             except BadConnectionId:
                 continue  # already closed
 
-    @property
-    def session(self):
-        """return admin session"""
-        return self._admin_session
-
     def _init_repo(self):
         """init the repository and connection to it.
         """
@@ -356,7 +350,6 @@ class CubicWebTC(BaseTestCase):
         # get an admin session (without actual login)
         login = text_type(db_handler.config.default_admin_config['login'])
         self.admin_access = self.new_access(login)
-        self._admin_session = self.admin_access._session
 
     # config management ########################################################
 
@@ -432,9 +425,6 @@ class CubicWebTC(BaseTestCase):
         MAILBOX[:] = []  # reset mailbox
 
     def tearDown(self):
-        # XXX hack until logilab.common.testlib is fixed
-        if self._admin_session is not None:
-            self._admin_session = None
         while self._cleanups:
             cleanup, args, kwargs = self._cleanups.pop(-1)
             cleanup(*args, **kwargs)

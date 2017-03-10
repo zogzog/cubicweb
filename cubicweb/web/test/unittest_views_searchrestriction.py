@@ -23,8 +23,9 @@ from cubicweb.web import facet
 class InsertAttrRelationTC(CubicWebTC):
 
     def parse(self, query):
-        rqlst = self.vreg.parse(self.session, query)
-        select = rqlst.children[0]
+        with self.admin_access.cnx() as cnx:
+            rqlst = self.vreg.parse(cnx, query)
+            rqlst.children[0]
         return rqlst
 
     def _generate(self, rqlst, rel, role, attr):

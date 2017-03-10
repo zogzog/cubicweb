@@ -120,7 +120,7 @@ class UtilsTC(BaseQuerierTC):
         pass
 
     def test_preprocess_1(self):
-        with self.session.new_cnx() as cnx:
+        with self._access.cnx() as cnx:
             reid = cnx.execute('Any X WHERE X is CWRType, X name "owned_by"')[0][0]
             rqlst = self._prepare(cnx, 'Any COUNT(RDEF) WHERE RDEF relation_type X, X eid %(x)s',
                                   {'x': reid})
@@ -128,7 +128,7 @@ class UtilsTC(BaseQuerierTC):
                              rqlst.solutions)
 
     def test_preprocess_2(self):
-        with self.session.new_cnx() as cnx:
+        with self._access.cnx() as cnx:
             teid = cnx.execute("INSERT Tag X: X name 'tag'")[0][0]
             #geid = self.execute("CWGroup G WHERE G name 'users'")[0][0]
             #self.execute("SET X tags Y WHERE X eid %(t)s, Y eid %(g)s",
@@ -144,8 +144,7 @@ class UtilsTC(BaseQuerierTC):
                                   text_type(parse(got)))
 
     def test_preprocess_security(self):
-        s = self.user_groups_session('users')
-        with s.new_cnx() as cnx:
+        with self.user_groups_session('users') as cnx:
             plan = self._prepare_plan(cnx, 'Any ETN,COUNT(X) GROUPBY ETN '
                                       'WHERE X is ET, ET name ETN')
             union = plan.rqlst
@@ -241,8 +240,7 @@ class UtilsTC(BaseQuerierTC):
             self.assertEqual(solutions, [{'X': 'Basket', 'ET': 'CWEType', 'ETN': 'String'}])
 
     def test_preprocess_security_aggregat(self):
-        s = self.user_groups_session('users')
-        with s.new_cnx() as cnx:
+        with self.user_groups_session('users') as cnx:
             plan = self._prepare_plan(cnx, 'Any MAX(X)')
             union = plan.rqlst
             plan.preprocess(union)
@@ -254,13 +252,13 @@ class UtilsTC(BaseQuerierTC):
                               ['MAX(X)'])
 
     def test_preprocess_nonregr(self):
-        with self.session.new_cnx() as cnx:
+        with self._access.cnx() as cnx:
             rqlst = self._prepare(cnx, 'Any S ORDERBY SI WHERE NOT S ecrit_par O, S para SI')
             self.assertEqual(len(rqlst.solutions), 1)
 
     def test_build_description(self):
         # should return an empty result set
-        rset = self.qexecute('Any X WHERE X eid %(x)s', {'x': self.session.user.eid})
+        rset = self.qexecute('Any X WHERE X eid %(x)s', {'x': self._access._user.eid})
         self.assertEqual(rset.description[0][0], 'CWUser')
         rset = self.qexecute('Any 1')
         self.assertEqual(rset.description[0][0], 'Int')
@@ -289,10 +287,9 @@ class UtilsTC(BaseQuerierTC):
         self.assertEqual(rset.description[0][0], 'String')
 
     def test_build_descr1(self):
-        with self.session.new_cnx() as cnx:
+        with self._access.cnx() as cnx:
             rset = cnx.execute('(Any U,L WHERE U login L) UNION '
                                '(Any G,N WHERE G name N, G is CWGroup)')
-            # rset.req = self.session
             orig_length = len(rset)
             rset.rows[0][0] = 9999999
             description = manual_build_descr(cnx, rset.syntax_tree(), None, rset.rows)
@@ -493,7 +490,7 @@ class QuerierTC(BaseQuerierTC):
         rset = self.qexecute('DISTINCT Any G WHERE U? in_group G')
         self.assertEqual(len(rset), 4)
         rset = self.qexecute('DISTINCT Any G WHERE U? in_group G, U eid %(x)s',
-                            {'x': self.session.user.eid})
+                            {'x': self._access._user.eid})
         self.assertEqual(len(rset), 4)
 
     def test_select_ambigous_outer_join(self):
@@ -687,7 +684,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertEqual(rset.rows[0][0], 12)
 
 ##     def test_select_simplified(self):
-##         ueid = self.session.user.eid
+##         ueid = self._access._user.eid
 ##         rset = self.qexecute('Any L WHERE %s login L'%ueid)
 ##         self.assertEqual(rset.rows[0][0], 'admin')
 ##         rset = self.qexecute('Any L WHERE %(x)s login L', {'x':ueid})
@@ -840,7 +837,7 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_explicit_eid(self):
         rset = self.qexecute('Any X,E WHERE X owned_by U, X eid E, U eid %(u)s',
-                             {'u': self.session.user.eid})
+                             {'u': self._access._user.eid})
         self.assertTrue(rset)
         self.assertEqual(rset.description[0][1], 'Int')
 
@@ -891,7 +888,7 @@ class QuerierTC(BaseQuerierTC):
                                                            'Password', 'String',
                                                            'TZDatetime', 'TZTime',
                                                            'Time'])
-        with self.session.new_cnx() as cnx:
+        with self._access.cnx() as cnx:
             cnx.create_entity('Personne', nom=u'louis', test=True)
             self.assertEqual(len(cnx.execute('Any X WHERE X test %(val)s', {'val': True})), 1)
             self.assertEqual(len(cnx.execute('Any X WHERE X test TRUE')), 1)
@@ -936,7 +933,7 @@ class QuerierTC(BaseQuerierTC):
                      '(Any N,COUNT(X) GROUPBY N ORDERBY 2 WHERE X login N)')
 
     def test_select_union_aggregat_independant_group(self):
-        with self.session.new_cnx() as cnx:
+        with self._access.cnx() as cnx:
             cnx.execute('INSERT State X: X name "hop"')
             cnx.execute('INSERT State X: X name "hop"')
             cnx.execute('INSERT Transition X: X name "hop"')
@@ -1185,8 +1182,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(len(rset.rows), 0, rset.rows)
 
     def test_delete_3(self):
-        s = self.user_groups_session('users')
-        with s.new_cnx() as cnx:
+        with self.user_groups_session('users') as cnx:
             peid, = self.o.execute(cnx, "INSERT Personne P: P nom 'toto'")[0]
             seid, = self.o.execute(cnx, "INSERT Societe S: S nom 'logilab'")[0]
             self.o.execute(cnx, "SET P travaille S")
@@ -1224,7 +1220,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         eeid, = self.qexecute('INSERT Email X: X messageid "<1234>", X subject "test", '
                               'X sender Y, X recipients Y WHERE Y is EmailAddress')[0]
         self.qexecute("DELETE Email X")
-        with self.session.new_cnx() as cnx:
+        with self._access.cnx() as cnx:
             sqlc = cnx.cnxset.cu
             sqlc.execute('SELECT * FROM recipients_relation')
             self.assertEqual(len(sqlc.fetchall()), 0)
@@ -1294,7 +1290,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(self.qexecute('Any X WHERE X nom "tutu"').rows, [[peid2]])
 
     def test_update_multiple2(self):
-        with self.session.new_cnx() as cnx:
+        with self._access.cnx() as cnx:
             ueid = cnx.execute("INSERT CWUser X: X login 'bob', X upassword 'toto'")[0][0]
             peid1 = cnx.execute("INSERT Personne Y: Y nom 'turlu'")[0][0]
             peid2 = cnx.execute("INSERT Personne Y: Y nom 'tutu'")[0][0]
@@ -1375,7 +1371,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(rset.description, [('CWUser',)])
         self.assertRaises(Unauthorized,
                           self.qexecute, "Any P WHERE X is CWUser, X login 'bob', X upassword P")
-        with self.session.new_cnx() as cnx:
+        with self._access.cnx() as cnx:
             cursor = cnx.cnxset.cu
             cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                            % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
@@ -1387,7 +1383,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(rset.description, [('CWUser',)])
 
     def test_update_upassword(self):
-        with self.session.new_cnx() as cnx:
+        with self._access.cnx() as cnx:
             rset = cnx.execute("INSERT CWUser X: X login 'bob', X upassword %(pwd)s",
                                {'pwd': 'toto'})
             self.assertEqual(rset.description[0][0], 'CWUser')
@@ -1495,7 +1491,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
                         'creation_date': '2000/07/03 11:00'})
         rset = self.qexecute('Any lower(N) ORDERBY LOWER(N) WHERE X is Tag, X name N,'
                             'X owned_by U, U eid %(x)s',
-                            {'x':self.session.user.eid})
+                            {'x':self._access._user.eid})
         self.assertEqual(rset.rows, [[u'\xe9name0']])
 
     def test_nonregr_description(self):
@@ -1543,7 +1539,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.qexecute('Any X ORDERBY D DESC WHERE X creation_date D')
 
     def test_nonregr_extra_joins(self):
-        ueid = self.session.user.eid
+        ueid = self._access._user.eid
         teid1 = self.qexecute("INSERT Folder X: X name 'folder1'")[0][0]
         teid2 = self.qexecute("INSERT Folder X: X name 'folder2'")[0][0]
         neid1 = self.qexecute("INSERT Note X: X para 'note1'")[0][0]

@@ -96,12 +96,9 @@ class ServerMigrationHelper(MigrationHelper):
             assert repo
             self.cnx = cnx
             self.repo = repo
-            self.session = cnx.session
         elif connect:
             self.repo = config.repository()
             self.set_cnx()
-        else:
-            self.session = None
         # no config on shell to a remote instance
         if config is not None and (cnx or connect):
             repo = self.repo
@@ -154,7 +151,6 @@ class ServerMigrationHelper(MigrationHelper):
             except (KeyboardInterrupt, EOFError):
                 print('aborting...')
                 sys.exit(0)
-        self.session = self.cnx.session
 
     def cube_upgraded(self, cube, version):
         self.cmd_set_property('system.version.%s' % cube.lower(),

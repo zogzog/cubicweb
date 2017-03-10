@@ -291,12 +291,12 @@ class Connection(RequestSessionBase):
     @_open_only
     def get_schema(self):
         """Return the schema currently used by the repository."""
-        return self.session.repo.source_defs()
+        return self.repo.source_defs()
 
     @_open_only
     def get_option_value(self, option):
         """Return the value for `option` in the configuration."""
-        return self.session.repo.get_option_value(option)
+        return self.repo.get_option_value(option)
 
     # transaction api
 
