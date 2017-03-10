@@ -329,10 +329,10 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
         repo_source = self.repo.sources_by_uri['ldap']
         with self.admin_access.repo_cnx() as cnx:
             source = cnx.execute('CWSource S WHERE S type="ldapfeed"').get_entity(0, 0)
-            config = source.repo_source.check_config(source)
+            config = repo_source.check_config(source)
             # filter with adim's phone number
             config['user-filter'] = u'(%s=%s)' % ('telephoneNumber', '109')
-            source.repo_source.update_config(source, config)
+            repo_source.update_config(source, config)
             cnx.commit()
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)
@@ -347,7 +347,7 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
                              'activated')
             # unfilter, syt should be activated again
             config['user-filter'] = u''
-            source.repo_source.update_config(source, config)
+            repo_source.update_config(source, config)
             cnx.commit()
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)
