@@ -242,11 +242,6 @@ class RepoAccess(object):
             user.login
             session = Session(user, self._repo)
             user._cw = user.cw_rset.req = session
-        with session.new_cnx() as cnx:
-            self._repo.hm.call_hooks('session_open', cnx)
-            # commit connection at this point in case write operation has been
-            # done during `session_open` hooks
-            cnx.commit()
         return session
 
     @contextmanager

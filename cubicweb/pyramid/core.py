@@ -295,11 +295,6 @@ def repo_connect(request, repo, eid):
     session = Session(request, user, repo)
     session._cached_lang = lang
     tools.cnx_attach_entity(session, user)
-    # Calling the hooks should be done only once, disabling it completely for
-    # now
-    # with session.new_cnx() as cnx:
-    #     repo.hm.call_hooks('session_open', cnx)
-    #     cnx.commit()
     return session
 
 

@@ -189,8 +189,6 @@ Hooks called on backup/restore event (eg `server_backup`,
 `server_restore`) have a `repo` and a `timestamp` attributes, but
 *their `_cw` attribute is None*.
 
-Hooks called on session event (`session_open`) have no special attribute.
-
 
 API
 ---
@@ -271,8 +269,7 @@ RELATIONS_HOOKS = set(('before_add_relation',   'after_add_relation' ,
                        'before_delete_relation','after_delete_relation'))
 SYSTEM_HOOKS = set(('server_backup', 'server_restore',
                     'server_startup', 'server_maintenance',
-                    'server_shutdown', 'before_server_shutdown',
-                    'session_open',))
+                    'server_shutdown', 'before_server_shutdown',))
 
 ALL_HOOKS = ENTITIES_HOOKS | RELATIONS_HOOKS | SYSTEM_HOOKS
 

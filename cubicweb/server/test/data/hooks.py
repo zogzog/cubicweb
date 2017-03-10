@@ -35,11 +35,3 @@ class ShutdownHook(Hook):
 
     def __call__(self):
         CALLED_EVENTS['server_shutdown'] = True
-
-
-class LoginHook(Hook):
-    __regid__ = 'mylogin'
-    events = ('session_open',)
-
-    def __call__(self):
-        CALLED_EVENTS['session_open'] = self._cw.user.login

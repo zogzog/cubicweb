@@ -134,12 +134,6 @@ class SystemHooksTC(CubicWebTC):
         self.repo.hm.call_hooks('server_shutdown', repo=self.repo)
         self.assertEqual(hooks.CALLED_EVENTS['server_shutdown'], True)
 
-    def test_session_open_close(self):
-        import hooks # cubicweb/server/test/data/hooks.py
-        anonaccess = self.new_access('anon')
-        with anonaccess.repo_cnx() as cnx:
-            self.assertEqual(hooks.CALLED_EVENTS['session_open'], 'anon')
-
 
 if __name__ == '__main__':
     unittest.main()
