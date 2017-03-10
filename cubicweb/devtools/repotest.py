@@ -27,7 +27,7 @@ from pprint import pprint
 from logilab.common.testlib import SkipTest
 
 from cubicweb.devtools.testlib import RepoAccess
-
+from cubicweb.entities.authobjs import user_session_cache_key
 
 def tuplify(mylist):
     return [tuple(item) for item in mylist]
@@ -251,7 +251,7 @@ class BaseQuerierTC(TestCase):
         # use cnx.user.eid to get correct owned_by relation, unless explicit eid
         with self._access.cnx() as cnx:
             user_eid = cnx.user.eid
-            cnx.user._cw.data['groups-%s' % user_eid] = set(groups)
+            cnx.user._cw.data[user_session_cache_key(user_eid, 'groups')] = set(groups)
             yield cnx
 
     def qexecute(self, rql, args=None, build_descr=True):
