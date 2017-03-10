@@ -246,7 +246,6 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
             self.assertRaises(AuthenticationError,
                               source.authenticate, cnx, 'syt', 'toto')
             self.assertTrue(source.authenticate(cnx, 'syt', 'syt'))
-        self.assertTrue(self.repo.new_session('syt', password='syt'))
 
     def test_base(self):
         with self.admin_access.repo_cnx() as cnx:
