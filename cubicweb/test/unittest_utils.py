@@ -33,7 +33,7 @@ from six.moves import range
 from cubicweb import Binary, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import (make_uid, UStringIO, RepeatList, HTMLHead,
-                            QueryCache, parse_repo_uri)
+                            QueryCache)
 from cubicweb.entity import Entity
 
 try:
@@ -57,18 +57,6 @@ class MakeUidTC(TestCase):
                 self.fail('make_uid must not return something begining with '
                           'some numeric character, got %s' % uid)
             d.add(uid)
-
-
-class TestParseRepoUri(TestCase):
-
-    def test_parse_repo_uri(self):
-        self.assertEqual(('inmemory', None, 'myapp'),
-                         parse_repo_uri('myapp'))
-        self.assertEqual(('inmemory', None, 'myapp'),
-                         parse_repo_uri('inmemory://myapp'))
-        with self.assertRaises(NotImplementedError):
-            parse_repo_uri('foo://bar')
-
 
 
 class TestQueryCache(TestCase):

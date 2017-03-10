@@ -23,7 +23,6 @@ from six import add_metaclass
 
 from logilab.common.deprecation import class_deprecated
 
-from cubicweb.utils import parse_repo_uri
 from cubicweb import AuthenticationError
 from cubicweb.server.session import Connection
 
