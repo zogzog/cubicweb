@@ -95,7 +95,7 @@ class WebConfiguration(CubicWebConfiguration):
         ('use-uicache',
          {'type': 'yn', 'default': True,
           'help': _('should css be compiled and store in uicache'),
-          'group': 'ui',
+          'group': 'ui', 'level': 2,
           }),
         ('anonymous-user',
          {'type' : 'string',
