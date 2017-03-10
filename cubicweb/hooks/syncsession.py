@@ -116,7 +116,6 @@ class _CloseSessionOp(hook.Operation):
             # remove cached groups for the user
             key = user_session_cache_key(self.session.user.eid, 'groups')
             self.session.data.pop(key, None)
-            self.session.close()
         except BadConnectionId:
             pass  # already closed
 

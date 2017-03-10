@@ -151,8 +151,7 @@ class FakeSession(RequestSessionBase):
 
     def commit(self, *args):
         self.transaction_data.clear()
-    def close(self, *args):
-        pass
+
     def system_sql(self, sql, args=None):
         pass
 

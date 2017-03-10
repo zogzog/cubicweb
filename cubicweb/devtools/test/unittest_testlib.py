@@ -285,10 +285,6 @@ class RepoAccessTC(CubicWebTC):
             self.assertTrue(rset)
             self.assertEqual('babar', req.form['elephant'])
 
-    def test_close(self):
-        acc = self.new_access('admin')
-        acc.close()
-
     def test_admin_access(self):
         with self.admin_access.client_cnx() as cnx:
             self.assertEqual('admin', cnx.user.login)

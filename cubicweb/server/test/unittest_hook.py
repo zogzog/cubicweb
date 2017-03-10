@@ -139,8 +139,6 @@ class SystemHooksTC(CubicWebTC):
         anonaccess = self.new_access('anon')
         with anonaccess.repo_cnx() as cnx:
             self.assertEqual(hooks.CALLED_EVENTS['session_open'], 'anon')
-        anonaccess.close()
-        self.assertEqual(hooks.CALLED_EVENTS['session_close'], 'anon')
 
 
 if __name__ == '__main__':

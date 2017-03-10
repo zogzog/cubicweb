@@ -458,7 +458,6 @@ class Repository(object):
             self.info('waiting thread %s...', thread.getName())
             thread.join()
             self.info('thread %s finished', thread.getName())
-        self.close_sessions()
         self.cnxsets.close()
         hits, misses = self.querier.cache_hit, self.querier.cache_miss
         try:
@@ -690,11 +689,6 @@ class Repository(object):
         return self.new_session(login, **kwargs).sessionid
 
     # session handling ########################################################
-
-    def close_sessions(self):
-        """close every opened sessions"""
-        for session in list(self._sessions.values()):
-            session.close()
 
     def clean_sessions(self):
         """close sessions not used since an amount of time specified in the

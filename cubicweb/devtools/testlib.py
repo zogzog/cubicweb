@@ -223,11 +223,6 @@ class RepoAccess(object):
 
     .. automethod:: cubicweb.testlib.RepoAccess.cnx
     .. automethod:: cubicweb.testlib.RepoAccess.web_request
-
-    The RepoAccess need to be closed to destroy the associated Session.
-    TestCase usually take care of this aspect for the user.
-
-    .. automethod:: cubicweb.testlib.RepoAccess.close
     """
 
     def __init__(self, repo, login, requestcls):
@@ -278,10 +273,6 @@ class RepoAccess(object):
         with self._session.new_cnx() as cnx:
             req.set_cnx(cnx)
             yield req
-
-    def close(self):
-        """Close the session associated to the RepoAccess"""
-        self._session.close()
 
     @contextmanager
     def shell(self):
@@ -360,7 +351,7 @@ class CubicWebTC(BaseTestCase):
     def _close_access(self):
         while self._open_access:
             try:
-                self._open_access.pop().close()
+                self._open_access.pop()
             except BadConnectionId:
                 continue  # already closed
 
@@ -458,7 +449,6 @@ class CubicWebTC(BaseTestCase):
     def tearDown(self):
         # XXX hack until logilab.common.testlib is fixed
         if self._admin_session is not None:
-            self._admin_session.close()
             self._admin_session = None
         while self._cleanups:
             cleanup, args, kwargs = self._cleanups.pop(-1)

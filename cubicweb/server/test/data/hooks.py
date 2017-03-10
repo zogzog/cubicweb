@@ -40,9 +40,3 @@ class LoginHook(Hook):
     events = ('session_open',)
     def __call__(self):
         CALLED_EVENTS['session_open'] = self._cw.user.login
-
-class LogoutHook(Hook):
-    __regid__ = 'mylogout'
-    events = ('session_close',)
-    def __call__(self):
-        CALLED_EVENTS['session_close'] = self._cw.user.login

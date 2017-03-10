@@ -108,7 +108,6 @@ def turn_repo_off(repo):
     * system source is shutdown
     """
     if not repo._needs_refresh:
-        repo.close_sessions()
         for cnxset in repo.cnxsets:
             cnxset.close(True)
         repo.system_source.shutdown()

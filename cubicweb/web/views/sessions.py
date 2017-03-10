@@ -127,9 +127,6 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         except InvalidSession:
             self.close_session(session)
             raise
-        if session.closed:
-            self.close_session(session)
-            raise InvalidSession()
         return session
 
     def open_session(self, req):
@@ -176,4 +173,3 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         """
         self.info('closing http session %s' % session.sessionid)
         self._sessions.pop(session.sessionid, None)
-        session.close()

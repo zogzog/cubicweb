@@ -246,9 +246,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
             self.assertRaises(AuthenticationError,
                               source.authenticate, cnx, 'syt', 'toto')
             self.assertTrue(source.authenticate(cnx, 'syt', 'syt'))
-        session = self.repo.new_session('syt', password='syt')
-        self.assertTrue(session)
-        session.close()
+        self.assertTrue(self.repo.new_session('syt', password='syt'))
 
     def test_base(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -420,9 +418,7 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
             cnx.commit()
         # and that we can now authenticate again
         self.assertRaises(AuthenticationError, self.repo.new_session, 'syt', password='toto')
-        session = self.repo.new_session('syt', password='syt')
-        self.assertTrue(session)
-        session.close()
+        self.assertTrue(self.repo.new_session('syt', password='syt'))
 
 
 class LDAPFeedGroupTC(LDAPFeedTestBase):

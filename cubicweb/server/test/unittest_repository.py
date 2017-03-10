@@ -77,9 +77,7 @@ class RepositoryTC(CubicWebTC):
             self.assertFalse(cnx.execute('Any X WHERE NOT X cw_source S'))
 
     def test_connect(self):
-        session = self.repo.new_session(self.admlogin, password=self.admpassword)
-        self.assertTrue(session.sessionid)
-        session.close()
+        self.assertTrue(self.repo.new_session(self.admlogin, password=self.admpassword))
         self.assertRaises(AuthenticationError,
                           self.repo.connect, self.admlogin, password='nimportnawak')
         self.assertRaises(AuthenticationError,
@@ -100,9 +98,7 @@ class RepositoryTC(CubicWebTC):
                         {'login': u"barnabé", 'passwd': u"héhéhé".encode('UTF8')})
             cnx.commit()
         repo = self.repo
-        session = repo.new_session(u"barnabé", password=u"héhéhé".encode('UTF8'))
-        self.assertTrue(session.sessionid)
-        session.close()
+        self.assertTrue(repo.new_session(u"barnabé", password=u"héhéhé".encode('UTF8')))
 
     def test_rollback_on_execute_validation_error(self):
         class ValidationErrorAfterHook(Hook):
@@ -141,14 +137,6 @@ class RepositoryTC(CubicWebTC):
                 self.assertEqual(str(cm.exception), 'transaction must be rolled back')
                 cnx.rollback()
                 self.assertFalse(cnx.execute('Any X WHERE X is CWGroup, X name "toto"'))
-
-
-    def test_close(self):
-        repo = self.repo
-        session = repo.new_session(self.admlogin, password=self.admpassword)
-        self.assertTrue(session.sessionid)
-        session.close()
-
 
     def test_initial_schema(self):
         schema = self.repo.schema
@@ -198,7 +186,6 @@ class RepositoryTC(CubicWebTC):
         session = repo.new_session(self.admlogin, password=self.admpassword)
         with session.new_cnx() as cnx:
             self.assertEqual(repo.type_from_eid(2, cnx), 'CWGroup')
-        session.close()
 
     def test_public_api(self):
         self.assertEqual(self.repo.get_schema(), self.repo.schema)
