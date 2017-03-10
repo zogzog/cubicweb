@@ -173,8 +173,8 @@ def sql_drop_all_user_tables(driver_or_helper, sqlcursor):
 
 
 class ConnectionWrapper(object):
-    """handle connection to the system source, at some point associated to a
-    :class:`Session`
+    """Wrap a connection to the system source's database, attempting to handle
+    automatic reconnection.
     """
 
     # since 3.19, we only have to manage the system source connection

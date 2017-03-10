@@ -83,11 +83,6 @@ class GcStatsService(Service):
         lookupclasses = (AppObject,
                          Union, ResultSet,
                          CubicWebRequestBase)
-        try:
-            from cubicweb.server.session import Session, InternalSession
-            lookupclasses += (InternalSession, Session)
-        except ImportError:
-            pass  # no server part installed
 
         results = {}
         counters, ocounters, garbage = gc_info(lookupclasses,

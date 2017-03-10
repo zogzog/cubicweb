@@ -887,82 +887,6 @@ class Connection(RequestSessionBase):
         return self.vreg.schema.rschema(rtype).rdefs[(subjtype, objtype)]
 
 
-def cnx_attr(attr_name, writable=False):
-    """return a property to forward attribute access to connection.
-
-    This is to be used by session"""
-    args = {}
-
-    @deprecated('[3.19] use a Connection object instead')
-    def attr_from_cnx(session):
-        return getattr(session._cnx, attr_name)
-
-    args['fget'] = attr_from_cnx
-    if writable:
-        @deprecated('[3.19] use a Connection object instead')
-        def write_attr(session, value):
-            return setattr(session._cnx, attr_name, value)
-        args['fset'] = write_attr
-    return property(**args)
-
-
-class Session(object):
-    """Repository user session
-
-    This ties all together:
-     * session id,
-     * user,
-     * other session data.
-    """
-
-    def __init__(self, user, repo, _id=None):
-        self.user = user  # XXX repoapi: deprecated and store only a login.
-        self.repo = repo
-        self.data = {}
-
-    def __unicode__(self):
-        return '<session %s (0x%x)>' % (
-            unicode(self.user.login), id(self))
-
-    @property
-    def login(self):
-        return self.user.login
-
-    def new_cnx(self):
-        """Return a new Connection object linked to the session
-
-        The returned Connection will *not* be managed by the Session.
-        """
-        return Connection(self)
-
-    @deprecated('[3.19] use a Connection object instead')
-    def get_option_value(self, option, foreid=None):
-        if foreid is not None:
-            warn('[3.19] foreid argument is deprecated', DeprecationWarning,
-                 stacklevel=2)
-        return self.repo.get_option_value(option)
-
-    # deprecated ###############################################################
-
-    @property
-    def anonymous_session(self):
-        # XXX for now, anonymous_user only exists in webconfig (and testconfig).
-        # It will only be present inside all-in-one instance.
-        # there is plan to move it down to global config.
-        if not hasattr(self.repo.config, 'anonymous_user'):
-            # not a web or test config, no anonymous user
-            return False
-        return self.user.login == self.repo.config.anonymous_user()[0]
-
-    @deprecated('[3.13] use getattr(session.rtype_eids_rdef(rtype, eidfrom, eidto), prop)')
-    def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
-        return getattr(self.rtype_eids_rdef(rtype, eidfrom, eidto), rprop)
-
-    # these are overridden by set_log_methods below
-    # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
-
-
 class InternalManager(object):
     """a manager user with all access rights used internally for task such as
     bootstrapping the repository or creating regular users according to
@@ -1010,5 +934,4 @@ class InternalManager(object):
         return None
 
 
-set_log_methods(Session, getLogger('cubicweb.session'))
 set_log_methods(Connection, getLogger('cubicweb.session'))
