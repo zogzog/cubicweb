@@ -30,7 +30,6 @@ from __future__ import print_function
 
 from warnings import warn
 from itertools import chain
-from time import time, localtime, strftime
 from contextlib import contextmanager
 from logging import getLogger
 
@@ -44,7 +43,6 @@ from rql.utils import rqlvar_maker
 
 from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
-                      BadConnectionId,
                       UniqueTogetherError, ViolatedConstraint)
 from cubicweb import set_log_methods
 from cubicweb import cwvreg, schema, server
@@ -220,8 +218,6 @@ class Repository(object):
         self._scheduler = scheduler
 
         self.app_instances_bus = NullEventBus()
-        # dictionary of opened sessions
-        self._sessions = {}
 
         # list of functions to be called at regular interval
         # list of running threads
@@ -390,31 +386,15 @@ class Repository(object):
                 raise Exception('Is the database initialised ? (cause: %s)' % ex)
         return appschema
 
-    def _prepare_startup(self):
-        """Prepare "Repository as a server" for startup.
-
-        * register session clean up task.
-        """
-        if not (self.config.creating or self.config.repairing
-                or self.config.quick_start):
-            # register a task to cleanup expired session
-            if self._scheduler is not None:
-                self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
-                assert self.cleanup_session_time > 0
-                cleanup_session_interval = min(60 * 60, self.cleanup_session_time / 3)
-                self.looping_task(cleanup_session_interval, self.clean_sessions)
-
     def run_scheduler(self):
         """Start repository scheduler after preparing the repository for that.
 
         * trigger server startup hook,
-        * register session clean up task,
         * start the scheduler *and block*.
 
         XXX Other startup related stuffs are done elsewhere. In Repository
         XXX __init__ or in external codes (various server managers).
         """
-        self._prepare_startup()
         assert self._scheduler is not None, \
             "This Repository is not intended to be used as a server"
         self.info(
@@ -675,7 +655,6 @@ class Repository(object):
         session = Session(user, self)
         user._cw = user.cw_rset.req = session
         user.cw_clear_relation_cache()
-        self._sessions[session.sessionid] = session
         self.info('opened session %s for user %s', session.sessionid, login)
         with session.new_cnx() as cnx:
             self.hm.call_hooks('session_open', cnx)
@@ -689,20 +668,6 @@ class Repository(object):
         return self.new_session(login, **kwargs).sessionid
 
     # session handling ########################################################
-
-    def clean_sessions(self):
-        """close sessions not used since an amount of time specified in the
-        configuration
-        """
-        mintime = time() - self.cleanup_session_time
-        self.debug('cleaning session unused since %s',
-                   strftime('%H:%M:%S', localtime(mintime)))
-        nbclosed = 0
-        for session in list(self._sessions.values()):
-            if session.timestamp < mintime:
-                session.close()
-                nbclosed += 1
-        return nbclosed
 
     @contextmanager
     def internal_cnx(self):

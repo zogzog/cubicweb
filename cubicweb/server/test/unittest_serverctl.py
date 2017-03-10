@@ -42,7 +42,7 @@ class ServerCTLTC(testlib.CubicWebTC):
         # make sure repository scheduler started
         scheduler_start_message = (
             'INFO:cubicweb.repository:starting repository scheduler with '
-            'tasks: update_feeds, clean_sessions, expire_dataimports'
+            'tasks: update_feeds, expire_dataimports'
         )
         self.assertIn(scheduler_start_message, log_cm.output)
         # and that scheduler's run method got called

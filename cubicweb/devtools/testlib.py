@@ -241,7 +241,6 @@ class RepoAccess(object):
             user.properties
             user.login
             session = Session(user, self._repo)
-            self._repo._sessions[session.sessionid] = session
             user._cw = user.cw_rset.req = session
         with session.new_cnx() as cnx:
             self._repo.hm.call_hooks('session_open', cnx)

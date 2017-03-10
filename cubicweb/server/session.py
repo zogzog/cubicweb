@@ -21,7 +21,6 @@ from __future__ import print_function
 
 import functools
 import sys
-from time import time
 from uuid import uuid4
 from warnings import warn
 from contextlib import contextmanager
@@ -256,9 +255,6 @@ class Connection(RequestSessionBase):
         self.repo = session.repo
         self.vreg = self.repo.vreg
         self._execute = self.repo.querier.execute
-
-        # other session utility
-        self._session_timestamp = session._timestamp
 
         # internal (root) session
         self.is_internal_session = isinstance(session.user, InternalManager)
@@ -756,10 +752,8 @@ class Connection(RequestSessionBase):
 
         See :meth:`cubicweb.dbapi.Cursor.execute` documentation.
         """
-        self._session_timestamp.touch()
         rset = self._execute(self, rql, kwargs, build_descr)
         rset.req = self
-        self._session_timestamp.touch()
         return rset
 
     @_open_only
@@ -786,7 +780,6 @@ class Connection(RequestSessionBase):
                 cnxset.rollback()
                 self.debug('rollback for transaction %s done', self.connectionid)
         finally:
-            self._session_timestamp.touch()
             self.clear()
 
     @_open_only
@@ -878,7 +871,6 @@ class Connection(RequestSessionBase):
                 self.debug('postcommit transaction %s done', self.connectionid)
                 return self.transaction_uuid(set=False)
         finally:
-            self._session_timestamp.touch()
             self.clear()
 
     # resource accessors ######################################################
@@ -928,18 +920,6 @@ def cnx_attr(attr_name, writable=False):
     return property(**args)
 
 
-class Timestamp(object):
-
-    def __init__(self):
-        self.value = time()
-
-    def touch(self):
-        self.value = time()
-
-    def __float__(self):
-        return float(self.value)
-
-
 class Session(object):
     """Repository user session
 
@@ -953,16 +933,11 @@ class Session(object):
         self.sessionid = _id or make_uid(unormalize(user.login))
         self.user = user  # XXX repoapi: deprecated and store only a login.
         self.repo = repo
-        self._timestamp = Timestamp()
         self.data = {}
 
     def __unicode__(self):
         return '<session %s (%s 0x%x)>' % (
             unicode(self.user.login), self.sessionid, id(self))
-
-    @property
-    def timestamp(self):
-        return float(self._timestamp)
 
     @property
     @deprecated('[3.19] session.id is deprecated, use session.sessionid')
@@ -986,18 +961,6 @@ class Session(object):
             warn('[3.19] foreid argument is deprecated', DeprecationWarning,
                  stacklevel=2)
         return self.repo.get_option_value(option)
-
-    def _touch(self):
-        """update latest session usage timestamp and reset mode to read"""
-        self._timestamp.touch()
-
-    local_perm_cache = cnx_attr('local_perm_cache')
-
-    @local_perm_cache.setter
-    def local_perm_cache(self, value):
-        # base class assign an empty dict:-(
-        assert value == {}
-        pass
 
     # deprecated ###############################################################
 

@@ -300,7 +300,6 @@ def repo_connect(request, repo, eid):
     # with session.new_cnx() as cnx:
     #     repo.hm.call_hooks('session_open', cnx)
     #     cnx.commit()
-    # repo._sessions[session.sessionid] = session
     return session
 
 
