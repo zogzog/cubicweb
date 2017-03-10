@@ -663,10 +663,6 @@ class Repository(object):
             cnx.commit()
         return session
 
-    @deprecated('[3.23] use .new_session instead (and get a plain session object)')
-    def connect(self, login, **kwargs):
-        return self.new_session(login, **kwargs).sessionid
-
     # session handling ########################################################
 
     @contextmanager

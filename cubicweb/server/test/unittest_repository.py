@@ -79,17 +79,17 @@ class RepositoryTC(CubicWebTC):
     def test_connect(self):
         self.assertTrue(self.repo.new_session(self.admlogin, password=self.admpassword))
         self.assertRaises(AuthenticationError,
-                          self.repo.connect, self.admlogin, password='nimportnawak')
+                          self.repo.new_session, self.admlogin, password='nimportnawak')
         self.assertRaises(AuthenticationError,
-                          self.repo.connect, self.admlogin, password='')
+                          self.repo.new_session, self.admlogin, password='')
         self.assertRaises(AuthenticationError,
-                          self.repo.connect, self.admlogin, password=None)
+                          self.repo.new_session, self.admlogin, password=None)
         self.assertRaises(AuthenticationError,
-                          self.repo.connect, None, password=None)
+                          self.repo.new_session, None, password=None)
         self.assertRaises(AuthenticationError,
-                          self.repo.connect, self.admlogin)
+                          self.repo.new_session, self.admlogin)
         self.assertRaises(AuthenticationError,
-                          self.repo.connect, None)
+                          self.repo.new_session, None)
 
     def test_login_upassword_accent(self):
         with self.admin_access.repo_cnx() as cnx:
