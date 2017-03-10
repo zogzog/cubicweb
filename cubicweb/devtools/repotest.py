@@ -273,7 +273,6 @@ class BasePlannerTC(BaseQuerierTC):
     def setup(self):
         # XXX source_defs
         self.o = self.repo.querier
-        self.session = self.repo._sessions.values()[0]
         self.schema = self.o.schema
         self.system = self.repo.system_source
         do_monkey_patch()
