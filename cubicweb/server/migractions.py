@@ -154,7 +154,7 @@ class ServerMigrationHelper(MigrationHelper):
             except (KeyboardInterrupt, EOFError):
                 print('aborting...')
                 sys.exit(0)
-        self.session = self.repo._get_session(self.cnx.sessionid)
+        self.session = self.cnx.session
 
     def cube_upgraded(self, cube, version):
         self.cmd_set_property('system.version.%s' % cube.lower(),

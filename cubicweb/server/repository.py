@@ -48,7 +48,7 @@ from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UniqueTogetherError, onevent, ViolatedConstraint)
 from cubicweb import set_log_methods
 from cubicweb import cwvreg, schema, server
-from cubicweb.server import ShuttingDown, utils, hook, querier, sources
+from cubicweb.server import utils, hook, querier, sources
 from cubicweb.server.session import Session, InternalManager
 
 
@@ -700,10 +700,6 @@ class Repository(object):
     def connect(self, login, **kwargs):
         return self.new_session(login, **kwargs).sessionid
 
-    @deprecated('[3.23] use session.close() directly')
-    def close(self, sessionid):
-        self._get_session(sessionid).close()
-
     # session handling ########################################################
 
     def close_sessions(self):
@@ -737,16 +733,6 @@ class Repository(object):
             cnx.user._cw = cnx  # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
             with cnx.security_enabled(read=False, write=False):
                 yield cnx
-
-    def _get_session(self, sessionid, txid=None, checkshuttingdown=True):
-        """return the session associated with the given session identifier"""
-        if checkshuttingdown and self.shutting_down:
-            raise ShuttingDown('Repository is shutting down')
-        try:
-            session = self._sessions[sessionid]
-        except KeyError:
-            raise BadConnectionId('No such session %s' % sessionid)
-        return session
 
     # data sources handling ###################################################
     # * correspondance between eid and type

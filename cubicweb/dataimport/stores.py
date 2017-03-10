@@ -149,11 +149,6 @@ class RQLObjectStore(NullStore):
     def commit(self):
         return self._commit()
 
-    @property
-    def session(self):
-        warnings.warn('[3.19] deprecated property.', DeprecationWarning, stacklevel=2)
-        return self._cnx.repo._get_session(self._cnx.sessionid)
-
     @deprecated("[3.19] use cnx.find(*args, **kwargs).entities() instead")
     def find_entities(self, *args, **kwargs):
         return self._cnx.find(*args, **kwargs).entities()
