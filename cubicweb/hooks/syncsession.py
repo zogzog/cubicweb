@@ -24,11 +24,9 @@ from cubicweb.server import hook
 from cubicweb.entities.authobjs import user_session_cache_key
 
 
-# take cnx and not repo because it's needed for other sessions implementation (e.g. pyramid)
-def get_user_sessions(cnx, ueid):
-    for session in cnx.repo._sessions.values():
-        if ueid == session.user.eid:
-            yield session
+def get_user_sessions(cnx, user_eid):
+    if cnx.user.eid == user_eid:
+        yield cnx
 
 
 class CachedValueMixin(object):

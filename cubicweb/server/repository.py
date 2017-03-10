@@ -45,7 +45,7 @@ from rql.utils import rqlvar_maker
 from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
                       BadConnectionId,
-                      UniqueTogetherError, onevent, ViolatedConstraint)
+                      UniqueTogetherError, ViolatedConstraint)
 from cubicweb import set_log_methods
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import utils, hook, querier, sources
@@ -241,17 +241,6 @@ class Repository(object):
         self._type_cache = {}
         # the hooks manager
         self.hm = hook.HooksManager(self.vreg)
-
-        # registry hook to fix user class on registry reload
-        @onevent('after-registry-reload', self)
-        def fix_user_classes(self):
-            # After registry reload the 'CWUser' class used for CWEtype
-            # changed.  So any existing user object have a different class than
-            # the new loaded one. We are hot fixing this.
-            usercls = self.vreg['etypes'].etype_class('CWUser')
-            for session in self._sessions.values():
-                if not isinstance(session.user, InternalManager):
-                    session.user.__class__ = usercls
 
     def bootstrap(self):
         self.info('starting repository from %s', self.config.apphome)
