@@ -165,10 +165,6 @@ HOOKS_DENY_ALL = object()
 DEFAULT_SECURITY = object()  # evaluated to true by design
 
 
-class SessionClosedError(RuntimeError):
-    pass
-
-
 def _open_only(func):
     """decorator for Connection method that check it is open"""
     @functools.wraps(func)
