@@ -15,8 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Official API to access the content of a repository
-"""
+"""Official API to access the content of a repository."""
+
 from warnings import warn
 
 from six import add_metaclass
@@ -26,8 +26,6 @@ from logilab.common.deprecation import class_deprecated
 from cubicweb import AuthenticationError
 from cubicweb.server.session import Connection
 
-
-### public API ######################################################
 
 def get_repository(uri=None, config=None, vreg=None):
     """get a repository for the given URI or config/vregistry (in case we're
@@ -41,6 +39,7 @@ def get_repository(uri=None, config=None, vreg=None):
 
     assert config is not None, 'get_repository(config=config)'
     return config.repository(vreg)
+
 
 def connect(repo, login, **kwargs):
     """Take credential and return associated Connection.
@@ -59,7 +58,7 @@ def anonymous_cnx(repo):
     raises an AuthenticationError if anonymous usage is not allowed
     """
     anoninfo = getattr(repo.config, 'anonymous_user', lambda: None)()
-    if anoninfo is None: # no anonymous user
+    if anoninfo is None:  # no anonymous user
         raise AuthenticationError('anonymous access is not authorized')
     anon_login, anon_password = anoninfo
     # use vreg's repository cache

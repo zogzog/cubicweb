@@ -25,10 +25,8 @@ from itertools import repeat
 from six import text_type
 
 from logilab.common.textutils import normalize_text
-from logilab.common.deprecation import class_renamed, class_moved, deprecated
 from logilab.common.registry import yes
 
-from cubicweb.entity import Entity
 from cubicweb.view import Component, EntityView
 from cubicweb.server.hook import SendMailOp
 from cubicweb.mail import construct_message_id, format_mail
@@ -54,7 +52,7 @@ class RecipientsFinder(Component):
         elif mode == 'default-dest-addrs':
             lang = self._cw.vreg.property_value('ui.language')
             dests = zip(self._cw.vreg.config['default-dest-addrs'], repeat(lang))
-        else: # mode == 'none'
+        else:  # mode == 'none'
             dests = []
         return dests
 
@@ -75,8 +73,8 @@ class NotificationView(EntityView):
     msgid_timestamp = True
 
     # to be defined on concrete sub-classes
-    content = None # body of the mail
-    message = None # action verb of the subject
+    content = None  # body of the mail
+    message = None  # action verb of the subject
 
     # this is usually the method to call
     def render_and_send(self, **kwargs):
@@ -168,7 +166,7 @@ class NotificationView(EntityView):
 
     def format_section(self, attr, value):
         return '%(attr)s\n%(ul)s\n%(value)s\n' % {
-            'attr': attr, 'ul': '-'*len(attr), 'value': value}
+            'attr': attr, 'ul': '-' * len(attr), 'value': value}
 
     def subject(self):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
@@ -182,12 +180,12 @@ class NotificationView(EntityView):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         for key, val in kwargs.items():
             if val and isinstance(val, text_type) and val.strip():
-               kwargs[key] = self._cw._(val)
+                kwargs[key] = self._cw._(val)
         kwargs.update({'user': self.user_data['login'],
                        'eid': entity.eid,
                        'etype': entity.dc_type(),
                        'url': entity.absolute_url(),
-                       'title': entity.dc_long_title(),})
+                       'title': entity.dc_long_title()})
         return kwargs
 
 
@@ -249,8 +247,8 @@ url: %(url)s
 
     def subject(self):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
-        return  u'%s #%s (%s)' % (self._cw.__('New %s' % entity.e_schema),
-                                  entity.eid, self.user_data['login'])
+        return u'%s #%s (%s)' % (self._cw.__('New %s' % entity.e_schema),
+                                 entity.eid, self.user_data['login'])
 
 
 def format_value(value):
@@ -315,5 +313,5 @@ url: %(url)s
 
     def subject(self):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
-        return  u'%s #%s (%s)' % (self._cw.__('Updated %s' % entity.e_schema),
-                                  entity.eid, self.user_data['login'])
+        return u'%s #%s (%s)' % (self._cw.__('Updated %s' % entity.e_schema),
+                                 entity.eid, self.user_data['login'])

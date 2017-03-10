@@ -19,8 +19,6 @@
 
 from __future__ import division
 
-
-
 import base64
 import decimal
 import datetime
@@ -49,6 +47,7 @@ _MARKER = object()
 
 # initialize random seed from current time
 random.seed()
+
 
 def admincnx(appid):
     from cubicweb import repoapi

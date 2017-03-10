@@ -20,6 +20,7 @@ cubicweb/devtools/test/unittest_i18n.py
 cubicweb/devtools/test/unittest_webtest.py
 cubicweb/devtools/webtest.py
 cubicweb/entities/adapters.py
+cubicweb/entities/authobjs.py
 cubicweb/entities/test/unittest_base.py
 cubicweb/etwist/__init__.py
 cubicweb/etwist/request.py
@@ -30,6 +31,7 @@ cubicweb/hooks/test/unittest_notificationhooks.py
 cubicweb/hooks/test/unittest_security.py
 cubicweb/hooks/test/unittest_syncsession.py
 cubicweb/pylintext.py
+cubicweb/repoapi.py
 cubicweb/rset.py
 cubicweb/rtags.py
 cubicweb/server/__init__.py
@@ -54,6 +56,7 @@ cubicweb/server/test/unittest_serverctl.py
 cubicweb/server/test/unittest_session.py
 cubicweb/server/test/unittest_rqlannotation.py
 cubicweb/server/test/unittest_utils.py
+cubicweb/sobjects/notification.py
 cubicweb/sobjects/test/unittest_notification.py
 cubicweb/sobjects/test/unittest_register_user.py
 cubicweb/sobjects/textparsers.py
@@ -92,6 +95,7 @@ cubicweb/web/test/unittest_http_headers.py
 cubicweb/web/test/unittest_views_basetemplates.py
 cubicweb/web/test/unittest_views_cwsources.py
 cubicweb/web/test/unittest_views_json.py
+cubicweb/web/views/authentication.py
 cubicweb/web/views/editcontroller.py
 cubicweb/web/views/json.py
 cubicweb/web/views/searchrestriction.py

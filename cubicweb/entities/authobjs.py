@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """entity classes user and group entities"""
 
-
-
 from six import string_types, text_type
 
 from logilab.common.decorators import cached

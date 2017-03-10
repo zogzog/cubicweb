@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """user authentication component"""
 
-
-
 from logilab.common.deprecation import class_renamed
 from logilab.common.textutils import unormalize
 
@@ -29,7 +27,8 @@ from cubicweb.web import InvalidSession
 from cubicweb.server.session import Connection
 
 
-class NoAuthInfo(Exception): pass
+class NoAuthInfo(Exception):
+    pass
 
 
 class WebAuthInfoRetriever(Component):
@@ -70,6 +69,7 @@ class WebAuthInfoRetriever(Component):
         """
         pass
 
+
 WebAuthInfoRetreiver = class_renamed(
     'WebAuthInfoRetreiver', WebAuthInfoRetriever,
     '[3.17] WebAuthInfoRetreiver had been renamed into WebAuthInfoRetriever '
@@ -94,6 +94,7 @@ class LoginPasswordRetriever(WebAuthInfoRetriever):
 
     def revalidate_login(self, req):
         return req.get_authorization()[0]
+
 
 LoginPasswordRetreiver = class_renamed(
     'LoginPasswordRetreiver', LoginPasswordRetriever,
@@ -190,7 +191,7 @@ class RepositoryAuthenticationManager(object):
                 session = self._authenticate(login, authinfo)
             except AuthenticationError:
                 retriever.cleanup_authentication_information(req)
-                continue # the next one may succeed
+                continue  # the next one may succeed
             for retriever_ in self.authinforetrievers:
                 retriever_.authenticated(retriever, req, session, login, authinfo)
             return session, login
