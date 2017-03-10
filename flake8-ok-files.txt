@@ -42,6 +42,7 @@ cubicweb/server/utils.py
 cubicweb/server/test/datacomputed/migratedapp/schema.py
 cubicweb/server/test/datacomputed/schema.py
 cubicweb/server/test/data/entities.py
+cubicweb/server/test/data/hooks.py
 cubicweb/server/test/data-migractions/cubes/fakecustomtype/__init__.py
 cubicweb/server/test/data-migractions/cubes/fakeemail/__init__.py
 cubicweb/server/test/data-migractions/cubes/__init__.py
