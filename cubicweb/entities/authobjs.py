@@ -173,14 +173,3 @@ class CWUser(AnyEntity):
         return self.login
 
     dc_long_title = name
-
-    def __call__(self, *args, **kwargs):
-        """ugly hack for compatibility betweeb dbapi and repo api
-
-        In the dbapi, Connection and Session have a ``user`` method to
-        generated a user for a request In the repo api, Connection and Session
-        have a user attribute inherited from SessionRequestBase prototype. This
-        ugly hack allows to not break user of the user method.
-
-        XXX Deprecate me ASAP"""
-        return self

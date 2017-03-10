@@ -1146,7 +1146,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
 
         self.assertRaises(QueryError,
                           self.qexecute,
-                          "INSERT CWUser X: X login 'toto', X eid %s" % cnx.user(self.session).eid)
+                          "INSERT CWUser X: X login 'toto', X eid %s" % cnx.user.eid)
 
     def test_insertion_description_with_where(self):
         rset = self.qexecute('INSERT CWUser E, EmailAddress EM: E login "X", E upassword "X", '
@@ -1338,7 +1338,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
                           "WHERE X is Personne")
         self.assertRaises(QueryError,
                           self.qexecute,
-                          "SET X login 'tutu', X eid %s" % cnx.user(self.session).eid)
+                          "SET X login 'tutu', X eid %s" % cnx.user.eid)
 
 
     # HAVING on write queries test #############################################
