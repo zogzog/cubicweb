@@ -655,7 +655,7 @@ class Repository(object):
         session = Session(user, self)
         user._cw = user.cw_rset.req = session
         user.cw_clear_relation_cache()
-        self.info('opened session %s for user %s', session.sessionid, login)
+        self.info('opened session %s for user %s', session, login)
         with session.new_cnx() as cnx:
             self.hm.call_hooks('session_open', cnx)
             # commit connection at this point in case write operation has been

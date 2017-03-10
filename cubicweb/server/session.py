@@ -29,13 +29,11 @@ from logging import getLogger
 from six import text_type
 
 from logilab.common.deprecation import deprecated
-from logilab.common.textutils import unormalize
 from logilab.common.registry import objectify_predicate
 
 from cubicweb import QueryError, ProgrammingError, schema, server
 from cubicweb import set_log_methods
 from cubicweb.req import RequestSessionBase
-from cubicweb.utils import make_uid
 from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.server.edition import EditedEntity
 
@@ -176,8 +174,7 @@ def _open_only(func):
     @functools.wraps(func)
     def check_open(cnx, *args, **kwargs):
         if not cnx._open:
-            raise ProgrammingError('Closed Connection: %s'
-                                   % cnx.connectionid)
+            raise ProgrammingError('Closed Connection: %s' % cnx)
         return func(cnx, *args, **kwargs)
     return check_open
 
@@ -247,9 +244,7 @@ class Connection(RequestSessionBase):
         super(Connection, self).__init__(session.repo.vreg)
         #: connection unique id
         self._open = None
-        self.connectionid = '%s-%s' % (session.sessionid, uuid4().hex)
         self.session = session
-        self.sessionid = session.sessionid
 
         #: server.Repository object
         self.repo = session.repo
@@ -478,7 +473,7 @@ class Connection(RequestSessionBase):
         # XXX not using _open_only because before at creation time. _set_user
         # call this function to cache the Connection user.
         if entity.cw_etype != 'CWUser' and not self._open:
-            raise ProgrammingError('Closed Connection: %s' % self.connectionid)
+            raise ProgrammingError('Closed Connection: %s' % self)
         ecache = self.transaction_data.setdefault('ecache', {})
         ecache.setdefault(entity.eid, entity)
 
@@ -778,7 +773,7 @@ class Connection(RequestSessionBase):
                         self.critical('rollback error', exc_info=sys.exc_info())
                         continue
                 cnxset.rollback()
-                self.debug('rollback for transaction %s done', self.connectionid)
+                self.debug('rollback for transaction %s done', self)
         finally:
             self.clear()
 
@@ -824,7 +819,7 @@ class Connection(RequestSessionBase):
                                 print(operation)
                             operation.handle_event('precommit_event')
                     self.pending_operations[:] = processed
-                    self.debug('precommit transaction %s done', self.connectionid)
+                    self.debug('precommit transaction %s done', self)
                 except BaseException:
                     # if error on [pre]commit:
                     #
@@ -868,7 +863,7 @@ class Connection(RequestSessionBase):
                         except BaseException:
                             self.critical('error while postcommit',
                                           exc_info=sys.exc_info())
-                self.debug('postcommit transaction %s done', self.connectionid)
+                self.debug('postcommit transaction %s done', self)
                 return self.transaction_uuid(set=False)
         finally:
             self.clear()
@@ -930,19 +925,13 @@ class Session(object):
     """
 
     def __init__(self, user, repo, _id=None):
-        self.sessionid = _id or make_uid(unormalize(user.login))
         self.user = user  # XXX repoapi: deprecated and store only a login.
         self.repo = repo
         self.data = {}
 
     def __unicode__(self):
-        return '<session %s (%s 0x%x)>' % (
-            unicode(self.user.login), self.sessionid, id(self))
-
-    @property
-    @deprecated('[3.19] session.id is deprecated, use session.sessionid')
-    def id(self):
-        return self.sessionid
+        return '<session %s (0x%x)>' % (
+            unicode(self.user.login), id(self))
 
     @property
     def login(self):
