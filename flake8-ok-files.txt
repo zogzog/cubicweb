@@ -32,6 +32,7 @@ cubicweb/hooks/test/unittest_syncsession.py
 cubicweb/pylintext.py
 cubicweb/rset.py
 cubicweb/rtags.py
+cubicweb/server/__init__.py
 cubicweb/server/repository.py
 cubicweb/server/rqlannotation.py
 cubicweb/server/schema2sql.py

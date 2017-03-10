@@ -22,8 +22,6 @@ The server module contains functions to initialize a new repository.
 """
 from __future__ import print_function
 
-
-
 from contextlib import contextmanager
 
 from six import text_type, string_types
@@ -62,16 +60,16 @@ class Service(AppObject):
 
 # server debugging flags. They may be combined using binary operators.
 
-#:no debug information
+#: no debug information
 DBG_NONE = 0  #: no debug information
 #: rql execution information
-DBG_RQL  = 1
+DBG_RQL = 1
 #: executed sql
-DBG_SQL  = 2
+DBG_SQL = 2
 #: repository events
 DBG_REPO = 4
 #: multi-sources
-DBG_MS   = 8
+DBG_MS = 8
 #: hooks
 DBG_HOOKS = 16
 #: operations
