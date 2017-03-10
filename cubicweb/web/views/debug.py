@@ -103,22 +103,6 @@ class ProcessInformationView(StartupView):
         pyvalue = [(sname, format_stat(sname, sval))
                     for sname, sval in sorted(stats.items())]
         self.wview('pyvaltable', pyvalue=pyvalue, header_column_idx=0)
-        # open repo sessions
-        if req.user.is_in_group('managers'):
-            w(u'<h3>%s</h3>' % _('opened sessions'))
-            sessions = repo._sessions.values()
-            if sessions:
-                w(u'<ul>')
-                for session in sessions:
-                    w(u'<li>%s (%s: %s)<br/>' % (
-                        xml_escape(text_type(session)),
-                        _('last usage'),
-                        strftime(dtformat, localtime(session.timestamp))))
-                    dict_to_html(w, session.data)
-                    w(u'</li>')
-                w(u'</ul>')
-            else:
-                w(u'<p>%s</p>' % _('no repository sessions found'))
         # web server information
         w(u'<h2>%s</h2>' % _('Web server'))
         pyvalue = ((_('base url'), req.base_url()),
