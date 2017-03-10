@@ -30,11 +30,11 @@ class StatsService(Service):
     resources usage.
     """
 
-    __regid__  = 'repo_stats'
+    __regid__ = 'repo_stats'
     __select__ = match_user_groups('managers', 'users')
 
     def call(self):
-        repo = self._cw.repo # Service are repo side only.
+        repo = self._cw.repo  # Service are repo side only.
         results = {}
         querier = repo.querier
         source = repo.system_source
@@ -42,8 +42,8 @@ class StatsService(Service):
             (len(querier._rql_cache), repo.config['rql-cache-size'],
             querier.cache_hit, querier.cache_miss, 'rqlt_st'),
             (len(source._cache), repo.config['rql-cache-size'],
-            source.cache_hit, source.cache_miss, 'sql'),
-            ):
+             source.cache_hit, source.cache_miss, 'sql'),
+        ):
             results['%s_cache_size' % title] = {'size': size, 'maxsize': maxsize}
             results['%s_cache_hit' % title] = hits
             results['%s_cache_miss' % title] = misses
@@ -61,7 +61,7 @@ class GcStatsService(Service):
     resources usage.
     """
 
-    __regid__  = 'repo_gc_stats'
+    __regid__ = 'repo_gc_stats'
     __select__ = match_user_groups('managers')
 
     def call(self, nmax=20):

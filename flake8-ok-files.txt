@@ -57,6 +57,7 @@ cubicweb/server/test/unittest_session.py
 cubicweb/server/test/unittest_rqlannotation.py
 cubicweb/server/test/unittest_utils.py
 cubicweb/sobjects/notification.py
+cubicweb/sobjects/services.py
 cubicweb/sobjects/test/unittest_notification.py
 cubicweb/sobjects/test/unittest_register_user.py
 cubicweb/sobjects/textparsers.py
