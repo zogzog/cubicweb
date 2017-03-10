@@ -183,9 +183,6 @@ class FakeRepo(object):
         self.vreg = vreg or FakeCWRegistryStore(self.config, initlog=False)
         self.vreg.schema = schema
 
-    def internal_session(self):
-        return FakeSession(self)
-
 
 class FakeSource(object):
     dbhelper = get_db_helper('sqlite')

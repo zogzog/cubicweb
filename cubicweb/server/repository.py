@@ -670,8 +670,7 @@ class Repository(object):
         """Context manager returning a Connection using internal user which have
         every access rights on the repository.
 
-        Beware that unlike the older :meth:`internal_session`, internal
-        connections have all hooks beside security enabled.
+        Internal connections have all hooks beside security enabled.
         """
         with Session(InternalManager(), self).new_cnx() as cnx:
             cnx.user._cw = cnx  # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
