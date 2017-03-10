@@ -45,8 +45,13 @@ def get_repository(uri=None, config=None, vreg=None):
 def connect(repo, login, **kwargs):
     """Take credential and return associated Connection.
 
-    raise AuthenticationError if the credential are invalid."""
-    return repo.new_session(login, **kwargs).new_cnx()
+    raise AuthenticationError if the credential are invalid.
+    """
+    # use an internal connection to try to get a user object
+    with repo.internal_cnx() as cnx:
+        user = repo.authenticate_user(cnx, login, **kwargs)
+    return Connection(repo, user)
+
 
 def anonymous_cnx(repo):
     """return a Connection for Anonymous user.

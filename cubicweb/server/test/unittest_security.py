@@ -85,13 +85,13 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
             oldhash = cnx.system_sql("SELECT cw_upassword FROM cw_CWUser "
                                      "WHERE cw_login = 'oldpassword'").fetchone()[0]
             oldhash = self.repo.system_source.binary_to_str(oldhash)
-            session = self.repo.new_session('oldpassword', password='oldpassword')
+            self.repo.authenticate_user(cnx, 'oldpassword', password='oldpassword')
             newhash = cnx.system_sql("SELECT cw_upassword FROM cw_CWUser "
                                      "WHERE cw_login = 'oldpassword'").fetchone()[0]
             newhash = self.repo.system_source.binary_to_str(newhash)
             self.assertNotEqual(oldhash, newhash)
             self.assertTrue(newhash.startswith(b'$6$'))
-            session = self.repo.new_session('oldpassword', password='oldpassword')
+            self.repo.authenticate_user(cnx, 'oldpassword', password='oldpassword')
             newnewhash = cnx.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE "
                                         "cw_login = 'oldpassword'").fetchone()[0]
             newnewhash = self.repo.system_source.binary_to_str(newnewhash)
@@ -303,7 +303,8 @@ class SecurityTC(BaseSecurityTC):
             cnx.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
                        {'x': ueid, 'passwd': b'newpwd'})
             cnx.commit()
-        self.repo.new_session('user', password='newpwd')
+        with self.repo.internal_cnx() as cnx:
+            self.repo.authenticate_user(cnx, 'user', password='newpwd')
 
     def test_user_cant_change_other_upassword(self):
         with self.admin_access.repo_cnx() as cnx:

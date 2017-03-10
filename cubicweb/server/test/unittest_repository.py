@@ -77,19 +77,21 @@ class RepositoryTC(CubicWebTC):
             self.assertFalse(cnx.execute('Any X WHERE NOT X cw_source S'))
 
     def test_connect(self):
-        self.assertTrue(self.repo.new_session(self.admlogin, password=self.admpassword))
-        self.assertRaises(AuthenticationError,
-                          self.repo.new_session, self.admlogin, password='nimportnawak')
-        self.assertRaises(AuthenticationError,
-                          self.repo.new_session, self.admlogin, password='')
-        self.assertRaises(AuthenticationError,
-                          self.repo.new_session, self.admlogin, password=None)
-        self.assertRaises(AuthenticationError,
-                          self.repo.new_session, None, password=None)
-        self.assertRaises(AuthenticationError,
-                          self.repo.new_session, self.admlogin)
-        self.assertRaises(AuthenticationError,
-                          self.repo.new_session, None)
+        with self.repo.internal_cnx() as cnx:
+            self.assertTrue(
+                self.repo.authenticate_user(cnx, self.admlogin, password=self.admpassword))
+            self.assertRaises(AuthenticationError, self.repo.authenticate_user,
+                              cnx, self.admlogin, password='nimportnawak')
+            self.assertRaises(AuthenticationError, self.repo.authenticate_user,
+                              cnx, self.admlogin, password='')
+            self.assertRaises(AuthenticationError, self.repo.authenticate_user,
+                              cnx, self.admlogin, password=None)
+            self.assertRaises(AuthenticationError, self.repo.authenticate_user,
+                              cnx, None, password=None)
+            self.assertRaises(AuthenticationError, self.repo.authenticate_user,
+                              cnx, self.admlogin)
+            self.assertRaises(AuthenticationError, self.repo.authenticate_user,
+                              cnx, None)
 
     def test_login_upassword_accent(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -97,8 +99,8 @@ class RepositoryTC(CubicWebTC):
                         'X in_group G WHERE G name "users"',
                         {'login': u"barnabé", 'passwd': u"héhéhé".encode('UTF8')})
             cnx.commit()
-        repo = self.repo
-        self.assertTrue(repo.new_session(u"barnabé", password=u"héhéhé".encode('UTF8')))
+            repo = self.repo
+            self.assertTrue(repo.authenticate_user(cnx, u"barnabé", password=u"héhéhé".encode('UTF8')))
 
     def test_rollback_on_execute_validation_error(self):
         class ValidationErrorAfterHook(Hook):
@@ -180,12 +182,6 @@ class RepositoryTC(CubicWebTC):
 
         ownedby = schema.rschema('owned_by')
         self.assertEqual(ownedby.objects('CWEType'), ('CWUser',))
-
-    def test_internal_api(self):
-        repo = self.repo
-        session = repo.new_session(self.admlogin, password=self.admpassword)
-        with session.new_cnx() as cnx:
-            self.assertEqual(repo.type_from_eid(2, cnx), 'CWGroup')
 
     def test_public_api(self):
         self.assertEqual(self.repo.get_schema(), self.repo.schema)

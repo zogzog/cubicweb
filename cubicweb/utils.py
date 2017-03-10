@@ -51,6 +51,7 @@ _MARKER = object()
 random.seed()
 
 def admincnx(appid):
+    from cubicweb import repoapi
     from cubicweb.cwconfig import CubicWebConfiguration
     from cubicweb.server.repository import Repository
     config = CubicWebConfiguration.config_for(appid)
@@ -60,8 +61,7 @@ def admincnx(appid):
 
     repo = Repository(config)
     repo.bootstrap()
-    session = repo.new_session(login, password=password)
-    return session.new_cnx()
+    return repoapi.connect(repo, login, password=password)
 
 
 def make_uid(key=None):
