@@ -866,15 +866,15 @@ class CubicWebTC(BaseTestCase):
         authm.anoninfo = authm.anoninfo[0], {'password': authm.anoninfo[1]}
         # not properly cleaned between tests
         self.open_sessions = sh.session_manager._sessions = {}
-        return req, self.session
+        return req
 
-    def assertAuthSuccess(self, req, origsession, nbsessions=1):
+    def assertAuthSuccess(self, req, nbsessions=1):
         session = self.app.get_session(req)
         cnx = session.new_cnx()
         with cnx:
             req.set_cnx(cnx)
         self.assertEqual(len(self.open_sessions), nbsessions, self.open_sessions)
-        self.assertEqual(session.login, origsession.login)
+        self.assertEqual(req.user.login, self.admlogin)
         self.assertEqual(session.anonymous_session, False)
 
     def assertAuthFailure(self, req, nbsessions=0):

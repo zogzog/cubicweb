@@ -219,7 +219,7 @@ class ApplicationTC(CubicWebTC):
     def test_handle_request_with_lang_fromurl(self):
         """No language negociation, get language from URL."""
         self.config.global_set_option('language-mode', 'url-prefix')
-        req, origsession = self.init_authentication('http')
+        req = self.init_authentication('http')
         self.assertEqual(req.url(), 'http://testing.fr/cubicweb/login')
         self.assertEqual(req.lang, 'en')
         self.app.handle_request(req)
@@ -638,20 +638,20 @@ class ApplicationTC(CubicWebTC):
     # authentication tests ####################################################
 
     def test_http_auth_no_anon(self):
-        req, origsession = self.init_authentication('http')
+        req = self.init_authentication('http')
         self.assertAuthFailure(req)
         self.app.handle_request(req)
         self.assertEqual(401, req.status_out)
         clear_cache(req, 'get_authorization')
         authstr = base64.encodestring(('%s:%s' % (self.admlogin, self.admpassword)).encode('ascii'))
         req.set_request_header('Authorization', 'basic %s' % authstr.decode('ascii'))
-        self.assertAuthSuccess(req, origsession)
+        self.assertAuthSuccess(req)
         req._url = 'logout'
         self.assertRaises(LogOut, self.app_handle_request, req)
         self.assertEqual(len(self.open_sessions), 0)
 
     def test_cookie_auth_no_anon(self):
-        req, origsession = self.init_authentication('cookie')
+        req = self.init_authentication('cookie')
         self.assertAuthFailure(req)
         try:
             form = self.app.handle_request(req)
@@ -663,7 +663,7 @@ class ApplicationTC(CubicWebTC):
         self.assertFalse(req.cnx)  # Mock cnx are False
         req.form['__login'] = self.admlogin
         req.form['__password'] = self.admpassword
-        self.assertAuthSuccess(req, origsession)
+        self.assertAuthSuccess(req)
         req._url = 'logout'
         self.assertRaises(LogOut, self.app_handle_request, req)
         self.assertEqual(len(self.open_sessions), 0)
@@ -675,11 +675,11 @@ class ApplicationTC(CubicWebTC):
             cnx.execute('INSERT EmailAddress X: X address %(address)s, U primary_email X '
                         'WHERE U login %(login)s', {'address': address, 'login': login})
             cnx.commit()
-        req, origsession = self.init_authentication('cookie')
+        req = self.init_authentication('cookie')
         self.set_option('allow-email-login', True)
         req.form['__login'] = address
         req.form['__password'] = self.admpassword
-        self.assertAuthSuccess(req, origsession)
+        self.assertAuthSuccess(req)
         req._url = 'logout'
         self.assertRaises(LogOut, self.app_handle_request, req)
         self.assertEqual(len(self.open_sessions), 0)
@@ -718,27 +718,27 @@ class ApplicationTC(CubicWebTC):
         self._reset_cookie(req)
 
     def test_http_auth_anon_allowed(self):
-        req, origsession = self.init_authentication('http', 'anon')
+        req = self.init_authentication('http', 'anon')
         self._test_auth_anon(req)
         authstr = base64.encodestring(b'toto:pouet')
         req.set_request_header('Authorization', 'basic %s' % authstr.decode('ascii'))
         self._test_anon_auth_fail(req)
         authstr = base64.encodestring(('%s:%s' % (self.admlogin, self.admpassword)).encode('ascii'))
         req.set_request_header('Authorization', 'basic %s' % authstr.decode('ascii'))
-        self.assertAuthSuccess(req, origsession)
+        self.assertAuthSuccess(req)
         req._url = 'logout'
         self.assertRaises(LogOut, self.app_handle_request, req)
         self.assertEqual(len(self.open_sessions), 0)
 
     def test_cookie_auth_anon_allowed(self):
-        req, origsession = self.init_authentication('cookie', 'anon')
+        req = self.init_authentication('cookie', 'anon')
         self._test_auth_anon(req)
         req.form['__login'] = 'toto'
         req.form['__password'] = 'pouet'
         self._test_anon_auth_fail(req)
         req.form['__login'] = self.admlogin
         req.form['__password'] = self.admpassword
-        self.assertAuthSuccess(req, origsession)
+        self.assertAuthSuccess(req)
         req._url = 'logout'
         self.assertRaises(LogOut, self.app_handle_request, req)
         self.assertEqual(0, len(self.open_sessions))
@@ -749,10 +749,10 @@ class ApplicationTC(CubicWebTC):
             # admin should see anon + admin
             self.assertEqual(2, len(list(req.find('CWUser'))))
             with anonymized_request(req):
-                self.assertEqual('anon', req.session.login, 'anon')
+                self.assertEqual('anon', req.session.user.login)
                 # anon should only see anon user
                 self.assertEqual(1, len(list(req.find('CWUser'))))
-            self.assertEqual(self.admlogin, req.session.login)
+            self.assertEqual(self.admlogin, req.session.user.login)
             self.assertEqual(2, len(list(req.find('CWUser'))))
 
     def test_non_regr_optional_first_var(self):
