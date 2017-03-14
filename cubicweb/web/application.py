@@ -18,7 +18,6 @@
 """CubicWeb web client application object"""
 
 
-
 import contextlib
 from functools import wraps
 import json

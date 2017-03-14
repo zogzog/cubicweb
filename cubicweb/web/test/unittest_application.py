@@ -24,7 +24,7 @@ from six.moves import http_client
 from six.moves.http_cookies import SimpleCookie
 
 from logilab.common.testlib import TestCase, unittest_main
-from logilab.common.decorators import clear_cache, classproperty
+from logilab.common.decorators import clear_cache
 
 from cubicweb import view
 from cubicweb.devtools.testlib import CubicWebTC, real_error_handling
@@ -32,7 +32,6 @@ from cubicweb.devtools.fake import FakeRequest
 from cubicweb.web import LogOut, Redirect, INTERNAL_FIELD_VALUE
 from cubicweb.web.views.basecontrollers import ViewController
 from cubicweb.web.application import anonymized_request
-from cubicweb import repoapi
 
 
 class FakeMapping:
@@ -574,13 +573,13 @@ class ApplicationTC(CubicWebTC):
             perm_eid = text_type(perm.eid)
             req.form = {
                 'eid': [dir_eid, perm_eid],
-                '__maineid' : dir_eid,
+                '__maineid': dir_eid,
                 '__type:%s' % dir_eid: 'Directory',
                 '__type:%s' % perm_eid: 'DirectoryPermission',
                 '_cw_entity_fields:%s' % dir_eid: '',
                 '_cw_entity_fields:%s' % perm_eid: 'has_permission-object',
                 'has_permission-object:%s' % perm_eid: '',
-                }
+            }
             path, _params = self.expect_redirect_handle_request(req, 'edit')
             self.assertTrue(req.find('Directory', eid=mydir.eid))
             self.assertFalse(req.find('DirectoryPermission', eid=perm.eid))

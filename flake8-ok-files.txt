@@ -89,8 +89,10 @@ cubicweb/test/unittest_rtags.py
 cubicweb/test/unittest_schema.py
 cubicweb/test/unittest_toolsutils.py
 cubicweb/test/unittest_wfutils.py
+cubicweb/web/application.py
 cubicweb/web/formwidgets.py
 cubicweb/web/test/data/entities.py
+cubicweb/web/test/unittest_application.py
 cubicweb/web/test/unittest_http_headers.py
 cubicweb/web/test/unittest_views_basetemplates.py
 cubicweb/web/test/unittest_views_cwsources.py
