@@ -49,11 +49,10 @@ from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application, eid_param
 from cubicweb.server.hook import SendMailOp
-from cubicweb.server.session import Session
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import fake, htmlparser, DEFAULT_EMPTY_DB_ID
 from cubicweb.devtools.fill import insert_entity_queries, make_relations_queries
-
+from cubicweb.web.views.authentication import Session
 
 if sys.version_info[:2] < (3, 4):
     from unittest2 import TestCase
@@ -251,11 +250,12 @@ class RepoAccess(object):
             req.cnx.commit()
             req.cnx.rolback()
         """
+        session = kwargs.pop('session', Session(self._repo, self._user))
         req = self.requestcls(self._repo.vreg, url=url, headers=headers,
                               method=method, form=kwargs)
         with self.cnx() as cnx:
             # web request expect a session attribute on cnx referencing the web session
-            cnx.session = Session(self._repo, self._user)
+            cnx.session = session
             req.set_cnx(cnx)
             yield req
 
@@ -681,10 +681,10 @@ class CubicWebTC(BaseTestCase):
         return ctrl.publish(), req
 
     @contextmanager
-    def remote_calling(self, fname, *args):
+    def remote_calling(self, fname, *args, **kwargs):
         """remote json call simulation"""
         args = [json.dumps(arg) for arg in args]
-        with self.admin_access.web_request(fname=fname, pageid='123', arg=args) as req:
+        with self.admin_access.web_request(fname=fname, pageid='123', arg=args, **kwargs) as req:
             ctrl = self.vreg['controllers'].select('ajax', req)
             yield ctrl.publish(), req
 

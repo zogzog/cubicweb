@@ -32,7 +32,7 @@ from cubicweb.entity import Entity
 from cubicweb.view import Component, EntityView
 from cubicweb.server.hook import SendMailOp
 from cubicweb.mail import construct_message_id, format_mail
-from cubicweb.server.session import Session, InternalManager
+from cubicweb.server.session import Connection, InternalManager
 
 
 class RecipientsFinder(Component):
@@ -120,8 +120,7 @@ class NotificationView(EntityView):
                 emailaddr = something.cw_adapt_to('IEmailable').get_email()
                 user = something
             # hi-jack self._cw to get a session for the returned user
-            session = Session(user, self._cw.repo)
-            with session.new_cnx() as cnx:
+            with Connection(self._cw.repo, user) as cnx:
                 self._cw = cnx
                 try:
                     # since the same view (eg self) may be called multiple time and we

@@ -884,7 +884,8 @@ class AjaxControllerTC(CubicWebTC):
                 (self.schema['tags'].rdefs['Tag', 'CWUser'],
                  {'delete': (RRQLExpression('S owned_by U'), )}, )):
             with self.admin_access.web_request(rql='CWUser P WHERE P login "John"',
-                                   pageid='123', fname='view') as req:
+                                               pageid='123', fname='view',
+                                               session=req.session) as req:
                 ctrl = self.ctrl(req)
                 rset = self.john.as_rset()
                 rset.req = req
@@ -898,7 +899,8 @@ class AjaxControllerTC(CubicWebTC):
             self.assertEqual(deletes, [])
             inserts = get_pending_inserts(req)
             self.assertEqual(inserts, ['12:tags:13'])
-        with self.remote_calling('add_pending_inserts', [['12', 'tags', '14']]) as (_, req):
+        with self.remote_calling('add_pending_inserts', [['12', 'tags', '14']],
+                                 session=req.session) as (_, req):
             deletes = get_pending_deletes(req)
             self.assertEqual(deletes, [])
             inserts = get_pending_inserts(req)
@@ -917,7 +919,8 @@ class AjaxControllerTC(CubicWebTC):
             self.assertEqual(inserts, [])
             deletes = get_pending_deletes(req)
             self.assertEqual(deletes, ['12:tags:13'])
-        with self.remote_calling('add_pending_delete', ['12', 'tags', '14']) as (_, req):
+        with self.remote_calling('add_pending_delete', ['12', 'tags', '14'],
+                                 session=req.session) as (_, req):
             inserts = get_pending_inserts(req)
             self.assertEqual(inserts, [])
             deletes = get_pending_deletes(req)
@@ -931,9 +934,10 @@ class AjaxControllerTC(CubicWebTC):
             req.remove_pending_operations()
 
     def test_remove_pending_operations(self):
-        with self.remote_calling('add_pending_delete', ['12', 'tags', '13']):
+        with self.remote_calling('add_pending_delete', ['12', 'tags', '13']) as (_, req):
             pass
-        with self.remote_calling('add_pending_inserts', [['12', 'tags', '14']]) as (_, req):
+        with self.remote_calling('add_pending_inserts', [['12', 'tags', '14']],
+                                 session=req.session) as (_, req):
             inserts = get_pending_inserts(req)
             self.assertEqual(inserts, ['12:tags:14'])
             deletes = get_pending_deletes(req)

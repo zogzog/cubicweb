@@ -47,7 +47,7 @@ from cubicweb import (CW_MIGRATION_MAP, QueryError,
 from cubicweb import set_log_methods
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import utils, hook, querier, sources
-from cubicweb.server.session import Session, InternalManager
+from cubicweb.server.session import InternalManager, Connection
 
 
 NO_CACHE_RELATIONS = set([
@@ -667,7 +667,7 @@ class Repository(object):
 
         Internal connections have all hooks beside security enabled.
         """
-        with Session(InternalManager(), self).new_cnx() as cnx:
+        with Connection(self, InternalManager()) as cnx:
             cnx.user._cw = cnx  # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
             with cnx.security_enabled(read=False, write=False):
                 yield cnx

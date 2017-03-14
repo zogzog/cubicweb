@@ -701,7 +701,7 @@ class ApplicationTC(CubicWebTC):
         with cnx:
             req.set_cnx(cnx)
         self.assertEqual(len(self.open_sessions), 1)
-        self.assertEqual(asession.login, 'anon')
+        self.assertEqual(asession.user.login, 'anon')
         self.assertTrue(asession.anonymous_session)
         self._reset_cookie(req)
 

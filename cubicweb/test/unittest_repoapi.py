@@ -56,7 +56,7 @@ class REPOAPITC(CubicWebTC):
         """Check that ClientConnection requires explicit open and close
         """
         access = self.admin_access
-        cltcnx = Connection(access._session)
+        cltcnx = Connection(access._repo, access._user)
         # connection not open yet
         with self.assertRaises(ProgrammingError):
             cltcnx.execute('Any X WHERE X is CWUser')

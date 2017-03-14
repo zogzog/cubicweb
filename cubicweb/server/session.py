@@ -236,23 +236,21 @@ class Connection(RequestSessionBase):
     is_request = False
     hooks_in_progress = False
 
-    def __init__(self, session):
-        super(Connection, self).__init__(session.repo.vreg)
+    def __init__(self, repo, user):
+        super(Connection, self).__init__(repo.vreg)
         #: connection unique id
         self._open = None
-        self.session = session
 
         #: server.Repository object
-        self.repo = session.repo
+        self.repo = repo
         self.vreg = self.repo.vreg
         self._execute = self.repo.querier.execute
 
         # internal (root) session
-        self.is_internal_session = isinstance(session.user, InternalManager)
+        self.is_internal_session = isinstance(user, InternalManager)
 
         #: dict containing arbitrary data cleared at the end of the transaction
         self.transaction_data = {}
-        self._session_data = session.data
         #: ordered list of operations to be processed on commit/rollback
         self.pending_operations = []
         #: (None, 'precommit', 'postcommit', 'uncommitable')
@@ -273,7 +271,7 @@ class Connection(RequestSessionBase):
         self.write_security = DEFAULT_SECURITY
 
         # undo control
-        config = session.repo.config
+        config = repo.config
         if config.creating or config.repairing or self.is_internal_session:
             self.undo_actions = False
         else:
@@ -283,10 +281,10 @@ class Connection(RequestSessionBase):
         self._rewriter = RQLRewriter(self)
 
         # other session utility
-        if session.user.login == '__internal_manager__':
-            self.user = session.user
+        if user.login == '__internal_manager__':
+            self.user = user
         else:
-            self._set_user(session.user)
+            self._set_user(user)
 
     @_open_only
     def get_schema(self):
@@ -392,8 +390,9 @@ class Connection(RequestSessionBase):
     # shared data handling ###################################################
 
     @property
+    @deprecated('[3.25] use transaction_data or req.session.data', stacklevel=3)
     def data(self):
-        return self._session_data
+        return self.transaction_data
 
     @property
     def rql_rewriter(self):
@@ -406,7 +405,7 @@ class Connection(RequestSessionBase):
         if txdata:
             data = self.transaction_data
         else:
-            data = self._session_data
+            data = self.data
         if pop:
             return data.pop(key, default)
         else:
@@ -419,7 +418,7 @@ class Connection(RequestSessionBase):
         if txdata:
             self.transaction_data[key] = value
         else:
-            self._session_data[key] = value
+            self.data[key] = value
 
     def clear(self):
         """reset internal data"""
@@ -449,10 +448,6 @@ class Connection(RequestSessionBase):
                 ' stop using .ensure_cnx_set')
     def ensure_cnx_set(self):
         yield
-
-    @property
-    def anonymous_connection(self):
-        return self.session.anonymous_session
 
     # Entity cache management #################################################
     #

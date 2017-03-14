@@ -52,12 +52,12 @@ class Connection(cwsession.Connection):
     """
 
     def __init__(self, session, *args, **kw):
-        super(Connection, self).__init__(session, *args, **kw)
-        self._session = session
+        super(Connection, self).__init__(session._repo, session._user, *args, **kw)
+        self.session = session
         self.lang = session._cached_lang
 
     def _get_session_data(self):
-        return self._session.data
+        return self.session.data
 
     def _set_session_data(self, data):
         pass
@@ -65,15 +65,26 @@ class Connection(cwsession.Connection):
     _session_data = property(_get_session_data, _set_session_data)
 
 
-class Session(cwsession.Session):
+class Session(object):
     """ A Session that access the session data through a property.
 
     Along with :class:`Connection`, it avoid any load of the pyramid session
     data until it is actually accessed.
     """
     def __init__(self, pyramid_request, user, repo):
-        super(Session, self).__init__(user, repo)
         self._pyramid_request = pyramid_request
+        self._user = user
+        self._repo = repo
+
+    @property
+    def anonymous_session(self):
+        # XXX for now, anonymous_user only exists in webconfig (and testconfig).
+        # It will only be present inside all-in-one instance.
+        # there is plan to move it down to global config.
+        if not hasattr(self._repo.config, 'anonymous_user'):
+            # not a web or test config, no anonymous user
+            return False
+        return self._user.login == self._repo.config.anonymous_user()[0]
 
     def get_data(self):
         if not getattr(self, '_protect_data_access', False):
