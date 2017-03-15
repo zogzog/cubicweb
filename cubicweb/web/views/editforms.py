@@ -73,10 +73,12 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
     paginable = False
     # show first level of composite relations in a treeview
     show_composite = False
+    show_composite_skip_rtypes = set('wf_info_for',)
 
-    @staticmethod
-    def _iter_composite_entities(entity, limit=None):
+    def _iter_composite_entities(self, entity, limit=None):
         for rdef, role in entity.e_schema.composite_rdef_roles:
+            if rdef.rtype in self.show_composite_skip_rtypes:
+                continue
             for centity in entity.related(
                 rdef.rtype, role, limit=limit
             ).entities():
