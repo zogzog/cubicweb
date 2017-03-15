@@ -234,16 +234,6 @@ class AbstractSource(object):
             cnxset.cnx = self.get_connection()
             cnxset.cu = cnxset.cnx.cursor()
 
-    # cache handling ###########################################################
-
-    def reset_caches(self):
-        """method called during test to reset potential source caches"""
-        pass
-
-    def clear_eid_cache(self, eid, etype):
-        """clear potential caches for the given eid"""
-        pass
-
     # user authentication api ##################################################
 
     def authenticate(self, cnx, login, **kwargs):

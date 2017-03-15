@@ -277,7 +277,6 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
             eid = cnx.execute('CWUser X WHERE X login %(login)s', {'login': 'syt'})[0][0]
             cnx.execute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': eid})
             cnx.commit()
-            source.reset_caches()
             rset = cnx.execute('CWUser X WHERE X login %(login)s', {'login': 'syt'})
             self.assertEqual(len(rset), 1)
             e = rset.get_entity(0, 0)
