@@ -41,7 +41,7 @@ from logilab.common.deprecation import deprecated
 from yams import BadSchemaDefinition
 from rql.utils import rqlvar_maker
 
-from cubicweb import (CW_MIGRATION_MAP, QueryError,
+from cubicweb import (CW_MIGRATION_MAP,
                       UnknownEid, AuthenticationError, ExecutionError,
                       UniqueTogetherError, ViolatedConstraint)
 from cubicweb import set_log_methods
