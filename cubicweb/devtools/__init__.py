@@ -124,9 +124,8 @@ def turn_repo_on(repo):
     if repo._needs_refresh:
         for cnxset in repo.cnxsets:
             cnxset.reconnect()
-        repo._type_cache = {}
         repo.querier.set_schema(repo.schema)
-        repo.system_source.reset_caches()
+        repo.clear_caches()
         repo._needs_refresh = False
 
 

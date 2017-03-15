@@ -30,7 +30,7 @@ import logging
 import sys
 
 from six import PY2, text_type, string_types
-from six.moves import range, cPickle as pickle
+from six.moves import range, cPickle as pickle, zip
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.configuration import Method
@@ -361,15 +361,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         authentifier.source = self
         authentifier.set_schema(self.schema)
 
-    def reset_caches(self):
-        """method called during test to reset potential source caches"""
-        self._cache = QueryCache(self.repo.config['rql-cache-size'])
-
-    def clear_eid_cache(self, eid, etype):
-        """clear potential caches for the given eid"""
-        self._cache.pop('Any X WHERE X eid %s, X is %s' % (eid, etype), None)
-        self._cache.pop('Any X WHERE X eid %s' % eid, None)
-        self._cache.pop('Any %s' % eid, None)
+    def clear_caches(self, eids, etypes):
+        """Clear potential source caches."""
+        if eids is None:
+            self._cache = QueryCache(self.repo.config['rql-cache-size'])
+        else:
+            cache = self._cache
+            for eid, etype in zip(eids, etypes):
+                cache.pop('Any X WHERE X eid %s' % eid, None)
+                cache.pop('Any %s' % eid, None)
+                if etype is not None:
+                    cache.pop('Any X WHERE X eid %s, X is %s' % (eid, etype), None)
 
     @statsd_timeit
     def sqlexec(self, cnx, sql, args=None):
