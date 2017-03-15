@@ -322,9 +322,6 @@ class Repository(object):
                     continue
                 self.add_source(sourceent)
 
-    def _clear_planning_caches(self):
-        clear_cache(self, 'source_defs')
-
     def add_source(self, sourceent):
         try:
             source = self.get_source(sourceent.type, sourceent.name,
@@ -344,12 +341,12 @@ class Repository(object):
             source.init(True, sourceent)
         else:
             source.init(False, sourceent)
-        self._clear_planning_caches()
+        self._clear_source_defs_caches()
 
     def remove_source(self, uri):
         source = self.sources_by_uri.pop(uri)
         del self.sources_by_eid[source.eid]
-        self._clear_planning_caches()
+        self._clear_source_defs_caches()
 
     def get_source(self, type, uri, source_config, eid=None):
         # set uri and type in source config so it's available through
@@ -589,6 +586,9 @@ class Repository(object):
         for uri, source in self.sources_by_uri.items():
             sources[uri] = source.public_config
         return sources
+
+    def _clear_source_defs_caches(self):
+        clear_cache(self, 'source_defs')
 
     def properties(self):
         """Return a result set containing system wide properties.
