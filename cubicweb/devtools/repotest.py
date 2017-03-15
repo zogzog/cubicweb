@@ -39,7 +39,7 @@ def snippet_key(a):
 
 
 def check_plan(self, rql, expected, kwargs=None):
-    with self._access.cnx() as cnx:
+    with self.admin_access.cnx() as cnx:
         plan = self._prepare_plan(cnx, rql, kwargs)
         self.planner.build_plan(plan)
         try:
@@ -194,8 +194,8 @@ class BaseQuerierTC(TestCase):
 
     def setUp(self):
         self.o = self.repo.querier
-        self._access = RepoAccess(self.repo, 'admin', FakeRequest)
-        self.ueid = self._access._user.eid
+        self.admin_access = RepoAccess(self.repo, 'admin', FakeRequest)
+        self.ueid = self.admin_access._user.eid
         assert self.ueid != -1
         self.repo._type_cache = {} # clear cache
         self.maxeid = self.get_max_eid()
@@ -203,18 +203,18 @@ class BaseQuerierTC(TestCase):
         self._dumb_sessions = []
 
     def get_max_eid(self):
-        with self._access.cnx() as cnx:
+        with self.admin_access.cnx() as cnx:
             return cnx.execute('Any MAX(X)')[0][0]
 
     def cleanup(self):
-        with self._access.cnx() as cnx:
+        with self.admin_access.cnx() as cnx:
             cnx.execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
             cnx.commit()
 
     def tearDown(self):
         undo_monkey_patch()
         self.cleanup()
-        assert self._access._user.eid != -1
+        assert self.admin_access._user.eid != -1
 
     def set_debug(self, debug):
         set_debug(debug)
@@ -249,13 +249,13 @@ class BaseQuerierTC(TestCase):
     def user_groups_session(self, *groups):
         """lightweight session using the current user with hi-jacked groups"""
         # use cnx.user.eid to get correct owned_by relation, unless explicit eid
-        with self._access.cnx() as cnx:
+        with self.admin_access.cnx() as cnx:
             user_eid = cnx.user.eid
             cnx.user._cw.data[user_session_cache_key(user_eid, 'groups')] = set(groups)
             yield cnx
 
     def qexecute(self, rql, args=None, build_descr=True):
-        with self._access.cnx() as cnx:
+        with self.admin_access.cnx() as cnx:
             try:
                 return self.o.execute(cnx, rql, args, build_descr)
             finally:
