@@ -23,7 +23,7 @@ from __future__ import print_function
 from itertools import repeat
 
 from six import text_type, string_types, integer_types
-from six.moves import range
+from six.moves import range, zip
 
 from rql import RQLSyntaxError, CoercionError
 from rql.stmts import Union
@@ -477,14 +477,23 @@ class QuerierHelper(object):
 
     def set_schema(self, schema):
         self.schema = schema
-        repo = self._repo
-        self.rql_cache = RQLCache(repo, schema)
-        rqlhelper = repo.vreg.rqlhelper
+        self.clear_caches()
+        rqlhelper = self._repo.vreg.rqlhelper
         self._annotate = rqlhelper.annotate
         # rql planner
         self._planner = SSPlanner(schema, rqlhelper)
         # sql generation annotator
         self.sqlgen_annotate = SQLGenAnnotator(schema).annotate
+
+    def clear_caches(self, eids=None, etypes=None):
+        if eids is None:
+            self.rql_cache = RQLCache(self._repo, self.schema)
+        else:
+            cache = self.rql_cache
+            for eid, etype in zip(eids, etypes):
+                cache.pop(('Any X WHERE X eid %s' % eid,), None)
+                if etype is not None:
+                    cache.pop(('%s X WHERE X eid %s' % (etype, eid),), None)
 
     def plan_factory(self, rqlst, args, cnx):
         """create an execution plan for an INSERT RQL query"""

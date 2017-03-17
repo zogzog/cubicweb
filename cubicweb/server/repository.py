@@ -667,15 +667,13 @@ class Repository(object):
         else:
             etypes = []
             etcache = self._type_cache
-            rqlcache = self.querier.rql_cache
             for eid in eids:
                 try:
                     etype = etcache.pop(int(eid))  # may be a string in some cases
-                    rqlcache.pop(('%s X WHERE X eid %s' % (etype, eid),), None)
                 except KeyError:
                     etype = None
-                rqlcache.pop(('Any X WHERE X eid %s' % eid,), None)
                 etypes.append(etype)
+        self.querier.clear_caches(eids, etypes)
         self.system_source.clear_caches(eids, etypes)
 
     def type_from_eid(self, eid, cnx):
