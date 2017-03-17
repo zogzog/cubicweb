@@ -1,2 +1,1 @@
 pytest
-http://hg.logilab.org/master/yams/archive/default.tar.bz2#egg=yams
