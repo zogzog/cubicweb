@@ -193,7 +193,7 @@ setup(
     data_files=data_files,
     install_requires=[
         'six >= 1.4.0',
-        'logilab-common >= 1.2.2',
+        'logilab-common >= 1.4.0',
         'logilab-mtconverter >= 0.8.0',
         'rql >= 0.34.0',
         'yams >= 0.44.0',

@@ -22,7 +22,7 @@ BuildArch:      noarch
 
 Requires:       %{python}
 Requires:       %{python}-six >= 1.4.0
-Requires:       %{python}-logilab-common >= 1.2.2
+Requires:       %{python}-logilab-common >= 1.4.0
 Requires:       %{python}-logilab-mtconverter >= 0.8.0
 Requires:       %{python}-rql >= 0.34.0
 Requires:       %{python}-yams >= 0.44.0
