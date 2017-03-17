@@ -21,7 +21,6 @@ tree.
 This is used for instance for read security checking in the repository.
 """
 
-
 from six import text_type, string_types
 
 from rql import nodes as n, stmts, TypeResolverException
@@ -33,7 +32,7 @@ from logilab.common import tempattr
 from logilab.common.graph import has_path
 
 from cubicweb import Unauthorized
-from cubicweb.schema import RRQLExpression
+
 
 def cleanup_solutions(rqlst, solutions):
     for sol in solutions:
@@ -66,7 +65,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
         var = newroot.defined_vars[varname]
         stinfo = var.stinfo
         if stinfo.get('uidrel') is not None:
-            continue # eid specified, no need for additional type specification
+            continue  # eid specified, no need for additional type specification
         try:
             typerel = rqlst.defined_vars[varname].stinfo.get('typerel')
         except KeyError:
@@ -103,7 +102,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                 # possible types can only be a subset of existing ones, so only
                 # remove no more possible types
                 for cst in mytyperel.get_nodes(n.Constant):
-                    if not cst.value in possibletypes:
+                    if cst.value not in possibletypes:
                         cst.parent.remove(cst)
         else:
             # we have to add types restriction
@@ -159,7 +158,7 @@ def _add_noinvariant(noinvariant, restricted, select, nbtrees):
 def _expand_selection(terms, selected, aliases, select, newselect):
     for term in terms:
         for vref in term.iget_nodes(n.VariableRef):
-            if not vref.name in selected:
+            if vref.name not in selected:
                 select.append_selected(vref)
                 colalias = newselect.get_variable(vref.name, len(aliases))
                 aliases.append(n.VariableRef(colalias))
@@ -175,6 +174,7 @@ def _has_multiple_cardinality(etypes, rdef, ttypes_func, cardindex):
             if rdef(etype, ttype).cardinality[cardindex] in '+*':
                 return True
     return False
+
 
 def _compatible_relation(relations, stmt, sniprel):
     """Search among given rql relation nodes if there is one 'compatible' with the
@@ -209,6 +209,7 @@ class Unsupported(Exception):
     """raised when an rql expression can't be inserted in some rql query
     because it create an unresolvable query (eg no solutions found)
     """
+
 
 class VariableFromSubQuery(Exception):
     """flow control exception to indicate that a variable is coming from a
@@ -302,15 +303,15 @@ class RQLRewriter(object):
                             newvar.stinfo.setdefault('relations', set()).add(rel)
                 newselect.set_orderby(sortterms)
                 _expand_selection(select.orderby, selected, aliases, select, newselect)
-                select.orderby = () # XXX dereference?
+                select.orderby = ()  # XXX dereference?
             if select.groupby:
                 newselect.set_groupby([g.copy(newselect) for g in select.groupby])
                 _expand_selection(select.groupby, selected, aliases, select, newselect)
-                select.groupby = () # XXX dereference?
+                select.groupby = ()  # XXX dereference?
             if select.having:
                 newselect.set_having([g.copy(newselect) for g in select.having])
                 _expand_selection(select.having, selected, aliases, select, newselect)
-                select.having = () # XXX dereference?
+                select.having = ()  # XXX dereference?
             if select.limit:
                 newselect.limit = select.limit
                 select.limit = None
@@ -376,7 +377,7 @@ class RQLRewriter(object):
             'something wrong in your schema permission (for instance using a '
             'RQLExpression which inserts a relation which doesn\'t exist in '
             'the schema)\nOrig solutions: %s\nnew solutions: %s' % (
-            select, solutions, newsolutions))
+                select, solutions, newsolutions))
         if len(newsolutions) > len(solutions):
             newsolutions = self.remove_ambiguities(snippets, newsolutions)
             assert newsolutions
@@ -390,7 +391,7 @@ class RQLRewriter(object):
                 varmap = tuple(sorted(varmap.items()))
             else:
                 assert isinstance(varmap, tuple), varmap
-            if varexistsmap is not None and not varmap in varexistsmap:
+            if varexistsmap is not None and varmap not in varexistsmap:
                 continue
             self.insert_varmap_snippets(varmap, rqlexprs, varexistsmap)
 
@@ -418,7 +419,7 @@ class RQLRewriter(object):
                         vi['rhs_rels'].setdefault(rel.r_type, []).append(rel)
                     vi['lhs_rels'] = {}
                     for rel in sti.get('relations', []):
-                        if not rel in sti.get('rhsrelations', []):
+                        if rel not in sti.get('rhsrelations', []):
                             vi['lhs_rels'].setdefault(rel.r_type, []).append(rel)
                 else:
                     vi['rhs_rels'] = vi['lhs_rels'] = {}
@@ -460,7 +461,7 @@ class RQLRewriter(object):
                     self.insert_snippet(varmap, rqlexpr.snippet_rqlst, exists)
         if varexistsmap is None and not inserted:
             # no rql expression found matching rql solutions. User has no access right
-            raise Unauthorized() # XXX may also be because of bad constraints in schema definition
+            raise Unauthorized()  # XXX may also be because of bad constraints in schema definition
 
     def insert_snippet(self, varmap, snippetrqlst, previous=None):
         new = snippetrqlst.where.accept(self)
@@ -498,7 +499,6 @@ class RQLRewriter(object):
                 assert previous is None
                 self._insert_scope, new = self.snippet_subquery(varmap, new)
                 self.insert_pending()
-                #self._insert_scope = None
                 return new
             new = self._inserted_root(new)
             if previous is None:
@@ -548,7 +548,7 @@ class RQLRewriter(object):
                 # XXX dunno how to handle this
                 self.session.error(
                     'cant check security of %s, ambigous type for %s in %s',
-                    stmt, varname, key[0]) # key[0] == the rql expression
+                    stmt, varname, key[0])  # key[0] == the rql expression
                 raise Unauthorized()
             etype = next(iter(ptypes))
             eschema = self.schema.eschema(etype)
@@ -581,7 +581,7 @@ class RQLRewriter(object):
                     rschema = get_rschema(rel.r_type)
                     if rschema.final or rschema.inlined:
                         subselect_vrefs = []
-                        rel.children[0].name = varname # XXX explain why
+                        rel.children[0].name = varname  # XXX explain why
                         subselect.add_restriction(rel.copy(subselect))
                         for vref in rel.children[1].iget_nodes(n.VariableRef):
                             if isinstance(vref.variable, n.ColumnAlias):
@@ -611,7 +611,7 @@ class RQLRewriter(object):
                                 for orel in iter_relations(ostinfo):
                                     orschema = get_rschema(orel.r_type)
                                     if orschema.final or orschema.inlined:
-                                        todo.append( (vref.name, ostinfo) )
+                                        todo.append((vref.name, ostinfo))
                                         break
             if need_null_test:
                 snippetrqlst = n.Or(
@@ -680,7 +680,7 @@ class RQLRewriter(object):
         for sol in newsolutions:
             variante = []
             for key, newvar in self.rewritten.items():
-                variante.append( (key, sol[newvar]) )
+                variante.append((key, sol[newvar]))
             variantes.add(tuple(variante))
         # rebuild variantes as dict
         variantes = [dict(variante) for variante in variantes]
@@ -709,13 +709,12 @@ class RQLRewriter(object):
             if newvar in removed:
                 del self.rewritten[key]
 
-
     def _may_be_shared_with(self, sniprel, target):
         """if the snippet relation can be skipped to use a relation from the
         original query, return that relation node
         """
         if sniprel.neged(strict=True):
-            return None # no way
+            return None  # no way
         rschema = self.schema.rschema(sniprel.r_type)
         stmt = self.current_statement()
         for vi in self.varinfos:
@@ -725,11 +724,13 @@ class RQLRewriter(object):
                     cardindex = 0
                     ttypes_func = rschema.objects
                     rdef = rschema.rdef
-                else: # target == 'subject':
+                else:  # target == 'subject':
                     orels = vi['rhs_rels'][sniprel.r_type]
                     cardindex = 1
                     ttypes_func = rschema.subjects
-                    rdef = lambda x, y: rschema.rdef(y, x)
+
+                    def rdef(x, y):
+                        return rschema.rdef(y, x)
             except KeyError:
                 # may be raised by vi['xhs_rels'][sniprel.r_type]
                 continue
@@ -817,8 +818,7 @@ class RQLRewriter(object):
             return True
         vargraph = self.current_expr.vargraph
         for existingvar in self.existingvars:
-            #path = has_path(vargraph, varname, existingvar)
-            if not varname in vargraph or has_path(vargraph, varname, existingvar):
+            if varname not in vargraph or has_path(vargraph, varname, existingvar):
                 return True
         # no path from this variable to an existing variable
         return False
@@ -835,7 +835,7 @@ class RQLRewriter(object):
             assert lhs.name == 'U'
             action = node.r_type.split('_')[1]
             key = (self.current_expr, self.varmap, rhs.name)
-            self.pending_keys.append( (key, action) )
+            self.pending_keys.append((key, action))
             return
         if isinstance(rhs, n.VariableRef):
             if self.existingvars and not self.keep_var(rhs.name):
@@ -915,7 +915,7 @@ class RQLRelationRewriter(RQLRewriter):
         for relation in union.iget_nodes(n.Relation):
             if relation.r_type in rules:
                 self.select = relation.stmt
-                self.solutions = solutions = self.select.solutions[:]
+                self.solutions = self.select.solutions[:]
                 self.current_expr = rules[relation.r_type]
                 self._insert_scope = relation.scope
                 self.rewritten = {}
