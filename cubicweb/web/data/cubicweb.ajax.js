@@ -461,7 +461,9 @@ function _loadDynamicFragments(node) {
     }
     for (var i = 0; i < fragments.length; i++) {
         var fragment = fragments[i];
-        fragment.innerHTML = '<h3>' + LOADING_MSG + ' ... <img src="data/loading.gif" /></h3>';
+        fragment.innerHTML = (
+            '<h3>' + LOADING_MSG +
+                ' ... <img src="' + BASE_URL + 'data/loading.gif" /></h3>');
         var $fragment = jQuery(fragment);
         // if cubicweb:loadurl is set, just pick the url et send it to loadxhtml
         var url = $fragment.attr('cubicweb:loadurl');
