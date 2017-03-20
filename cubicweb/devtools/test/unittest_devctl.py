@@ -20,7 +20,7 @@
 import os
 import os.path as osp
 import sys
-from subprocess import Popen, PIPE, STDOUT, check_output
+from subprocess import Popen, PIPE, STDOUT
 from unittest import TestCase
 
 from cubicweb.devtools.testlib import TemporaryDirectory
@@ -92,20 +92,30 @@ class DevCtlTC(TestCase):
             projectdir = osp.join(tmpdir, 'cubicweb-foo')
             env = os.environ.copy()
             env['HOME'] = tmpdir
+            # Retrieve user-site first to later set the PYTHONPATH.
+            proc = Popen([sys.executable, '-m', 'site', '--user-site'],
+                         stdout=PIPE, stderr=PIPE, env=env, cwd=tmpdir)
+            retcode = proc.wait()
+            # Exit codes below 2 are not errors and are ok for us (see
+            # 'python3 -m site --help' for details).
+            self.assertFalse(retcode > 2, to_unicode(proc.stderr.read()))
+            user_site = proc.stdout.read().strip()
+            # We need this otherwise setuptools will complain that the
+            # installation target is not in PYTHONPATH (probably because we
+            # use a fake HOME).
+            env['PYTHONPATH'] = user_site
             cmd = [sys.executable, 'setup.py', 'install', '--user']
             proc = Popen(cmd, stdout=PIPE, stderr=STDOUT,
                          cwd=projectdir, env=env)
             retcode = proc.wait()
             stdout = to_unicode(proc.stdout.read())
             self.assertEqual(retcode, 0, stdout)
-            targetdir = check_output([sys.executable, '-m', 'site', '--user-site'],
-                                     env=env, cwd=projectdir).strip()
             target_egg = 'cubicweb_foo-0.1.0-py{0}.egg'.format(sys.version[:3]).encode()
-            self.assertTrue(osp.isdir(osp.join(targetdir, target_egg)),
-                            'target directory content: %s' % os.listdir(targetdir))
-            pkgdir = osp.join(targetdir, target_egg, b'cubicweb_foo')
+            self.assertTrue(osp.isdir(osp.join(user_site, target_egg)),
+                            'target directory content: %s' % os.listdir(user_site))
+            pkgdir = osp.join(user_site, target_egg, b'cubicweb_foo')
             self.assertTrue(osp.isdir(pkgdir),
-                            os.listdir(osp.join(targetdir, target_egg)))
+                            os.listdir(osp.join(user_site, target_egg)))
             pkgcontent = [f for f in os.listdir(pkgdir) if f.endswith(b'.py')]
             self.assertItemsEqual(pkgcontent,
                                   [b'schema.py', b'entities.py', b'hooks.py', b'__init__.py',
