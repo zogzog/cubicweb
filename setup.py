@@ -220,7 +220,7 @@ setup(
         'logilab-common >= 1.2.2',
         'logilab-mtconverter >= 0.8.0',
         'rql >= 0.34.0',
-        'yams >= 0.44.0',
+        'yams >= 0.44.0, < 0.45.0',
         'lxml',
         'logilab-database >= 1.15.0',
         'passlib < 2.0',
