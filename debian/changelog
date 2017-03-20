@@ -1,3 +1,9 @@
+cubicweb (3.24.6-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Denis Laxalde <denis.laxalde@logilab.fr>  Mon, 20 Mar 2017 08:57:32 +0100
+
 cubicweb (3.24.5-1) unstable; urgency=medium
 
   * New upstream release. 
