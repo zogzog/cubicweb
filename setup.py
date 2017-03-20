@@ -206,7 +206,7 @@ setup(
     ],
     entry_points={
         'paste.app_factory': [
-            'main=cubicweb.pyramid:pyramid_app',
+            'pyramid_main=cubicweb.pyramid:pyramid_app',
         ],
     },
     extras_require={
