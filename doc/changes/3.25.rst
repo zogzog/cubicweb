@@ -10,7 +10,63 @@ New features
 
 .. _pgbouncer: https://pgbouncer.github.io/
 
+* In `deleteconf` view (confirmation before deletion), the list of first-level
+  composite objects that would be deleted along with the primary entity is
+  displayed (01eeea97e549).
+
+* The ``cubicweb.pyramid`` module now provides a Paste application factory
+  registered as an entry point named ``pyramid_main`` and that can be used to
+  run a Pyramid WSGI application bound to a CubicWeb repository.
+
+* A new configuration type ``pyramid`` has been added to create CubicWeb's
+  instances (through ``cubicweb-ctl create -c pyramid <basecube> <appid>``).
+  This configuration bootstraps a CubicWeb instance that is essentially a
+  repository plus the minimal setup to run a Pyramid WSGI application on top
+  of it. Noticeably, it does not ship all *web* configuration but rather
+  relies on configuration declared in a ``development.ini`` file for any
+  Pyramid application.
 
 * A new way to declare workflows as simple data structure (dict/list) has been
   introduced. Respective utility functions live in ``cubicweb.wfutils``
   module. This handles both the creation and migration of workflows.
+
+* A new IDublinCore adapter has been introduced to control the generation of
+  Dublin Core metadata that are used in several base views.
+
+* It is now possible to *derive* rtags using their ``derive`` method
+  (0849a5eb57b8).
+
+* A new ``cubicweb-ctl scheduler <appid>`` command has been introduced to run
+  background and periodic tasks of the repository (previously called *looping
+  tasks*). In a production environment, a process with this command should be
+  run alongside with a WSGI server process (possibly running multiple
+  processes itself).
+
+
+Backwards incompatible changes
+------------------------------
+
+* As a consequence of the replacement of the old looping tasks manager by a
+  scheduler, all cubicweb-ctl's "start" commands (i.e. ``start``, ``pyramid``,
+  ``wsgi``) do not start repository *looping tasks manager* anymore, nor do
+  they start the scheduler. Site administrators are thus expected to start
+  this scheduler as a separate process.
+
+
+API changes
+-----------
+
+* In ``cubicweb.pyramid``, function ``make_cubicweb_application`` got renamed
+  into ``config_from_cwconfig`` (950ce7d9f642).
+
+* Several cleanups in repository's session management have been conducted
+  resulting from changes introduced in 3.19 release.
+
+
+Removals
+--------
+
+* Support for 'https-url' configuration option has been removed
+  (4516c3956d46).
+
+* The `next_tabindex` method of request class has been removed (011730a4af73).
