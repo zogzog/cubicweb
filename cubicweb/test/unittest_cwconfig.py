@@ -450,9 +450,9 @@ class ModnamesTC(unittest.TestCase):
             ('cubicweb', 'cubicweb.schemas.workflow'),
             ('cubicweb', 'cubicweb.schemas.Bookmark'),
             ('bar', 'cubes.bar.schema'),
-            ('foo', 'cubes.foo.schema'),
-            ('foo', 'cubes.foo.schema.a'),
-            ('foo', 'cubes.foo.schema.b'),
+            ('foo', 'cubicweb_foo.schema'),
+            ('foo', 'cubicweb_foo.schema.a'),
+            ('foo', 'cubicweb_foo.schema.b'),
         ]
         # app has schema file
         instance_dir, cubes_dir = (
@@ -497,9 +497,9 @@ class ModnamesTC(unittest.TestCase):
             'cubicweb.entities.sources',
             'cubicweb.entities.wfobjs',
             'cubes.bar.hooks',
-            'cubes.foo.entities',
-            'cubes.foo.entities.a',
-            'cubes.foo.hooks',
+            'cubicweb_foo.entities',
+            'cubicweb_foo.entities.a',
+            'cubicweb_foo.hooks',
         ]
         # data1 has entities
         with temp_config('data1', instance_dir, cubes_dir,

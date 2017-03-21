@@ -276,6 +276,15 @@ def _cube_pkgname(cube):
     return cube
 
 
+def _cube_modname(cube):
+    modname = _cube_pkgname(cube)
+    loader = pkgutil.find_loader(modname)
+    if loader:
+        return modname
+    else:
+        return 'cubes.' + cube
+
+
 def _expand_modname(modname):
     """expand modules names `modname` if exists by walking non package submodules
     and yield (submodname, filepath) including `modname` itself
@@ -817,7 +826,8 @@ this option is set to yes",
         for name in ('bootstrap', 'base', 'workflow', 'Bookmark'):
             modnames.append(('cubicweb', 'cubicweb.schemas.' + name))
         for cube in reversed(self.cubes()):
-            for modname, filepath in _expand_modname('cubes.{0}.schema'.format(cube)):
+            for modname, filepath in _expand_modname(
+                    '{0}.schema'.format(_cube_modname(cube))):
                 modnames.append((cube, modname))
         if self.apphome:
             apphome = realpath(self.apphome)
@@ -1335,9 +1345,10 @@ the repository',
 
     def appobjects_cube_modnames(self, cube):
         modnames = []
+        cube_modname = _cube_modname(cube)
         cube_submodnames = self._sorted_appobjects(self.cube_appobject_path)
         for name in cube_submodnames:
-            for modname, filepath in _expand_modname('.'.join(['cubes', cube, name])):
+            for modname, filepath in _expand_modname('.'.join([cube_modname, name])):
                 modnames.append(modname)
         return modnames
 
