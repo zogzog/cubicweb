@@ -34,7 +34,9 @@ New features
   Dublin Core metadata that are used in several base views.
 
 * It is now possible to *derive* rtags using their ``derive`` method
-  (0849a5eb57b8).
+  (0849a5eb57b8). Derived rtags keep a reference to the original rtag and only
+  hold custom rules, allowing changes which are done in the original rtag after
+  derivation to be still considered.
 
 * A new ``cubicweb-ctl scheduler <appid>`` command has been introduced to run
   background and periodic tasks of the repository (previously called *looping
@@ -56,7 +58,13 @@ Backwards incompatible changes
   into ``config_from_cwconfig`` (950ce7d9f642).
 
 * Several cleanups in repository's session management have been conducted
-  resulting from changes introduced in 3.19 release.
+  resulting from changes introduced in 3.19 release. Among others, the
+  ``cubicweb.server.session.Session`` class has been dropped, and request
+  ``session`` attribute is now tight to a web session whose implementation
+  depends on the front-end used (twisted or pyramid). Hence this attribute
+  should not be accessed from "repository side" code (e.g. hooks or operations)
+  and has lost some of his former attributes like its ``repo`` attribute
+  referencing the repository instance.
 
 * Support for 'https-url' configuration option has been removed
   (4516c3956d46).
