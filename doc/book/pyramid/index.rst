@@ -19,7 +19,7 @@ Narrative Documentation
 
 .. toctree::
     :maxdepth: 2
-    
+
     quickstart
     ctl
     settings
