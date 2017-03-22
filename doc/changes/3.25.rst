@@ -52,19 +52,11 @@ Backwards incompatible changes
   they start the scheduler. Site administrators are thus expected to start
   this scheduler as a separate process.
 
-
-API changes
------------
-
 * In ``cubicweb.pyramid``, function ``make_cubicweb_application`` got renamed
   into ``config_from_cwconfig`` (950ce7d9f642).
 
 * Several cleanups in repository's session management have been conducted
   resulting from changes introduced in 3.19 release.
-
-
-Removals
---------
 
 * Support for 'https-url' configuration option has been removed
   (4516c3956d46).
