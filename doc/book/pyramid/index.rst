@@ -1,18 +1,22 @@
-================
-Pyramid Cubicweb
-================
+Pyramid
+=======
 
-Pyramid Cubicweb is an attempt to rebase the CubicWeb framework on pyramid.
+:mod:`cubicweb.pyramid` provides a way to bind a CubicWeb data repository to a
+Pyramid WSGI web application.
 
 It can be used in two different ways:
 
--   Within CubicWeb, through the 'pyramid' cube and the
-    :ref:`pyramid command <cubicweb-ctl_pyramid>`.
-    In this mode, the Pyramid CubicWeb replaces some parts of
-    CubicWeb and make the pyramid api available to the cubes.
+-   Through the :ref:`pyramid command <cubicweb-ctl_pyramid>` or through
+    :func:`cubicweb.pyramid.wsgi_application` WSGI application factory, one can
+    run an ``all-in-one`` CubicWeb instance with the web part served by a
+    Pyramid application. This is referred to as the *backwards compatible
+    mode*.
 
--   Within a pyramid application, it provides easy access to a CubicWeb
-    instance and registry.
+-   Through the ``pyramid`` configuration type, one can setup a CubicWeb
+    instance which repository can be used from within a Pyramid application.
+    Such an instance may be launched through ``pserve`` or any WSGI server as
+    would any plain Pyramid application.
+
 
 Narrative Documentation
 =======================
