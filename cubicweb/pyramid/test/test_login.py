@@ -21,6 +21,7 @@ class LoginTestLangUrlPrefix(PyramidCWTest):
 
 
 class LoginTest(PyramidCWTest):
+    settings = {'cubicweb.bwcompat': True}
 
     def test_login_form(self):
         res = self.webapp.get('/login')
