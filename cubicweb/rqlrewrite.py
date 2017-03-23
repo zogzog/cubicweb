@@ -164,6 +164,7 @@ def _expand_selection(terms, selected, aliases, select, newselect):
                 aliases.append(n.VariableRef(colalias))
                 selected.add(vref.name)
 
+
 def _has_multiple_cardinality(etypes, rdef, ttypes_func, cardindex):
     """return True if relation definitions from entity types (`etypes`) to
     target types returned by the `ttypes_func` function all have single (1 or ?)
@@ -339,7 +340,7 @@ class RQLRewriter(object):
             myrqlst = select.copy(solutions=lchecksolutions)
             myunion.append(myrqlst)
             # in-place rewrite + annotation / simplification
-            lcheckdef = [({var: 'X'}, rqlexprs) for var, rqlexprs in lcheckdef]
+            lcheckdef = [({v: 'X'}, rqlexprs) for v, rqlexprs in lcheckdef]
             self.rewrite(myrqlst, lcheckdef, kwargs)
             _add_noinvariant(noinvariant, restricted, myrqlst, nbtrees)
         if () in localchecks:
@@ -683,7 +684,7 @@ class RQLRewriter(object):
                 variante.append((key, sol[newvar]))
             variantes.add(tuple(variante))
         # rebuild variantes as dict
-        variantes = [dict(variante) for variante in variantes]
+        variantes = [dict(v) for v in variantes]
         # remove variable which have always the same type
         for key in self.rewritten:
             it = iter(variantes)
