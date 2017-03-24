@@ -71,6 +71,7 @@ else:
 # data files that shall be copied into the main package directory
 package_data = {
     'cubicweb.web.views': ['*.pt'],
+    'cubicweb.pyramid': ['development.ini.tmpl'],
 }
 
 try:
