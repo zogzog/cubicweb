@@ -22,7 +22,6 @@
 
 import atexit
 import os
-from warnings import warn
 
 import wsgicors
 
@@ -239,10 +238,3 @@ def includeme(config):
 
     if asbool(config.registry.settings.get('cubicweb.bwcompat', True)):
         config.include('cubicweb.pyramid.bwcompat')
-
-    if cwconfig.debugmode:
-        try:
-            config.include('pyramid_debugtoolbar')
-        except ImportError:
-            warn('pyramid_debugtoolbar package not available, install it to '
-                 'get UI debug features', RuntimeWarning)
