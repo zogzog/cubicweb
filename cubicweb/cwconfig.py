@@ -760,17 +760,6 @@ this option is set to yes",
             else:
                 cls.warning('no __init__ file in cube %s', cube)
 
-    @classmethod
-    def init_available_cubes(cls):
-        """cubes may register some sources (svnfile for instance) in their
-        __init__ file, so they should be loaded early in the startup process
-        """
-        for cube in cls.available_cubes():
-            try:
-                __import__('cubes.%s' % cube)
-            except Exception as ex:
-                cls.warning("can't init cube %s: %s", cube, ex)
-
     cubicweb_appobject_path = set(['entities'])
     cube_appobject_path = set(['entities'])
 
