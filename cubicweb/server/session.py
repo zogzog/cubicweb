@@ -852,6 +852,8 @@ class Connection(RequestSessionBase):
                         try:
                             operation.handle_event('postcommit_event')
                         except BaseException:
+                            if self.repo.config.mode == 'test':
+                                raise
                             self.critical('error while postcommit',
                                           exc_info=sys.exc_info())
                 self.debug('postcommit transaction %s done', self)
