@@ -127,9 +127,9 @@ class CubicWebConfigurationTC(BaseTestCase):
     @patch('pkg_resources.iter_entry_points', side_effect=iter_entry_points)
     def test_available_cubes(self, mock_iter_entry_points):
         expected_cubes = [
-            'card', 'comment', 'email', 'file',
-            'forge', 'localperms',
-            'mycube', 'tag',
+            'card', 'comment', 'cubicweb_comment', 'cubicweb_email', 'file',
+            'cubicweb_file', 'cubicweb_forge', 'localperms',
+            'cubicweb_mycube', 'tag',
         ]
         self._test_available_cubes(expected_cubes)
         mock_iter_entry_points.assert_called_once_with(

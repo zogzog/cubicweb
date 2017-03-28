@@ -512,7 +512,6 @@ this option is set to yes",
     @classmethod
     def available_cubes(cls):
         cubes = set()
-        prefix = 'cubicweb_'
         for entry_point in pkg_resources.iter_entry_points(
                 group='cubicweb.cubes', name=None):
             try:
@@ -521,11 +520,11 @@ this option is set to yes",
                 continue
             else:
                 modname = module.__name__
-                if not modname.startswith(prefix):
+                if not modname.startswith('cubicweb_'):
                     cls.warning('entry point %s does not appear to be a cube',
                                 entry_point)
                     continue
-                cubes.add(modname[len(prefix):])
+                cubes.add(modname)
         # Legacy cubes.
         for directory in cls.cubes_search_path():
             if not exists(directory):
