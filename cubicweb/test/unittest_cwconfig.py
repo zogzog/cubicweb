@@ -23,7 +23,7 @@ import functools
 import sys
 import os
 import pkgutil
-from os.path import dirname, join, abspath
+from os.path import dirname, join
 from pkg_resources import EntryPoint, Distribution
 import unittest
 
@@ -31,7 +31,6 @@ from mock import patch
 from six import PY3
 
 from logilab.common.modutils import cleanup_sys_modules
-from logilab.common.changelog import Version
 
 from cubicweb.devtools import ApptestConfiguration
 from cubicweb.devtools.testlib import BaseTestCase, TemporaryDirectory
@@ -43,9 +42,9 @@ def unabsolutize(path):
     parts = path.split(os.sep)
     for i, part in reversed(tuple(enumerate(parts))):
         if part.startswith('cubicweb_'):
-            return os.sep.join([part[len('cubicweb_'):]] + parts[i+1:])
+            return os.sep.join([part[len('cubicweb_'):]] + parts[i + 1:])
         if part.startswith('cubicweb') or part == 'legacy_cubes':
-            return os.sep.join(parts[i+1:])
+            return os.sep.join(parts[i + 1:])
     raise Exception('duh? %s' % path)
 
 
@@ -144,17 +143,17 @@ class CubicWebConfigurationTC(BaseTestCase):
         # forge depends on email and file and comment
         # email depends on file
         self.assertEqual(self.config.reorder_cubes(['file', 'email', 'forge']),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
         self.assertEqual(self.config.reorder_cubes(['email', 'file', 'forge']),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
         self.assertEqual(self.config.reorder_cubes(['email', 'forge', 'file']),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
         self.assertEqual(self.config.reorder_cubes(['file', 'forge', 'email']),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
         self.assertEqual(self.config.reorder_cubes(['forge', 'file', 'email']),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
         self.assertEqual(self.config.reorder_cubes(('forge', 'email', 'file')),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
 
     def test_reorder_cubes_recommends(self):
         from cubicweb_comment import __pkginfo__ as comment_pkginfo
@@ -166,20 +165,19 @@ class CubicWebConfigurationTC(BaseTestCase):
             # email recommends comment
             # comment recommends file
             self.assertEqual(self.config.reorder_cubes(('forge', 'email', 'file', 'comment')),
-                              ('forge', 'email', 'comment', 'file'))
+                             ('forge', 'email', 'comment', 'file'))
             self.assertEqual(self.config.reorder_cubes(('forge', 'email', 'comment', 'file')),
-                              ('forge', 'email', 'comment', 'file'))
+                             ('forge', 'email', 'comment', 'file'))
             self.assertEqual(self.config.reorder_cubes(('forge', 'comment', 'email', 'file')),
-                              ('forge', 'email', 'comment', 'file'))
+                             ('forge', 'email', 'comment', 'file'))
             self.assertEqual(self.config.reorder_cubes(('comment', 'forge', 'email', 'file')),
-                              ('forge', 'email', 'comment', 'file'))
+                             ('forge', 'email', 'comment', 'file'))
         finally:
             comment_pkginfo.__recommends_cubes__ = {}
 
     def test_expand_cubes(self):
         self.assertEqual(self.config.expand_cubes(('email', 'comment')),
-                          ['email', 'comment', 'file'])
-
+                         ['email', 'comment', 'file'])
 
     def test_init_cubes_ignore_pyramid_cube(self):
         warning_msg = 'cubicweb-pyramid got integrated into CubicWeb'
@@ -236,13 +234,13 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
         self.assertNotEqual(dirname(email.__file__), self.config.CUBES_DIR)
         self.config.__class__.CUBES_PATH = [self.custom_cubes_dir]
         self.assertEqual(self.config.cubes_search_path(),
-                          [self.custom_cubes_dir, self.config.CUBES_DIR])
+                         [self.custom_cubes_dir, self.config.CUBES_DIR])
         self.config.__class__.CUBES_PATH = [self.custom_cubes_dir,
                                             self.config.CUBES_DIR, 'unexistant']
         # filter out unexistant and duplicates
         self.assertEqual(self.config.cubes_search_path(),
-                          [self.custom_cubes_dir,
-                           self.config.CUBES_DIR])
+                         [self.custom_cubes_dir,
+                          self.config.CUBES_DIR])
         self.assertIn('mycube', self.config.available_cubes())
         # test cubes python path
         self.config.adjust_sys_path()
@@ -366,7 +364,7 @@ class FindPrefixTC(unittest.TestCase):
     def test_upper_candidate_prefix(self):
         with TemporaryDirectory() as prefix:
             self.make_dirs(prefix, 'share', 'cubicweb')
-            self.make_dirs(prefix, 'bell', 'bob',  'share', 'cubicweb')
+            self.make_dirs(prefix, 'bell', 'bob', 'share', 'cubicweb')
             file_path = self.make_file(prefix, 'bell', 'toto.py')
             self.assertEqual(_find_prefix(file_path), prefix)
 

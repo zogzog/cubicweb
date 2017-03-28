@@ -84,6 +84,7 @@ cubicweb/test/data_schemareader/schema.py
 cubicweb/test/data/server_migration/bootstrapmigration_repository.py
 cubicweb/test/data/views.py
 cubicweb/test/unittest_binary.py
+cubicweb/test/unittest_cwconfig.py
 cubicweb/test/unittest_mail.py
 cubicweb/test/unittest_repoapi.py
 cubicweb/test/unittest_req.py
