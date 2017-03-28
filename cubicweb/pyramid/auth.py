@@ -17,8 +17,74 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""
+CubicWeb AuthTkt authentication policy
+--------------------------------------
 
-"""Authentication policies for cubicweb.pyramid."""
+When using the `cubicweb.pyramid.auth` module, which is the default in most
+cases, you may have to configure the behaviour of these authentication
+policies using standard's Pyramid configuration. You may want to configure in
+your pyramid configuration file:
+
+:Session Authentication:
+
+    This is a `AuthTktAuthenticationPolicy`_ so you may overwrite default
+    configuration values by adding configuration entries using the prefix
+    ``cubicweb.auth.authtkt.session``. Default values are:
+
+    ::
+
+        cubicweb.auth.authtkt.session.hashalg = sha512
+        cubicweb.auth.authtkt.session.cookie_name = auth_tkt
+        cubicweb.auth.authtkt.session.timeout = 1200
+        cubicweb.auth.authtkt.session.reissue_time = 120
+        cubicweb.auth.authtkt.session.http_only = True
+        cubicweb.auth.authtkt.session.secure = True
+
+
+:Persistent Authentication:
+
+    This is also a `AuthTktAuthenticationPolicy`_. It is used when persistent
+    sessions are activated (typically when using the cubicweb-rememberme_
+    cube). You may overwrite default configuration values by adding
+    configuration entries using the prefix
+    ``cubicweb.auth.authtkt.persistent``. Default values are:
+
+    ::
+
+        cubicweb.auth.authtkt.persistent.hashalg = sha512
+        cubicweb.auth.authtkt.persistent.cookie_name = pauth_tkt
+        cubicweb.auth.authtkt.persistent.max_age = 3600*24*30
+        cubicweb.auth.authtkt.persistent.reissue_time = 3600*24
+        cubicweb.auth.authtkt.persistent.http_only = True
+        cubicweb.auth.authtkt.persistent.secure = True
+
+
+.. Warning:: Legacy timeout values from the instance's
+             ``all-in-one.conf`` are **not** used at all (``
+             http-session-time`` and ``cleanup-session-time``)
+
+.. _CubicWeb: https://www.cubicweb.org/
+.. _`cubicweb-rememberme`: \
+    https://www.cubicweb.org/project/cubicweb-rememberme
+.. _AuthTktAuthenticationPolicy: \
+    http://docs.pylonsproject.org/projects/pyramid/en/latest/api/authentication.html#pyramid.authentication.AuthTktAuthenticationPolicy
+
+
+Secrets
+~~~~~~~
+There are a number of secrets to configure in ``pyramid.ini``. They
+should be different one from each other, as explained in `Pyramid's
+documentation`_.
+
+For the record, regarding authentication:
+
+:cubicweb.auth.authtkt.session.secret: This secret is used to encrypt
+   the authentication cookie.
+
+:cubicweb.auth.authtkt.persistent.secret: This secret is used to
+   encrypt the persistent authentication cookie.
+"""
 
 import datetime
 import logging
