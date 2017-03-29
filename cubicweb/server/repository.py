@@ -405,6 +405,8 @@ class Repository(object):
         looping tasks can only be registered during repository initialization,
         once done this method will fail.
         """
+        if self.config.repairing:
+            return
         assert self._scheduler is not None, \
             "This Repository is not intended to be used as a server"
         event = utils.schedule_periodic_task(
