@@ -74,3 +74,7 @@ Backwards incompatible changes
   (4516c3956d46).
 
 * The `next_tabindex` method of request class has been removed (011730a4af73).
+
+* The `cubicweb.hook.logstats.start` hook was dropped because it's looping
+  task would not be run in a web instance (see first point about repository
+  scheduler).
