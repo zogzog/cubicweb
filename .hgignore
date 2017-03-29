@@ -13,6 +13,7 @@
 ^doc/book/en/apidoc$
 \.old$
 \.pybuild
+cubicweb/server/test/data/slapd.conf
 debian/python-cubicweb
 debian/*.log
 debian/*.substvars
