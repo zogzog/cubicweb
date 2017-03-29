@@ -35,6 +35,8 @@ class LogStatsStartHook(hook.Hook):
     events = ('server_startup',)
 
     def __call__(self):
+        if not self.repo.has_scheduler():
+            return
         interval = self.repo.config.get('logstat-interval', 0)
         if interval <= 0:
             return            
