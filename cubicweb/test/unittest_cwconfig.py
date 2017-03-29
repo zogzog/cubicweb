@@ -124,6 +124,7 @@ class CubicWebConfigurationTC(BaseTestCase):
 
     def tearDown(self):
         ApptestConfiguration.CUBES_PATH = []
+        cleanup_sys_modules([self.datapath('libpython')])
 
     @patch('pkg_resources.iter_entry_points', side_effect=iter_entry_points)
     def test_available_cubes(self, mock_iter_entry_points):
@@ -186,6 +187,15 @@ class CubicWebConfigurationTC(BaseTestCase):
             self.config.init_cubes(['pyramid', 'card'])
         self.assertIn(warning_msg, cm.output[0])
         self.assertNotIn('pyramid', self.config._cubes)
+
+    @patch('pkg_resources.iter_entry_points', side_effect=iter_entry_points)
+    def test_ccplugin_modname(self, mock_iter_entry_points):
+        self.config.load_cwctl_plugins()
+        mock_iter_entry_points.assert_called_once_with(
+            group='cubicweb.cubes', name=None)
+        self.assertNotIn('cubes.mycube.ccplugin', sys.modules, sorted(sys.modules))
+        self.assertIn('cubicweb_mycube.ccplugin', sys.modules, sorted(sys.modules))
+
 
 class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
 
@@ -274,7 +284,12 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
             self.assertEqual(self.config['allow-email-login'], result)
         finally:
             del os.environ['CW_ALLOW_EMAIL_LOGIN']
-            
+
+    def test_ccplugin_modname(self):
+        self.config.load_cwctl_plugins()
+        self.assertIn('cubes.mycube.ccplugin', sys.modules, sorted(sys.modules))
+        self.assertNotIn('cubicweb_mycube.ccplugin', sys.modules, sorted(sys.modules))
+
 
 class FindPrefixTC(unittest.TestCase):
 
