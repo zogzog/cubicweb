@@ -511,6 +511,10 @@ this option is set to yes",
 
     @classmethod
     def available_cubes(cls):
+        """Return a list of available cube names.
+
+        For cube as package, name is equal to python package's name.
+        """
         cubes = set()
         for entry_point in pkg_resources.iter_entry_points(
                 group='cubicweb.cubes', name=None):
