@@ -407,8 +407,12 @@ class Repository(object):
         """
         if self.config.repairing:
             return
-        assert self._scheduler is not None, \
-            "This Repository is not intended to be used as a server"
+        if self._scheduler is None:
+            self.warning(
+                'looping task %s will not run in this process where repository '
+                'has no scheduler; use "cubicweb-ctl scheduler <appid>" to '
+                'have it running', func)
+            return
         event = utils.schedule_periodic_task(
             self._scheduler, interval, func, *args)
         self.info('scheduled periodic task %s (interval: %.2fs)',
