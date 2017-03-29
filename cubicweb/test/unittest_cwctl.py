@@ -23,13 +23,20 @@ import unittest
 
 from six import PY2
 
+from mock import patch
+
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.cwctl import ListCommand
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.migractions import ServerMigrationHelper
 
+import unittest_cwconfig
+
 
 class CubicWebCtlTC(unittest.TestCase):
+
+    setUpClass = unittest_cwconfig.CubicWebConfigurationTC.setUpClass
+    tearDownClass = unittest_cwconfig.CubicWebConfigurationTC.tearDownClass
 
     def setUp(self):
         self.stream = BytesIO() if PY2 else StringIO()
@@ -38,8 +45,12 @@ class CubicWebCtlTC(unittest.TestCase):
     def tearDown(self):
         sys.stdout = sys.__stdout__
 
-    def test_list(self):
+    @patch('pkg_resources.iter_entry_points', side_effect=unittest_cwconfig.iter_entry_points)
+    def test_list(self, mock_iter_entry_points):
         ListCommand(None).run([])
+        self.assertNotIn('cubicweb_', self.stream.getvalue())
+        mock_iter_entry_points.assert_called_once_with(
+            group='cubicweb.cubes', name=None)
 
     def test_list_configurations(self):
         ListCommand(None).run(['configurations'])

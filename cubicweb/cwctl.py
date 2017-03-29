@@ -89,6 +89,18 @@ def detect_available_modes(templdir):
     return modes
 
 
+def available_cube_names(cwcfg):
+    """Return a list of available cube names, with 'cubicweb_' prefix dropped.
+    """
+    def drop_prefix(cube):
+        prefix = 'cubicweb_'
+        if cube.startswith(prefix):
+            cube = cube[len(prefix):]
+        return cube
+
+    return [drop_prefix(cube) for cube in cwcfg.available_cubes()]
+
+
 class InstanceCommand(Command):
     """base class for command taking 0 to n instance id as arguments
     (0 meaning all registered instances)
@@ -220,14 +232,15 @@ class ListCommand(Command):
             cfgpb = ConfigurationProblem(cwcfg)
             try:
                 cubesdir = pathsep.join(cwcfg.cubes_search_path())
-                namesize = max(len(x) for x in cwcfg.available_cubes())
+                cube_names = available_cube_names(cwcfg)
+                namesize = max(len(x) for x in cube_names)
             except ConfigurationError as ex:
                 print('No cubes available:', ex)
             except ValueError:
                 print('No cubes available in %s' % cubesdir)
             else:
                 print('Available cubes (%s):' % cubesdir)
-                for cube in cwcfg.available_cubes():
+                for cube in cube_names:
                     try:
                         tinfo = cwcfg.cube_pkginfo(cube)
                         tversion = tinfo.version
@@ -360,7 +373,7 @@ class CreateInstanceCommand(Command):
         except ConfigurationError as ex:
             print(ex)
             print('\navailable cubes:', end=' ')
-            print(', '.join(cwcfg.available_cubes()))
+            print(', '.join(available_cube_names(cwcfg)))
             return
         # create the registry directory for this instance
         print('\n'+underline_title('Creating the instance %s' % appid))
