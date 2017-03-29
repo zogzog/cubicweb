@@ -25,7 +25,6 @@ from six import PY2
 
 from mock import patch
 
-from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.cwctl import ListCommand
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.migractions import ServerMigrationHelper
@@ -69,10 +68,11 @@ class CubicWebShellTC(CubicWebTC):
                                         interactive=False,
                                         # hack so it don't try to load fs schema
                                         schema=1)
-            scripts = {'script1.py': list(),
-                       'script2.py': ['-v'],
-                       'script3.py': ['-vd', '-f', 'FILE.TXT'],
-                      }
+            scripts = {
+                'script1.py': list(),
+                'script2.py': ['-v'],
+                'script3.py': ['-vd', '-f', 'FILE.TXT'],
+            }
             mih.cmd_process_script(join(self.datadir, 'scripts', 'script1.py'),
                                    funcname=None)
             for script, args in scripts.items():
