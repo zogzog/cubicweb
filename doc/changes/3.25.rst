@@ -52,7 +52,11 @@ Backwards incompatible changes
   scheduler, all cubicweb-ctl's "start" commands (i.e. ``start``, ``pyramid``,
   ``wsgi``) do not start repository *looping tasks manager* anymore, nor do
   they start the scheduler. Site administrators are thus expected to start
-  this scheduler as a separate process.
+  this scheduler as a separate process. Also, registering looping tasks (i.e.
+  calling ``repo.looping_tasks()``) is a no-op when the repository has no
+  scheduler set; a warning is issued in such cases. Application developers may
+  rely on repository's ``has_scheduler`` method to determine if they should
+  register a looping task or not.
 
 * In ``cubicweb.pyramid``, function ``make_cubicweb_application`` got renamed
   into ``config_from_cwconfig`` (950ce7d9f642).

@@ -383,6 +383,12 @@ class Repository(object):
                 raise Exception('Is the database initialised ? (cause: %s)' % ex)
         return appschema
 
+    def has_scheduler(self):
+        """Return True if the repository has a scheduler attached and is able
+        to register looping tasks.
+        """
+        return self._scheduler is not None
+
     def run_scheduler(self):
         """Start repository scheduler after preparing the repository for that.
 
@@ -392,7 +398,7 @@ class Repository(object):
         XXX Other startup related stuffs are done elsewhere. In Repository
         XXX __init__ or in external codes (various server managers).
         """
-        assert self._scheduler is not None, \
+        assert self.has_scheduler(), \
             "This Repository is not intended to be used as a server"
         self.info(
             'starting repository scheduler with tasks: %s',
@@ -407,7 +413,7 @@ class Repository(object):
         """
         if self.config.repairing:
             return
-        if self._scheduler is None:
+        if not self.has_scheduler():
             self.warning(
                 'looping task %s will not run in this process where repository '
                 'has no scheduler; use "cubicweb-ctl scheduler <appid>" to '
