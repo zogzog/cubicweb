@@ -93,6 +93,21 @@ def temp_config(appid, instance_dir, cubes_dir, cubes):
             del sys.modules[module]
 
 
+def iter_entry_points(group, name):
+    """Mock pkg_resources.iter_entry_points to yield EntryPoint from
+    packages found in test/data/libpython even though these are not
+    installed.
+    """
+    libpython = CubicWebConfigurationTC.datapath('libpython')
+    prefix = 'cubicweb_'
+    for pkgname in os.listdir(libpython):
+        if not pkgname.startswith(prefix):
+            continue
+        location = join(libpython, pkgname)
+        yield EntryPoint(pkgname[len(prefix):], pkgname,
+                         dist=Distribution(location))
+
+
 class CubicWebConfigurationTC(BaseTestCase):
 
     @classmethod
@@ -109,20 +124,6 @@ class CubicWebConfigurationTC(BaseTestCase):
 
     def tearDown(self):
         ApptestConfiguration.CUBES_PATH = []
-
-    def iter_entry_points(group, name):
-        """Mock pkg_resources.iter_entry_points to yield EntryPoint from
-        packages found in test/data/libpython even though these are not
-        installed.
-        """
-        libpython = CubicWebConfigurationTC.datapath('libpython')
-        prefix = 'cubicweb_'
-        for pkgname in os.listdir(libpython):
-            if not pkgname.startswith(prefix):
-                continue
-            location = join(libpython, pkgname)
-            yield EntryPoint(pkgname[len(prefix):], pkgname,
-                             dist=Distribution(location))
 
     @patch('pkg_resources.iter_entry_points', side_effect=iter_entry_points)
     def test_available_cubes(self, mock_iter_entry_points):
