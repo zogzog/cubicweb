@@ -78,3 +78,14 @@ Backwards incompatible changes
 * The `cubicweb.hook.logstats.start` hook was dropped because it's looping
   task would not be run in a web instance (see first point about repository
   scheduler).
+
+* ``uicfg`` rules  to hide the opposite relation of inlined form are not anymore
+  automatically added, because this was actually done randomly and so not
+  reliable, so you'll have to add them manually:
+
+  ::
+
+    autoform_section.tag_subject_of(('CWUser', 'use_email', 'EmailAddress'),
+                                    'main', 'inlined')
+    autoform_section.tag_object_of(('CWUser', 'use_email', 'EmailAddress'),
+                                   'inlined', 'hidden')
