@@ -62,26 +62,26 @@ class CWUser(AnyEntity):
     def groups(self):
         key = user_session_cache_key(self.eid, 'groups')
         try:
-            return self._cw.data[key]
+            return self._cw.transaction_data[key]
         except KeyError:
             with self._cw.security_enabled(read=False):
                 groups = set(group for group, in self._cw.execute(
                     'Any GN WHERE U in_group G, G name GN, U eid %(userid)s',
                     {'userid': self.eid}))
-            self._cw.data[key] = groups
+            self._cw.transaction_data[key] = groups
             return groups
 
     @property
     def properties(self):
         key = user_session_cache_key(self.eid, 'properties')
         try:
-            return self._cw.data[key]
+            return self._cw.transaction_data[key]
         except KeyError:
             with self._cw.security_enabled(read=False):
                 properties = dict(self._cw.execute(
                     'Any K, V WHERE P for_user U, U eid %(userid)s, '
                     'P pkey K, P value V', {'userid': self.eid}))
-            self._cw.data[key] = properties
+            self._cw.transaction_data[key] = properties
             return properties
 
     def prefered_language(self, language=None):

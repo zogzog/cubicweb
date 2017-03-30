@@ -251,7 +251,7 @@ class BaseQuerierTC(TestCase):
         # use cnx.user.eid to get correct owned_by relation, unless explicit eid
         with self.admin_access.cnx() as cnx:
             user_eid = cnx.user.eid
-            cnx.user._cw.data[user_session_cache_key(user_eid, 'groups')] = set(groups)
+            cnx.user._cw.transaction_data[user_session_cache_key(user_eid, 'groups')] = set(groups)
             yield cnx
 
     def qexecute(self, rql, args=None, build_descr=True):
