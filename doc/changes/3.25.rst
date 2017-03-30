@@ -67,8 +67,11 @@ Backwards incompatible changes
   ``session`` attribute is now tight to a web session whose implementation
   depends on the front-end used (twisted or pyramid). Hence this attribute
   should not be accessed from "repository side" code (e.g. hooks or operations)
-  and has lost some of his former attributes like its ``repo`` attribute
-  referencing the repository instance.
+  and has lost some of his former attributes like ``repo`` which used to
+  reference the repository instance. Due to this, you don't have anymore access
+  to session's data through the connection, which leds to deprecation of the
+  ``data`` attribute and removal of ``get_shared_data`` and ``set_shared_data``
+  methods which are deprecated since 3.19.
 
 * Support for 'https-url' configuration option has been removed
   (4516c3956d46).
