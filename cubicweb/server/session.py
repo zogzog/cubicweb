@@ -398,28 +398,6 @@ class Connection(RequestSessionBase):
     def rql_rewriter(self):
         return self._rewriter
 
-    @_open_only
-    @deprecated('[3.19] use session or transaction data', stacklevel=3)
-    def get_shared_data(self, key, default=None, pop=False, txdata=False):
-        """return value associated to `key` in session data"""
-        if txdata:
-            data = self.transaction_data
-        else:
-            data = self.data
-        if pop:
-            return data.pop(key, default)
-        else:
-            return data.get(key, default)
-
-    @_open_only
-    @deprecated('[3.19] use session or transaction data', stacklevel=3)
-    def set_shared_data(self, key, value, txdata=False):
-        """set value associated to `key` in session data"""
-        if txdata:
-            self.transaction_data[key] = value
-        else:
-            self.data[key] = value
-
     def clear(self):
         """reset internal data"""
         self.transaction_data = {}

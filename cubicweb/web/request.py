@@ -961,8 +961,6 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
     entity_metas = _cnx_func('entity_metas')  # XXX deprecated
     entity_type = _cnx_func('entity_type')
     source_defs = _cnx_func('source_defs')
-    get_shared_data = _cnx_func('get_shared_data')
-    set_shared_data = _cnx_func('set_shared_data')
 
     # security #################################################################
 
