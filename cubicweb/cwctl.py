@@ -690,6 +690,11 @@ class UpgradeInstanceCommand(InstanceCommandFork):
           'default': False,
           'help': 'only upgrade files on the file system, not the database.'}),
 
+        ('no-config-update',
+         {'short': 'C', 'action': 'store_true',
+          'default': False,
+          'help': 'do NOT update config file if set.'}),
+
         ('nostartstop',
          {'short': 'n', 'action' : 'store_true',
           'default': False,
@@ -768,7 +773,8 @@ given, appropriate sources for migration will be automatically selected \
         else:
             print('-> no data migration needed for instance %s.' % appid)
         # rewrite main configuration file
-        mih.rewrite_configuration()
+        if not self.config.no_config_update:
+            mih.rewrite_configuration()
         mih.shutdown()
         # handle i18n upgrade
         if not self.i18nupgrade(config):
