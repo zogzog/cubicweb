@@ -76,7 +76,7 @@ class GenStaticDataDirMixIn(object):
         if not dest:
             dest = osp.join(config.appdatahome, 'data')
         if osp.exists(dest):
-            if (not ask_clean or
+            if config.verbosity and (not ask_clean or
                 not (config.verbosity and
                      ASK.confirm('Remove existing data directory %s?' % dest))):
                 raise ExecutionError('Directory %s already exists. '
