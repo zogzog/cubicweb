@@ -39,6 +39,17 @@ except ImportError:
     from shutil import copytree as linkdir
 
 
+def rmtreecontent(dst):
+    """Delete the content of the dst directory (but NOT the directory
+       itself)"""
+    for fname in os.listdir(dst):
+        fpath = osp.join(dst, fname)
+        if osp.isfile(fpath):
+            os.unlink(fpath)
+        else:
+            rmtree(fpath)
+
+
 class WebCreateHandler(CommandHandler):
     cmdname = 'create'
 
@@ -70,7 +81,7 @@ class GenStaticDataDirMixIn(object):
                      ASK.confirm('Remove existing data directory %s?' % dest))):
                 raise ExecutionError('Directory %s already exists. '
                                      'Remove it first.' % dest)
-            rmtree(dest)
+            rmtreecontent(dest)
         config.quick_start = True # notify this is not a regular start
         # list all resources (no matter their order)
         resources = set()
