@@ -294,6 +294,7 @@ class Repository(object):
             # configurate tsearch according to postgres version
             self.system_source.init_creating()
         else:
+            self._init_system_source()
             self.init_sources_from_database()
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
@@ -306,20 +307,27 @@ class Repository(object):
 
     # internals ###############################################################
 
-    def init_sources_from_database(self):
+    def _init_system_source(self):
         if self.config.quick_start:
             self.system_source.init_creating()
+            return
+        with self.internal_cnx() as cnx:
+            sourceent = cnx.execute(
+                'Any S, SA, SC WHERE S is_instance_of CWSource,'
+                ' S name "system", S type SA, S config SC'
+            ).one()
+            self.system_source.eid = sourceent.eid
+            self.sources_by_eid[sourceent.eid] = self.system_source
+            self.system_source.init(True, sourceent)
+
+    def init_sources_from_database(self):
+        if self.config.quick_start:
             return
         with self.internal_cnx() as cnx:
             # FIXME: sources should be ordered (add_entity priority)
             for sourceent in cnx.execute(
                     'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
-                    'S name SN, S type SA, S config SC').entities():
-                if sourceent.name == 'system':
-                    self.system_source.eid = sourceent.eid
-                    self.sources_by_eid[sourceent.eid] = self.system_source
-                    self.system_source.init(True, sourceent)
-                    continue
+                    'S name SN, S type SA, S config SC, S name != "system"').entities():
                 self.add_source(sourceent)
 
     def add_source(self, sourceent):
