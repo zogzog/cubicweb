@@ -307,7 +307,7 @@ class Repository(object):
     # internals ###############################################################
 
     def init_sources_from_database(self):
-        if self.config.quick_start or 'CWSource' not in self.schema:  # 3.10 migration
+        if self.config.quick_start:
             self.system_source.init_creating()
             return
         with self.internal_cnx() as cnx:
