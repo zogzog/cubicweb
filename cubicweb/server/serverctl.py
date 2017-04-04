@@ -1063,7 +1063,7 @@ class SynchronizeSourceCommand(Command):
                     else:
                         sources.append(source)
             else:
-                for uri, source in list(repo.sources_by_uri.items()):
+                for uri, source in repo.sources_by_uri.items():
                     if (uri != 'system' and
                             repo.config.source_enabled(source) and
                             source.config['synchronize']):
