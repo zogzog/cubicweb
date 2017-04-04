@@ -211,7 +211,6 @@ class Repository(object):
 
     def __init__(self, config, scheduler=None, vreg=None):
         self.config = config
-        self.sources_by_eid = {}
         if vreg is None:
             vreg = cwvreg.CWRegistryStore(config)
         self.vreg = vreg
@@ -230,7 +229,6 @@ class Repository(object):
         # sources (additional sources info in the system database)
         self.system_source = self.get_source('native', 'system',
                                              config.system_source_config.copy())
-        self.sources_by_uri = {'system': self.system_source}
         # querier helper, need to be created after sources initialization
         self.querier = querier.QuerierHelper(self, self.schema)
         # cache eid -> type
@@ -295,7 +293,6 @@ class Repository(object):
             self.system_source.init_creating()
         else:
             self._init_system_source()
-            self.init_sources_from_database()
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
         # 4. close initialization connection set and reopen fresh ones for
@@ -304,6 +301,41 @@ class Repository(object):
         self.cnxsets = _CnxSetPool(self.system_source, pool_size)
         # 5. call instance level initialisation hooks
         self.hm.call_hooks('server_startup', repo=self)
+
+    @property
+    def sources_by_uri(self):
+        mapping = {'system': self.system_source}
+        mapping.update((sourceent.name, source)
+                       for sourceent, source in self._sources())
+        return mapping
+
+    @property
+    def sources_by_eid(self):
+        mapping = {self.system_source.eid: self.system_source}
+        mapping.update((sourceent.eid, source)
+                       for sourceent, source in self._sources())
+        return mapping
+
+    def _sources(self):
+        if self.config.quick_start:
+            return
+        with self.internal_cnx() as cnx:
+            for sourceent in cnx.execute(
+                    'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
+                    'S name SN, S type SA, S config SC, S name != "system"').entities():
+                source = self.get_source(sourceent.type, sourceent.name,
+                                         sourceent.host_config, sourceent.eid)
+                if self.config.source_enabled(source):
+                    # call source's init method to complete their initialisation if
+                    # needed (for instance looking for persistent configuration using an
+                    # internal session, which is not possible until connections sets have been
+                    # initialized)
+                    source.init(True, sourceent)
+                else:
+                    source.init(False, sourceent)
+                source.set_schema(self.schema)
+                yield sourceent, source
+        self._clear_source_defs_caches()
 
     # internals ###############################################################
 
@@ -317,44 +349,7 @@ class Repository(object):
                 ' S name "system", S type SA, S config SC'
             ).one()
             self.system_source.eid = sourceent.eid
-            self.sources_by_eid[sourceent.eid] = self.system_source
             self.system_source.init(True, sourceent)
-
-    def init_sources_from_database(self):
-        if self.config.quick_start:
-            return
-        with self.internal_cnx() as cnx:
-            # FIXME: sources should be ordered (add_entity priority)
-            for sourceent in cnx.execute(
-                    'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
-                    'S name SN, S type SA, S config SC, S name != "system"').entities():
-                self.add_source(sourceent)
-
-    def add_source(self, sourceent):
-        try:
-            source = self.get_source(sourceent.type, sourceent.name,
-                                     sourceent.host_config, sourceent.eid)
-        except RuntimeError:
-            if self.config.repairing:
-                self.exception('cant setup source %s, skipped', sourceent.name)
-                return
-            raise
-        self.sources_by_eid[sourceent.eid] = source
-        self.sources_by_uri[sourceent.name] = source
-        if self.config.source_enabled(source):
-            # call source's init method to complete their initialisation if
-            # needed (for instance looking for persistent configuration using an
-            # internal session, which is not possible until connections sets have been
-            # initialized)
-            source.init(True, sourceent)
-        else:
-            source.init(False, sourceent)
-        self._clear_source_defs_caches()
-
-    def remove_source(self, uri):
-        source = self.sources_by_uri.pop(uri)
-        del self.sources_by_eid[source.eid]
-        self._clear_source_defs_caches()
 
     def get_source(self, type, uri, source_config, eid=None):
         # set uri and type in source config so it's available through
@@ -371,8 +366,7 @@ class Repository(object):
         else:
             self.vreg._set_schema(schema)
         self.querier.set_schema(schema)
-        for source in self.sources_by_uri.values():
-            source.set_schema(schema)
+        self.system_source.set_schema(schema)
         self.schema = schema
 
     def deserialize_schema(self):
