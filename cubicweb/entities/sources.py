@@ -31,9 +31,12 @@ from cubicweb.entities import AnyEntity, fetch_config
 
 
 class _CWSourceCfgMixIn(object):
+
     @property
     def dictconfig(self):
-        return self.config and text_to_dict(self.config) or {}
+        if not self.config:
+            return {}
+        return text_to_dict(self.config)
 
 
 class CWSource(_CWSourceCfgMixIn, AnyEntity):
