@@ -107,14 +107,10 @@ class DataFeedSource(AbstractSource):
             raise ValidationError(source_entity.eid, {'config': msg})
         return typed_config
 
-    def _entity_update(self, source_entity):
-        super(DataFeedSource, self)._entity_update(source_entity)
-        self.parser_id = source_entity.parser
-        self.latest_retrieval = source_entity.latest_retrieval
-
     def init(self, activated, source_entity):
         super(DataFeedSource, self).init(activated, source_entity)
         self.parser_id = source_entity.parser
+        self.latest_retrieval = source_entity.latest_retrieval
         typed_config = self.config
         self.synchro_interval = timedelta(seconds=typed_config['synchronization-interval'])
         self.max_lock_lifetime = timedelta(seconds=typed_config['max-lock-lifetime'])

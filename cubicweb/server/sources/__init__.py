@@ -176,14 +176,6 @@ class AbstractSource(object):
         return cls.check_conf_dict(source_entity.eid, source_entity.host_config,
                                     _=source_entity._cw._)
 
-    def _entity_update(self, source_entity):
-        source_entity.complete()
-        if source_entity.url:
-            self.urls = [url.strip() for url in source_entity.url.splitlines()
-                         if url.strip()]
-        else:
-            self.urls = []
-
     # source initialization / finalization #####################################
 
     def set_schema(self, schema):
@@ -198,8 +190,14 @@ class AbstractSource(object):
         """method called by the repository once ready to handle request.
         `activated` is a boolean flag telling if the source is activated or not.
         """
-        if activated:
-            self._entity_update(source_entity)
+        if not activated:
+            return
+        source_entity.complete()
+        if source_entity.url:
+            self.urls = [url.strip() for url in source_entity.url.splitlines()
+                         if url.strip()]
+        else:
+            self.urls = []
 
     PUBLIC_KEYS = ('type', 'uri', 'use-cwuri-as-url')
     def remove_sensitive_information(self, sourcedef):

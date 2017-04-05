@@ -178,6 +178,16 @@ You can set multiple groups by separating them by a comma.',
 
     def init(self, activated, source_entity):
         super(LDAPFeedSource, self).init(activated, source_entity)
+        if self.urls:
+            if len(self.urls) > 1:
+                raise ValidationError(source_entity.eid, {'url': _('can only have one url')})
+            try:
+                protocol, hostport = self.urls[0].split('://')
+            except ValueError:
+                raise ValidationError(source_entity.eid, {'url': _('badly formatted url')})
+            if protocol not in PROTO_PORT:
+                raise ValidationError(source_entity.eid, {'url': _('unsupported protocol')})
+
         typedconfig = self.config
         self.authmode = typedconfig['auth-mode']
         self._authenticate = getattr(self, '_auth_%s' % self.authmode)
@@ -205,18 +215,6 @@ You can set multiple groups by separating them by a comma.',
         if typedconfig['group-filter']:
             self.group_base_filters.append(typedconfig['group-filter'])
         self._conn = None
-
-    def _entity_update(self, source_entity):
-        super(LDAPFeedSource, self)._entity_update(source_entity)
-        if self.urls:
-            if len(self.urls) > 1:
-                raise ValidationError(source_entity.eid, {'url': _('can only have one url')})
-            try:
-                protocol, hostport = self.urls[0].split('://')
-            except ValueError:
-                raise ValidationError(source_entity.eid, {'url': _('badly formatted url')})
-            if protocol not in PROTO_PORT:
-                raise ValidationError(source_entity.eid, {'url': _('unsupported protocol')})
 
     def connection_info(self):
         assert len(self.urls) == 1, self.urls
