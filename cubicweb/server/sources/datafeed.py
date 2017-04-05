@@ -112,11 +112,10 @@ class DataFeedSource(AbstractSource):
         self.parser_id = source_entity.parser
         self.latest_retrieval = source_entity.latest_retrieval
 
-    def update_config(self, source_entity, typed_config):
-        """update configuration from source entity. `typed_config` is config
-        properly typed with defaults set
-        """
-        super(DataFeedSource, self).update_config(source_entity, typed_config)
+    def init(self, activated, source_entity):
+        super(DataFeedSource, self).init(activated, source_entity)
+        self.parser_id = source_entity.parser
+        typed_config = self.config
         self.synchro_interval = timedelta(seconds=typed_config['synchronization-interval'])
         self.max_lock_lifetime = timedelta(seconds=typed_config['max-lock-lifetime'])
         self.http_timeout = typed_config['http-timeout']
@@ -126,10 +125,6 @@ class DataFeedSource(AbstractSource):
         if typed_config['use-cwuri-as-url'] is not None:
             self.use_cwuri_as_url = typed_config['use-cwuri-as-url']
             self.public_config['use-cwuri-as-url'] = self.use_cwuri_as_url
-
-    def init(self, activated, source_entity):
-        super(DataFeedSource, self).init(activated, source_entity)
-        self.parser_id = source_entity.parser
 
     def _get_parser(self, cnx, **kwargs):
         if self.parser_id is None:

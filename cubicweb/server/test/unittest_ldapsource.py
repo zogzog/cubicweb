@@ -115,6 +115,12 @@ def ldapsource(cnx):
     return cnx.find('CWSource', type=u'ldapfeed').one()
 
 
+def update_source_config(source, options):
+    config = source.dictconfig
+    config.update(options)
+    source.cw_set(config=u'\n'.join('%s=%s' % x for x in config.items()))
+
+
 class LDAPFeedTestBase(CubicWebTC):
     test_db_id = 'ldap-feed'
     loglevel = 'ERROR'
@@ -222,10 +228,9 @@ class CheckWrongGroup(LDAPFeedTestBase):
     def test_wrong_group(self):
         with self.admin_access.repo_cnx() as cnx:
             source = ldapsource(cnx)
-            config = source.repo_source.check_config(source)
             # inject a bogus group here, along with at least a valid one
-            config['user-default-group'] = ('thisgroupdoesnotexists', 'users')
-            source.repo_source.update_config(source, config)
+            options = {'use-default-group': 'thisgroupdoesnotexists,users'}
+            update_source_config(source, options)
             cnx.commit()
             # here we emitted an error log entry
             source.repo_source.pull_data(cnx, force=True, raise_on_error=True)
@@ -329,16 +334,15 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
 
     def test_a_filter_inactivate(self):
         """ filtered out people should be deactivated, unable to authenticate """
-        repo_source = self.repo.sources_by_uri['ldap']
         with self.admin_access.repo_cnx() as cnx:
             source = ldapsource(cnx)
-            config = repo_source.check_config(source)
             # filter with adim's phone number
-            config['user-filter'] = u'(%s=%s)' % ('telephoneNumber', '109')
-            repo_source.update_config(source, config)
+            options = {'user-filter': '(%s=%s)' % ('telephonenumber', '109')}
+            update_source_config(source, options)
             cnx.commit()
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)
+            repo_source = self.repo.sources_by_uri['ldap']
             self.assertRaises(AuthenticationError,
                               repo_source.authenticate, cnx, 'syt', 'syt')
         with self.admin_access.repo_cnx() as cnx:
@@ -349,8 +353,9 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
                                          'U in_state S, S name N').rows[0][0],
                              'activated')
             # unfilter, syt should be activated again
-            config['user-filter'] = u''
-            repo_source.update_config(source, config)
+            source = ldapsource(cnx)
+            options = {'user-filter': u''}
+            update_source_config(source, options)
             cnx.commit()
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)

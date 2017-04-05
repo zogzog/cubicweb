@@ -176,11 +176,9 @@ You can set multiple groups by separating them by a comma.',
 
     _conn = None
 
-    def update_config(self, source_entity, typedconfig):
-        """update configuration from source entity. `typedconfig` is config
-        properly typed with defaults set
-        """
-        super(LDAPFeedSource, self).update_config(source_entity, typedconfig)
+    def init(self, activated, source_entity):
+        super(LDAPFeedSource, self).init(activated, source_entity)
+        typedconfig = self.config
         self.authmode = typedconfig['auth-mode']
         self._authenticate = getattr(self, '_auth_%s' % self.authmode)
         self.cnx_dn = typedconfig['data-cnx-dn']

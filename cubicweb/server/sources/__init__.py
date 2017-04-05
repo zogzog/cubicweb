@@ -99,8 +99,8 @@ class AbstractSource(object):
         # on logging
         set_log_methods(self, getLogger('cubicweb.sources.' + unormalize(text_type(self.uri))))
         source_config.pop('type')
-        self.update_config(None, self.check_conf_dict(eid, source_config,
-                                                      fail_if_unknown=False))
+        self.config = self.check_conf_dict(
+            eid, source_config, fail_if_unknown=False)
 
     def __repr__(self):
         return '<%s %s source %s @%#x>' % (self.uri, self.__class__.__name__,
@@ -175,14 +175,6 @@ class AbstractSource(object):
         """check configuration of source entity"""
         return cls.check_conf_dict(source_entity.eid, source_entity.host_config,
                                     _=source_entity._cw._)
-
-    def update_config(self, source_entity, typedconfig):
-        """update configuration from source entity. `typedconfig` is config
-        properly typed with defaults set
-        """
-        if source_entity is not None:
-            self._entity_update(source_entity)
-        self.config = typedconfig
 
     def _entity_update(self, source_entity):
         source_entity.complete()
