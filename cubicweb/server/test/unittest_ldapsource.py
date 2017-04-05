@@ -147,8 +147,8 @@ class LDAPFeedTestBase(CubicWebTC):
         cnx.commit()
         return cls.pull(cnx)
 
-    @classmethod
-    def pull(self, cnx):
+    @staticmethod
+    def pull(cnx):
         lfsource = cnx.repo.sources_by_uri['ldap']
         stats = lfsource.pull_data(cnx, force=True, raise_on_error=True)
         cnx.commit()
