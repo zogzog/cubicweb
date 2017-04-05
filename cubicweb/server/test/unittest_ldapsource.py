@@ -111,6 +111,10 @@ def terminate_slapd(cls):
         pass
 
 
+def ldapsource(cnx):
+    return cnx.find('CWSource', type=u'ldapfeed').one()
+
+
 class LDAPFeedTestBase(CubicWebTC):
     test_db_id = 'ldap-feed'
     loglevel = 'ERROR'
@@ -217,7 +221,7 @@ class CheckWrongGroup(LDAPFeedTestBase):
 
     def test_wrong_group(self):
         with self.admin_access.repo_cnx() as cnx:
-            source = cnx.execute('CWSource S WHERE S type="ldapfeed"').get_entity(0, 0)
+            source = ldapsource(cnx)
             config = source.repo_source.check_config(source)
             # inject a bogus group here, along with at least a valid one
             config['user-default-group'] = ('thisgroupdoesnotexists', 'users')
@@ -327,7 +331,7 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
         """ filtered out people should be deactivated, unable to authenticate """
         repo_source = self.repo.sources_by_uri['ldap']
         with self.admin_access.repo_cnx() as cnx:
-            source = cnx.execute('CWSource S WHERE S type="ldapfeed"').get_entity(0, 0)
+            source = ldapsource(cnx)
             config = repo_source.check_config(source)
             # filter with adim's phone number
             config['user-filter'] = u'(%s=%s)' % ('telephoneNumber', '109')
