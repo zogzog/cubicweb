@@ -191,7 +191,7 @@ class DataFeedSource(AbstractSource):
 
         def _synchronize_source(repo, source_eid, import_log_eid):
             with repo.internal_cnx() as cnx:
-                source = repo.sources_by_eid[source_eid]
+                source = repo.source_by_eid(source_eid)
                 source._pull_data(cnx, force, raise_on_error, import_log_eid=import_log_eid)
 
         sync = partial(_synchronize_source, cnx.repo, self.eid, import_log.eid)

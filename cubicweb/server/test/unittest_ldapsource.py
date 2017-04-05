@@ -159,7 +159,7 @@ class LDAPFeedTestBase(CubicWebTC):
 
     @staticmethod
     def pull(cnx):
-        lfsource = cnx.repo.sources_by_uri['ldap']
+        lfsource = cnx.repo.source_by_uri('ldap')
         stats = lfsource.pull_data(cnx, force=True, raise_on_error=True)
         cnx.commit()
         return stats
@@ -208,7 +208,7 @@ class LDAPFeedTestBase(CubicWebTC):
         self._ldapmodify(modcmd)
 
     def _ldapmodify(self, modcmd):
-        uri = self.repo.sources_by_uri['ldap'].urls[0]
+        uri = self.repo.source_by_uri('ldap').urls[0]
         updatecmd = ['ldapmodify', '-H', uri, '-v', '-x', '-D',
                      'cn=admin,dc=cubicweb,dc=test', '-w', 'cw']
         PIPE = subprocess.PIPE
@@ -247,7 +247,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
         self.assertTrue(entity.modification_date)
 
     def test_authenticate(self):
-        source = self.repo.sources_by_uri['ldap']
+        source = self.repo.source_by_uri('ldap')
         with self.admin_access.repo_cnx() as cnx:
             # ensure we won't be logged against
             self.assertRaises(AuthenticationError,
@@ -282,7 +282,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
     def test_copy_to_system_source(self):
         "make sure we can 'convert' an LDAP user into a system one"
         with self.admin_access.repo_cnx() as cnx:
-            source = self.repo.sources_by_uri['ldap']
+            source = self.repo.source_by_uri('ldap')
             eid = cnx.execute('CWUser X WHERE X login %(login)s', {'login': 'syt'})[0][0]
             cnx.execute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': eid})
             cnx.commit()
@@ -315,7 +315,7 @@ class LDAPGeneratePwdTC(LDAPFeedTestBase):
 
     def setup_database(self):
         with self.admin_access.repo_cnx() as cnx:
-            lfsource = cnx.repo.sources_by_uri['ldap']
+            lfsource = cnx.repo.source_by_uri('ldap')
             del lfsource.user_attrs['userPassword']
         super(LDAPGeneratePwdTC, self).setup_database()
 
@@ -342,7 +342,7 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
             cnx.commit()
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)
-            repo_source = self.repo.sources_by_uri['ldap']
+            repo_source = self.repo.source_by_uri('ldap')
             self.assertRaises(AuthenticationError,
                               repo_source.authenticate, cnx, 'syt', 'syt')
         with self.admin_access.repo_cnx() as cnx:
@@ -374,7 +374,7 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
         self.delete_ldap_entry('uid=syt,ou=People,dc=cubicweb,dc=test')
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)
-            source = self.repo.sources_by_uri['ldap']
+            source = self.repo.source_by_uri('ldap')
             self.assertRaises(AuthenticationError,
                               source.authenticate, cnx, 'syt', 'syt')
         with self.admin_access.repo_cnx() as cnx:
@@ -413,7 +413,7 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
         # test reactivating BY HAND the user isn't enough to
         # authenticate, as the native source refuse to authenticate
         # user from other sources
-        repo_source = self.repo.sources_by_uri['ldap']
+        repo_source = self.repo.source_by_uri('ldap')
         self.delete_ldap_entry('uid=syt,ou=People,dc=cubicweb,dc=test')
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)

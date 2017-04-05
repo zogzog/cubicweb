@@ -45,7 +45,7 @@ class MassiveObjectStoreWithCustomMDGenStoreTC(
     def store_impl(self, cnx):
         source = cnx.create_entity('CWSource', type=u'datafeed', name=u'test', url=u'test')
         cnx.commit()
-        metagen = stores.MetadataGenerator(cnx, source=cnx.repo.sources_by_eid[source.eid])
+        metagen = stores.MetadataGenerator(cnx, source=cnx.repo.source_by_eid(source.eid))
         return MassiveObjectStore(cnx, metagen=metagen)
 
 

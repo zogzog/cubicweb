@@ -63,7 +63,7 @@ class CWSource(_CWSourceCfgMixIn, AnyEntity):
         """repository only property, not available from the web side (eg
         self._cw is expected to be a server session)
         """
-        return self._cw.repo.sources_by_eid[self.eid]
+        return self._cw.repo.source_by_eid(self.eid)
 
 
 class CWSourceHostConfig(_CWSourceCfgMixIn, AnyEntity):

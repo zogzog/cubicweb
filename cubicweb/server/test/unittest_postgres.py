@@ -52,7 +52,7 @@ class PostgresFTITC(CubicWebTC):
 
     def test_eid_range(self):
         # concurrent allocation of eid ranges
-        source = self.repo.sources_by_uri['system']
+        source = self.repo.system_source
         range1 = []
         range2 = []
         def allocate_eid_ranges(session, target):

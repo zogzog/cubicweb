@@ -302,6 +302,20 @@ class Repository(object):
         # 5. call instance level initialisation hooks
         self.hm.call_hooks('server_startup', repo=self)
 
+    def source_by_uri(self, uri):
+        with self.internal_cnx() as cnx:
+            rset = cnx.find('CWSource', name=uri)
+            if not rset:
+                raise ValueError('no source with uri %s found' % uri)
+            return self._source_from_cwsource(rset.one())
+
+    def source_by_eid(self, eid):
+        with self.internal_cnx() as cnx:
+            rset = cnx.find('CWSource', eid=eid)
+            if not rset:
+                raise ValueError('no source with eid %d found' % eid)
+            return self._source_from_cwsource(rset.one())
+
     @property
     def sources_by_uri(self):
         mapping = {'system': self.system_source}
@@ -323,19 +337,23 @@ class Repository(object):
             for sourceent in cnx.execute(
                     'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
                     'S name SN, S type SA, S config SC, S name != "system"').entities():
-                source = self.get_source(sourceent.type, sourceent.name,
-                                         sourceent.host_config, sourceent.eid)
-                if self.config.source_enabled(source):
-                    # call source's init method to complete their initialisation if
-                    # needed (for instance looking for persistent configuration using an
-                    # internal session, which is not possible until connections sets have been
-                    # initialized)
-                    source.init(True, sourceent)
-                else:
-                    source.init(False, sourceent)
-                source.set_schema(self.schema)
+                source = self._source_from_cwsource(sourceent)
                 yield sourceent, source
         self._clear_source_defs_caches()
+
+    def _source_from_cwsource(self, sourceent):
+        source = self.get_source(sourceent.type, sourceent.name,
+                                 sourceent.host_config, sourceent.eid)
+        if self.config.source_enabled(source):
+            # call source's init method to complete their initialisation if
+            # needed (for instance looking for persistent configuration using an
+            # internal session, which is not possible until connections sets have been
+            # initialized)
+            source.init(True, sourceent)
+        else:
+            source.init(False, sourceent)
+        source.set_schema(self.schema)
+        return source
 
     # internals ###############################################################
 

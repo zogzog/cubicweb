@@ -1056,8 +1056,8 @@ class SynchronizeSourceCommand(Command):
             if len(args) >= 2:
                 for name in args[1:]:
                     try:
-                        source = repo.sources_by_uri[name]
-                    except KeyError:
+                        source = repo.source_by_uri(name)
+                    except ValueError:
                         cnx.error('no source named %r' % name)
                         errors = True
                     else:
