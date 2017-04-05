@@ -35,24 +35,6 @@ class _CWSourceCfgMixIn(object):
     def dictconfig(self):
         return self.config and text_to_dict(self.config) or {}
 
-    def update_config(self, skip_unknown=False, **config):
-        from cubicweb.server import SOURCE_TYPES
-        from cubicweb.server.serverconfig import (SourceConfiguration,
-                                                  generate_source_config)
-        cfg = self.dictconfig
-        cfg.update(config)
-        options = SOURCE_TYPES[self.type].options
-        sconfig = SourceConfiguration(self._cw.vreg.config, options=options)
-        for opt, val in cfg.items():
-            try:
-                sconfig.set_option(opt, val)
-            except OptionError:
-                if skip_unknown:
-                    continue
-                raise
-        cfgstr = text_type(generate_source_config(sconfig), self._cw.encoding)
-        self.cw_set(config=cfgstr)
-
 
 class CWSource(_CWSourceCfgMixIn, AnyEntity):
     __regid__ = 'CWSource'
