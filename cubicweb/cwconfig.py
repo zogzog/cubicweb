@@ -1060,6 +1060,7 @@ the repository',
 
     MODES = ('common', 'repository', 'Any')
     MCOMPAT = {'all-in-one': MODES,
+               'pyramid': MODES,
                'repository': ('common', 'repository', 'Any')}
     @classmethod
     def accept_mode(cls, mode):
