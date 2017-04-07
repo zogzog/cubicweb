@@ -226,7 +226,11 @@ def includeme(config):
     config.registry['cubicweb.registry'] = repo.vreg
 
     if cwconfig.mode != 'test':
-        atexit.register(repo.shutdown)
+        @atexit.register
+        def shutdown_repo():
+            if repo.shutting_down:
+                return
+            repo.shutdown
 
     if asbool(config.registry.settings.get('cubicweb.defaults', True)):
         config.include('cubicweb.pyramid.defaults')
