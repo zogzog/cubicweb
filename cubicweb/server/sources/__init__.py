@@ -99,8 +99,8 @@ class AbstractSource(object):
         # on logging
         set_log_methods(self, getLogger('cubicweb.sources.' + unormalize(text_type(self.uri))))
         source_config.pop('type')
-        self.config = self.check_conf_dict(
-            eid, source_config, fail_if_unknown=False)
+        self.config = self._check_config_dict(
+            eid, source_config, raise_on_error=False)
 
     def __repr__(self):
         return '<%s %s source %s @%#x>' % (self.uri, self.__class__.__name__,
@@ -133,15 +133,18 @@ class AbstractSource(object):
         pass
 
     @classmethod
-    def check_conf_dict(cls, eid, confdict, fail_if_unknown=True):
-        """check configuration of source entity. Return config dict properly
+    def _check_config_dict(cls, eid, confdict, raise_on_error=True):
+        """Check configuration of source entity and return config dict properly
         typed with defaults set.
+
+        If `raise_on_error` is True (the default), a ValidationError will be
+        raised if some error is encountered, else the problem will be ignored.
         """
         processed = {}
         for optname, optdict in cls.options:
             value = confdict.pop(optname, optdict.get('default'))
             if value is configuration.REQUIRED:
-                if not fail_if_unknown:
+                if not raise_on_error:
                     continue
                 msg = _('specifying %s is mandatory')
                 msgargs = optname
@@ -151,6 +154,8 @@ class AbstractSource(object):
                 try:
                     value = configuration._validate(value, optdict, optname)
                 except Exception as ex:
+                    if not raise_on_error:
+                        continue
                     msg = text_type(ex)
                     raise ValidationError(eid, {role_name('config', 'subject'): msg})
             processed[optname] = value
@@ -161,7 +166,7 @@ class AbstractSource(object):
             pass
         # check for unknown options
         if confdict and tuple(confdict) != ('adapter',):
-            if fail_if_unknown:
+            if raise_on_error:
                 msg = _('unknown options %s')
                 msgargs = ', '.join(confdict)
                 raise ValidationError(eid, {role_name('config', 'subject'): msg}, msgargs)
@@ -174,8 +179,10 @@ class AbstractSource(object):
 
     @classmethod
     def check_config(cls, source_entity):
-        """check configuration of source entity"""
-        return cls.check_conf_dict(source_entity.eid, source_entity.dictconfig)
+        """Check configuration of source entity, raise ValidationError if some
+        errors are detected.
+        """
+        return cls._check_config_dict(source_entity.eid, source_entity.dictconfig)
 
     # source initialization / finalization #####################################
 

@@ -49,8 +49,8 @@ class SourceAddedHook(SourceHook):
         # initialisation, as config for this source is in a file and handling
         # is done separatly (no need for the operation either)
         if self.entity.name != 'system':
-            sourcecls.check_conf_dict(self.entity.eid, self.entity.host_config,
-                                      fail_if_unknown=not self._cw.vreg.config.repairing)
+            sourcecls._check_config_dict(self.entity.eid, self.entity.host_config,
+                                         raise_on_error=not self._cw.vreg.config.repairing)
 
 
 class SourceRemovedHook(SourceHook):
