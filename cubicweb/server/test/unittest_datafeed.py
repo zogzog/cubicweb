@@ -20,6 +20,7 @@
 from datetime import timedelta
 from contextlib import contextmanager
 
+from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sources import datafeed
 from cubicweb.dataimport.stores import NoHookRQLObjectStore, MetaGenerator
@@ -132,6 +133,27 @@ class DataFeedTC(CubicWebTC):
         self.assertEqual(stats, {})
         self.assertIn(u'failed to load parser for source &quot;ô myfeed&quot;',
                       importlog)
+
+    def test_bad_config(self):
+        with self.admin_access.repo_cnx() as cnx:
+            with self.base_parser(cnx):
+                with self.assertRaises(ValidationError) as cm:
+                    cnx.create_entity(
+                        'CWSource', name=u'error', type=u'datafeed', parser=u'testparser',
+                        url=u'ignored',
+                        config=u'synchronization-interval=1s')
+                self.assertIn('synchronization-interval must be greater than 1 minute',
+                              str(cm.exception))
+                cnx.rollback()
+
+                with self.assertRaises(ValidationError) as cm:
+                    cnx.create_entity(
+                        'CWSource', name=u'error', type=u'datafeed', parser=u'testparser',
+                        url=u'ignored',
+                        config=u'synch-interval=1min')
+                self.assertIn('unknown options synch-interval',
+                              str(cm.exception))
+                cnx.rollback()
 
 
 class DataFeedConfigTC(CubicWebTC):

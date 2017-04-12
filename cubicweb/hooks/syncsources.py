@@ -32,6 +32,12 @@ class SourceHook(hook.Hook):
     __abstract__ = True
     category = 'cw.sources'
 
+    def get_source(self, source_entity):
+        if source_entity.name == 'system':
+            return self._cw.repo.system_source
+        return self._cw.repo.get_source(source_entity.type, source_entity.name,
+                                        {}, source_entity.eid)
+
 
 # repo sources synchronization #################################################
 
@@ -40,17 +46,12 @@ class SourceAddedHook(SourceHook):
     __select__ = SourceHook.__select__ & is_instance('CWSource')
     events = ('after_add_entity',)
     def __call__(self):
-        try:
-            sourcecls = SOURCE_TYPES[self.entity.type]
-        except KeyError:
+        if self.entity.type not in SOURCE_TYPES:
             msg = _('Unknown source type')
             raise validation_error(self.entity, {('type', 'subject'): msg})
-        # ignore creation of the system source done during database
-        # initialisation, as config for this source is in a file and handling
-        # is done separatly (no need for the operation either)
-        if self.entity.name != 'system':
-            sourcecls._check_config_dict(self.entity.eid, self.entity.host_config,
-                                         raise_on_error=not self._cw.vreg.config.repairing)
+
+        source = self.get_source(self.entity)
+        source.check_config(self.entity)
 
 
 class SourceRemovedHook(SourceHook):
@@ -73,8 +74,7 @@ class SourceUpdatedHook(SourceHook):
             if oldname == 'system':
                 msg = _("You cannot rename the system source")
                 raise validation_error(self.entity, {('name', 'subject'): msg})
-        if 'config' in self.entity.cw_edited or 'url' in self.entity.cw_edited:
-            if self.entity.name == 'system' and self.entity.config:
-                msg = _("Configuration of the system source goes to "
-                        "the 'sources' file, not in the database")
-                raise validation_error(self.entity, {('config', 'subject'): msg})
+
+        source = self.get_source(self.entity)
+        if 'config' in self.entity.cw_edited:
+            source.check_config(self.entity)

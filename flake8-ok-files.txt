@@ -30,6 +30,7 @@ cubicweb/hooks/test/data/hooks.py
 cubicweb/hooks/test/unittest_notificationhooks.py
 cubicweb/hooks/test/unittest_security.py
 cubicweb/hooks/test/unittest_syncsession.py
+cubicweb/hooks/test/unittest_syncsources.py
 cubicweb/pylintext.py
 cubicweb/repoapi.py
 cubicweb/rqlrewrite.py

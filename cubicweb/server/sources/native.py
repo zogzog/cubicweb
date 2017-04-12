@@ -350,10 +350,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.create_eid = self.eid_generator.create_eid
 
     def check_config(self, source_entity):
-        """check configuration of source entity"""
-        if source_entity.host_config:
-            msg = _('the system source has its configuration '
-                    'stored on the file-system')
+        if source_entity.config:
+            msg = _("Configuration of the system source goes to "
+                    "the 'sources' file, not in the database")
             raise ValidationError(source_entity.eid, {role_name('config', 'subject'): msg})
 
     def add_authentifier(self, authentifier):
