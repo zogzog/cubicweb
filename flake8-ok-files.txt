@@ -26,6 +26,7 @@ cubicweb/etwist/__init__.py
 cubicweb/etwist/request.py
 cubicweb/etwist/service.py
 cubicweb/ext/__init__.py
+cubicweb/hooks/syncsources.py
 cubicweb/hooks/test/data/hooks.py
 cubicweb/hooks/test/unittest_notificationhooks.py
 cubicweb/hooks/test/unittest_security.py
@@ -53,6 +54,7 @@ cubicweb/server/test/data-migractions/cubes/__init__.py
 cubicweb/server/test/data-migractions/migratedapp/__init__.py
 cubicweb/server/test/data-schema2sql/__init__.py
 cubicweb/server/test/unittest_checkintegrity.py
+cubicweb/server/test/unittest_datafeed.py
 cubicweb/server/test/unittest_ldapsource.py
 cubicweb/server/test/unittest_serverctl.py
 cubicweb/server/test/unittest_session.py
@@ -63,6 +65,8 @@ cubicweb/sobjects/services.py
 cubicweb/sobjects/test/unittest_notification.py
 cubicweb/sobjects/test/unittest_register_user.py
 cubicweb/sobjects/textparsers.py
+cubicweb/sources/__init__.py
+cubicweb/sources/native.py
 cubicweb/test/data/libpython/cubicweb_comment/__init__.py
 cubicweb/test/data/libpython/cubicweb_comment/__pkginfo__.py
 cubicweb/test/data/libpython/cubicweb_email/entities.py

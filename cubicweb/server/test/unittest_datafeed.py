@@ -178,6 +178,7 @@ class DataFeedConfigTC(CubicWebTC):
         self.assertEqual({'type': u'datafeed', 'uri': u'myfeed', 'use-cwuri-as-url': False},
                          dfsource.public_config)
 
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

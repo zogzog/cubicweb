@@ -19,10 +19,6 @@
 
 from cubicweb import _
 
-from socket import gethostname
-
-from logilab.common.decorators import clear_cache
-
 from cubicweb import validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.server import SOURCE_TYPES, hook
@@ -39,12 +35,11 @@ class SourceHook(hook.Hook):
                                         {}, source_entity.eid)
 
 
-# repo sources synchronization #################################################
-
 class SourceAddedHook(SourceHook):
     __regid__ = 'cw.sources.added'
     __select__ = SourceHook.__select__ & is_instance('CWSource')
     events = ('after_add_entity',)
+
     def __call__(self):
         if self.entity.type not in SOURCE_TYPES:
             msg = _('Unknown source type')
@@ -59,6 +54,7 @@ class SourceRemovedHook(SourceHook):
     __regid__ = 'cw.sources.removed'
     __select__ = SourceHook.__select__ & is_instance('CWSource')
     events = ('before_delete_entity',)
+
     def __call__(self):
         if self.entity.name == 'system':
             msg = _("You cannot remove the system source")
@@ -69,6 +65,7 @@ class SourceUpdatedHook(SourceHook):
     __regid__ = 'cw.sources.configupdate'
     __select__ = SourceHook.__select__ & is_instance('CWSource')
     events = ('before_update_entity',)
+
     def __call__(self):
         if 'name' in self.entity.cw_edited:
             oldname, newname = self.entity.cw_edited.oldnewvalue('name')

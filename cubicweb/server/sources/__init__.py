@@ -85,7 +85,7 @@ class AbstractSource(object):
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
     def __init__(self, repo, source_config, eid=None):
         self.repo = repo
@@ -213,12 +213,13 @@ class AbstractSource(object):
             self.urls = []
 
     PUBLIC_KEYS = ('type', 'uri', 'use-cwuri-as-url')
+
     def remove_sensitive_information(self, sourcedef):
         """remove sensitive information such as login / password from source
         definition
         """
         for key in list(sourcedef):
-            if not key in self.PUBLIC_KEYS:
+            if key not in self.PUBLIC_KEYS:
                 sourcedef.pop(key)
 
     # connections handling #####################################################
@@ -282,7 +283,7 @@ class AbstractSource(object):
         """add a relation to the source"""
         raise NotImplementedError(self)
 
-    def add_relations(self, cnx,  rtype, subj_obj_list):
+    def add_relations(self, cnx, rtype, subj_obj_list):
         """add a relations to the source"""
         # override in derived classes if you feel you can
         # optimize
