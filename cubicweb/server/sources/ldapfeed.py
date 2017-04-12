@@ -176,8 +176,8 @@ You can set multiple groups by separating them by a comma.',
 
     _conn = None
 
-    def init(self, activated, source_entity):
-        super(LDAPFeedSource, self).init(activated, source_entity)
+    def init(self, source_entity):
+        super(LDAPFeedSource, self).init(source_entity)
         if self.urls:
             if len(self.urls) > 1:
                 raise ValidationError(source_entity.eid, {'url': _('can only have one url')})

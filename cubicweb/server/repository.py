@@ -350,10 +350,7 @@ class Repository(object):
             # needed (for instance looking for persistent configuration using an
             # internal session, which is not possible until connections sets have been
             # initialized)
-            source.init(True, sourceent)
-        else:
-            source.init(False, sourceent)
-        source.set_schema(self.schema)
+            source.init(sourceent)
         return source
 
     # internals ###############################################################
@@ -368,7 +365,7 @@ class Repository(object):
                 ' S name "system", S type SA, S config SC'
             ).one()
             self.system_source.eid = sourceent.eid
-            self.system_source.init(True, sourceent)
+            self.system_source.init(sourceent)
 
     def get_source(self, type, uri, source_config, eid=None):
         # set uri and type in source config so it's available through

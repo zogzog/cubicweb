@@ -186,12 +186,10 @@ class AbstractSource(object):
         """method called by the repository once ready to create a new instance"""
         pass
 
-    def init(self, activated, source_entity):
+    def init(self, source_entity):
         """method called by the repository once ready to handle request.
         `activated` is a boolean flag telling if the source is activated or not.
         """
-        if not activated:
-            return
         source_entity.complete()
         if source_entity.url:
             self.urls = [url.strip() for url in source_entity.url.splitlines()
