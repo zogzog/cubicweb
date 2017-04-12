@@ -132,8 +132,7 @@ class AbstractSource(object):
         """method called to restore a backup of source's data"""
         pass
 
-    @classmethod
-    def _check_config_dict(cls, eid, confdict, raise_on_error=True):
+    def _check_config_dict(self, eid, confdict, raise_on_error=True):
         """Check configuration of source entity and return config dict properly
         typed with defaults set.
 
@@ -141,7 +140,7 @@ class AbstractSource(object):
         raised if some error is encountered, else the problem will be ignored.
         """
         processed = {}
-        for optname, optdict in cls.options:
+        for optname, optdict in self.options:
             value = confdict.pop(optname, optdict.get('default'))
             if value is configuration.REQUIRED:
                 if not raise_on_error:
@@ -171,18 +170,16 @@ class AbstractSource(object):
                 msgargs = ', '.join(confdict)
                 raise ValidationError(eid, {role_name('config', 'subject'): msg}, msgargs)
             else:
-                logger = getLogger('cubicweb.sources')
-                logger.warning('unknown options %s', ', '.join(confdict))
+                self.warning('unknown options %s', ', '.join(confdict))
                 # add options to processed, they may be necessary during migration
                 processed.update(confdict)
         return processed
 
-    @classmethod
-    def check_config(cls, source_entity):
+    def check_config(self, source_entity):
         """Check configuration of source entity, raise ValidationError if some
         errors are detected.
         """
-        return cls._check_config_dict(source_entity.eid, source_entity.dictconfig)
+        return self._check_config_dict(source_entity.eid, source_entity.dictconfig)
 
     def check_urls(self, source_entity):
         """Check URL of source entity: `urls` is a string that may contain one
