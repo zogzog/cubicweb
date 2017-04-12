@@ -22,6 +22,28 @@ from cubicweb.devtools.testlib import CubicWebTC
 
 class SyncSourcesTC(CubicWebTC):
 
+    def test_source_type_unknown(self):
+        with self.admin_access.cnx() as cnx:
+            with self.assertRaises(ValidationError) as cm:
+                cnx.create_entity(
+                    'CWSource', name=u'source',
+                    type=u'doesnotexit',
+                    parser=u'doestnotmatter',
+                )
+        self.assertIn('Unknown source type', str(cm.exception))
+
+    def test_cant_delete_system_source(self):
+        with self.admin_access.cnx() as cnx:
+            with self.assertRaises(ValidationError) as cm:
+                cnx.execute('DELETE CWSource X')
+        self.assertIn('You cannot remove the system source', str(cm.exception))
+
+    def test_cant_rename_system_source(self):
+        with self.admin_access.cnx() as cnx:
+            with self.assertRaises(ValidationError) as cm:
+                cnx.find('CWSource').one().cw_set(name=u'sexy name')
+        self.assertIn('You cannot rename the system source', str(cm.exception))
+
     def test_cant_add_config_system_source(self):
         with self.admin_access.cnx() as cnx:
             source = cnx.find('CWSource').one()
