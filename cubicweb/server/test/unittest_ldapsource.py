@@ -229,7 +229,7 @@ class CheckWrongGroup(LDAPFeedTestBase):
         with self.admin_access.repo_cnx() as cnx:
             source = ldapsource(cnx)
             # inject a bogus group here, along with at least a valid one
-            options = {'use-default-group': 'thisgroupdoesnotexists,users'}
+            options = {'user-default-group': 'thisgroupdoesnotexists,users'}
             update_source_config(source, options)
             cnx.commit()
             # here we emitted an error log entry
