@@ -324,6 +324,7 @@ class Repository(object):
         return mapping
 
     @property
+    @deprecated("[3.25] use source_by_eid(<eid>)")
     def sources_by_eid(self):
         mapping = {self.system_source.eid: self.system_source}
         mapping.update((sourceent.eid, source)
