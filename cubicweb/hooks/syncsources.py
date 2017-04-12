@@ -51,6 +51,7 @@ class SourceAddedHook(SourceHook):
             raise validation_error(self.entity, {('type', 'subject'): msg})
 
         source = self.get_source(self.entity)
+        source.check_urls(self.entity)
         source.check_config(self.entity)
 
 
@@ -76,5 +77,7 @@ class SourceUpdatedHook(SourceHook):
                 raise validation_error(self.entity, {('name', 'subject'): msg})
 
         source = self.get_source(self.entity)
+        if 'url' in self.entity.cw_edited:
+            source.check_urls(self.entity)
         if 'config' in self.entity.cw_edited:
             source.check_config(self.entity)

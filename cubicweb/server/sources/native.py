@@ -355,6 +355,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     "the 'sources' file, not in the database")
             raise ValidationError(source_entity.eid, {role_name('config', 'subject'): msg})
 
+    def check_urls(self, source_entity):
+        if source_entity.url:
+            msg = _("Configuration of the system source goes to "
+                    "the 'sources' file, not in the database")
+            raise ValidationError(source_entity.eid, {role_name('config', 'subject'): msg})
+
     def add_authentifier(self, authentifier):
         self.authentifiers.append(authentifier)
         authentifier.source = self

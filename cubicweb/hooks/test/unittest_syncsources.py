@@ -26,8 +26,15 @@ class SyncSourcesTC(CubicWebTC):
         with self.admin_access.cnx() as cnx:
             source = cnx.find('CWSource').one()
 
-            with self.assertRaises(ValidationError):
+            with self.assertRaises(ValidationError) as cm:
+                source.cw_set(url=u'whatever')
+            self.assertIn("Configuration of the system source goes to the 'sources' file",
+                          str(cm.exception))
+
+            with self.assertRaises(ValidationError) as cm:
                 source.cw_set(config=u'whatever')
+            self.assertIn("Configuration of the system source goes to the 'sources' file",
+                          str(cm.exception))
 
 
 if __name__ == '__main__':

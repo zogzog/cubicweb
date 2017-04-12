@@ -184,6 +184,17 @@ class AbstractSource(object):
         """
         return cls._check_config_dict(source_entity.eid, source_entity.dictconfig)
 
+    def check_urls(self, source_entity):
+        """Check URL of source entity: `urls` is a string that may contain one
+        URL per line), and return a list of at least one validated URL.
+        """
+        urls = source_entity.url if source_entity.url else ''
+        urls = [url.strip() for url in urls.splitlines() if url.strip()]
+        if not urls:
+            msg = _('specifying an URL is mandatory')
+            raise ValidationError(source_entity.eid, {role_name('url', 'subject'): msg})
+        return urls
+
     # source initialization / finalization #####################################
 
     def set_schema(self, schema):
@@ -200,8 +211,7 @@ class AbstractSource(object):
         """
         source_entity.complete()
         if source_entity.url:
-            self.urls = [url.strip() for url in source_entity.url.splitlines()
-                         if url.strip()]
+            self.urls = self.check_urls(source_entity)
         else:
             self.urls = []
 

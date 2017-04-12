@@ -149,6 +149,15 @@ class DataFeedTC(CubicWebTC):
                 with self.assertRaises(ValidationError) as cm:
                     cnx.create_entity(
                         'CWSource', name=u'error', type=u'datafeed', parser=u'testparser',
+                        url=None,
+                        config=u'synchronization-interval=1min')
+                self.assertIn('specifying an URL is mandatory',
+                              str(cm.exception))
+                cnx.rollback()
+
+                with self.assertRaises(ValidationError) as cm:
+                    cnx.create_entity(
+                        'CWSource', name=u'error', type=u'datafeed', parser=u'testparser',
                         url=u'ignored',
                         config=u'synch-interval=1min')
                 self.assertIn('unknown options synch-interval',

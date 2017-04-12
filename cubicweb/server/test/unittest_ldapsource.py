@@ -34,7 +34,7 @@ from os.path import join
 from six import string_types
 from six.moves import range
 
-from cubicweb import AuthenticationError
+from cubicweb import AuthenticationError, ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.httptest import get_available_port
 
@@ -306,6 +306,33 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
             pwd = cu.fetchall()[0][0]
             self.assertIsNotNone(pwd)
             self.assertTrue(str(pwd))
+
+    def test_bad_config(self):
+        with self.admin_access.cnx() as cnx:
+
+            with self.assertRaises(ValidationError) as cm:
+                cnx.create_entity(
+                    'CWSource', name=u'erroneous', type=u'ldapfeed', parser=u'ldapfeed',
+                    url=u'ldap.com', config=CONFIG_LDAPFEED)
+            self.assertIn('badly formatted url',
+                          str(cm.exception))
+            cnx.rollback()
+
+            with self.assertRaises(ValidationError) as cm:
+                cnx.create_entity(
+                    'CWSource', name=u'erroneous', type=u'ldapfeed', parser=u'ldapfeed',
+                    url=u'http://ldap.com', config=CONFIG_LDAPFEED)
+            self.assertIn('unsupported protocol',
+                          str(cm.exception))
+            cnx.rollback()
+
+            with self.assertRaises(ValidationError) as cm:
+                cnx.create_entity(
+                    'CWSource', name=u'erroneous', type=u'ldapfeed', parser=u'ldapfeed',
+                    url=u'ldap://host1\nldap://host2', config=CONFIG_LDAPFEED)
+            self.assertIn('can only have one url',
+                          str(cm.exception))
+            cnx.rollback()
 
 
 class LDAPGeneratePwdTC(LDAPFeedTestBase):

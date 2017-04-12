@@ -176,18 +176,23 @@ You can set multiple groups by separating them by a comma.',
 
     _conn = None
 
+    def check_urls(self, source_entity):
+        urls = super(LDAPFeedSource, self).check_urls(source_entity)
+
+        if len(urls) > 1:
+            raise ValidationError(source_entity.eid, {'url': _('can only have one url')})
+
+        try:
+            protocol, hostport = urls[0].split('://')
+        except ValueError:
+            raise ValidationError(source_entity.eid, {'url': _('badly formatted url')})
+        if protocol not in PROTO_PORT:
+            raise ValidationError(source_entity.eid, {'url': _('unsupported protocol')})
+
+        return urls
+
     def init(self, source_entity):
         super(LDAPFeedSource, self).init(source_entity)
-        if self.urls:
-            if len(self.urls) > 1:
-                raise ValidationError(source_entity.eid, {'url': _('can only have one url')})
-            try:
-                protocol, hostport = self.urls[0].split('://')
-            except ValueError:
-                raise ValidationError(source_entity.eid, {'url': _('badly formatted url')})
-            if protocol not in PROTO_PORT:
-                raise ValidationError(source_entity.eid, {'url': _('unsupported protocol')})
-
         typedconfig = self.config
         self.authmode = typedconfig['auth-mode']
         self._authenticate = getattr(self, '_auth_%s' % self.authmode)
