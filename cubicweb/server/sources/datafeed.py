@@ -34,7 +34,7 @@ from lxml import etree
 
 from logilab.common.deprecation import deprecated
 
-from cubicweb import ObjectNotFound, ValidationError, SourceException
+from cubicweb import ObjectNotFound, ValidationError, SourceException, _
 from cubicweb.server.sources import AbstractSource
 from cubicweb.appobject import AppObject
 
@@ -102,7 +102,6 @@ class DataFeedSource(AbstractSource):
         """check configuration of source entity"""
         typed_config = super(DataFeedSource, self).check_config(source_entity)
         if typed_config['synchronization-interval'] < 60:
-            _ = source_entity._cw._
             msg = _('synchronization-interval must be greater than 1 minute')
             raise ValidationError(source_entity.eid, {'config': msg})
         return typed_config

@@ -41,7 +41,7 @@ from yams.schema import role_name
 
 from cubicweb import (UnknownEid, AuthenticationError, ValidationError, Binary,
                       UniqueTogetherError, UndoTransactionException, ViolatedConstraint)
-from cubicweb import transaction as tx, server, neg_role
+from cubicweb import transaction as tx, server, neg_role, _
 from cubicweb.utils import QueryCache
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
@@ -352,8 +352,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def check_config(self, source_entity):
         """check configuration of source entity"""
         if source_entity.host_config:
-            msg = source_entity._cw._('the system source has its configuration '
-                                      'stored on the file-system')
+            msg = _('the system source has its configuration '
+                    'stored on the file-system')
             raise ValidationError(source_entity.eid, {role_name('config', 'subject'): msg})
 
     def add_authentifier(self, authentifier):

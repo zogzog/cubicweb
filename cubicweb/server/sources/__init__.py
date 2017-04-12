@@ -29,7 +29,7 @@ from logilab.common.textutils import unormalize
 
 from yams.schema import role_name
 
-from cubicweb import ValidationError, set_log_methods, server
+from cubicweb import ValidationError, set_log_methods, server, _
 from cubicweb.server import SOURCE_TYPES
 
 
@@ -133,7 +133,7 @@ class AbstractSource(object):
         pass
 
     @classmethod
-    def check_conf_dict(cls, eid, confdict, _=text_type, fail_if_unknown=True):
+    def check_conf_dict(cls, eid, confdict, fail_if_unknown=True):
         """check configuration of source entity. Return config dict properly
         typed with defaults set.
         """
@@ -143,14 +143,15 @@ class AbstractSource(object):
             if value is configuration.REQUIRED:
                 if not fail_if_unknown:
                     continue
-                msg = _('specifying %s is mandatory' % optname)
-                raise ValidationError(eid, {role_name('config', 'subject'): msg})
+                msg = _('specifying %s is mandatory')
+                msgargs = optname
+                raise ValidationError(eid, {role_name('config', 'subject'): msg}, msgargs)
             elif value is not None:
                 # type check
                 try:
                     value = configuration._validate(value, optdict, optname)
                 except Exception as ex:
-                    msg = text_type(ex) # XXX internationalization
+                    msg = text_type(ex)
                     raise ValidationError(eid, {role_name('config', 'subject'): msg})
             processed[optname] = value
         # cw < 3.10 bw compat
@@ -161,8 +162,9 @@ class AbstractSource(object):
         # check for unknown options
         if confdict and tuple(confdict) != ('adapter',):
             if fail_if_unknown:
-                msg = _('unknown options %s') % ', '.join(confdict)
-                raise ValidationError(eid, {role_name('config', 'subject'): msg})
+                msg = _('unknown options %s')
+                msgargs = ', '.join(confdict)
+                raise ValidationError(eid, {role_name('config', 'subject'): msg}, msgargs)
             else:
                 logger = getLogger('cubicweb.sources')
                 logger.warning('unknown options %s', ', '.join(confdict))
@@ -173,8 +175,7 @@ class AbstractSource(object):
     @classmethod
     def check_config(cls, source_entity):
         """check configuration of source entity"""
-        return cls.check_conf_dict(source_entity.eid, source_entity.host_config,
-                                    _=source_entity._cw._)
+        return cls.check_conf_dict(source_entity.eid, source_entity.dictconfig)
 
     # source initialization / finalization #####################################
 
