@@ -44,7 +44,7 @@ def rmtreecontent(dst):
        itself)"""
     for fname in os.listdir(dst):
         fpath = osp.join(dst, fname)
-        if osp.isfile(fpath):
+        if osp.isfile(fpath) or osp.islink(fpath):
             os.unlink(fpath)
         else:
             rmtree(fpath)
