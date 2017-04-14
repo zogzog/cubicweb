@@ -17,8 +17,72 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""
+Web session when using pyramid
+------------------------------
 
-"""Pyramid session factories for CubicWeb."""
+CubicWeb ``CWSession`` entity type so that sessions can be
+stored in the database, which allows to run a Cubicweb instance
+without having to set up a session storage (like redis or memcache)
+solution.
+
+However, for production systems, it is greatly advised to use such a
+storage solution for the sessions.
+
+The handling of the sessions is made by pyramid (see the
+`pyramid's documentation on sessions`_ for more details).
+
+For example, to set up a redis based session storage, you need the
+`pyramid-redis-session`_ package, then you must configure pyramid to
+use this backend, by configuring the pyramid configuration file:
+
+
+.. code-block:: ini
+
+   [main]
+   cubicweb.defaults = no # we do not want to load the default cw session handling
+
+   cubicweb.auth.authtkt.session.secret = <secret1>
+   cubicweb.auth.authtkt.persistent.secret = <secret2>
+   cubicweb.auth.authtkt.session.secure = yes
+   cubicweb.auth.authtkt.persistent.secure = yes
+
+   redis.sessions.secret = <secret3>
+   redis.sessions.prefix = <my-app>:
+
+   redis.sessions.url = redis://localhost:6379/0
+
+   pyramid.includes =
+           pyramid_redis_sessions
+           cubicweb.pyramid.auth
+           cubicweb.pyramid.login
+
+
+.. Warning:: If you want to be able to log in a CubicWeb application
+             served by pyramid on a unsecured stream (typically when
+             you start an instance in dev mode using a simple
+             ``cubicweb-ctl pyramid -D -linfo myinstance``), you
+             **must** set ``cubicweb.auth.authtkt.session.secure`` to
+             ``no``.
+
+Secrets
+~~~~~~~
+
+There are a number of secrets to configure in ``pyramid.ini``. They
+should be different one from each other, as explained in `Pyramid's
+documentation`_.
+
+For the record, regarding session handling:
+
+:cubicweb.session.secret: This secret is used to encrypt the session's
+   data ID (data themselved are stored in the backend, database or
+   redis) when using the integrated (``CWSession`` based) session data
+   storage.
+
+:redis.session.secret: This secret is used to encrypt the session's
+   data ID (data themselved are stored in the backend, database or
+   redis) when using redis as backend.
+"""
 
 import warnings
 import logging

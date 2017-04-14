@@ -21,6 +21,8 @@ import re
 from socket import gethostname
 import logging
 
+from six import text_type
+
 from logilab.common.textutils import text_to_dict
 from logilab.common.configuration import OptionError
 from logilab.mtconverter import xml_escape
@@ -29,27 +31,12 @@ from cubicweb.entities import AnyEntity, fetch_config
 
 
 class _CWSourceCfgMixIn(object):
+
     @property
     def dictconfig(self):
-        return self.config and text_to_dict(self.config) or {}
-
-    def update_config(self, skip_unknown=False, **config):
-        from cubicweb.server import SOURCE_TYPES
-        from cubicweb.server.serverconfig import (SourceConfiguration,
-                                                  generate_source_config)
-        cfg = self.dictconfig
-        cfg.update(config)
-        options = SOURCE_TYPES[self.type].options
-        sconfig = SourceConfiguration(self._cw.vreg.config, options=options)
-        for opt, val in cfg.items():
-            try:
-                sconfig.set_option(opt, val)
-            except OptionError:
-                if skip_unknown:
-                    continue
-                raise
-        cfgstr = unicode(generate_source_config(sconfig), self._cw.encoding)
-        self.cw_set(config=cfgstr)
+        if not self.config:
+            return {}
+        return text_to_dict(self.config)
 
 
 class CWSource(_CWSourceCfgMixIn, AnyEntity):
@@ -76,7 +63,7 @@ class CWSource(_CWSourceCfgMixIn, AnyEntity):
         """repository only property, not available from the web side (eg
         self._cw is expected to be a server session)
         """
-        return self._cw.repo.sources_by_eid[self.eid]
+        return self._cw.repo.source_by_eid(self.eid)
 
 
 class CWSourceHostConfig(_CWSourceCfgMixIn, AnyEntity):

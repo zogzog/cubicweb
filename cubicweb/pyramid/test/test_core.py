@@ -24,6 +24,7 @@ def put_in_uncommitable_state(request):
 
 class CoreTest(PyramidCWTest):
     anonymous_allowed = True
+    settings = {'cubicweb.bwcompat': True}
 
     def includeme(self, config):
         config.add_route('uncommitable', '/uncommitable')

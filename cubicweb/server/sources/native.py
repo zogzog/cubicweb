@@ -41,7 +41,7 @@ from yams.schema import role_name
 
 from cubicweb import (UnknownEid, AuthenticationError, ValidationError, Binary,
                       UniqueTogetherError, UndoTransactionException, ViolatedConstraint)
-from cubicweb import transaction as tx, server, neg_role
+from cubicweb import transaction as tx, server, neg_role, _
 from cubicweb.utils import QueryCache
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
@@ -229,7 +229,7 @@ class DefaultEidGenerator(object):
                 return self._create_eid(count)
             else:
                 raise
-        except Exception: # WTF?
+        except Exception:  # WTF?
             cnx.rollback()
             self.cnx = None
             source.exception('create eid failed in an unforeseen way on SQL statement %s', sql)
@@ -350,10 +350,15 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.create_eid = self.eid_generator.create_eid
 
     def check_config(self, source_entity):
-        """check configuration of source entity"""
-        if source_entity.host_config:
-            msg = source_entity._cw._('the system source has its configuration '
-                                      'stored on the file-system')
+        if source_entity.config:
+            msg = _("Configuration of the system source goes to "
+                    "the 'sources' file, not in the database")
+            raise ValidationError(source_entity.eid, {role_name('config', 'subject'): msg})
+
+    def check_urls(self, source_entity):
+        if source_entity.url:
+            msg = _("Configuration of the system source goes to "
+                    "the 'sources' file, not in the database")
             raise ValidationError(source_entity.eid, {role_name('config', 'subject'): msg})
 
     def add_authentifier(self, authentifier):
@@ -427,8 +432,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         else:
             raise ValueError('Unknown format %r' % format)
 
-    def init(self, activated, source_entity):
-        super(NativeSQLSource, self).init(activated, source_entity)
+    def init(self, source_entity):
+        super(NativeSQLSource, self).init(source_entity)
         self.init_creating(source_entity._cw.cnxset)
 
     def shutdown(self):
@@ -699,7 +704,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         raise UniqueTogetherError(cnx, cstrname=mo.group(0))
                     # old sqlite
                     mo = re.search('columns? (.*) (?:is|are) not unique', arg)
-                    if mo is not None: # sqlite in use
+                    if mo is not None:  # sqlite in use
                         # we left chop the 'cw_' prefix of attribute names
                         rtypes = [c.strip()[3:]
                                   for c in mo.group(1).split(',')]
@@ -1644,12 +1649,12 @@ class DatabaseIndependentBackupRestore(object):
             self.logger.critical('Restore warning: versions do not match')
             new_cubes = db_versions - archive_versions
             if new_cubes:
-                self.logger.critical('In the db:\n%s', '\n'.join('%s: %s' % (cube, ver)
-                                                            for cube, ver in sorted(new_cubes)))
+                self.logger.critical('In the db:\n%s', '\n'.join(
+                    '%s: %s' % (cube, ver) for cube, ver in sorted(new_cubes)))
             old_cubes = archive_versions - db_versions
             if old_cubes:
-                self.logger.critical('In the archive:\n%s', '\n'.join('%s: %s' % (cube, ver)
-                                                            for cube, ver in sorted(old_cubes)))
+                self.logger.critical('In the archive:\n%s', '\n'.join(
+                    '%s: %s' % (cube, ver) for cube, ver in sorted(old_cubes)))
             if not ASK.confirm('Versions mismatch: continue anyway ?', False):
                 raise ValueError('Unable to restore: versions do not match')
         table_chunks = {}

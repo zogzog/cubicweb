@@ -276,6 +276,15 @@ def _cube_pkgname(cube):
     return cube
 
 
+def _cube_modname(cube):
+    modname = _cube_pkgname(cube)
+    loader = pkgutil.find_loader(modname)
+    if loader:
+        return modname
+    else:
+        return 'cubes.' + cube
+
+
 def _expand_modname(modname):
     """expand modules names `modname` if exists by walking non package submodules
     and yield (submodname, filepath) including `modname` itself
@@ -502,8 +511,11 @@ this option is set to yes",
 
     @classmethod
     def available_cubes(cls):
+        """Return a list of available cube names.
+
+        For cube as package, name is equal to python package's name.
+        """
         cubes = set()
-        prefix = 'cubicweb_'
         for entry_point in pkg_resources.iter_entry_points(
                 group='cubicweb.cubes', name=None):
             try:
@@ -512,11 +524,11 @@ this option is set to yes",
                 continue
             else:
                 modname = module.__name__
-                if not modname.startswith(prefix):
+                if not modname.startswith('cubicweb_'):
                     cls.warning('entry point %s does not appear to be a cube',
                                 entry_point)
                     continue
-                cubes.add(modname[len(prefix):])
+                cubes.add(modname)
         # Legacy cubes.
         for directory in cls.cubes_search_path():
             if not exists(directory):
@@ -751,17 +763,6 @@ this option is set to yes",
             else:
                 cls.warning('no __init__ file in cube %s', cube)
 
-    @classmethod
-    def init_available_cubes(cls):
-        """cubes may register some sources (svnfile for instance) in their
-        __init__ file, so they should be loaded early in the startup process
-        """
-        for cube in cls.available_cubes():
-            try:
-                __import__('cubes.%s' % cube)
-            except Exception as ex:
-                cls.warning("can't init cube %s: %s", cube, ex)
-
     cubicweb_appobject_path = set(['entities'])
     cube_appobject_path = set(['entities'])
 
@@ -817,7 +818,8 @@ this option is set to yes",
         for name in ('bootstrap', 'base', 'workflow', 'Bookmark'):
             modnames.append(('cubicweb', 'cubicweb.schemas.' + name))
         for cube in reversed(self.cubes()):
-            for modname, filepath in _expand_modname('cubes.{0}.schema'.format(cube)):
+            for modname, filepath in _expand_modname(
+                    '{0}.schema'.format(_cube_modname(cube))):
                 modnames.append((cube, modname))
         if self.apphome:
             apphome = realpath(self.apphome)
@@ -1058,6 +1060,7 @@ the repository',
 
     MODES = ('common', 'repository', 'Any')
     MCOMPAT = {'all-in-one': MODES,
+               'pyramid': MODES,
                'repository': ('common', 'repository', 'Any')}
     @classmethod
     def accept_mode(cls, mode):
@@ -1335,9 +1338,10 @@ the repository',
 
     def appobjects_cube_modnames(self, cube):
         modnames = []
+        cube_modname = _cube_modname(cube)
         cube_submodnames = self._sorted_appobjects(self.cube_appobject_path)
         for name in cube_submodnames:
-            for modname, filepath in _expand_modname('.'.join(['cubes', cube, name])):
+            for modname, filepath in _expand_modname('.'.join([cube_modname, name])):
                 modnames.append(modname)
         return modnames
 

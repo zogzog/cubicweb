@@ -1008,6 +1008,16 @@ class CubicWebSchema(Schema):
 
     etype_name_re = r'[A-Z][A-Za-z0-9]*[a-z]+[A-Za-z0-9]*$'
 
+    @cachedproperty
+    def rules_rqlexpr_mapping(self):
+        """Return a dictionary mapping rtype to RRQLExpression for computed
+        relations.
+        """
+        rules = {}
+        for rschema in self.iter_computed_relations():
+            rules[rschema.type] = RRQLExpression(rschema.rule)
+        return rules
+
     def add_entity_type(self, edef):
         edef.name = str(edef.name)
         edef.name = bw_normalize_etype(edef.name)
@@ -1148,6 +1158,8 @@ class CubicWebSchema(Schema):
         super(CubicWebSchema, self).rebuild_infered_relations()
         self.finalize_computed_attributes()
         self.finalize_computed_relations()
+        # remove @cachedproperty cache
+        self.__dict__.pop('rules_rqlexpr_mapping', None)
 
 
 # additional cw specific constraints ###########################################

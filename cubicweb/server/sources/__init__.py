@@ -29,7 +29,7 @@ from logilab.common.textutils import unormalize
 
 from yams.schema import role_name
 
-from cubicweb import ValidationError, set_log_methods, server
+from cubicweb import ValidationError, set_log_methods, server, _
 from cubicweb.server import SOURCE_TYPES
 
 
@@ -85,7 +85,7 @@ class AbstractSource(object):
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
     def __init__(self, repo, source_config, eid=None):
         self.repo = repo
@@ -99,8 +99,8 @@ class AbstractSource(object):
         # on logging
         set_log_methods(self, getLogger('cubicweb.sources.' + unormalize(text_type(self.uri))))
         source_config.pop('type')
-        self.update_config(None, self.check_conf_dict(eid, source_config,
-                                                      fail_if_unknown=False))
+        self.config = self._check_config_dict(
+            eid, source_config, raise_on_error=False)
 
     def __repr__(self):
         return '<%s %s source %s @%#x>' % (self.uri, self.__class__.__name__,
@@ -132,25 +132,30 @@ class AbstractSource(object):
         """method called to restore a backup of source's data"""
         pass
 
-    @classmethod
-    def check_conf_dict(cls, eid, confdict, _=text_type, fail_if_unknown=True):
-        """check configuration of source entity. Return config dict properly
+    def _check_config_dict(self, eid, confdict, raise_on_error=True):
+        """Check configuration of source entity and return config dict properly
         typed with defaults set.
+
+        If `raise_on_error` is True (the default), a ValidationError will be
+        raised if some error is encountered, else the problem will be ignored.
         """
         processed = {}
-        for optname, optdict in cls.options:
+        for optname, optdict in self.options:
             value = confdict.pop(optname, optdict.get('default'))
             if value is configuration.REQUIRED:
-                if not fail_if_unknown:
+                if not raise_on_error:
                     continue
-                msg = _('specifying %s is mandatory' % optname)
-                raise ValidationError(eid, {role_name('config', 'subject'): msg})
+                msg = _('specifying %s is mandatory')
+                msgargs = optname
+                raise ValidationError(eid, {role_name('config', 'subject'): msg}, msgargs)
             elif value is not None:
                 # type check
                 try:
                     value = configuration._validate(value, optdict, optname)
                 except Exception as ex:
-                    msg = text_type(ex) # XXX internationalization
+                    if not raise_on_error:
+                        continue
+                    msg = text_type(ex)
                     raise ValidationError(eid, {role_name('config', 'subject'): msg})
             processed[optname] = value
         # cw < 3.10 bw compat
@@ -160,37 +165,32 @@ class AbstractSource(object):
             pass
         # check for unknown options
         if confdict and tuple(confdict) != ('adapter',):
-            if fail_if_unknown:
-                msg = _('unknown options %s') % ', '.join(confdict)
-                raise ValidationError(eid, {role_name('config', 'subject'): msg})
+            if raise_on_error:
+                msg = _('unknown options %s')
+                msgargs = ', '.join(confdict)
+                raise ValidationError(eid, {role_name('config', 'subject'): msg}, msgargs)
             else:
-                logger = getLogger('cubicweb.sources')
-                logger.warning('unknown options %s', ', '.join(confdict))
+                self.warning('unknown options %s', ', '.join(confdict))
                 # add options to processed, they may be necessary during migration
                 processed.update(confdict)
         return processed
 
-    @classmethod
-    def check_config(cls, source_entity):
-        """check configuration of source entity"""
-        return cls.check_conf_dict(source_entity.eid, source_entity.host_config,
-                                    _=source_entity._cw._)
-
-    def update_config(self, source_entity, typedconfig):
-        """update configuration from source entity. `typedconfig` is config
-        properly typed with defaults set
+    def check_config(self, source_entity):
+        """Check configuration of source entity, raise ValidationError if some
+        errors are detected.
         """
-        if source_entity is not None:
-            self._entity_update(source_entity)
-        self.config = typedconfig
+        return self._check_config_dict(source_entity.eid, source_entity.dictconfig)
 
-    def _entity_update(self, source_entity):
-        source_entity.complete()
-        if source_entity.url:
-            self.urls = [url.strip() for url in source_entity.url.splitlines()
-                         if url.strip()]
-        else:
-            self.urls = []
+    def check_urls(self, source_entity):
+        """Check URL of source entity: `urls` is a string that may contain one
+        URL per line), and return a list of at least one validated URL.
+        """
+        urls = source_entity.url if source_entity.url else ''
+        urls = [url.strip() for url in urls.splitlines() if url.strip()]
+        if not urls:
+            msg = _('specifying an URL is mandatory')
+            raise ValidationError(source_entity.eid, {role_name('url', 'subject'): msg})
+        return urls
 
     # source initialization / finalization #####################################
 
@@ -202,20 +202,24 @@ class AbstractSource(object):
         """method called by the repository once ready to create a new instance"""
         pass
 
-    def init(self, activated, source_entity):
+    def init(self, source_entity):
         """method called by the repository once ready to handle request.
         `activated` is a boolean flag telling if the source is activated or not.
         """
-        if activated:
-            self._entity_update(source_entity)
+        source_entity.complete()
+        if source_entity.url:
+            self.urls = self.check_urls(source_entity)
+        else:
+            self.urls = []
 
     PUBLIC_KEYS = ('type', 'uri', 'use-cwuri-as-url')
+
     def remove_sensitive_information(self, sourcedef):
         """remove sensitive information such as login / password from source
         definition
         """
         for key in list(sourcedef):
-            if not key in self.PUBLIC_KEYS:
+            if key not in self.PUBLIC_KEYS:
                 sourcedef.pop(key)
 
     # connections handling #####################################################
@@ -279,7 +283,7 @@ class AbstractSource(object):
         """add a relation to the source"""
         raise NotImplementedError(self)
 
-    def add_relations(self, cnx,  rtype, subj_obj_list):
+    def add_relations(self, cnx, rtype, subj_obj_list):
         """add a relations to the source"""
         # override in derived classes if you feel you can
         # optimize

@@ -13,12 +13,13 @@ pyramid related configuration value.
 
 .. _pyramid_settings:
 
-Pyramid Settings
-----------------
+Pyramid Settings file
+---------------------
 
-If a ``pyramid.ini`` file is found in the instance home directory (where the
-``all-in-one.conf`` file is), its ``[main]`` section will be read and used as the
-``settings`` of the pyramid Configurator.
+In *backwards compatibility* mode, Pyramid settings will be looked for in a
+``pyramid.ini`` file in the instance home directory (where the
+``all-in-one.conf`` file is), its ``[main]`` section will be read and used as
+the ``settings`` of the pyramid Configurator.
 
 This configuration file is almost the same as the one read by ``pserve``, which
 allow to easily add any pyramid extension and configure it.
@@ -42,6 +43,14 @@ A typical ``pyramid.ini`` file is:
     redis.sessions.timeout = 1200
 
     redis.sessions.host = mywheezy
+
+
+Without *backwards compatibility* a standard ``development.ini`` file can be
+used with any useful CubicWeb-specific settings added.
+
+
+Pyramid CubicWeb configuration entries
+--------------------------------------
 
 The Pyramid CubicWeb specific configuration entries are:
 

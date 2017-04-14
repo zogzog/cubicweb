@@ -15,7 +15,9 @@ class PyramidCWTest(CubicWebTestTC):
     def setUp(self):
         # Skip CubicWebTestTC setUp
         super(CubicWebTestTC, self).setUp()
-        config = Configurator(settings=self.settings)
+        settings = {'cubicweb.bwcompat': False}
+        settings.update(self.settings)
+        config = Configurator(settings=settings)
         config.registry['cubicweb.repository'] = self.repo
         config.include('cubicweb.pyramid')
         self.includeme(config)

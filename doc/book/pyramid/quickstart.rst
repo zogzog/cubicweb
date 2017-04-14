@@ -6,37 +6,53 @@ Quick start
 Prerequites
 -----------
 
--   Install everything (here with pip, possibly in a virtualenv)::
+Install the *pyramid* flavour of CubicWeb (here with pip, possibly in a
+virtualenv):
 
-        pip install pyramid-cubicweb cubicweb-pyramid pyramid_debugtoolbar
+::
 
--   Have a working Cubicweb instance, for example:
+        pip install cubicweb[pyramid]
 
 
-    -   Make sure CubicWeb is in user mode::
+Instance creation and running
+-----------------------------
 
-            export CW_MODE=user
+In *backwards compatible* mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    -   Create a CubicWeb instance, and install the 'pyramid' cube on it (see
-        :ref:`configenv` for more details on this step)::
+In this mode, you can simply create an instance of kind ``all-in-one`` with
+the ``cubicweb-ctl create`` command. You'll then need to add a ``pyramid.ini``
+file in your instance directory, see :ref:`pyramid_settings` for details about the
+content of this file.
 
-            cubicweb-ctl create pyramid myinstance
+Start the instance with the :ref:`'pyramid' command <cubicweb-ctl_pyramid>`
+instead of 'start':
 
--   Edit your ``~/etc/cubicweb.d/myinstance/all-in-one.conf`` and set values for
-    :confval:`pyramid-auth-secret` and :confval:`pyramid-session-secret`.
-    *required if cubicweb.pyramid.auth and pyramid_cubiweb.session get
-    included, which is the default*
+::
 
-From CubicWeb
--------------
+    cubicweb-ctl pyramid --debug myinstance
 
--   Start the instance with the :ref:`'pyramid' command <cubicweb-ctl_pyramid>`
-    instead of 'start'::
 
-        cubicweb-ctl pyramid --debug myinstance
+Without *backwards compatibility*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In this mode, you can create an instance of kind ``pyramid`` as follow:
+
+::
+
+    cubicweb-ctl create -c pyramid <cube_name> <instance_name>
+
+This will bootstrap a ``development.ini`` file typical of a Pyramid
+application in the instance's directory. The new instance may then be launched
+by any WSGI server, for instance with pserve_:
+
+::
+
+    pserve etc/cubicweb.d/<instance_name>/development.ini
+
 
 In a pyramid application
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 -   Create a pyramid application
 
@@ -55,18 +71,8 @@ In a pyramid application
 
         cubicweb.instance = myinstance
 
--   Configure the base-url and https-url in all-in-one.conf to match the ones
-    of the pyramid configuration (this is a temporary limitation).
-
-
-Usage with pserve
------------------
-
-To run a Pyramid application using pserve_:
-
-::
-
-    pserve /path/to/development.ini instance=<appid>
+-   Configure the base-url in all-in-one.conf to match the ones of the pyramid
+    configuration (this is a temporary limitation).
 
 
 .. _pserve: \

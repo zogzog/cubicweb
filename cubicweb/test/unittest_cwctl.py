@@ -23,13 +23,19 @@ import unittest
 
 from six import PY2
 
-from cubicweb.cwconfig import CubicWebConfiguration
+from mock import patch
+
 from cubicweb.cwctl import ListCommand
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.migractions import ServerMigrationHelper
 
+import unittest_cwconfig
+
 
 class CubicWebCtlTC(unittest.TestCase):
+
+    setUpClass = unittest_cwconfig.CubicWebConfigurationTC.setUpClass
+    tearDownClass = unittest_cwconfig.CubicWebConfigurationTC.tearDownClass
 
     def setUp(self):
         self.stream = BytesIO() if PY2 else StringIO()
@@ -38,8 +44,12 @@ class CubicWebCtlTC(unittest.TestCase):
     def tearDown(self):
         sys.stdout = sys.__stdout__
 
-    def test_list(self):
+    @patch('pkg_resources.iter_entry_points', side_effect=unittest_cwconfig.iter_entry_points)
+    def test_list(self, mock_iter_entry_points):
         ListCommand(None).run([])
+        self.assertNotIn('cubicweb_', self.stream.getvalue())
+        mock_iter_entry_points.assert_called_once_with(
+            group='cubicweb.cubes', name=None)
 
     def test_list_configurations(self):
         ListCommand(None).run(['configurations'])
@@ -58,10 +68,11 @@ class CubicWebShellTC(CubicWebTC):
                                         interactive=False,
                                         # hack so it don't try to load fs schema
                                         schema=1)
-            scripts = {'script1.py': list(),
-                       'script2.py': ['-v'],
-                       'script3.py': ['-vd', '-f', 'FILE.TXT'],
-                      }
+            scripts = {
+                'script1.py': list(),
+                'script2.py': ['-v'],
+                'script3.py': ['-vd', '-f', 'FILE.TXT'],
+            }
             mih.cmd_process_script(join(self.datadir, 'scripts', 'script1.py'),
                                    funcname=None)
             for script, args in scripts.items():

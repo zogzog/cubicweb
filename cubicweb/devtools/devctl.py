@@ -28,7 +28,7 @@ import shutil
 import tempfile
 import sys
 from datetime import datetime, date
-from os import mkdir, chdir, path as osp
+from os import getcwd, mkdir, chdir, path as osp
 import pkg_resources
 from warnings import warn
 
@@ -691,13 +691,8 @@ layout, and a full featured cube with "full" layout.',
         verbose = self.get('verbose')
         destdir = self.get('directory')
         if not destdir:
-            cubespath = ServerConfiguration.cubes_search_path()
-            if len(cubespath) > 1:
-                raise BadCommandUsage(
-                    "can't guess directory where to put the new cube."
-                    " Please specify it using the --directory option")
-            destdir = cubespath[0]
-        if not osp.isdir(destdir):
+            destdir = getcwd()
+        elif not osp.isdir(destdir):
             print("-> creating cubes directory", destdir)
             try:
                 mkdir(destdir)

@@ -80,23 +80,6 @@ class CWPropertyHooksTC(CubicWebTC):
             cnx.commit()
         self.assertEqual(self.vreg.property_value('test.int'), 42)
 
-    def test_sync_user_props(self):
-        with self.admin_access.client_cnx() as cnx:
-            self.assertNotIn('ui.language', cnx.user.properties)
-            cnx.user.set_property(u'ui.language', u'fr')
-            self.assertNotIn('ui.language', cnx.user.properties)
-            cnx.commit()
-            self.assertEqual(cnx.user.properties['ui.language'], 'fr')
-            cnx.user.set_property(u'ui.language', u'en')
-            self.assertEqual(cnx.user.properties['ui.language'], 'fr')
-            cnx.commit()
-            self.assertEqual(cnx.user.properties['ui.language'], 'en')
-            cnx.execute('DELETE CWProperty X WHERE X for_user U, U eid %(u)s',
-                        {'u': cnx.user.eid})
-            self.assertEqual(cnx.user.properties['ui.language'], 'en')
-            cnx.commit()
-            self.assertNotIn('ui.language', cnx.user.properties)
-
     def test_sync_sitewide_props(self):
         with self.admin_access.client_cnx() as cnx:
             self.assertNotIn('ui.language', cnx.vreg['propertyvalues'])
@@ -112,22 +95,6 @@ class CWPropertyHooksTC(CubicWebTC):
             self.assertEqual(cnx.vreg['propertyvalues']['ui.language'], 'en')
             cnx.commit()
             self.assertNotIn('ui.language', cnx.vreg['propertyvalues'])
-
-
-class UserGroupsSyncTC(CubicWebTC):
-
-    def test_sync_groups(self):
-        with self.admin_access.client_cnx() as cnx:
-            cnx.execute('SET U in_group G WHERE G name "users", U eid %(u)s',
-                        {'u': cnx.user.eid})
-            self.assertEqual(cnx.user.groups, set(['managers']))
-            cnx.commit()
-            self.assertEqual(cnx.user.groups, set(['managers', 'users']))
-            cnx.execute('DELETE U in_group G WHERE G name "users", U eid %(u)s',
-                        {'u': cnx.user.eid})
-            self.assertEqual(cnx.user.groups, set(['managers', 'users']))
-            cnx.commit()
-            self.assertEqual(cnx.user.groups, set(['managers']))
 
 
 if __name__ == '__main__':

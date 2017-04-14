@@ -20,6 +20,7 @@
 from datetime import timedelta
 from contextlib import contextmanager
 
+from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sources import datafeed
 from cubicweb.dataimport.stores import NoHookRQLObjectStore, MetaGenerator
@@ -50,18 +51,19 @@ class DataFeedTC(CubicWebTC):
                 store.commit()
 
         with self.temporary_appobjects(AParser):
-            if u'ô myfeed' in self.repo.sources_by_uri:
-                yield self.repo.sources_by_uri[u'ô myfeed']._get_parser(session)
-            else:
+            try:
+                source = self.repo.source_by_uri(u'ô myfeed')
+            except ValueError:
                 yield
+            else:
+                yield source._get_parser(session)
         # vreg.unregister just pops appobjects from their regid entry,
         # completely remove the entry to ensure we have no side effect with
         # this empty entry.
         del self.vreg['parsers'][AParser.__regid__]
 
     def test(self):
-        self.assertIn(u'ô myfeed', self.repo.sources_by_uri)
-        dfsource = self.repo.sources_by_uri[u'ô myfeed']
+        dfsource = self.repo.source_by_uri(u'ô myfeed')
         self.assertNotIn('use_cwuri_as_url', dfsource.__dict__)
         self.assertEqual({'type': u'datafeed', 'uri': u'ô myfeed', 'use-cwuri-as-url': True},
                          dfsource.public_config)
@@ -113,15 +115,16 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual('a string', value.geturl())
 
     def test_update_url(self):
-        dfsource = self.repo.sources_by_uri[u'ô myfeed']
+        dfsource = self.repo.source_by_uri(u'ô myfeed')
         with self.admin_access.repo_cnx() as cnx:
             cnx.entity_from_eid(dfsource.eid).cw_set(url=u"http://pouet.com\nhttp://pouet.org")
-            self.assertEqual(dfsource.urls, [u'ignored'])
             cnx.commit()
+        self.assertEqual(dfsource.urls, [u'ignored'])
+        dfsource = self.repo.source_by_uri(u'ô myfeed')
         self.assertEqual(dfsource.urls, [u"http://pouet.com", u"http://pouet.org"])
 
     def test_parser_not_found(self):
-        dfsource = self.repo.sources_by_uri[u'ô myfeed']
+        dfsource = self.repo.source_by_uri(u'ô myfeed')
         with self.assertLogs('cubicweb.sources.o myfeed', level='ERROR') as cm:
             with self.repo.internal_cnx() as cnx:
                 stats = dfsource.pull_data(cnx, force=True)
@@ -130,6 +133,36 @@ class DataFeedTC(CubicWebTC):
         self.assertEqual(stats, {})
         self.assertIn(u'failed to load parser for source &quot;ô myfeed&quot;',
                       importlog)
+
+    def test_bad_config(self):
+        with self.admin_access.repo_cnx() as cnx:
+            with self.base_parser(cnx):
+                with self.assertRaises(ValidationError) as cm:
+                    cnx.create_entity(
+                        'CWSource', name=u'error', type=u'datafeed', parser=u'testparser',
+                        url=u'ignored',
+                        config=u'synchronization-interval=1s')
+                self.assertIn('synchronization-interval must be greater than 1 minute',
+                              str(cm.exception))
+                cnx.rollback()
+
+                with self.assertRaises(ValidationError) as cm:
+                    cnx.create_entity(
+                        'CWSource', name=u'error', type=u'datafeed', parser=u'testparser',
+                        url=None,
+                        config=u'synchronization-interval=1min')
+                self.assertIn('specifying an URL is mandatory',
+                              str(cm.exception))
+                cnx.rollback()
+
+                with self.assertRaises(ValidationError) as cm:
+                    cnx.create_entity(
+                        'CWSource', name=u'error', type=u'datafeed', parser=u'testparser',
+                        url=u'ignored',
+                        config=u'synch-interval=1min')
+                self.assertIn('unknown options synch-interval',
+                              str(cm.exception))
+                cnx.rollback()
 
 
 class DataFeedConfigTC(CubicWebTC):
@@ -140,11 +173,12 @@ class DataFeedConfigTC(CubicWebTC):
                               parser=u'testparser', url=u'ignored',
                               config=u'use-cwuri-as-url=no')
             cnx.commit()
-        dfsource = self.repo.sources_by_uri['myfeed']
+        dfsource = self.repo.source_by_uri('myfeed')
         self.assertEqual(dfsource.use_cwuri_as_url, False)
         self.assertEqual({'type': u'datafeed', 'uri': u'myfeed', 'use-cwuri-as-url': False},
                          dfsource.public_config)
 
+
 if __name__ == '__main__':
-    from logilab.common.testlib import unittest_main
-    unittest_main()
+    import unittest
+    unittest.main()

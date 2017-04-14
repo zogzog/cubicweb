@@ -378,7 +378,7 @@ class UndoableTransactionTC(CubicWebTC):
             txuuid = cnx.commit()
             p = cnx.create_entity('Personne', nom=u'louis', fiche=c)
             cnx.commit()
-            integrityerror = self.repo.sources_by_uri['system'].dbhelper.dbapi_module.IntegrityError
+            integrityerror = self.repo.system_source.dbhelper.dbapi_module.IntegrityError
             with self.assertRaises(integrityerror):
                 cnx.undo_transaction(txuuid)
 

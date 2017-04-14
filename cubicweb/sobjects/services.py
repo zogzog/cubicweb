@@ -142,6 +142,6 @@ class SourceSynchronizationService(Service):
     __select__ = Service.__select__ & match_user_groups('managers')
 
     def call(self, source_eid):
-        source = self._cw.repo.sources_by_eid[source_eid]
+        source = self._cw.repo.source_by_eid(source_eid)
         result = source.pull_data(self._cw, force=True, async=True)
         return result['import_log_eid']

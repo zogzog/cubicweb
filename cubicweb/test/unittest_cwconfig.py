@@ -23,7 +23,7 @@ import functools
 import sys
 import os
 import pkgutil
-from os.path import dirname, join, abspath
+from os.path import dirname, join
 from pkg_resources import EntryPoint, Distribution
 import unittest
 
@@ -31,7 +31,6 @@ from mock import patch
 from six import PY3
 
 from logilab.common.modutils import cleanup_sys_modules
-from logilab.common.changelog import Version
 
 from cubicweb.devtools import ApptestConfiguration
 from cubicweb.devtools.testlib import BaseTestCase, TemporaryDirectory
@@ -43,9 +42,9 @@ def unabsolutize(path):
     parts = path.split(os.sep)
     for i, part in reversed(tuple(enumerate(parts))):
         if part.startswith('cubicweb_'):
-            return os.sep.join([part[len('cubicweb_'):]] + parts[i+1:])
+            return os.sep.join([part[len('cubicweb_'):]] + parts[i + 1:])
         if part.startswith('cubicweb') or part == 'legacy_cubes':
-            return os.sep.join(parts[i+1:])
+            return os.sep.join(parts[i + 1:])
     raise Exception('duh? %s' % path)
 
 
@@ -93,6 +92,21 @@ def temp_config(appid, instance_dir, cubes_dir, cubes):
             del sys.modules[module]
 
 
+def iter_entry_points(group, name):
+    """Mock pkg_resources.iter_entry_points to yield EntryPoint from
+    packages found in test/data/libpython even though these are not
+    installed.
+    """
+    libpython = CubicWebConfigurationTC.datapath('libpython')
+    prefix = 'cubicweb_'
+    for pkgname in os.listdir(libpython):
+        if not pkgname.startswith(prefix):
+            continue
+        location = join(libpython, pkgname)
+        yield EntryPoint(pkgname[len(prefix):], pkgname,
+                         dist=Distribution(location))
+
+
 class CubicWebConfigurationTC(BaseTestCase):
 
     @classmethod
@@ -109,27 +123,14 @@ class CubicWebConfigurationTC(BaseTestCase):
 
     def tearDown(self):
         ApptestConfiguration.CUBES_PATH = []
-
-    def iter_entry_points(group, name):
-        """Mock pkg_resources.iter_entry_points to yield EntryPoint from
-        packages found in test/data/libpython even though these are not
-        installed.
-        """
-        libpython = CubicWebConfigurationTC.datapath('libpython')
-        prefix = 'cubicweb_'
-        for pkgname in os.listdir(libpython):
-            if not pkgname.startswith(prefix):
-                continue
-            location = join(libpython, pkgname)
-            yield EntryPoint(pkgname[len(prefix):], pkgname,
-                             dist=Distribution(location))
+        cleanup_sys_modules([self.datapath('libpython')])
 
     @patch('pkg_resources.iter_entry_points', side_effect=iter_entry_points)
     def test_available_cubes(self, mock_iter_entry_points):
         expected_cubes = [
-            'card', 'comment', 'email', 'file',
-            'forge', 'localperms',
-            'mycube', 'tag',
+            'card', 'comment', 'cubicweb_comment', 'cubicweb_email', 'file',
+            'cubicweb_file', 'cubicweb_forge', 'localperms',
+            'cubicweb_mycube', 'tag',
         ]
         self._test_available_cubes(expected_cubes)
         mock_iter_entry_points.assert_called_once_with(
@@ -142,17 +143,17 @@ class CubicWebConfigurationTC(BaseTestCase):
         # forge depends on email and file and comment
         # email depends on file
         self.assertEqual(self.config.reorder_cubes(['file', 'email', 'forge']),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
         self.assertEqual(self.config.reorder_cubes(['email', 'file', 'forge']),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
         self.assertEqual(self.config.reorder_cubes(['email', 'forge', 'file']),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
         self.assertEqual(self.config.reorder_cubes(['file', 'forge', 'email']),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
         self.assertEqual(self.config.reorder_cubes(['forge', 'file', 'email']),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
         self.assertEqual(self.config.reorder_cubes(('forge', 'email', 'file')),
-                          ('forge', 'email', 'file'))
+                         ('forge', 'email', 'file'))
 
     def test_reorder_cubes_recommends(self):
         from cubicweb_comment import __pkginfo__ as comment_pkginfo
@@ -164,20 +165,19 @@ class CubicWebConfigurationTC(BaseTestCase):
             # email recommends comment
             # comment recommends file
             self.assertEqual(self.config.reorder_cubes(('forge', 'email', 'file', 'comment')),
-                              ('forge', 'email', 'comment', 'file'))
+                             ('forge', 'email', 'comment', 'file'))
             self.assertEqual(self.config.reorder_cubes(('forge', 'email', 'comment', 'file')),
-                              ('forge', 'email', 'comment', 'file'))
+                             ('forge', 'email', 'comment', 'file'))
             self.assertEqual(self.config.reorder_cubes(('forge', 'comment', 'email', 'file')),
-                              ('forge', 'email', 'comment', 'file'))
+                             ('forge', 'email', 'comment', 'file'))
             self.assertEqual(self.config.reorder_cubes(('comment', 'forge', 'email', 'file')),
-                              ('forge', 'email', 'comment', 'file'))
+                             ('forge', 'email', 'comment', 'file'))
         finally:
             comment_pkginfo.__recommends_cubes__ = {}
 
     def test_expand_cubes(self):
         self.assertEqual(self.config.expand_cubes(('email', 'comment')),
-                          ['email', 'comment', 'file'])
-
+                         ['email', 'comment', 'file'])
 
     def test_init_cubes_ignore_pyramid_cube(self):
         warning_msg = 'cubicweb-pyramid got integrated into CubicWeb'
@@ -185,6 +185,15 @@ class CubicWebConfigurationTC(BaseTestCase):
             self.config.init_cubes(['pyramid', 'card'])
         self.assertIn(warning_msg, cm.output[0])
         self.assertNotIn('pyramid', self.config._cubes)
+
+    @patch('pkg_resources.iter_entry_points', side_effect=iter_entry_points)
+    def test_ccplugin_modname(self, mock_iter_entry_points):
+        self.config.load_cwctl_plugins()
+        mock_iter_entry_points.assert_called_once_with(
+            group='cubicweb.cubes', name=None)
+        self.assertNotIn('cubes.mycube.ccplugin', sys.modules, sorted(sys.modules))
+        self.assertIn('cubicweb_mycube.ccplugin', sys.modules, sorted(sys.modules))
+
 
 class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
 
@@ -225,13 +234,13 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
         self.assertNotEqual(dirname(email.__file__), self.config.CUBES_DIR)
         self.config.__class__.CUBES_PATH = [self.custom_cubes_dir]
         self.assertEqual(self.config.cubes_search_path(),
-                          [self.custom_cubes_dir, self.config.CUBES_DIR])
+                         [self.custom_cubes_dir, self.config.CUBES_DIR])
         self.config.__class__.CUBES_PATH = [self.custom_cubes_dir,
                                             self.config.CUBES_DIR, 'unexistant']
         # filter out unexistant and duplicates
         self.assertEqual(self.config.cubes_search_path(),
-                          [self.custom_cubes_dir,
-                           self.config.CUBES_DIR])
+                         [self.custom_cubes_dir,
+                          self.config.CUBES_DIR])
         self.assertIn('mycube', self.config.available_cubes())
         # test cubes python path
         self.config.adjust_sys_path()
@@ -273,7 +282,12 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
             self.assertEqual(self.config['allow-email-login'], result)
         finally:
             del os.environ['CW_ALLOW_EMAIL_LOGIN']
-            
+
+    def test_ccplugin_modname(self):
+        self.config.load_cwctl_plugins()
+        self.assertIn('cubes.mycube.ccplugin', sys.modules, sorted(sys.modules))
+        self.assertNotIn('cubicweb_mycube.ccplugin', sys.modules, sorted(sys.modules))
+
 
 class FindPrefixTC(unittest.TestCase):
 
@@ -350,7 +364,7 @@ class FindPrefixTC(unittest.TestCase):
     def test_upper_candidate_prefix(self):
         with TemporaryDirectory() as prefix:
             self.make_dirs(prefix, 'share', 'cubicweb')
-            self.make_dirs(prefix, 'bell', 'bob',  'share', 'cubicweb')
+            self.make_dirs(prefix, 'bell', 'bob', 'share', 'cubicweb')
             file_path = self.make_file(prefix, 'bell', 'toto.py')
             self.assertEqual(_find_prefix(file_path), prefix)
 
@@ -450,9 +464,9 @@ class ModnamesTC(unittest.TestCase):
             ('cubicweb', 'cubicweb.schemas.workflow'),
             ('cubicweb', 'cubicweb.schemas.Bookmark'),
             ('bar', 'cubes.bar.schema'),
-            ('foo', 'cubes.foo.schema'),
-            ('foo', 'cubes.foo.schema.a'),
-            ('foo', 'cubes.foo.schema.b'),
+            ('foo', 'cubicweb_foo.schema'),
+            ('foo', 'cubicweb_foo.schema.a'),
+            ('foo', 'cubicweb_foo.schema.b'),
         ]
         # app has schema file
         instance_dir, cubes_dir = (
@@ -497,9 +511,9 @@ class ModnamesTC(unittest.TestCase):
             'cubicweb.entities.sources',
             'cubicweb.entities.wfobjs',
             'cubes.bar.hooks',
-            'cubes.foo.entities',
-            'cubes.foo.entities.a',
-            'cubes.foo.hooks',
+            'cubicweb_foo.entities',
+            'cubicweb_foo.entities.a',
+            'cubicweb_foo.hooks',
         ]
         # data1 has entities
         with temp_config('data1', instance_dir, cubes_dir,

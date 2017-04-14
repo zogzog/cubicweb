@@ -76,13 +76,16 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
     show_composite_skip_rtypes = set('wf_info_for',)
 
     def _iter_composite_entities(self, entity, limit=None):
+        eids = set()
         for rdef, role in entity.e_schema.composite_rdef_roles:
             if rdef.rtype in self.show_composite_skip_rtypes:
                 continue
             for centity in entity.related(
                 rdef.rtype, role, limit=limit
             ).entities():
-                yield centity
+                if centity.eid not in eids:
+                    eids.add(centity.eid)
+                    yield centity
 
     def call(self, onsubmit=None):
         """ask for confirmation before real deletion"""
@@ -120,7 +123,8 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
                     content = tags.a(centity.view('textoutofcontext'),
                                      href=centity.absolute_url())
                 else:
-                    w(u'<li class="last">%s</li></ul>' % content)
+                    if content is not None:
+                        w(u'<li class="last">%s</li></ul>' % content)
             w(u'</li>\n')
         w(u'</ul>\n')
         form.render(w=self.w)

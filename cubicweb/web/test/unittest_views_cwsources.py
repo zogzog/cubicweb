@@ -35,7 +35,7 @@ class SynchronizeSourceTC(CubicWebTC):
 
             with self.temporary_appobjects(AParser):
                 source = req.create_entity('CWSource', name=u'ext', type=u'datafeed',
-                                           parser=u'cw.entityxml')
+                                           parser=u'cw.entityxml', url=u'whatever')
                 req.cnx.commit()
 
             self.threads = 0

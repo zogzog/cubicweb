@@ -22,7 +22,6 @@
 
 import atexit
 import os
-from warnings import warn
 
 import wsgicors
 
@@ -226,7 +225,12 @@ def includeme(config):
         repo = config.registry['cubicweb.repository'] = cwconfig.repository()
     config.registry['cubicweb.registry'] = repo.vreg
 
-    atexit.register(repo.shutdown)
+    if cwconfig.mode != 'test':
+        @atexit.register
+        def shutdown_repo():
+            if repo.shutting_down:
+                return
+            repo.shutdown
 
     if asbool(config.registry.settings.get('cubicweb.defaults', True)):
         config.include('cubicweb.pyramid.defaults')
@@ -238,10 +242,3 @@ def includeme(config):
 
     if asbool(config.registry.settings.get('cubicweb.bwcompat', True)):
         config.include('cubicweb.pyramid.bwcompat')
-
-    if cwconfig.debugmode:
-        try:
-            config.include('pyramid_debugtoolbar')
-        except ImportError:
-            warn('pyramid_debugtoolbar package not available, install it to '
-                 'get UI debug features', RuntimeWarning)

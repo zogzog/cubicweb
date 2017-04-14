@@ -34,7 +34,7 @@ from lxml import etree
 
 from logilab.common.deprecation import deprecated
 
-from cubicweb import ObjectNotFound, ValidationError, SourceException
+from cubicweb import ObjectNotFound, ValidationError, SourceException, _
 from cubicweb.server.sources import AbstractSource
 from cubicweb.appobject import AppObject
 
@@ -102,21 +102,15 @@ class DataFeedSource(AbstractSource):
         """check configuration of source entity"""
         typed_config = super(DataFeedSource, self).check_config(source_entity)
         if typed_config['synchronization-interval'] < 60:
-            _ = source_entity._cw._
             msg = _('synchronization-interval must be greater than 1 minute')
             raise ValidationError(source_entity.eid, {'config': msg})
         return typed_config
 
-    def _entity_update(self, source_entity):
-        super(DataFeedSource, self)._entity_update(source_entity)
+    def init(self, source_entity):
+        super(DataFeedSource, self).init(source_entity)
         self.parser_id = source_entity.parser
         self.latest_retrieval = source_entity.latest_retrieval
-
-    def update_config(self, source_entity, typed_config):
-        """update configuration from source entity. `typed_config` is config
-        properly typed with defaults set
-        """
-        super(DataFeedSource, self).update_config(source_entity, typed_config)
+        typed_config = self.config
         self.synchro_interval = timedelta(seconds=typed_config['synchronization-interval'])
         self.max_lock_lifetime = timedelta(seconds=typed_config['max-lock-lifetime'])
         self.http_timeout = typed_config['http-timeout']
@@ -126,10 +120,6 @@ class DataFeedSource(AbstractSource):
         if typed_config['use-cwuri-as-url'] is not None:
             self.use_cwuri_as_url = typed_config['use-cwuri-as-url']
             self.public_config['use-cwuri-as-url'] = self.use_cwuri_as_url
-
-    def init(self, activated, source_entity):
-        super(DataFeedSource, self).init(activated, source_entity)
-        self.parser_id = source_entity.parser
 
     def _get_parser(self, cnx, **kwargs):
         if self.parser_id is None:
@@ -200,7 +190,7 @@ class DataFeedSource(AbstractSource):
 
         def _synchronize_source(repo, source_eid, import_log_eid):
             with repo.internal_cnx() as cnx:
-                source = repo.sources_by_eid[source_eid]
+                source = repo.source_by_eid(source_eid)
                 source._pull_data(cnx, force, raise_on_error, import_log_eid=import_log_eid)
 
         sync = partial(_synchronize_source, cnx.repo, self.eid, import_log.eid)

@@ -29,7 +29,7 @@ class TransactionsCleanupStartupHook(hook.Hook):
     events = ('server_startup',)
 
     def __call__(self):
-        if self.repo._scheduler is None:
+        if not self.repo.has_scheduler():
             return
         # XXX use named args and inner functions to avoid referencing globals
         # which may cause reloading pb
@@ -51,12 +51,12 @@ class UpdateFeedsStartupHook(hook.Hook):
     events = ('server_startup',)
 
     def __call__(self):
-        if self.repo._scheduler is None:
+        if not self.repo.has_scheduler():
             return
         def update_feeds(repo):
             # take a list to avoid iterating on a dictionary whose size may
             # change
-            for uri, source in list(repo.sources_by_uri.items()):
+            for uri, source in repo.sources_by_uri.items():
                 if (uri == 'system'
                     or not repo.config.source_enabled(source)
                     or not source.config['synchronize']):
@@ -75,7 +75,7 @@ class DataImportsCleanupStartupHook(hook.Hook):
     events = ('server_startup',)
 
     def __call__(self):
-        if self.repo._scheduler is None:
+        if not self.repo.has_scheduler():
             return
         def expire_dataimports(repo=self.repo):
             for uri, source in repo.sources_by_uri.items():

@@ -211,7 +211,6 @@ class Repository(object):
 
     def __init__(self, config, scheduler=None, vreg=None):
         self.config = config
-        self.sources_by_eid = {}
         if vreg is None:
             vreg = cwvreg.CWRegistryStore(config)
         self.vreg = vreg
@@ -230,7 +229,6 @@ class Repository(object):
         # sources (additional sources info in the system database)
         self.system_source = self.get_source('native', 'system',
                                              config.system_source_config.copy())
-        self.sources_by_uri = {'system': self.system_source}
         # querier helper, need to be created after sources initialization
         self.querier = querier.QuerierHelper(self, self.schema)
         # cache eid -> type
@@ -294,7 +292,7 @@ class Repository(object):
             # configurate tsearch according to postgres version
             self.system_source.init_creating()
         else:
-            self.init_sources_from_database()
+            self._init_system_source()
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
         # 4. close initialization connection set and reopen fresh ones for
@@ -304,49 +302,70 @@ class Repository(object):
         # 5. call instance level initialisation hooks
         self.hm.call_hooks('server_startup', repo=self)
 
-    # internals ###############################################################
+    def source_by_uri(self, uri):
+        with self.internal_cnx() as cnx:
+            rset = cnx.find('CWSource', name=uri)
+            if not rset:
+                raise ValueError('no source with uri %s found' % uri)
+            return self._source_from_cwsource(rset.one())
 
-    def init_sources_from_database(self):
-        if self.config.quick_start or 'CWSource' not in self.schema:  # 3.10 migration
-            self.system_source.init_creating()
+    def source_by_eid(self, eid):
+        with self.internal_cnx() as cnx:
+            rset = cnx.find('CWSource', eid=eid)
+            if not rset:
+                raise ValueError('no source with eid %d found' % eid)
+            return self._source_from_cwsource(rset.one())
+
+    @property
+    def sources_by_uri(self):
+        mapping = {'system': self.system_source}
+        mapping.update((sourceent.name, source)
+                       for sourceent, source in self._sources())
+        return mapping
+
+    @property
+    @deprecated("[3.25] use source_by_eid(<eid>)")
+    def sources_by_eid(self):
+        mapping = {self.system_source.eid: self.system_source}
+        mapping.update((sourceent.eid, source)
+                       for sourceent, source in self._sources())
+        return mapping
+
+    def _sources(self):
+        if self.config.quick_start:
             return
         with self.internal_cnx() as cnx:
-            # FIXME: sources should be ordered (add_entity priority)
             for sourceent in cnx.execute(
                     'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
-                    'S name SN, S type SA, S config SC').entities():
-                if sourceent.name == 'system':
-                    self.system_source.eid = sourceent.eid
-                    self.sources_by_eid[sourceent.eid] = self.system_source
-                    self.system_source.init(True, sourceent)
-                    continue
-                self.add_source(sourceent)
+                    'S name SN, S type SA, S config SC, S name != "system"').entities():
+                source = self._source_from_cwsource(sourceent)
+                yield sourceent, source
+        self._clear_source_defs_caches()
 
-    def add_source(self, sourceent):
-        try:
-            source = self.get_source(sourceent.type, sourceent.name,
-                                     sourceent.host_config, sourceent.eid)
-        except RuntimeError:
-            if self.config.repairing:
-                self.exception('cant setup source %s, skipped', sourceent.name)
-                return
-            raise
-        self.sources_by_eid[sourceent.eid] = source
-        self.sources_by_uri[sourceent.name] = source
+    def _source_from_cwsource(self, sourceent):
+        source = self.get_source(sourceent.type, sourceent.name,
+                                 sourceent.host_config, sourceent.eid)
         if self.config.source_enabled(source):
             # call source's init method to complete their initialisation if
             # needed (for instance looking for persistent configuration using an
             # internal session, which is not possible until connections sets have been
             # initialized)
-            source.init(True, sourceent)
-        else:
-            source.init(False, sourceent)
-        self._clear_source_defs_caches()
+            source.init(sourceent)
+        return source
 
-    def remove_source(self, uri):
-        source = self.sources_by_uri.pop(uri)
-        del self.sources_by_eid[source.eid]
-        self._clear_source_defs_caches()
+    # internals ###############################################################
+
+    def _init_system_source(self):
+        if self.config.quick_start:
+            self.system_source.init_creating()
+            return
+        with self.internal_cnx() as cnx:
+            sourceent = cnx.execute(
+                'Any S, SA, SC WHERE S is_instance_of CWSource,'
+                ' S name "system", S type SA, S config SC'
+            ).one()
+            self.system_source.eid = sourceent.eid
+            self.system_source.init(sourceent)
 
     def get_source(self, type, uri, source_config, eid=None):
         # set uri and type in source config so it's available through
@@ -363,8 +382,7 @@ class Repository(object):
         else:
             self.vreg._set_schema(schema)
         self.querier.set_schema(schema)
-        for source in self.sources_by_uri.values():
-            source.set_schema(schema)
+        self.system_source.set_schema(schema)
         self.schema = schema
 
     def deserialize_schema(self):
@@ -383,6 +401,12 @@ class Repository(object):
                 raise Exception('Is the database initialised ? (cause: %s)' % ex)
         return appschema
 
+    def has_scheduler(self):
+        """Return True if the repository has a scheduler attached and is able
+        to register looping tasks.
+        """
+        return self._scheduler is not None
+
     def run_scheduler(self):
         """Start repository scheduler after preparing the repository for that.
 
@@ -392,7 +416,7 @@ class Repository(object):
         XXX Other startup related stuffs are done elsewhere. In Repository
         XXX __init__ or in external codes (various server managers).
         """
-        assert self._scheduler is not None, \
+        assert self.has_scheduler(), \
             "This Repository is not intended to be used as a server"
         self.info(
             'starting repository scheduler with tasks: %s',
@@ -405,8 +429,14 @@ class Repository(object):
         looping tasks can only be registered during repository initialization,
         once done this method will fail.
         """
-        assert self._scheduler is not None, \
-            "This Repository is not intended to be used as a server"
+        if self.config.repairing:
+            return
+        if not self.has_scheduler():
+            self.warning(
+                'looping task %s will not run in this process where repository '
+                'has no scheduler; use "cubicweb-ctl scheduler <appid>" to '
+                'have it running', func)
+            return
         event = utils.schedule_periodic_task(
             self._scheduler, interval, func, *args)
         self.info('scheduled periodic task %s (interval: %.2fs)',

@@ -28,7 +28,7 @@ import glob
 modname = distname = "cubicweb"
 
 numversion = (3, 25, 0)
-version = '.'.join(str(num) for num in numversion) + '.dev0'
+version = '.'.join(str(num) for num in numversion)
 
 description = "a repository of entities / relations for knowledge management"
 author = "Logilab"
@@ -71,6 +71,7 @@ else:
 # data files that shall be copied into the main package directory
 package_data = {
     'cubicweb.web.views': ['*.pt'],
+    'cubicweb.pyramid': ['development.ini.tmpl'],
 }
 
 try:

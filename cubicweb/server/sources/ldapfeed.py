@@ -176,11 +176,24 @@ You can set multiple groups by separating them by a comma.',
 
     _conn = None
 
-    def update_config(self, source_entity, typedconfig):
-        """update configuration from source entity. `typedconfig` is config
-        properly typed with defaults set
-        """
-        super(LDAPFeedSource, self).update_config(source_entity, typedconfig)
+    def check_urls(self, source_entity):
+        urls = super(LDAPFeedSource, self).check_urls(source_entity)
+
+        if len(urls) > 1:
+            raise ValidationError(source_entity.eid, {'url': _('can only have one url')})
+
+        try:
+            protocol, hostport = urls[0].split('://')
+        except ValueError:
+            raise ValidationError(source_entity.eid, {'url': _('badly formatted url')})
+        if protocol not in PROTO_PORT:
+            raise ValidationError(source_entity.eid, {'url': _('unsupported protocol')})
+
+        return urls
+
+    def init(self, source_entity):
+        super(LDAPFeedSource, self).init(source_entity)
+        typedconfig = self.config
         self.authmode = typedconfig['auth-mode']
         self._authenticate = getattr(self, '_auth_%s' % self.authmode)
         self.cnx_dn = typedconfig['data-cnx-dn']
@@ -207,18 +220,6 @@ You can set multiple groups by separating them by a comma.',
         if typedconfig['group-filter']:
             self.group_base_filters.append(typedconfig['group-filter'])
         self._conn = None
-
-    def _entity_update(self, source_entity):
-        super(LDAPFeedSource, self)._entity_update(source_entity)
-        if self.urls:
-            if len(self.urls) > 1:
-                raise ValidationError(source_entity.eid, {'url': _('can only have one url')})
-            try:
-                protocol, hostport = self.urls[0].split('://')
-            except ValueError:
-                raise ValidationError(source_entity.eid, {'url': _('badly formatted url')})
-            if protocol not in PROTO_PORT:
-                raise ValidationError(source_entity.eid, {'url': _('unsupported protocol')})
 
     def connection_info(self):
         assert len(self.urls) == 1, self.urls

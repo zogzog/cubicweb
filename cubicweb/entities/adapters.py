@@ -49,7 +49,9 @@ class IDublinCoreAdapter(view.EntityAdapter):
 
     def long_title(self):
         """Return a more detailled title for entity"""
-        return self.title()
+        # go through entity.dc_title for bw compat purpose: if entity define dc_title but not
+        # dc_long_title, we still want it to be considered.
+        return self.entity.dc_title()
 
     def description(self, format='text/plain'):
         """Return a suitable description for entity"""

@@ -34,7 +34,7 @@ from os.path import join
 from six import string_types
 from six.moves import range
 
-from cubicweb import AuthenticationError
+from cubicweb import AuthenticationError, ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.httptest import get_available_port
 
@@ -111,6 +111,16 @@ def terminate_slapd(cls):
         pass
 
 
+def ldapsource(cnx):
+    return cnx.find('CWSource', type=u'ldapfeed').one()
+
+
+def update_source_config(source, options):
+    config = source.dictconfig
+    config.update(options)
+    source.cw_set(config=u'\n'.join('%s=%s' % x for x in config.items()))
+
+
 class LDAPFeedTestBase(CubicWebTC):
     test_db_id = 'ldap-feed'
     loglevel = 'ERROR'
@@ -147,9 +157,9 @@ class LDAPFeedTestBase(CubicWebTC):
         cnx.commit()
         return cls.pull(cnx)
 
-    @classmethod
-    def pull(self, cnx):
-        lfsource = cnx.repo.sources_by_uri['ldap']
+    @staticmethod
+    def pull(cnx):
+        lfsource = cnx.repo.source_by_uri('ldap')
         stats = lfsource.pull_data(cnx, force=True, raise_on_error=True)
         cnx.commit()
         return stats
@@ -198,7 +208,7 @@ class LDAPFeedTestBase(CubicWebTC):
         self._ldapmodify(modcmd)
 
     def _ldapmodify(self, modcmd):
-        uri = self.repo.sources_by_uri['ldap'].urls[0]
+        uri = self.repo.source_by_uri('ldap').urls[0]
         updatecmd = ['ldapmodify', '-H', uri, '-v', '-x', '-D',
                      'cn=admin,dc=cubicweb,dc=test', '-w', 'cw']
         PIPE = subprocess.PIPE
@@ -217,11 +227,10 @@ class CheckWrongGroup(LDAPFeedTestBase):
 
     def test_wrong_group(self):
         with self.admin_access.repo_cnx() as cnx:
-            source = cnx.execute('CWSource S WHERE S type="ldapfeed"').get_entity(0, 0)
-            config = source.repo_source.check_config(source)
+            source = ldapsource(cnx)
             # inject a bogus group here, along with at least a valid one
-            config['user-default-group'] = ('thisgroupdoesnotexists', 'users')
-            source.repo_source.update_config(source, config)
+            options = {'user-default-group': 'thisgroupdoesnotexists,users'}
+            update_source_config(source, options)
             cnx.commit()
             # here we emitted an error log entry
             source.repo_source.pull_data(cnx, force=True, raise_on_error=True)
@@ -238,7 +247,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
         self.assertTrue(entity.modification_date)
 
     def test_authenticate(self):
-        source = self.repo.sources_by_uri['ldap']
+        source = self.repo.source_by_uri('ldap')
         with self.admin_access.repo_cnx() as cnx:
             # ensure we won't be logged against
             self.assertRaises(AuthenticationError,
@@ -273,7 +282,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
     def test_copy_to_system_source(self):
         "make sure we can 'convert' an LDAP user into a system one"
         with self.admin_access.repo_cnx() as cnx:
-            source = self.repo.sources_by_uri['ldap']
+            source = self.repo.source_by_uri('ldap')
             eid = cnx.execute('CWUser X WHERE X login %(login)s', {'login': 'syt'})[0][0]
             cnx.execute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': eid})
             cnx.commit()
@@ -298,6 +307,33 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
             self.assertIsNotNone(pwd)
             self.assertTrue(str(pwd))
 
+    def test_bad_config(self):
+        with self.admin_access.cnx() as cnx:
+
+            with self.assertRaises(ValidationError) as cm:
+                cnx.create_entity(
+                    'CWSource', name=u'erroneous', type=u'ldapfeed', parser=u'ldapfeed',
+                    url=u'ldap.com', config=CONFIG_LDAPFEED)
+            self.assertIn('badly formatted url',
+                          str(cm.exception))
+            cnx.rollback()
+
+            with self.assertRaises(ValidationError) as cm:
+                cnx.create_entity(
+                    'CWSource', name=u'erroneous', type=u'ldapfeed', parser=u'ldapfeed',
+                    url=u'http://ldap.com', config=CONFIG_LDAPFEED)
+            self.assertIn('unsupported protocol',
+                          str(cm.exception))
+            cnx.rollback()
+
+            with self.assertRaises(ValidationError) as cm:
+                cnx.create_entity(
+                    'CWSource', name=u'erroneous', type=u'ldapfeed', parser=u'ldapfeed',
+                    url=u'ldap://host1\nldap://host2', config=CONFIG_LDAPFEED)
+            self.assertIn('can only have one url',
+                          str(cm.exception))
+            cnx.rollback()
+
 
 class LDAPGeneratePwdTC(LDAPFeedTestBase):
     """
@@ -306,7 +342,7 @@ class LDAPGeneratePwdTC(LDAPFeedTestBase):
 
     def setup_database(self):
         with self.admin_access.repo_cnx() as cnx:
-            lfsource = cnx.repo.sources_by_uri['ldap']
+            lfsource = cnx.repo.source_by_uri('ldap')
             del lfsource.user_attrs['userPassword']
         super(LDAPGeneratePwdTC, self).setup_database()
 
@@ -325,16 +361,15 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
 
     def test_a_filter_inactivate(self):
         """ filtered out people should be deactivated, unable to authenticate """
-        repo_source = self.repo.sources_by_uri['ldap']
         with self.admin_access.repo_cnx() as cnx:
-            source = cnx.execute('CWSource S WHERE S type="ldapfeed"').get_entity(0, 0)
-            config = repo_source.check_config(source)
+            source = ldapsource(cnx)
             # filter with adim's phone number
-            config['user-filter'] = u'(%s=%s)' % ('telephoneNumber', '109')
-            repo_source.update_config(source, config)
+            options = {'user-filter': '(%s=%s)' % ('telephonenumber', '109')}
+            update_source_config(source, options)
             cnx.commit()
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)
+            repo_source = self.repo.source_by_uri('ldap')
             self.assertRaises(AuthenticationError,
                               repo_source.authenticate, cnx, 'syt', 'syt')
         with self.admin_access.repo_cnx() as cnx:
@@ -345,8 +380,9 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
                                          'U in_state S, S name N').rows[0][0],
                              'activated')
             # unfilter, syt should be activated again
-            config['user-filter'] = u''
-            repo_source.update_config(source, config)
+            source = ldapsource(cnx)
+            options = {'user-filter': u''}
+            update_source_config(source, options)
             cnx.commit()
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)
@@ -365,7 +401,7 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
         self.delete_ldap_entry('uid=syt,ou=People,dc=cubicweb,dc=test')
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)
-            source = self.repo.sources_by_uri['ldap']
+            source = self.repo.source_by_uri('ldap')
             self.assertRaises(AuthenticationError,
                               source.authenticate, cnx, 'syt', 'syt')
         with self.admin_access.repo_cnx() as cnx:
@@ -404,7 +440,7 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
         # test reactivating BY HAND the user isn't enough to
         # authenticate, as the native source refuse to authenticate
         # user from other sources
-        repo_source = self.repo.sources_by_uri['ldap']
+        repo_source = self.repo.source_by_uri('ldap')
         self.delete_ldap_entry('uid=syt,ou=People,dc=cubicweb,dc=test')
         with self.repo.internal_cnx() as cnx:
             self.pull(cnx)

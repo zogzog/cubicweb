@@ -30,6 +30,7 @@ from pytz import utc
 
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.server.hook import Operation
 
 
 class CoreHooksTC(CubicWebTC):
@@ -215,6 +216,21 @@ class SchemaHooksTC(CubicWebTC):
             self.assertEqual(ex.errors,
                              {'': u'some relations violate a unicity constraint',
                               'login': u'login is part of violated unicity constraint'})
+
+
+class OperationTC(CubicWebTC):
+
+    def test_bad_postcommit_event(self):
+
+        class BadOp(Operation):
+            def postcommit_event(self):
+                raise RuntimeError('this is bad')
+
+        with self.admin_access.cnx() as cnx:
+            BadOp(cnx)
+            with self.assertRaises(RuntimeError) as cm:
+                cnx.commit()
+            self.assertEqual(str(cm.exception), 'this is bad')
 
 
 if __name__ == '__main__':

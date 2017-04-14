@@ -10,6 +10,8 @@ from cubicweb.pyramid.test import PyramidCWTest
 
 
 class WSGIAppTest(PyramidCWTest):
+    settings = {'cubicweb.bwcompat': True}
+
     def make_request(self, path, environ=None, **kw):
         r = webtest.app.TestRequest.blank(path, environ, **kw)
 
