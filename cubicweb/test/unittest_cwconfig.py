@@ -409,8 +409,15 @@ class ModnamesTC(unittest.TestCase):
         self.assertEqual(list(_expand_modname('lib.a')), [
             ('lib.a', join(tempdir, 'a.py')),
         ])
-        # lib.b.d (subpackage) not to be imported
+        # lib.b.d should be imported
         self.assertEqual(list(_expand_modname('lib.b')), [
+            ('lib.b', join(tempdir, 'b', '__init__.py')),
+            ('lib.b.a', join(tempdir, 'b', 'a.py')),
+            ('lib.b.c', join(tempdir, 'b', 'c.py')),
+            ('lib.b.d', join(tempdir, 'b', 'd', '__init__.py')),
+        ])
+        # lib.b.d should not be imported without recursive mode
+        self.assertEqual(list(_expand_modname('lib.b', recursive=False)), [
             ('lib.b', join(tempdir, 'b', '__init__.py')),
             ('lib.b.a', join(tempdir, 'b', 'a.py')),
             ('lib.b.c', join(tempdir, 'b', 'c.py')),
@@ -418,11 +425,16 @@ class ModnamesTC(unittest.TestCase):
         self.assertEqual(list(_expand_modname('lib')), [
             ('lib', join(tempdir, '__init__.py')),
             ('lib.a', join(tempdir, 'a.py')),
+            ('lib.b', join(tempdir, 'b', '__init__.py')),
+            ('lib.b.a', join(tempdir, 'b', 'a.py')),
+            ('lib.b.c', join(tempdir, 'b', 'c.py')),
+            ('lib.b.d', join(tempdir, 'b', 'd', '__init__.py')),
             ('lib.c', join(tempdir, 'c.py')),
         ])
         for source in (
             join(tempdir, 'c.py'),
             join(tempdir, 'b', 'c.py'),
+            join(tempdir, 'b', 'd', '__init__.py'),
         ):
             if not PY3:
                 # ensure pyc file exists.
@@ -441,6 +453,8 @@ class ModnamesTC(unittest.TestCase):
         self.assertEqual(list(_expand_modname('lib')), [
             ('lib', join(tempdir, '__init__.py')),
             ('lib.a', join(tempdir, 'a.py')),
+            ('lib.b', join(tempdir, 'b', '__init__.py')),
+            ('lib.b.a', join(tempdir, 'b', 'a.py')),
         ])
 
     @templibdir
@@ -451,6 +465,8 @@ class ModnamesTC(unittest.TestCase):
             join(libdir, 'cubicweb_foo', 'schema', '__init__.py'),
             join(libdir, 'cubicweb_foo', 'schema', 'a.py'),
             join(libdir, 'cubicweb_foo', 'schema', 'b.py'),
+            # subpackages should not be loaded
+            join(libdir, 'cubicweb_foo', 'schema', 'c', '__init__.py'),
             join(libdir, 'cubes', '__init__.py'),
             join(libdir, 'cubes', 'bar', '__init__.py'),
             join(libdir, 'cubes', 'bar', 'schema.py'),
@@ -492,6 +508,10 @@ class ModnamesTC(unittest.TestCase):
             join(libdir, 'cubicweb_foo', '__init__.py'),
             join(libdir, 'cubicweb_foo', 'entities', '__init__.py'),
             join(libdir, 'cubicweb_foo', 'entities', 'a.py'),
+            # subpackages should be loaded recursively
+            join(libdir, 'cubicweb_foo', 'entities', 'b', '__init__.py'),
+            join(libdir, 'cubicweb_foo', 'entities', 'b', 'a.py'),
+            join(libdir, 'cubicweb_foo', 'entities', 'b', 'c', '__init__.py'),
             join(libdir, 'cubicweb_foo', 'hooks.py'),
             join(libdir, 'cubes', '__init__.py'),
             join(libdir, 'cubes', 'bar', '__init__.py'),
@@ -513,6 +533,9 @@ class ModnamesTC(unittest.TestCase):
             'cubes.bar.hooks',
             'cubicweb_foo.entities',
             'cubicweb_foo.entities.a',
+            'cubicweb_foo.entities.b',
+            'cubicweb_foo.entities.b.a',
+            'cubicweb_foo.entities.b.c',
             'cubicweb_foo.hooks',
         ]
         # data1 has entities

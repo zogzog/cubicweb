@@ -285,12 +285,15 @@ def _cube_modname(cube):
         return 'cubes.' + cube
 
 
-def _expand_modname(modname):
-    """expand modules names `modname` if exists by walking non package submodules
-    and yield (submodname, filepath) including `modname` itself
+def _expand_modname(modname, recursive=True):
+    """expand modules names `modname` if exists by recursively walking
+    submodules and subpackages and yield (submodname, filepath) including
+    `modname` itself
 
     If the file ends with .pyc or .pyo (python bytecode) also check that the
     corresponding source .py file exists before yielding.
+
+    If `recursive` is False skip subpackages.
     """
     try:
         loader = pkgutil.find_loader(modname)
@@ -312,11 +315,14 @@ def _expand_modname(modname):
     if loader.is_package(modname):
         path = dirname(filepath)
         for subloader, subname, ispkg in pkgutil.walk_packages([path]):
-            # ignore subpackages (historical behavior)
+            submodname = '.'.join([modname, subname])
             if not ispkg:
                 filepath = subloader.find_module(subname).get_filename()
                 if check_source_file(filepath):
-                    yield modname + '.' + subname, filepath
+                    yield submodname, filepath
+            elif recursive:
+                for x in _expand_modname(submodname, recursive=True):
+                    yield x
 
 
 # persistent options definition
@@ -819,11 +825,13 @@ this option is set to yes",
             modnames.append(('cubicweb', 'cubicweb.schemas.' + name))
         for cube in reversed(self.cubes()):
             for modname, filepath in _expand_modname(
-                    '{0}.schema'.format(_cube_modname(cube))):
+                    '{0}.schema'.format(_cube_modname(cube)),
+                    recursive=False):
                 modnames.append((cube, modname))
         if self.apphome:
             apphome = realpath(self.apphome)
-            for modname, filepath in _expand_modname('schema'):
+            for modname, filepath in _expand_modname(
+                    'schema', recursive=False):
                 if realpath(filepath).startswith(apphome):
                     modnames.append(('data', modname))
         return modnames
