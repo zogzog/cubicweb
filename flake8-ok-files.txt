@@ -42,6 +42,8 @@ cubicweb/server/repository.py
 cubicweb/server/rqlannotation.py
 cubicweb/server/schema2sql.py
 cubicweb/server/session.py
+cubicweb/server/sources/__init__.py
+cubicweb/server/sources/native.py
 cubicweb/server/sqlutils.py
 cubicweb/server/utils.py
 cubicweb/server/test/datacomputed/migratedapp/schema.py
@@ -65,8 +67,6 @@ cubicweb/sobjects/services.py
 cubicweb/sobjects/test/unittest_notification.py
 cubicweb/sobjects/test/unittest_register_user.py
 cubicweb/sobjects/textparsers.py
-cubicweb/sources/__init__.py
-cubicweb/sources/native.py
 cubicweb/test/data/libpython/cubicweb_comment/__init__.py
 cubicweb/test/data/libpython/cubicweb_comment/__pkginfo__.py
 cubicweb/test/data/libpython/cubicweb_email/entities.py
