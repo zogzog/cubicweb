@@ -253,6 +253,21 @@ class ExtEntity(object):
                 entity_dict[rtype] = extid2eid[entity_dict[rtype]]
         return True
 
+    def why_not_ready(self, extid2eid):
+        """Return some text explaining why this ext entity is not ready.
+        """
+        assert self._schema, 'prepare() method should be called first on %s' % self
+        # as .prepare has been called, we know that .values only contains subject relation *type* as
+        # key (no more (rtype, role) tuple)
+        schema = self._schema
+        entity_dict = self.values
+        for rtype in entity_dict:
+            rschema = schema.rschema(rtype)
+            if not rschema.final:
+                if entity_dict[rtype] not in extid2eid:
+                    return u'inlined relation %s is not present (%s)' % (rtype, entity_dict[rtype])
+        raise AssertionError('this external entity seems actually ready for insertion')
+
 
 class ExtEntitiesImporter(object):
     """This class is responsible for importing externals entities, that is instances of
@@ -413,7 +428,8 @@ class ExtEntitiesImporter(object):
                     "missing data?"]
             for ext_entities in queue.values():
                 for ext_entity in ext_entities:
-                    msgs.append(str(ext_entity))
+                    msg = '{}: {}'.format(ext_entity, ext_entity.why_not_ready(self.extid2eid))
+                    msgs.append(msg)
             map(error, msgs)
             if self.raise_on_error:
                 raise Exception('\n'.join(msgs))
