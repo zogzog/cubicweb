@@ -48,7 +48,7 @@ class TimeZone(EntityType):
     Entity type for timezone of geonames.
     See timeZones.txt
     """
-    code = String(maxsize=1024, indexed=True)
+    code = String(maxsize=1024, indexed=True, required=True)
     gmt = Float()
     dst = Float()
     raw_offset = Float()

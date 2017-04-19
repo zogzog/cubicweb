@@ -96,7 +96,7 @@ class SQLGenImportSimpleTC(testlib.CubicWebTC):
     def test_sqlgenstore_etype_metadata(self):
         with self.admin_access.repo_cnx() as cnx:
             store = SQLGenObjectStore(cnx)
-            timezone_eid = store.prepare_insert_entity('TimeZone')
+            timezone_eid = store.prepare_insert_entity('TimeZone', code=u'12')
             store.prepare_insert_entity('Location', timezone=timezone_eid)
             store.flush()
             store.commit()

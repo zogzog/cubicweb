@@ -16,6 +16,8 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 """Massive store test case"""
 
+import psycopg2
+
 from cubicweb.devtools import testlib, PostgresApptestConfiguration
 from cubicweb.devtools import startpgcluster, stoppgcluster
 from cubicweb.dataimport import ucsvreader, stores
@@ -113,7 +115,7 @@ class MassImportSimpleTC(testlib.CubicWebTC):
     def test_massimport_etype_metadata(self):
         with self.admin_access.repo_cnx() as cnx:
             store = MassiveObjectStore(cnx)
-            timezone_eid = store.prepare_insert_entity('TimeZone')
+            timezone_eid = store.prepare_insert_entity('TimeZone', code=u'12')
             store.prepare_insert_entity('Location', timezone=timezone_eid)
             store.flush()
             store.commit()
@@ -263,6 +265,16 @@ where table_schema = %(s)s''', {'s': pgh.pg_schema}).fetchall()
             store = MassiveObjectStore(cnx)
             store.prepare_insert_entity('Location', name=u'toto')
             store.finish()
+
+    def test_delete_metatable_on_integrity_error(self):
+        with self.admin_access.repo_cnx() as cnx:
+            store = MassiveObjectStore(cnx)
+            store.prepare_insert_entity('TimeZone')
+            store.flush()
+            store.commit()
+            with self.assertRaises(psycopg2.IntegrityError):
+                store.finish()
+            self.assertNotIn('cwmassive_initialized', set(self.get_db_descr(cnx)))
 
 
 if __name__ == '__main__':

@@ -185,6 +185,19 @@ class MassiveObjectStore(stores.RQLObjectStore):
 
     def finish(self):
         """Remove temporary tables and columns."""
+        try:
+            self._finish()
+            self._cnx.commit()
+        except Exception:
+            self._cnx.rollback()
+            raise
+        finally:
+            # delete the meta data table
+            self.sql('DROP TABLE IF EXISTS cwmassive_initialized')
+            self.commit()
+
+    def _finish(self):
+        """Remove temporary tables and columns."""
         assert not self.slave_mode, 'finish method should only be called by the master store'
         self.logger.info("Start cleaning")
         # Get all the initialized etypes/rtypes
@@ -226,9 +239,6 @@ class MassiveObjectStore(stores.RQLObjectStore):
                     self._tmp_data_cleanup(tmp_tablename, rtype, uuid)
         # restore all deleted indexes and constraints
         self._dbh.restore_indexes_and_constraints()
-        # delete the meta data table
-        self.sql('DROP TABLE IF EXISTS cwmassive_initialized')
-        self.commit()
 
     def _insert_etype_metadata(self, etype, tmp_tablename):
         """Massive insertion of meta data for `etype`, with new entities in `tmp_tablename`.
