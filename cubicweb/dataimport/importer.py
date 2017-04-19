@@ -244,7 +244,7 @@ class ExtEntity(object):
             if not rschema.final:
                 # .prepare() should drop other cases from the entity dict
                 assert rschema.inlined
-                if not entity_dict[rtype] in extid2eid:
+                if entity_dict[rtype] not in extid2eid:
                     return False
         # entity is ready, replace all relation's extid by eids
         for rtype in entity_dict:
