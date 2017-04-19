@@ -16,8 +16,6 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 """SQL object store test case"""
 
-import itertools
-
 from cubicweb.dataimport import ucsvreader
 from cubicweb.devtools import testlib, PostgresApptestConfiguration
 from cubicweb.devtools import startpgcluster, stoppgcluster
@@ -48,7 +46,7 @@ class SQLGenImportSimpleTC(testlib.CubicWebTC):
         for code, gmt, dst, raw_offset in ucsvreader(open(self.datapath('timeZones.txt'), 'rb'),
                                                      delimiter='\t'):
             cnx.create_entity('TimeZone', code=code, gmt=float(gmt),
-                                    dst=float(dst), raw_offset=float(raw_offset))
+                              dst=float(dst), raw_offset=float(raw_offset))
         timezone_code = dict(cnx.execute('Any C, X WHERE X is TimeZone, X code C'))
         cnx.commit()
         # Push data
@@ -70,12 +68,12 @@ class SQLGenImportSimpleTC(testlib.CubicWebTC):
                       'alternatenames': infos[3],
                       'latitude': latitude, 'longitude': longitude,
                       'feature_class': feature_class,
-                      'alternate_country_code':infos[9],
+                      'alternate_country_code': infos[9],
                       'admin_code_3': infos[12],
                       'admin_code_4': infos[13],
                       'population': population, 'elevation': elevation,
                       'gtopo30': gtopo, 'timezone': timezone_code.get(infos[17]),
-                      'cwuri':  u'http://sws.geonames.org/%s/' % int(infos[0]),
+                      'cwuri': u'http://sws.geonames.org/%s/' % int(infos[0]),
                       'geonameid': int(infos[0]),
                       }
             store.prepare_insert_entity('Location', **entity)
