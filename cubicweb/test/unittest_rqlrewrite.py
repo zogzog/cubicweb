@@ -528,9 +528,9 @@ class RQLRewriteTC(TestCase):
         self.assertMultiLineEqual(
             rqlst.as_string(),
             u'Any P WHERE NOT P require_state S, '
-            'EXISTS(((NOT EXISTS(A require_permission P, A is IN(Card, Note)))'
+            '((NOT EXISTS(A require_permission P, A is IN(Card, Note)))'
             ' OR (EXISTS(B require_permission P, B is Card, S name "state1")))'
-            ' OR (EXISTS(C require_permission P, C is Note, S name "state2"))), '
+            ' OR (EXISTS(C require_permission P, C is Note, S name "state2")), '
             'P is CWPermission, S is State')
 
     def test_ambiguous_using_is_in_function(self):
@@ -543,8 +543,8 @@ class RQLRewriteTC(TestCase):
         self.assertMultiLineEqual(
             rqlst.as_string(),
             u'Any P WHERE NOT P require_state S, '
-            'EXISTS((NOT EXISTS(A require_permission P, A is IN(Card, Note))) '
-            'OR (EXISTS(B require_permission P, B is IN(Card, Note), S name "state1"))), '
+            '(NOT EXISTS(A require_permission P, A is IN(Card, Note))) '
+            'OR (EXISTS(B require_permission P, B is IN(Card, Note), S name "state1")), '
             'P is CWPermission, S is State')
 
 from cubicweb.devtools.testlib import CubicWebTC

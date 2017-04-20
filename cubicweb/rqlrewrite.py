@@ -206,6 +206,19 @@ def iter_relations(stinfo):
     return stinfo['relations'] - stinfo['rhsrelations']
 
 
+def need_exists(node):
+    """Return true if the given node should be wrapped in an `Exists` node.
+
+    This is true when node isn't already an `Exists` or `Not` node, nor a
+    `And`/`Or` of `Exists` or `Not` nodes.
+    """
+    if isinstance(node, (n.Exists, n.Not)):
+        return False
+    if isinstance(node, (n.Or, n.And)):
+        return need_exists(node.children[0]) or need_exists(node.children[1])
+    return True
+
+
 class Unsupported(Exception):
     """raised when an rql expression can't be inserted in some rql query
     because it create an unresolvable query (eg no solutions found)
@@ -474,7 +487,7 @@ class RQLRewriter(object):
             self.existingvars = existing
 
     def _inserted_root(self, new):
-        if not isinstance(new, (n.Exists, n.Not)):
+        if need_exists(new):
             new = n.Exists(new)
         return new
 
