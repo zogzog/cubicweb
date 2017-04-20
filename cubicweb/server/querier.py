@@ -293,7 +293,7 @@ class ExecutionPlan(object):
                         if rqlexpr.check(cnx, eid):
                             break
                     else:
-                        raise Unauthorized('No read acces on %r with eid %i.' % (var, eid))
+                        raise Unauthorized('No read access on %r with eid %i.' % (var, eid))
                 # mark variables protected by an rql expression
                 restricted_vars.update(localcheck)
                 # turn local check into a dict key
