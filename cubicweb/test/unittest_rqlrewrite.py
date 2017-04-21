@@ -67,9 +67,7 @@ def _prepare_rewriter(rewriter_cls, kwargs):
             @staticmethod
             def annotate(rqlst):
                 rqlhelper.annotate(rqlst)
-            @staticmethod
-            def simplify(mainrqlst, needcopy=False):
-                rqlhelper.simplify(rqlst, needcopy)
+
     return rewriter_cls(mock_object(vreg=FakeVReg, user=(mock_object(eid=1))))
 
 
