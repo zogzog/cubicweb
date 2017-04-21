@@ -18,7 +18,6 @@
 
 from six import string_types
 
-from logilab.common.testlib import unittest_main, TestCase
 from logilab.common.testlib import mock_object
 from logilab.common.decorators import monkeypatch
 from yams import BadSchemaDefinition
@@ -29,7 +28,7 @@ from cubicweb import Unauthorized, rqlrewrite, devtools
 from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.schema import RRQLExpression, ERQLExpression
 from cubicweb.devtools import repotest
-from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.devtools.testlib import CubicWebTC, TestCase
 
 
 def setUpModule(*args):
@@ -912,4 +911,5 @@ def rule_rewrite(rqlst, kwargs=None):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    import unittest
+    unittest.main()
