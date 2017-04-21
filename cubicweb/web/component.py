@@ -126,7 +126,7 @@ class NavigationComponent(Component):
         return url
 
     def ajax_page_url(self, **params):
-        divid = params.setdefault('divid', 'pageContent')
+        divid = params.setdefault('divid', 'contentmain')
         params['rql'] = self.cw_rset.printable_rql()
         return js_href("$(%s).loadxhtml(AJAX_PREFIX_URL, %s, 'get', 'swap')" % (
             json_dumps('#'+divid), js.ajaxFuncArgs('view', params)))

@@ -246,7 +246,7 @@ class FilterBox(FacetFilterMixIn, component.CtxComponent):
             rset, vid, divid, paginate = context
         else:
             rset = self.cw_rset
-            vid, divid = None, 'pageContent'
+            vid, divid = None, 'contentmain'
             paginate = view and view.paginable
         return rset, vid, divid, paginate
 
