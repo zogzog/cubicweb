@@ -67,14 +67,28 @@ def _prepare_rewriter(rewriter_cls, kwargs):
 
 def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
     rewriter = _prepare_rewriter(rqlrewrite.RQLRewriter, kwargs)
+    # turn {(V1, V2): constraints} into [(varmap, constraints)]
     snippets = []
+    snippet_varmap = {}
     for v, exprs in sorted(snippets_map.items()):
-        rqlexprs = [isinstance(snippet, string_types)
-                    and mock_object(snippet_rqlst=parse(u'Any X WHERE '+snippet).children[0],
-                                    expression=u'Any X WHERE '+snippet)
-                    or snippet
-                    for snippet in exprs]
-        snippets.append((dict([v]), rqlexprs))
+        rqlexprs = []
+        varmap = dict([v])
+        for snippet in exprs:
+            # when the same snippet is impacting several variables, group them
+            # unless there is some conflicts on the snippet's variable name (we
+            # only want that for constraint on relations using both S and O)
+            if snippet in snippet_varmap and not (
+                    set(varmap.values()) & set(snippet_varmap[snippet].values())):
+                snippet_varmap[snippet].update(varmap)
+                continue
+            snippet_varmap[snippet] = varmap
+            if isinstance(snippet, string_types):
+                snippet = mock_object(snippet_rqlst=parse(u'Any X WHERE ' + snippet).children[0],
+                                      expression=u'Any X WHERE ' + snippet)
+            rqlexprs.append(snippet)
+        if rqlexprs:
+            snippets.append((varmap, rqlexprs))
+
     rqlhelper.compute_solutions(rqlst.children[0], {'eid': eid_func_map}, kwargs=kwargs)
     rewriter.rewrite(rqlst.children[0], snippets, kwargs, existingvars)
     check_vrefs(rqlst.children[0])
@@ -502,6 +516,36 @@ class RQLRewriteTC(TestCase):
         self.assertEqual(rqlst.as_string(),
                          'Any O WHERE S use_email O, S is CWUser, O is EmailAddress, '
                          'EXISTS(NOT S in_group A, A name "guests", A is CWGroup)')
+
+    def test_ambiguous_constraint_not_exists(self):
+        state_constraint = (
+            'NOT EXISTS(A require_permission S) '
+            'OR EXISTS(B require_permission S, B is Card, O name "state1")'
+            'OR EXISTS(C require_permission S, C is Note, O name "state2")'
+        )
+        rqlst = parse(u'Any P WHERE NOT P require_state S')
+        rewrite(rqlst, {('P', 'S'): (state_constraint,), ('S', 'O'): (state_constraint,)}, {})
+        self.assertMultiLineEqual(
+            rqlst.as_string(),
+            u'Any P WHERE NOT P require_state S, '
+            'EXISTS(((NOT EXISTS(A require_permission P, A is IN(Card, Note)))'
+            ' OR (EXISTS(B require_permission P, B is Card, S name "state1")))'
+            ' OR (EXISTS(C require_permission P, C is Note, S name "state2"))), '
+            'P is CWPermission, S is State')
+
+    def test_ambiguous_using_is_in_function(self):
+        state_constraint = (
+            'NOT EXISTS(A require_permission S) '
+            'OR EXISTS(B require_permission S, B is IN (Card, Note), O name "state1")'
+        )
+        rqlst = parse(u'Any P WHERE NOT P require_state S')
+        rewrite(rqlst, {('P', 'S'): (state_constraint,), ('S', 'O'): (state_constraint,)}, {})
+        self.assertMultiLineEqual(
+            rqlst.as_string(),
+            u'Any P WHERE NOT P require_state S, '
+            'EXISTS((NOT EXISTS(A require_permission P, A is IN(Card, Note))) '
+            'OR (EXISTS(B require_permission P, B is IN(Card, Note), S name "state1"))), '
+            'P is CWPermission, S is State')
 
 from cubicweb.devtools.testlib import CubicWebTC
 
