@@ -147,13 +147,19 @@ class RequestCWTC(CubicWebTC):
             users = list(users)
             self.assertEqual(len(users), 2)
 
-            with self.assertRaises(AssertionError):
+            with self.assertRaisesRegexp(
+                AssertionError, '^chapeau not in CWUser subject relations$'
+            ):
                 req.find('CWUser', chapeau=u"melon")
 
-            with self.assertRaises(AssertionError):
+            with self.assertRaisesRegexp(
+                AssertionError, '^buddy not in CWUser object relations$'
+            ):
                 req.find('CWUser', reverse_buddy=users[0])
 
-            with self.assertRaises(NotImplementedError):
+            with self.assertRaisesRegexp(
+                NotImplementedError, '^in_group: list of values are not supported$'
+            ):
                 req.find('CWUser', in_group=[1, 2])
 
 
