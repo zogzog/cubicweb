@@ -213,7 +213,7 @@ class RequestSessionBase(object):
         >>> users = find('CWGroup', name=u"users").one()
         >>> groups = find('CWGroup').entities()
         """
-        parts = ['Any X WHERE X is %s' % etype]
+        parts = ['Any X WHERE X is {0}'.format(etype)]
         varmaker = rqlvar_maker(defined='X')
         eschema = self.vreg.schema.eschema(etype)
         for attr, value in kwargs.items():
@@ -225,15 +225,13 @@ class RequestSessionBase(object):
             if attr.startswith('reverse_'):
                 attr = attr[8:]
                 assert attr in eschema.objrels, \
-                    '%s not in %s object relations' % (attr, eschema)
-                parts.append(
-                    '%(varname)s %(attr)s X, '
-                    '%(varname)s eid %%(reverse_%(attr)s)s'
-                    % {'attr': attr, 'varname': next(varmaker)})
+                    '{0} not in {1} object relations'.format(attr, eschema)
+                parts.append('{var} {attr} X, {var} eid %(reverse_{attr})s'.format(
+                    var=next(varmaker), attr=attr))
             else:
                 assert attr in eschema.subjrels, \
-                    '%s not in %s subject relations' % (attr, eschema)
-                parts.append('X %(attr)s %%(%(attr)s)s' % {'attr': attr})
+                    '{0} not in {1} subject relations'.format(attr, eschema)
+                parts.append('X {attr} %({attr})s'.format(attr=attr))
 
         rql = ', '.join(parts)
 
