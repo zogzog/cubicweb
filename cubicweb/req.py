@@ -218,7 +218,8 @@ class RequestSessionBase(object):
         eschema = self.vreg.schema.eschema(etype)
         for attr, value in kwargs.items():
             if isinstance(value, list) or isinstance(value, tuple):
-                raise NotImplementedError("List of values are not supported")
+                raise NotImplementedError(
+                    '{0}: list of values are not supported'.format(attr))
             if hasattr(value, 'eid'):
                 kwargs[attr] = value.eid
             if attr.startswith('reverse_'):
