@@ -224,13 +224,13 @@ class RequestSessionBase(object):
                 kwargs[attr] = value.eid
             if attr.startswith('reverse_'):
                 attr = attr[8:]
-                assert attr in eschema.objrels, \
-                    '{0} not in {1} object relations'.format(attr, eschema)
+                if attr not in eschema.objrels:
+                    raise KeyError('{0} not in {1} object relations'.format(attr, eschema))
                 parts.append('{var} {attr} X, {var} eid %(reverse_{attr})s'.format(
                     var=next(varmaker), attr=attr))
             else:
-                assert attr in eschema.subjrels, \
-                    '{0} not in {1} subject relations'.format(attr, eschema)
+                if attr not in eschema.subjrels:
+                    raise KeyError('{0} not in {1} subject relations'.format(attr, eschema))
                 parts.append('X {attr} %({attr})s'.format(attr=attr))
 
         rql = ', '.join(parts)

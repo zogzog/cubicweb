@@ -148,12 +148,12 @@ class RequestCWTC(CubicWebTC):
             self.assertEqual(len(users), 2)
 
             with self.assertRaisesRegexp(
-                AssertionError, '^chapeau not in CWUser subject relations$'
+                KeyError, "^'chapeau not in CWUser subject relations'$"
             ):
                 req.find('CWUser', chapeau=u"melon")
 
             with self.assertRaisesRegexp(
-                AssertionError, '^buddy not in CWUser object relations$'
+                KeyError, "^'buddy not in CWUser object relations'$"
             ):
                 req.find('CWUser', reverse_buddy=users[0])
 
