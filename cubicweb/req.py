@@ -229,9 +229,14 @@ class RequestSessionBase(object):
                 parts.append('{var} {attr} X, {var} eid %(reverse_{attr})s'.format(
                     var=next(varmaker), attr=attr))
             else:
-                if attr not in eschema.subjrels:
+                rel = eschema.subjrels.get(attr)
+                if rel is None:
                     raise KeyError('{0} not in {1} subject relations'.format(attr, eschema))
-                parts.append('X {attr} %({attr})s'.format(attr=attr))
+                if rel.final:
+                    parts.append('X {attr} %({attr})s'.format(attr=attr))
+                else:
+                    parts.append('X {attr} {var}, {var} eid %({attr})s'.format(
+                        attr=attr, var=next(varmaker)))
 
         rql = ', '.join(parts)
 

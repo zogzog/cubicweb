@@ -132,7 +132,10 @@ class RequestCWTC(CubicWebTC):
                 firstname=u'adrien',
                 in_group=req.find('CWGroup', name=u'users').one())
 
-            u = req.find('CWUser', login=u'cdevienne').one()
+            rset = req.find('CWUser', login=u'cdevienne')
+            self.assertEqual(rset.printable_rql(),
+                             'Any X WHERE X is CWUser, X login "cdevienne"')
+            u = rset.one()
             self.assertEqual(u.firstname, u"Christophe")
 
             users = list(req.find('CWUser').entities())
@@ -143,8 +146,11 @@ class RequestCWTC(CubicWebTC):
             self.assertEqual(len(groups), 1)
             self.assertEqual(groups[0].name, u'users')
 
-            users = req.find('CWUser', in_group=groups[0]).entities()
-            users = list(users)
+            rset = req.find('CWUser', in_group=groups[0])
+            self.assertEqual(rset.printable_rql(),
+                             'Any X WHERE X is CWUser, X in_group A, '
+                             'A eid {0}'.format(groups[0].eid))
+            users = list(rset.entities())
             self.assertEqual(len(users), 2)
 
             with self.assertRaisesRegexp(
