@@ -77,7 +77,8 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
 
     def _iter_composite_entities(self, entity, limit=None):
         eids = set()
-        for rdef, role in entity.e_schema.composite_rdef_roles:
+        for rdef, role in sorted(entity.e_schema.composite_rdef_roles,
+                                 key=lambda x: x[0].rtype):
             if rdef.rtype in self.show_composite_skip_rtypes:
                 continue
             for centity in entity.related(
