@@ -199,7 +199,7 @@ setup(
         'yams >= 0.45.0',
         'lxml',
         'logilab-database >= 1.15.0',
-        'passlib >= 1.7.0',
+        'passlib',
         'pytz',
         'Markdown',
         'unittest2 >= 0.7.0',
