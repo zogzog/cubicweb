@@ -133,6 +133,7 @@ class AjaxController(Controller):
             warn('[3.15] remote function %s found on JSonController, '
                  'use AjaxFunction / @ajaxfunc instead' % fname,
                  DeprecationWarning, stacklevel=2)
+        debug_mode = self._cw.vreg.config.debugmode
         # no <arg> attribute means the callback takes no argument
         args = self._cw.form.get('arg', ())
         if not isinstance(args, (list, tuple)):
@@ -140,16 +141,19 @@ class AjaxController(Controller):
         try:
             args = [json.loads(arg) for arg in args]
         except ValueError as exc:
-            self.exception('error while decoding json arguments for '
-                           'js_%s: %s (err: %s)', fname, args, exc)
+            if debug_mode:
+                self.exception('error while decoding json arguments for '
+                               'js_%s: %s (err: %s)', fname, args, exc)
             raise RemoteCallFailed(exc_message(exc, self._cw.encoding))
         try:
             result = func(*args)
         except (RemoteCallFailed, DirectResponse):
             raise
         except Exception as exc:
-            self.exception('an exception occurred while calling js_%s(%s): %s',
-                           fname, args, exc)
+            if debug_mode:
+                self.exception(
+                    'an exception occurred while calling js_%s(%s): %s',
+                    fname, args, exc)
             raise RemoteCallFailed(exc_message(exc, self._cw.encoding))
         if result is None:
             return ''
@@ -219,7 +223,8 @@ class AjaxFunction(AppObject):
         try:
             return self._cw.execute(rql, args)
         except Exception as ex:
-            self.exception("error in _exec(rql=%s): %s", rql, ex)
+            if self._cw.vreg.config.debugmode:
+                self.exception("error in _exec(rql=%s): %s", rql, ex)
             return None
         return None
 
