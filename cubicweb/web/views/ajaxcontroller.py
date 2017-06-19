@@ -67,6 +67,7 @@ from warnings import warn
 from functools import partial
 
 from six import PY2, text_type
+from six.moves import http_client
 
 from logilab.common.date import strptime
 from logilab.common.registry import yes
@@ -116,7 +117,8 @@ class AjaxController(Controller):
         try:
             fname = self._cw.form['fname']
         except KeyError:
-            raise RemoteCallFailed('no method specified')
+            raise RemoteCallFailed('no method specified',
+                                   status=http_client.BAD_REQUEST)
         # 1/ check first for old-style (JSonController) ajax func for bw compat
         try:
             func = getattr(basecontrollers.JSonController, 'js_%s' % fname)
@@ -128,7 +130,8 @@ class AjaxController(Controller):
             try:
                 func = self._cw.vreg['ajax-func'].select(fname, self._cw)
             except ObjectNotFound:
-                raise RemoteCallFailed('no %s method' % fname)
+                raise RemoteCallFailed('no %s method' % fname,
+                                       status=http_client.BAD_REQUEST)
         else:
             warn('[3.15] remote function %s found on JSonController, '
                  'use AjaxFunction / @ajaxfunc instead' % fname,
@@ -144,7 +147,8 @@ class AjaxController(Controller):
             if debug_mode:
                 self.exception('error while decoding json arguments for '
                                'js_%s: %s (err: %s)', fname, args, exc)
-            raise RemoteCallFailed(exc_message(exc, self._cw.encoding))
+            raise RemoteCallFailed(exc_message(exc, self._cw.encoding),
+                                   status=http_client.BAD_REQUEST)
         try:
             result = func(*args)
         except (RemoteCallFailed, DirectResponse):

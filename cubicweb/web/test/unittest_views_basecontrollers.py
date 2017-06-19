@@ -1012,6 +1012,13 @@ class AjaxControllerTC(CubicWebTC):
             f = appobject(req)
             self.assertEqual(f(12, 13), '25')
 
+    def test_badrequest(self):
+        with self.assertRaises(RemoteCallFailed) as cm:
+            with self.remote_calling('foo'):
+                pass
+        self.assertEqual(cm.exception.status, 400)
+        self.assertEqual(cm.exception.reason, 'no foo method')
+
 
 class JSonControllerTC(AjaxControllerTC):
     # NOTE: this class performs the same tests as AjaxController but with
