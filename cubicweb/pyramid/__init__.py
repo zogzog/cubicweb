@@ -111,7 +111,9 @@ def wsgi_application_from_cwconfig(
         app,
         origin=' '.join(cwconfig['access-control-allow-origin']),
         headers=', '.join(cwconfig['access-control-allow-headers']),
+        expose_headers=', '.join(cwconfig['access-control-expose-headers']),
         methods=', '.join(cwconfig['access-control-allow-methods']),
+        maxage=cwconfig['access-control-max-age'],
         credentials='true')
 
     if profile:
