@@ -8,7 +8,7 @@ for eid, etype, encoded_extid in sql(
     sql('UPDATE cw_{} SET cw_cwuri=%(cwuri)s WHERE cw_eid=%(eid)s'.format(etype),
         {'eid': eid, 'cwuri': b64decode(encoded_extid)})
 
-sql('DROP TABLE moved_entities')
+sql('DROP TABLE IF EXISTS moved_entities')
 sql('ALTER TABLE entities DROP COLUMN asource')
 sql('ALTER TABLE entities DROP COLUMN extid')
 sql('DROP INDEX entities_type_idx')

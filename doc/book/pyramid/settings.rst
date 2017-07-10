@@ -76,7 +76,10 @@ The Pyramid CubicWeb specific configuration entries are:
 
 .. confval:: cubicweb.bwcompat (bool)
 
-    (True) Enable/disable backward compatibility. See :ref:`bwcompat_module`.
+    (True) Enable/disable backward compatibility. This only applies to
+    "all-in-one" configuration type.
+
+    See :ref:`bwcompat_module`.
 
 .. confval:: cubicweb.bwcompat.errorhandler (bool)
 

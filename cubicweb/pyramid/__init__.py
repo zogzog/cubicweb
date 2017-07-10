@@ -22,6 +22,7 @@
 
 import atexit
 import os
+import warnings
 
 import wsgicors
 
@@ -240,5 +241,11 @@ def includeme(config):
 
     config.include('cubicweb.pyramid.core')
 
-    if asbool(config.registry.settings.get('cubicweb.bwcompat', True)):
-        config.include('cubicweb.pyramid.bwcompat')
+    if asbool(config.registry.settings.get('cubicweb.bwcompat',
+                                           cwconfig.name == 'all-in-one')):
+        if cwconfig.name != 'all-in-one':
+            warnings.warn('"cubicweb.bwcompat" setting only applies to '
+                          '"all-in-one" instance configuration',
+                          UserWarning)
+        else:
+            config.include('cubicweb.pyramid.bwcompat')
