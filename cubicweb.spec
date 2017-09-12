@@ -8,7 +8,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           cubicweb
-Version:        3.25.1
+Version:        3.25.2
 Release:        logilab.1%{?dist}
 Summary:        CubicWeb is a semantic web application framework
 Source0:        https://pypi.python.org/packages/source/c/cubicweb/cubicweb-%{version}.tar.gz
@@ -27,7 +27,7 @@ Requires:       %{python}-logilab-mtconverter >= 0.8.0
 Requires:       %{python}-rql >= 0.34.0
 Requires:       %{python}-yams >= 0.45.0
 Requires:       %{python}-logilab-database >= 1.15.0
-Requires:       %{python}-passlib => 1.7.0
+Requires:       %{python}-passlib
 Requires:       %{python}-lxml
 Requires:       %{python}-twisted-web < 16.0.0
 Requires:       %{python}-markdown

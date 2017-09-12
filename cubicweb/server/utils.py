@@ -54,14 +54,15 @@ class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
     def to_string(self):
         return to_hash_str(u'%s$%s' % (self.salt, self.checksum or u''))
 
-    # passlib 1.5 wants calc_checksum, 1.6 wants _calc_checksum
-    def calc_checksum(self, secret):
+    def _calc_checksum(self, secret):
         return md5crypt(secret, self.salt.encode('ascii')).decode('utf-8')
-    _calc_checksum = calc_checksum
 
 
 _CRYPTO_CTX = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt', 'ldap_salted_sha1'],
                            deprecated=['cubicwebmd5crypt', 'des_crypt'])
+# for bw compat with passlib < 1.7
+if not hasattr(_CRYPTO_CTX, 'hash'):
+    _CRYPTO_CTX.hash = _CRYPTO_CTX.encrypt
 verify_and_update = _CRYPTO_CTX.verify_and_update
 
 

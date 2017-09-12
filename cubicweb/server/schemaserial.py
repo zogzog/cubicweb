@@ -92,6 +92,9 @@ def deserialize_schema(schema, cnx):
 
     # Computed Rtype
     tables = set(t.lower() for t in dbhelper.list_tables(cnx.cnxset.cu))
+    # on postgres, ensure the default schema name (public) is also checked
+    if dbhelper.backend_name == 'postgres':
+        tables.update(t.lower() for t in dbhelper.list_tables(cnx.cnxset.cu, 'public'))
     has_computed_relations = 'cw_cwcomputedrtype' in tables
     # computed attribute
     try:

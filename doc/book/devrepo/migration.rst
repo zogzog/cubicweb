@@ -197,9 +197,9 @@ scripts:
 * `option_group_change(option, oldgroup, newgroup)`, indicates that an option does not
   belong anymore to the same group.
 
-* `option_added(oldname, newname)`, indicates that an option has been added.
+* `option_added(option)`, indicates that an option has been added.
 
-* `option_removed(oldname, newname)`, indicates that an option has been deleted.
+* `option_removed(option)`, indicates that an option has been deleted.
 
 The `config` variable is an object which can be used to access the
 configuration values, for reading and updating, with a dictionary-like

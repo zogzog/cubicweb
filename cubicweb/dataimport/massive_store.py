@@ -106,6 +106,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """
         assert not self.slave_mode
         if self not in self._initialized:
+            self.sql('DROP TABLE IF EXISTS cwmassive_initialized')
             self.sql('CREATE TABLE cwmassive_initialized'
                      '(retype text, type varchar(128), uuid varchar(32))')
             self._initialized[self] = None
