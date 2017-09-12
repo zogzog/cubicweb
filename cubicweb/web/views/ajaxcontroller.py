@@ -73,7 +73,7 @@ from logilab.common.date import strptime
 from logilab.common.registry import yes
 from logilab.common.deprecation import deprecated
 
-from cubicweb import ObjectNotFound, NoSelectableObject
+from cubicweb import ObjectNotFound, NoSelectableObject, ValidationError
 from cubicweb.appobject import AppObject
 from cubicweb.utils import json, json_dumps, UStringIO
 from cubicweb.uilib import exc_message
@@ -153,6 +153,9 @@ class AjaxController(Controller):
             result = func(*args)
         except (RemoteCallFailed, DirectResponse):
             raise
+        except ValidationError:
+            raise RemoteCallFailed(exc_message(exc, self._cw.encoding),
+                                   status=http_client.BAD_REQUEST)
         except Exception as exc:
             if debug_mode:
                 self.exception(
