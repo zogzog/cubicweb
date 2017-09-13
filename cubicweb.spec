@@ -29,6 +29,7 @@ Requires:       %{python}-yams >= 0.45.0
 Requires:       %{python}-logilab-database >= 1.15.0
 Requires:       %{python}-passlib
 Requires:       %{python}-lxml
+Requires:       %{python}-unittest2 >= 0.7.0
 Requires:       %{python}-twisted-web < 16.0.0
 Requires:       %{python}-markdown
 Requires:       pytz
