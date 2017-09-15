@@ -1,4 +1,4 @@
-# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,10 +24,14 @@ from __future__ import print_function
 from contextlib import contextmanager
 from pprint import pprint
 
-from logilab.common.testlib import SkipTest
 
-from cubicweb.devtools.testlib import RepoAccess
 from cubicweb.entities.authobjs import user_session_cache_key
+from cubicweb.server import set_debug, debugged
+from cubicweb.server.sources.rql2sql import remove_unused_solutions
+
+from .testlib import RepoAccess, BaseTestCase
+from .fake import FakeRequest
+
 
 def tuplify(mylist):
     return [tuple(item) for item in mylist]
@@ -129,67 +133,7 @@ def restore_schema_eids_idx(schema, schema_eids):
             schema._eid_index[rdef.eid] = rdef
 
 
-from logilab.common.testlib import TestCase, mock_object
-from logilab.database import get_db_helper
-
-from rql import RQLHelper
-
-from cubicweb.devtools.testlib import BaseTestCase
-from cubicweb.devtools.fake import FakeRepo, FakeConfig, FakeRequest, FakeConnection
-from cubicweb.server import set_debug, debugged
-from cubicweb.server.querier import QuerierHelper
-from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
-
-class RQLGeneratorTC(BaseTestCase):
-    schema = backend = None # set this in concrete class
-
-    @classmethod
-    def setUpClass(cls):
-        if cls.backend is not None:
-            try:
-                cls.dbhelper = get_db_helper(cls.backend)
-            except ImportError as ex:
-                raise SkipTest(str(ex))
-
-    def setUp(self):
-        self.repo = FakeRepo(self.schema, config=FakeConfig(apphome=self.datadir))
-        self.repo.system_source = mock_object(dbdriver=self.backend)
-        self.rqlhelper = RQLHelper(self.schema,
-                                   special_relations={'eid': 'uid',
-                                                      'has_text': 'fti'},
-                                   backend=self.backend)
-        self.qhelper = QuerierHelper(self.repo, self.schema)
-        ExecutionPlan._check_permissions = _dummy_check_permissions
-        rqlannotation._select_principal = _select_principal
-        if self.backend is not None:
-            self.o = SQLGenerator(self.schema, self.dbhelper)
-
-    def tearDown(self):
-        ExecutionPlan._check_permissions = _orig_check_permissions
-        rqlannotation._select_principal = _orig_select_principal
-
-    def set_debug(self, debug):
-        set_debug(debug)
-    def debugged(self, debug):
-        return debugged(debug)
-
-    def _prepare(self, rql):
-        #print '******************** prepare', rql
-        union = self.rqlhelper.parse(rql)
-        #print '********* parsed', union.as_string()
-        self.rqlhelper.compute_solutions(union)
-        #print '********* solutions', solutions
-        self.rqlhelper.simplify(union)
-        #print '********* simplified', union.as_string()
-        plan = self.qhelper.plan_factory(union, {}, FakeConnection(self.repo))
-        plan.preprocess(union)
-        for select in union.children:
-            select.solutions.sort(key=lambda x: list(x.items()))
-        #print '********* ppsolutions', solutions
-        return union
-
-
-class BaseQuerierTC(TestCase):
+class BaseQuerierTC(BaseTestCase):
     repo = None # set this in concrete class
 
     def setUp(self):
@@ -316,8 +260,6 @@ def _check_permissions(*args, **kwargs):
     res = DumbOrderedDict(sorted(res.items(), key=lambda x: [list(y.items()) for y in x[1]]))
     return res, restricted
 
-def _dummy_check_permissions(self, rqlst):
-    return {(): rqlst.solutions}, set()
 
 from cubicweb.server import rqlannotation
 _orig_select_principal = rqlannotation._select_principal

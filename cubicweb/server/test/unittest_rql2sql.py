@@ -1,4 +1,4 @@
-# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,17 +26,24 @@ from logilab.common.testlib import mock_object
 from logilab.common.decorators import monkeypatch
 
 from rql import BadRQLQuery
+from rql import RQLHelper
 from rql.utils import register_function, FunctionDescr
 
 from cubicweb import devtools
-from cubicweb.devtools.repotest import RQLGeneratorTC
-from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
+from cubicweb.devtools.fake import FakeRepo, FakeConfig, FakeConnection
+from cubicweb.devtools.testlib import BaseTestCase
+from cubicweb.server import rqlannotation
+from cubicweb.server.querier import QuerierHelper, ExecutionPlan
+from cubicweb.server.sources import rql2sql
+
+_orig_select_principal = rqlannotation._select_principal
+_orig_check_permissions = ExecutionPlan._check_permissions
 
 
 def setUpModule():
     """Monkey-patch the SQL generator to ensure solutions order is predictable."""
     global orig_solutions_sql
-    orig_solutions_sql = SQLGenerator._solutions_sql
+    orig_solutions_sql = rql2sql.SQLGenerator._solutions_sql
 
     @monkeypatch
     def _solutions_sql(self, select, solutions, distinct, needalias):
@@ -45,7 +52,7 @@ def setUpModule():
 
 def tearDownModule():
     """Remove monkey-patch done in setUpModule"""
-    SQLGenerator._solutions_sql = orig_solutions_sql
+    rql2sql.SQLGenerator._solutions_sql = orig_solutions_sql
 
 
 # add a dumb registered procedure
@@ -1226,8 +1233,67 @@ WHERE NOT (EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_t
      '''SELECT rel_is0.eid_from
 FROM is_relation AS rel_is0
 WHERE rel_is0.eid_to=2'''),
+]
 
-    ]
+
+class RQLGeneratorTC(BaseTestCase):
+    schema = backend = None  # set this in concrete class
+
+    @classmethod
+    def setUpClass(cls):
+        if cls.backend is not None:
+            try:
+                cls.dbhelper = db.get_db_helper(cls.backend)
+            except ImportError as ex:
+                self.skipTest(str(ex))
+
+    def setUp(self):
+        self.repo = FakeRepo(self.schema, config=FakeConfig(apphome=self.datadir))
+        self.repo.system_source = mock_object(dbdriver=self.backend)
+        self.rqlhelper = RQLHelper(self.schema,
+                                   special_relations={'eid': 'uid',
+                                                      'has_text': 'fti'},
+                                   backend=self.backend)
+        self.qhelper = QuerierHelper(self.repo, self.schema)
+
+        def _dummy_check_permissions(self, rqlst):
+            return {(): rqlst.solutions}, set()
+
+        ExecutionPlan._check_permissions = _dummy_check_permissions
+
+        def _select_principal(scope, relations):
+            def sort_key(something):
+                try:
+                    return something.r_type
+                except AttributeError:
+                    return (something[0].r_type, something[1])
+            return _orig_select_principal(scope, relations,
+                                          _sort=lambda rels: sorted(rels, key=sort_key))
+
+        rqlannotation._select_principal = _select_principal
+        if self.backend is not None:
+            self.o = rql2sql.SQLGenerator(self.schema, self.dbhelper)
+
+    def tearDown(self):
+        ExecutionPlan._check_permissions = _orig_check_permissions
+        rqlannotation._select_principal = _orig_select_principal
+
+    def _prepare(self, rql):
+        #print '******************** prepare', rql
+        union = self.rqlhelper.parse(rql)
+        #print '********* parsed', union.as_string()
+        self.rqlhelper.compute_solutions(union)
+        #print '********* solutions', solutions
+        self.rqlhelper.simplify(union)
+        #print '********* simplified', union.as_string()
+        plan = self.qhelper.plan_factory(union, {}, FakeConnection(self.repo))
+        plan.preprocess(union)
+        for select in union.children:
+            select.solutions.sort(key=lambda x: list(x.items()))
+        #print '********* ppsolutions', solutions
+        return union
+
+
 class CWRQLTC(RQLGeneratorTC):
     backend = 'sqlite'
 
@@ -2273,21 +2339,23 @@ class removeUnsusedSolutionsTC(unittest.TestCase):
         rqlst = mock_object(defined_vars={})
         rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
         rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
-        self.assertEqual(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
-                                                          {'A': 'FootGroup', 'B': 'FootTeam'}], None),
-                          ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
-                            {'A': 'FootGroup', 'B': 'FootTeam'}],
-                           {}, set('B'))
-                          )
+        self.assertEqual(
+            rql2sql.remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
+                                                    {'A': 'FootGroup', 'B': 'FootTeam'}], None),
+            ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
+              {'A': 'FootGroup', 'B': 'FootTeam'}],
+             {}, set('B'))
+        )
 
     def test_invariant_varying(self):
         rqlst = mock_object(defined_vars={})
         rqlst.defined_vars['A'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=True)
         rqlst.defined_vars['B'] = mock_object(scope=rqlst, stinfo={}, _q_invariant=False)
-        self.assertEqual(remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
-                                                          {'A': 'FootGroup', 'B': 'RugbyTeam'}], None),
-                          ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'}], {}, set())
-                          )
+        self.assertEqual(
+            rql2sql.remove_unused_solutions(rqlst, [{'A': 'RugbyGroup', 'B': 'RugbyTeam'},
+                                                    {'A': 'FootGroup', 'B': 'RugbyTeam'}], None),
+            ([{'A': 'RugbyGroup', 'B': 'RugbyTeam'}], {}, set())
+        )
 
 
 if __name__ == '__main__':
