@@ -23,7 +23,6 @@ import unittest
 
 from logilab import database as db
 from logilab.common.testlib import mock_object
-from logilab.common.decorators import monkeypatch
 
 from rql import BadRQLQuery
 from rql import RQLHelper
@@ -38,22 +37,6 @@ from cubicweb.server.sources import rql2sql
 
 _orig_select_principal = rqlannotation._select_principal
 _orig_check_permissions = ExecutionPlan._check_permissions
-
-
-def setUpModule():
-    """Monkey-patch the SQL generator to ensure solutions order is predictable."""
-    global orig_solutions_sql
-    orig_solutions_sql = rql2sql.SQLGenerator._solutions_sql
-
-    @monkeypatch
-    def _solutions_sql(self, select, solutions, distinct, needalias):
-        return orig_solutions_sql(self, select, sorted(solutions), distinct, needalias)
-
-
-def tearDownModule():
-    """Remove monkey-patch done in setUpModule"""
-    rql2sql.SQLGenerator._solutions_sql = orig_solutions_sql
-
 
 # add a dumb registered procedure
 class stockproc(FunctionDescr):
