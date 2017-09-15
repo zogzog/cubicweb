@@ -194,7 +194,7 @@ Here is the code in cube's *hooks.py*:
 
 	def precommit_event(self):
 	    for eid in self.get_data():
-		entity = self.session.entity_from_eid(eid)
+		entity = self.cnx.entity_from_eid(eid)
 		if entity.visibility == 'parent':
 		    entity.cw_set(visibility=u'authenticated')
 
@@ -364,7 +364,7 @@ To run it type:
 
 .. sourcecode:: bash
 
-    $ pytest unittest_sytweb.py
+    $ python test/unittest_sytweb.py
     ========================  unittest_sytweb.py  ========================
     -> creating tables [....................]
     -> inserting default user and default groups.
@@ -382,7 +382,7 @@ test instance. The second one will be much quicker:
 
 .. sourcecode:: bash
 
-    $ pytest unittest_sytweb.py
+    $ python test/unittest_sytweb.py
     ========================  unittest_sytweb.py  ========================
     .
     ----------------------------------------------------------------------
@@ -395,11 +395,6 @@ database. You do that by removing the tmpdb files before running the test: ::
 
     $ rm data/database/tmpdb*
 
-
-.. Note::
-  pytest is a very convenient utility used to control test execution. It is available from the `logilab-common`_ package.
-
-.. _`logilab-common`: http://www.logilab.org/project/logilab-common
 
 .. _adv_tuto_migration_script:
 

@@ -5,26 +5,35 @@ Cube creation and schema definition
 
 .. _adv_tuto_create_new_cube:
 
-Step 1: creating a new cube for my web site
+Step 1: creating a virtual environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Fisrt I need a python virtual environment with cubicweb::
+
+  virtualenv python-2.7.5_cubicweb
+  . /python-2.7.5_cubicweb/bin/activate
+  pip install cubicweb
+
+
+Step 2: creating a new cube for my web site
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 One note about my development environment: I wanted to use the packaged
-version of CubicWeb and cubes while keeping my cube in my user
-directory, let's say `~src/cubes`.  I achieve this by setting the
-following environment variables::
+version of CubicWeb and cubes while keeping my cube in the current
+directory, let's say `~src/cubes`::
 
-  CW_CUBES_PATH=~/src/cubes
+  cd ~src/cubes
   CW_MODE=user
 
 I can now create the cube which will hold custom code for this web
 site using::
 
-  cubicweb-ctl newcube --directory=~/src/cubes sytweb
+  cubicweb-ctl newcube sytweb
 
 
 .. _adv_tuto_assemble_cubes:
 
-Step 2: pick building blocks into existing cubes
+Step 3: pick building blocks into existing cubes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Almost everything I want to handle in my web-site is somehow already modelized in
@@ -50,7 +59,7 @@ existing cubes that I'll extend for my need. So I'll pick the following cubes:
   entities supporting the `tags` relation by linking the to `Tag` entities. This
   will allows navigation into a large number of picture.
 
-Ok, now I'll tell my cube requires all this by editing :file:`cubes/sytweb/__pkginfo__.py`:
+Ok, now I'll tell my cube requires all this by editing :file:`cubicweb-sytweb/cubicweb_sytweb/__pkginfo__.py`:
 
   .. sourcecode:: python
 
@@ -64,26 +73,20 @@ Ok, now I'll tell my cube requires all this by editing :file:`cubes/sytweb/__pkg
 
 Notice that you can express minimal version of the cube that should be used,
 `None` meaning whatever version available. All packages starting with 'cubicweb-'
-will be recognized as being cube, not bare python packages. You can still specify
-this explicitly using instead the `__depends_cubes__` dictionary which should
-contains cube's name without the prefix. So the example below would be written
-as:
-
-  .. sourcecode:: python
-
-    __depends__ = {'cubicweb': '>= 3.10.0'}
-    __depends_cubes__ = {'file': '>= 1.9.0',
-		         'folder': '>= 1.1.0',
-		   	 'person': '>= 1.2.0',
-		   	 'comment': '>= 1.2.0',
-		   	 'tag': '>= 1.2.0',
-		   	 'zone': None}
+will be recognized as being cube, not bare python packages.
 
 If your cube is packaged for debian, it's a good idea to update the
 `debian/control` file at the same time, so you won't forget it.
 
+Now, I need to install all the dependencies::
 
-Step 3: glue everything together in my cube's schema
+  cd cubicweb-sytweb
+  pip install -e .
+  pip install cubicweb[etwist]
+  pip install psycopg2 # for postgresql
+
+
+Step 4: glue everything together in my cube's schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. sourcecode:: python
@@ -131,13 +134,15 @@ least), but since the possibility to let a schema evolve is one of CubicWeb's
 features (and goals), we won't worry about it for now and see that later when needed.
 
 
-Step 4: creating the instance
+Step 5: creating the instance
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now that I have a schema, I want to create an instance. To
 do so using this new 'sytweb' cube, I run::
 
   cubicweb-ctl create sytweb sytweb_instance
+
+Don't forget to say "yes" to the question: `Allow anonymous access ? [y/N]:`
 
 Hint: if you get an error while the database is initialized, you can
 avoid having to answer the questions again by running::
