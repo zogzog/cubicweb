@@ -1262,6 +1262,7 @@ def strip(text):
     return '\n'.join(l.strip() for l in text.strip().splitlines())
 
 class PostgresSQLGeneratorTC(RQLGeneratorTC):
+    maxDiff = None
     backend = 'postgres'
 
     def setUp(self):
