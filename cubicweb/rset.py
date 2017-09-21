@@ -393,6 +393,8 @@ class ResultSet(object):
             if self.rows[i][col] is not None:
                 yield self.get_entity(i, col)
 
+    all = entities
+
     def iter_rows_with_entities(self):
         """ iterates over rows, and for each row
         eids are converted to plain entities
@@ -458,6 +460,34 @@ class ResultSet(object):
             raise NoResultError("No row was found for one()")
         else:
             raise MultipleResultsError("Multiple rows were found for one()")
+
+    def first(self, col=0):
+        """Retrieve the first entity from the query.
+
+        If the result set is empty, raises :exc:`NoResultError`.
+
+        :type col: int
+        :param col: The column localising the entity in the unique row
+
+        :return: the partially initialized `Entity` instance
+        """
+        if len(self) == 0:
+            raise NoResultError("No row was found for first()")
+        return self.get_entity(0, col)
+
+    def last(self, col=0):
+        """Retrieve the last entity from the query.
+
+        If the result set is empty, raises :exc:`NoResultError`.
+
+        :type col: int
+        :param col: The column localising the entity in the unique row
+
+        :return: the partially initialized `Entity` instance
+        """
+        if len(self) == 0:
+            raise NoResultError("No row was found for last()")
+        return self.get_entity(-1, col)
 
     def _make_entity(self, row, col):
         """Instantiate an entity, and store it in the entity cache"""
