@@ -98,15 +98,29 @@ class AnyEntity(Entity):
 
     # meta data api ###########################################################
 
-    def __getattr__(self, name):
-        prefix = 'dc_'
-        if name.startswith(prefix):
-            # Proxy to IDublinCore adapter for bw compat.
-            adapted = self.cw_adapt_to('IDublinCore')
-            method = name[len(prefix):]
-            if hasattr(adapted, method):
-                return getattr(adapted, method)
-        raise AttributeError(name)
+    def dc_title(self):
+        return self.cw_adapt_to('IDublinCore').title()
+
+    def dc_long_title(self):
+        return self.cw_adapt_to('IDublinCore').long_title()
+
+    def dc_description(self, *args, **kwargs):
+        return self.cw_adapt_to('IDublinCore').description(*args, **kwargs)
+
+    def dc_authors(self):
+        return self.cw_adapt_to('IDublinCore').authors()
+
+    def dc_creator(self):
+        return self.cw_adapt_to('IDublinCore').creator()
+
+    def dc_date(self, *args, **kwargs):
+        return self.cw_adapt_to('IDublinCore').date(*args, **kwargs)
+
+    def dc_type(self, *args, **kwargs):
+        return self.cw_adapt_to('IDublinCore').type(*args, **kwargs)
+
+    def dc_language(self):
+        return self.cw_adapt_to('IDublinCore').language()
 
     @property
     def creator(self):
