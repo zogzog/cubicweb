@@ -172,7 +172,7 @@ class FormRenderer(AppObject):
                 else:
                     templstr = u'&#160;%s\n'
                 for field, err in errors:
-                    if field is None:
+                    if not field:
                         errormsg += templstr % err
                     else:
                         errormsg += templstr % '%s: %s' % (req._(field), err)
