@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,7 +20,7 @@
 
 from cubicweb import _
 
-from hashlib import sha1 # pylint: disable=E0611
+from hashlib import sha1  # pylint: disable=E0611
 
 from six import text_type
 from six.moves import range
@@ -28,7 +28,6 @@ from six.moves import range
 from logilab.mtconverter import xml_escape
 
 from cubicweb import tags
-from cubicweb.schema import display_name
 from cubicweb.predicates import one_line_rset, is_instance, match_user_groups
 from cubicweb.view import EntityView, StartupView
 from cubicweb.web import action, formwidgets
@@ -39,7 +38,8 @@ _pvs.tag_attribute(('CWUser', 'login'), 'hidden')
 
 _affk = uicfg.autoform_field_kwargs
 _affk.tag_subject_of(('CWUser', 'in_group', 'CWGroup'),
-                    {'widget': formwidgets.InOutWidget})
+                     {'widget': formwidgets.InOutWidget})
+
 
 class UserPreferencesEntityAction(action.Action):
     __regid__ = 'prefs'
@@ -66,7 +66,7 @@ class FoafView(EntityView):
         self.w(u'''<?xml version="1.0" encoding="%s"?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:rdfs="http://www.w3org/2000/01/rdf-schema#"
-         xmlns:foaf="http://xmlns.com/foaf/0.1/"> '''% self._cw.encoding)
+         xmlns:foaf="http://xmlns.com/foaf/0.1/"> ''' % self._cw.encoding)
         for i in range(self.cw_rset.rowcount):
             self.cell_call(i, 0)
         self.w(u'</rdf:RDF>\n')
@@ -121,6 +121,7 @@ class CWGroupMainTab(tabs.PrimaryTab):
             'U last_login_time LL, G eid %(x)s', {'x': entity.eid})
         self.wview('cwgroup.users', rset, 'null')
 
+
 class CWGroupUsersTable(tableview.RsetTableView):
     __regid__ = 'cwgroup.users'
     __select__ = is_instance('CWUser')
@@ -135,9 +136,7 @@ class CWGroupPermTab(EntityView):
     __select__ = is_instance('CWGroup')
 
     def entity_call(self, entity):
-        self._cw.add_css(('cubicweb.schema.css','cubicweb.acl.css'))
-        access_types = ('read', 'delete', 'add', 'update')
-        w = self.w
+        self._cw.add_css(('cubicweb.schema.css', 'cubicweb.acl.css'))
         objtype_access = {'CWEType': ('read', 'delete', 'add', 'update'),
                           'CWRelation': ('add', 'delete')}
         rql_cwetype = 'DISTINCT Any X WHERE X %s_permission CWG, X is CWEType, ' \
@@ -170,7 +169,7 @@ class CWGroupInContextView(EntityView):
 # user / groups management views ###############################################
 
 class ManageUsersAction(actions.ManagersAction):
-    __regid__ = 'cwuser' # see rewrite rule /cwuser
+    __regid__ = 'cwuser'  # see rewrite rule /cwuser
     title = _('users and groups')
     category = 'manage'
 
@@ -179,7 +178,7 @@ class UsersAndGroupsManagementView(tabs.TabsMixin, StartupView):
     __regid__ = 'cw.users-and-groups-management'
     __select__ = StartupView.__select__ & match_user_groups('managers')
     title = _('Users and groups management')
-    tabs = [_('cw.users-management'), _('cw.groups-management'),]
+    tabs = [_('cw.users-management'), _('cw.groups-management')]
     default_tab = 'cw.users-management'
 
     def call(self, **kwargs):
@@ -191,7 +190,7 @@ class UsersAndGroupsManagementView(tabs.TabsMixin, StartupView):
 class CWUserManagementView(StartupView):
     __regid__ = 'cw.users-management'
     __select__ = StartupView.__select__ & match_user_groups('managers')
-    cache_max_age = 0 # disable caching
+    cache_max_age = 0  # disable caching
     # XXX one could wish to display for instance only user's firstname/surname
     # for non managers but filtering out NULL caused crash with an ldapuser
     # source. The ldapuser source has been dropped and this code can be updated.
@@ -217,24 +216,24 @@ class CWUsersTable(tableview.EntityTableView):
 
     column_renderers = {
         'user': tableview.EntityTableColRenderer(
-            renderfunc=lambda w,x: w(tags.a(x.login, href=x.absolute_url())),
+            renderfunc=lambda w, x: w(tags.a(x.login, href=x.absolute_url())),
             sortfunc=lambda x: x.login),
         'in_state': tableview.EntityTableColRenderer(
-            renderfunc=lambda w,x: w(x.cw_adapt_to('IWorkflowable').printable_state),
+            renderfunc=lambda w, x: w(x.cw_adapt_to('IWorkflowable').printable_state),
             sortfunc=lambda x: x.cw_adapt_to('IWorkflowable').printable_state),
         'in_group': tableview.EntityTableColRenderer(
-            renderfunc=lambda w,x: x.view('reledit', rtype='in_group', role='subject', w=w)),
+            renderfunc=lambda w, x: x.view('reledit', rtype='in_group', role='subject', w=w)),
         'primary_email': tableview.RelatedEntityColRenderer(
-            getrelated=lambda x:x.primary_email and x.primary_email[0] or None),
+            getrelated=lambda x: x.primary_email and x.primary_email[0] or None),
         'cw_source': tableview.RelatedEntityColRenderer(
             getrelated=lambda x: x.cw_source[0]),
-        }
+    }
 
 
 class CWGroupsManagementView(StartupView):
     __regid__ = 'cw.groups-management'
     __select__ = StartupView.__select__ & match_user_groups('managers')
-    cache_max_age = 0 # disable caching
+    cache_max_age = 0  # disable caching
     rql = ('Any G,GN ORDERBY GN WHERE G is CWGroup, G name GN, NOT G name "owners"')
 
     def call(self, **kwargs):
@@ -253,6 +252,6 @@ class CWGroupsTable(tableview.EntityTableView):
         'group': tableview.MainEntityColRenderer(),
         'nb_users': tableview.EntityTableColRenderer(
             header=_('num. users'),
-            renderfunc=lambda w,x: w(text_type(x.num_users())),
+            renderfunc=lambda w, x: w(text_type(x.num_users())),
             sortfunc=lambda x: x.num_users()),
-        }
+    }

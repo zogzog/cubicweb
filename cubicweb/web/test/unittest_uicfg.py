@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+
 import copy
 import warnings
 
@@ -25,11 +26,11 @@ from cubicweb.web.views import uicfg
 
 abaa = uicfg.actionbox_appearsin_addmenu
 
+
 class UICFGTC(CubicWebTC):
 
     def test_default_actionbox_appearsin_addmenu_config(self):
         self.assertFalse(abaa.etype_get('TrInfo', 'wf_info_for', 'object', 'CWUser'))
-
 
 
 class DefinitionOrderTC(CubicWebTC):
@@ -41,19 +42,19 @@ class DefinitionOrderTC(CubicWebTC):
         for rtag in (uicfg.autoform_section, uicfg.autoform_field_kwargs):
             rtag._old_tagdefs = copy.deepcopy(rtag._tagdefs)
         new_def = (
-                    (('*', 'login', '*'),
-                         {'formtype':'main', 'section':'hidden'}),
-                    (('*', 'login', '*'),
-                         {'formtype':'muledit', 'section':'hidden'}),
-                    (('CWUser', 'login', '*'),
-                         {'formtype':'main', 'section':'attributes'}),
-                    (('CWUser', 'login', '*'),
-                         {'formtype':'muledit', 'section':'attributes'}),
-                    (('CWUser', 'login', 'String'),
-                         {'formtype':'main', 'section':'inlined'}),
-                    (('CWUser', 'login', 'String'),
-                         {'formtype':'inlined', 'section':'attributes'}),
-                    )
+            (('*', 'login', '*'),
+             {'formtype': 'main', 'section': 'hidden'}),
+            (('*', 'login', '*'),
+             {'formtype': 'muledit', 'section': 'hidden'}),
+            (('CWUser', 'login', '*'),
+             {'formtype': 'main', 'section': 'attributes'}),
+            (('CWUser', 'login', '*'),
+             {'formtype': 'muledit', 'section': 'attributes'}),
+            (('CWUser', 'login', 'String'),
+             {'formtype': 'main', 'section': 'inlined'}),
+            (('CWUser', 'login', 'String'),
+             {'formtype': 'inlined', 'section': 'attributes'}),
+        )
         for key, kwargs in new_def:
             uicfg.autoform_section.tag_subject_of(key, **kwargs)
 
@@ -120,10 +121,12 @@ class DefinitionOrderTC(CubicWebTC):
     @tag('uihelper', 'hidden', 'formconfig')
     def test_uihelper_formconfig(self):
         afk_get = uicfg.autoform_field_kwargs.get
+
         class CWUserFormConfig(uihelper.FormConfig):
             etype = 'CWUser'
             hidden = ('in_group',)
             fields_order = ('login', 'firstname')
+
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
         self.assertCountEqual(section_conf, ['main_hidden', 'muledit_attributes'])
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})

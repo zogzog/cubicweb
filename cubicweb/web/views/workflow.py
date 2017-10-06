@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -25,24 +25,21 @@
 from cubicweb import _
 
 import os
-from warnings import warn
 
 from six import add_metaclass
 
 from logilab.mtconverter import xml_escape
-from logilab.common.graph import escape
 from logilab.common.deprecation import class_deprecated
 
 from cubicweb import Unauthorized
-from cubicweb.predicates import (has_related_entities, one_line_rset,
-                                relation_possible, match_form_params,
-                                score_entity, is_instance, adaptable)
+from cubicweb.predicates import (one_line_rset,
+                                 relation_possible, match_form_params,
+                                 score_entity, is_instance, adaptable)
 from cubicweb.view import EntityView
-from cubicweb.schema import display_name
-from cubicweb.web import stdmsgs, action, component, form, action
-from cubicweb.web import formfields as ff, formwidgets as fwdgs
+from cubicweb.web import stdmsgs, action, component, form
+from cubicweb.web import formwidgets as fwdgs
 from cubicweb.web.views import TmpFileViewMixin
-from cubicweb.web.views import uicfg, forms, primary, ibreadcrumbs
+from cubicweb.web.views import uicfg, forms, ibreadcrumbs
 from cubicweb.web.views.tabs import TabbedPrimaryView, PrimaryTab
 from cubicweb.web.views.dotgraphview import DotGraphView, DotPropsHandler
 
@@ -77,6 +74,7 @@ _abaa.tag_object_of(('WorkflowTransition', 'transition_of', 'Workflow'), True)
 _afs = uicfg.autoform_section
 _affk = uicfg.autoform_field_kwargs
 
+
 # IWorkflowable views #########################################################
 
 class ChangeStateForm(forms.CompositeEntityForm):
@@ -84,7 +82,7 @@ class ChangeStateForm(forms.CompositeEntityForm):
     # session_key() implementation)
     __regid__ = domid = 'changestate'
 
-    form_renderer_id = 'base' # don't want EntityFormRenderer
+    form_renderer_id = 'base'  # don't want EntityFormRenderer
     form_buttons = [fwdgs.SubmitButton(),
                     fwdgs.Button(stdmsgs.BUTTON_CANCEL,
                                  {'class': fwdgs.Button.css_class + ' cwjs-edition-cancel'})]
@@ -132,8 +130,8 @@ class ChangeStateFormView(form.FormViewMixIn, EntityView):
 
 class WFHistoryView(EntityView):
     __regid__ = 'wfhistory'
-    __select__ = relation_possible('wf_info_for', role='object') & \
-                 score_entity(lambda x: x.cw_adapt_to('IWorkflowable').workflow_history)
+    __select__ = (relation_possible('wf_info_for', role='object')
+                  & score_entity(lambda x: x.cw_adapt_to('IWorkflowable').workflow_history))
 
     title = _('Workflow history')
 
@@ -180,6 +178,7 @@ class InContextWithStateView(EntityView):
     """display incontext view for an entity as well as its current state"""
     __regid__ = 'incontext-state'
     __select__ = adaptable('IWorkflowable')
+
     def entity_call(self, entity):
         iwf = entity.cw_adapt_to('IWorkflowable')
         self.w(u'%s [%s]' % (entity.view('incontext'), iwf.printable_state))
@@ -238,9 +237,10 @@ _abaa.tag_object_of(('BaseTransition', 'transition_of', 'Workflow'), False)
 _abaa.tag_object_of(('Transition', 'transition_of', 'Workflow'), True)
 _abaa.tag_object_of(('WorkflowTransition', 'transition_of', 'Workflow'), True)
 
+
 class WorkflowPrimaryView(TabbedPrimaryView):
     __select__ = is_instance('Workflow')
-    tabs = [  _('wf_tab_info'), _('wfgraph'),]
+    tabs = [_('wf_tab_info'), _('wfgraph')]
     default_tab = 'wf_tab_info'
 
 
@@ -253,6 +253,7 @@ class StateInContextView(EntityView):
         self.w(xml_escape(self._cw.view('textincontext', self.cw_rset,
                                         row=row, col=col)))
 
+
 class WorkflowTabTextView(PrimaryTab):
     __regid__ = 'wf_tab_info'
     __select__ = PrimaryTab.__select__ & one_line_rset() & is_instance('Workflow')
@@ -262,7 +263,7 @@ class WorkflowTabTextView(PrimaryTab):
         self.w(u'<div>%s</div>' % (entity.printable_value('description')))
         self.w(u'<span>%s%s</span>' % (_("workflow_of").capitalize(), _(" :")))
         html = []
-        for e in  entity.workflow_of:
+        for e in entity.workflow_of:
             view = e.view('outofcontext')
             if entity.eid == e.default_workflow[0].eid:
                 view += u' <span>[%s]</span>' % _('default_workflow')
@@ -273,10 +274,9 @@ class WorkflowTabTextView(PrimaryTab):
             'Any T,T,DS,T,TT ORDERBY TN WHERE T transition_of WF, WF eid %(x)s,'
             'T type TT, T name TN, T destination_state DS?', {'x': entity.eid})
         self.wview('table', rset, 'null',
-                   cellvids={ 1: 'trfromstates', 2: 'outofcontext', 3:'trsecurity',},
-                   headers = (_('Transition'),  _('from_state'),
-                              _('to_state'), _('permissions'), _('type') ),
-                   )
+                   cellvids={1: 'trfromstates', 2: 'outofcontext', 3: 'trsecurity'},
+                   headers=(_('Transition'), _('from_state'),
+                            _('to_state'), _('permissions'), _('type')))
 
 
 class TransitionSecurityTextView(EntityView):
@@ -293,9 +293,9 @@ class TransitionSecurityTextView(EntityView):
                                in entity.require_group))))
         if entity.condition:
             self.w(u'<div>%s%s %s</div>' %
-                   ( _('conditions'), _(" :"),
-                     u'<br/>'.join((e.dc_title() for e
-                                in entity.condition))))
+                   (_('conditions'), _(" :"),
+                    u'<br/>'.join((e.dc_title() for e in entity.condition))))
+
 
 class TransitionAllowedTextView(EntityView):
     __regid__ = 'trfromstates'
@@ -317,10 +317,12 @@ def _wf_items_for_relation(req, wfeid, wfrelation, field):
                   for e in getattr(wf, 'reverse_%s' % wfrelation)
                   if rschema.has_perm(req, 'add', **{param: e.eid}))
 
+
 # TrInfo
 _afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'main', 'hidden')
 _afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'main', 'hidden')
 _afs.tag_attribute(('TrInfo', 'tr_count'), 'main', 'hidden')
+
 
 # BaseTransition
 # XXX * allowed_transition BaseTransition
@@ -337,12 +339,14 @@ def transition_states_vocabulary(form, field):
         wfeid = eids[0]
     return _wf_items_for_relation(form._cw, wfeid, 'state_of', field)
 
+
 _afs.tag_subject_of(('*', 'destination_state', '*'), 'main', 'attributes')
 _affk.tag_subject_of(('*', 'destination_state', '*'),
                      {'choices': transition_states_vocabulary})
 _afs.tag_object_of(('*', 'allowed_transition', '*'), 'main', 'attributes')
 _affk.tag_object_of(('*', 'allowed_transition', '*'),
-                     {'choices': transition_states_vocabulary})
+                    {'choices': transition_states_vocabulary})
+
 
 # State
 
@@ -350,12 +354,13 @@ def state_transitions_vocabulary(form, field):
     entity = form.edited_entity
     if entity.has_eid():
         wfeid = entity.state_of[0].eid
-    else :
+    else:
         eids = form.linked_to.get(('state_of', 'subject'))
         if not eids:
             return []
         wfeid = eids[0]
     return _wf_items_for_relation(form._cw, wfeid, 'transition_of', field)
+
 
 _afs.tag_subject_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
 _affk.tag_subject_of(('State', 'allowed_transition', '*'),
@@ -366,22 +371,29 @@ _affk.tag_subject_of(('State', 'allowed_transition', '*'),
 
 class WorkflowIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
     __select__ = is_instance('Workflow')
+
     # XXX what if workflow of multiple types?
     def parent_entity(self):
         return self.entity.workflow_of and self.entity.workflow_of[0] or None
 
+
 class WorkflowItemIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
     __select__ = is_instance('BaseTransition', 'State')
+
     def parent_entity(self):
         return self.entity.workflow
 
+
 class TransitionItemIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
     __select__ = is_instance('SubWorkflowExitPoint')
+
     def parent_entity(self):
         return self.entity.reverse_subworkflow_exit[0]
 
+
 class TrInfoIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
     __select__ = is_instance('TrInfo')
+
     def parent_entity(self):
         return self.entity.for_entity
 
@@ -421,6 +433,7 @@ class WorkflowVisitor(object):
                 yield incomingstate.eid, transition.eid, transition
             for outgoingstate in transition.potential_destinations():
                 yield transition.eid, outgoingstate.eid, transition
+
 
 class WorkflowGraphView(DotGraphView):
     __regid__ = 'wfgraph'

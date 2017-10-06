@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -118,16 +118,10 @@ checking for dark-corner case where it can't be verified properly.
 .. Controlling the generic relation fields
 """
 
-
-from cubicweb import _
-
-from warnings import warn
-
 from six.moves import range
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
-from logilab.common.deprecation import deprecated
 from logilab.common.registry import NoSelectableObject
 
 from cubicweb import neg_role, uilib
@@ -185,7 +179,7 @@ class InlinedFormField(ff.Field):
         return False
 
     def process_posted(self, form):
-        pass # handled by the subform
+        pass  # handled by the subform
 
 
 class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
@@ -237,7 +231,7 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
                                              **self.cw_extra_kwargs)
         if self.pform is None:
             form.restore_previous_post(form.session_key())
-        #assert form.parent_form
+        # assert form.parent_form
         self.add_hiddens(form, entity)
         return form
 
@@ -261,7 +255,7 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
         entity = self._entity()
         rdef = entity.e_schema.rdef(self.rtype, neg_role(self.role), self.petype)
         card = rdef.role_cardinality(self.role)
-        if card == '1': # don't display remove link
+        if card == '1':  # don't display remove link
             return None
         # if cardinality is 1..n (+), dont display link to remove an inlined form for the first form
         # allowing to edit the relation. To detect so:
@@ -294,7 +288,7 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
         except KeyError:
             self._cw.data[countkey] = 1
         self.form.render(w=self.w, divid=divid, title=title, removejs=removejs,
-                         i18nctx=i18nctx, counter=self._cw.data[countkey] ,
+                         i18nctx=i18nctx, counter=self._cw.data[countkey],
                          **kwargs)
 
     def form_title(self, entity, i18nctx):
@@ -374,21 +368,21 @@ class InlineAddNewLinkView(InlineEntityCreationFormView):
                   & specified_etype_implements('Any'))
 
     _select_attrs = InlineEntityCreationFormView._select_attrs + ('card',)
-    card = None # make pylint happy
-    form = None # no actual form wrapped
+    card = None  # make pylint happy
+    form = None  # no actual form wrapped
 
     def call(self, i18nctx, **kwargs):
         self._cw.set_varmaker()
         divid = "addNew%s%s%s:%s" % (self.etype, self.rtype, self.role, self.peid)
         self.w(u'<div class="inlinedform" id="%s" cubicweb:limit="true">'
-          % divid)
+               % divid)
         js = "addInlineCreationForm('%s', '%s', '%s', '%s', '%s', '%s')" % (
             self.peid, self.petype, self.etype, self.rtype, self.role, i18nctx)
         if self.pform.should_hide_add_new_relation_link(self.rtype, self.card):
             js = "toggleVisibility('%s'); %s" % (divid, js)
         __ = self._cw.pgettext
         self.w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
-          % (self.rtype, self.peid, js, __(i18nctx, 'add a %s' % self.etype)))
+               % (self.rtype, self.peid, js, __(i18nctx, 'add a %s' % self.etype)))
         self.w(u'</div>')
 
 
@@ -399,6 +393,7 @@ def relation_id(eid, rtype, role, reid):
     if role == 'subject':
         return u'%s:%s:%s' % (eid, rtype, reid)
     return u'%s:%s:%s' % (reid, rtype, eid)
+
 
 def toggleable_relation_link(eid, nodeid, label='x'):
     """return javascript snippet to delete/undelete a relation between two
@@ -420,6 +415,7 @@ def get_pending_inserts(req, eid=None):
     return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
             if eid is None or eid in (subj, obj)]
 
+
 def get_pending_deletes(req, eid=None):
     """shortcut to access req's pending_delete entry
 
@@ -429,6 +425,7 @@ def get_pending_deletes(req, eid=None):
     pending = req.session.data.get('pending_delete', ())
     return ['%s:%s:%s' % (subj, rel, obj) for subj, rel, obj in pending
             if eid is None or eid in (subj, obj)]
+
 
 def parse_relations_descr(rdescr):
     """parse a string describing some relations, in the form
@@ -443,6 +440,7 @@ def parse_relations_descr(rdescr):
             for obj in objs.split('_'):
                 yield int(subj), rtype, int(obj)
 
+
 def delete_relations(req, rdefs):
     """delete relations from the repository"""
     # FIXME convert to using the syntax subject:relation:eids
@@ -451,6 +449,7 @@ def delete_relations(req, rdefs):
         rql = 'DELETE X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
         execute(rql, {'x': subj, 'y': obj})
     req.set_message(req._('relations deleted'))
+
 
 def insert_relations(req, rdefs):
     """insert relations into the repository"""
@@ -468,9 +467,11 @@ def inline_creation_form(self, peid, petype, ttype, rtype, role, i18nctx):
                                          peid=peid, petype=petype)
     return self._call_view(view, i18nctx=i18nctx)
 
+
 @ajaxfunc(output_type='json')
 def validate_form(self, action, names, values):
     return self.validate_form(action, names, values)
+
 
 @ajaxfunc
 def cancel_edition(self, errorurl):
@@ -491,6 +492,7 @@ def _add_pending(req, eidfrom, rel, eidto, kind):
         pendings.append(value)
         req.session.data[key] = pendings
 
+
 def _remove_pending(req, eidfrom, rel, eidto, kind):
     key = 'pending_%s' % kind
     pendings = req.session.data[key]
@@ -499,20 +501,24 @@ def _remove_pending(req, eidfrom, rel, eidto, kind):
         pendings.remove(value)
         req.session.data[key] = pendings
 
+
 @ajaxfunc(output_type='json')
 def remove_pending_insert(self, args):
     eidfrom, rel, eidto = args
     _remove_pending(self._cw, eidfrom, rel, eidto, 'insert')
+
 
 @ajaxfunc(output_type='json')
 def add_pending_inserts(self, tripletlist):
     for eidfrom, rel, eidto in tripletlist:
         _add_pending(self._cw, eidfrom, rel, eidto, 'insert')
 
+
 @ajaxfunc(output_type='json')
 def remove_pending_delete(self, args):
     eidfrom, rel, eidto = args
     _remove_pending(self._cw, eidfrom, rel, eidto, 'delete')
+
 
 @ajaxfunc(output_type='json')
 def add_pending_delete(self, args):
@@ -527,7 +533,6 @@ class GenericRelationsWidget(fw.FieldWidget):
         w = stream.append
         req = form._cw
         _ = req._
-        __ = _
         eid = form.edited_entity.eid
         w(u'<table id="relatedEntities">')
         for rschema, role, related in field.relations_table(form):
@@ -541,9 +546,9 @@ class GenericRelationsWidget(fw.FieldWidget):
                     w(u'<li>%s<span id="span%s" class="%s">%s</span></li>'
                       % (viewparams[1], viewparams[0], viewparams[2], viewparams[3]))
                 if not form.force_display and form.maxrelitems < len(related):
-                    link = (u'<span>'
-                            '[<a href="javascript: window.location.href+=\'&amp;__force_display=1\'">%s</a>]'
-                            '</span>' % _('view all'))
+                    link = (u'<span>[<a '
+                            'href="javascript: window.location.href+=\'&amp;__force_display=1\'"'
+                            '>%s</a>]</span>' % _('view all'))
                     w(u'<li>%s</li>' % link)
                 w(u'</ul>')
                 w(u'</td>')
@@ -619,7 +624,8 @@ class GenericRelationsField(ff.Field):
                 if rschema.has_perm(form._cw, 'delete', **haspermkwargs):
                     toggleable_rel_link_func = toggleable_relation_link
                 else:
-                    toggleable_rel_link_func = lambda x, y, z: u''
+                    def toggleable_rel_link_func(x, y, z):
+                        return u''
                 for row in range(rset.rowcount):
                     nodeid = relation_id(entity.eid, rschema, role,
                                          rset[row][0])
@@ -641,7 +647,7 @@ class GenericRelationsField(ff.Field):
         for pendingid in pending_inserts:
             eidfrom, rtype, eidto = pendingid.split(':')
             pendingid = 'id' + pendingid
-            if int(eidfrom) == entity.eid: # subject
+            if int(eidfrom) == entity.eid:  # subject
                 label = display_name(form._cw, rtype, 'subject',
                                      entity.cw_etype)
                 reid = eidto
@@ -687,13 +693,14 @@ class UnrelatedDivs(EntityView):
         relname, role = self._cw.form.get('relation').rsplit('_', 1)
         return u"""\
 <div class="%s" id="%s">
-  <select id="%s" onchange="javascript: addPendingInsert(this.options[this.selectedIndex], %s, %s, '%s');">
+  <select id="%s"
+          onchange="javascript: addPendingInsert(this.options[this.selectedIndex], %s, %s, '%s');">
     %s
   </select>
 </div>
 """ % (hidden and 'hidden' or '', divid, selectid,
-       xml_escape(json_dumps(entity.eid)), is_cell and 'true' or 'null', relname,
-       '\n'.join(options))
+       xml_escape(json_dumps(entity.eid)), is_cell and 'true' or 'null',
+       relname, '\n'.join(options))
 
     def _get_select_options(self, entity, rschema, role):
         """add options to search among all entities of each possible type"""
@@ -706,7 +713,7 @@ class UnrelatedDivs(EntityView):
         # NOTE: expect 'limit' arg on choices method of relation field
         for eview, reid in field.vocabulary(form, limit=limit):
             if reid is None:
-                if eview: # skip blank value
+                if eview:  # skip blank value
                     options.append('<option class="separator">-- %s --</option>'
                                    % xml_escape(eview))
             elif reid != ff.INTERNAL_FIELD_VALUE:
@@ -724,7 +731,7 @@ class UnrelatedDivs(EntityView):
         for eschema in targettypes:
             mode = '%s:%s:%s:%s' % (role, entity.eid, rschema.type, eschema)
             url = self._cw.build_url(entity.rest_path(), vid='search-associate',
-                                 __mode=mode)
+                                     __mode=mode)
             options.append((eschema.display_name(self._cw),
                             '<option value="%s">%s %s</option>' % (
                 xml_escape(url), _('Search for'), eschema.display_name(self._cw))))
@@ -784,7 +791,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         for rtype, role in self.editable_attributes():
             try:
                 self.field_by_name(str(rtype), role)
-                continue # explicitly specified
+                continue  # explicitly specified
             except f.FieldNotFound:
                 # has to be guessed
                 try:
@@ -803,7 +810,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         for formview in self.inlined_form_views():
             field = self._inlined_form_view_field(formview)
             self.fields.append(field)
-            if not field.fieldset in fsio:
+            if field.fieldset not in fsio:
                 fsio.append(field.fieldset)
         if self.formtype == 'main':
             # add the generic relation field if necessary
@@ -817,7 +824,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                     pass
                 else:
                     self.fields.append(field)
-                    if not field.fieldset in fsio:
+                    if field.fieldset not in fsio:
                         fsio.append(field.fieldset)
         self.maxrelitems = self._cw.property_value('navigation.related-limit')
         self.force_display = bool(self._cw.form.get('__force_display'))
@@ -949,7 +956,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         relation.
         """
         return (self.should_display_add_new_relation_link(
-                    rschema, existing, card) and
+            rschema, existing, card) and
                 self.check_inlined_rdef_permissions(
                     rschema, role, tschema, ttype))
 
@@ -967,7 +974,6 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 rdefkwargs = {'toeid': entity.eid}
             return rdef.has_perm(self._cw, 'add', **rdefkwargs)
         return rdef.may_have_permission('add', self._cw)
-
 
     def should_hide_add_new_relation_link(self, rschema, card):
         """return true if once an inlined creation form is added, the 'add new'
@@ -1009,7 +1015,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             pass
 
 
-## default form ui configuration ##############################################
+# default form ui configuration ##############################################
 
 _AFS = uicfg.autoform_section
 # use primary and not generated for eid since it has to be an hidden
@@ -1048,6 +1054,7 @@ _AFFK.tag_attribute(('RQLExpression', 'expression'),
                     {'widget': fw.TextInput})
 _AFFK.tag_subject_of(('TrInfo', 'wf_info_for', '*'),
                      {'widget': fw.HiddenInput})
+
 
 def registration_callback(vreg):
     global etype_relation_field
