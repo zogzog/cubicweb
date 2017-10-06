@@ -19,7 +19,10 @@
 import copy
 import warnings
 
-from cubicweb.devtools.testlib import CubicWebTC
+from yams.buildobjs import RelationDefinition, EntityType
+
+from cubicweb.devtools.testlib import CubicWebTC, BaseTestCase
+from cubicweb.schema import build_schema_from_namespace
 from cubicweb.web import uihelper, formwidgets as fwdgs
 from cubicweb.web.views import uicfg
 
@@ -142,6 +145,55 @@ class UicfgRegistryTC(CubicWebTC):
         self.vreg['uicfg'].register(custom_afs)
         obj = self.vreg['uicfg'].select_or_none('autoform_section')
         self.assertTrue(obj is custom_afs)
+
+
+def _schema():
+
+    class Personne(EntityType):
+        pass
+
+    class Societe(EntityType):
+        pass
+
+    class Tag(EntityType):
+        pass
+
+    class travaille(RelationDefinition):
+        subject = 'Personne'
+        object = 'Societe'
+
+    class tags(RelationDefinition):
+        subject = 'Tag'
+        object = ('Personne', 'Societe', 'Tag')
+
+    return build_schema_from_namespace(locals().items())
+
+
+class AutoformSectionTC(BaseTestCase):
+
+    def test_derivation(self):
+        schema = _schema()
+        afs = uicfg.AutoformSectionRelationTags()
+        afs.tag_subject_of(('Personne', 'travaille', '*'), 'main', 'relations')
+        afs.tag_object_of(('*', 'travaille', 'Societe'), 'main', 'relations')
+        afs.tag_subject_of(('Tag', 'tags', '*'), 'main', 'relations')
+
+        afs2 = afs.derive(__name__, afs.__select__)
+        afs2.tag_subject_of(('Personne', 'travaille', '*'), 'main', 'attributes')
+        afs2.tag_object_of(('*', 'travaille', 'Societe'), 'main', 'attributes')
+        afs2.tag_subject_of(('Tag', 'tags', 'Societe'), 'main', 'attributes')
+
+        afs.init(schema)
+        afs2.init(schema)
+
+        self.assertEqual(afs2.etype_get('Tag', 'tags', 'subject', 'Personne'),
+                         set(('main_relations', 'muledit_hidden', 'inlined_relations')))
+        self.assertEqual(afs2.etype_get('Tag', 'tags', 'subject', 'Societe'),
+                         set(('main_attributes', 'muledit_hidden', 'inlined_attributes')))
+        self.assertEqual(afs2.etype_get('Personne', 'travaille', 'subject', 'Societe'),
+                         set(('main_attributes', 'muledit_hidden', 'inlined_attributes')))
+        self.assertEqual(afs2.etype_get('Societe', 'travaille', 'object', 'Personne'),
+                         set(('main_attributes', 'muledit_hidden', 'inlined_attributes')))
 
 
 if __name__ == '__main__':
