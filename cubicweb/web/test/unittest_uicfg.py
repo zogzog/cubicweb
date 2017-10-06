@@ -19,7 +19,6 @@
 import copy
 import warnings
 
-from logilab.common.testlib import tag
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web import uihelper, formwidgets as fwdgs
 from cubicweb.web.views import uicfg
@@ -63,13 +62,11 @@ class DefinitionOrderTC(CubicWebTC):
         for rtag in (uicfg.autoform_section, uicfg.autoform_field_kwargs):
             rtag._tagdefs = rtag._old_tagdefs
 
-    @tag('uicfg')
     def test_definition_order_hidden(self):
         result = uicfg.autoform_section.get('CWUser', 'login', 'String', 'subject')
         expected = set(['main_inlined', 'muledit_attributes', 'inlined_attributes'])
         self.assertSetEqual(result, expected)
 
-    @tag('uihelper', 'order', 'func')
     def test_uihelper_set_fields_order(self):
         afk_get = uicfg.autoform_field_kwargs.get
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {})
@@ -79,7 +76,6 @@ class DefinitionOrderTC(CubicWebTC):
             self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
 
-    @tag('uicfg', 'order', 'func')
     def test_uicfg_primaryview_set_fields_order(self):
         pvdc = uicfg.primaryview_display_ctrl
         pvdc.set_fields_order('CWUser', ('login', 'firstname', 'surname'))
@@ -87,7 +83,6 @@ class DefinitionOrderTC(CubicWebTC):
         self.assertEqual(pvdc.get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
         self.assertEqual(pvdc.get('CWUser', 'surname', 'String', 'subject'), {'order': 2})
 
-    @tag('uihelper', 'kwargs', 'func')
     def test_uihelper_set_field_kwargs(self):
         afk_get = uicfg.autoform_field_kwargs.get
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {})
@@ -98,7 +93,6 @@ class DefinitionOrderTC(CubicWebTC):
             self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'widget': wdg})
 
-    @tag('uihelper', 'hidden', 'func')
     def test_uihelper_hide_fields(self):
         # original conf : in_group is edited in 'attributes' section everywhere
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
@@ -118,7 +112,6 @@ class DefinitionOrderTC(CubicWebTC):
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
         self.assertCountEqual(section_conf, ['main_hidden', 'muledit_hidden'])
 
-    @tag('uihelper', 'hidden', 'formconfig')
     def test_uihelper_formconfig(self):
         afk_get = uicfg.autoform_field_kwargs.get
 
@@ -152,5 +145,5 @@ class UicfgRegistryTC(CubicWebTC):
 
 
 if __name__ == '__main__':
-    from logilab.common.testlib import unittest_main
-    unittest_main()
+    import unittest
+    unittest.main()
