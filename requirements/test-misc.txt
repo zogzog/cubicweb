@@ -1,7 +1,7 @@
 ### Requirements for tests in various cubicweb/**/test directories. ###
 
 ## shared by several test folders
-cubicweb-card
+cubicweb-card == 0.5.8
 docutils
 Twisted < 16.0.0
 webtest
@@ -10,9 +10,9 @@ webtest
 Pygments
 mock
 #fyzz XXX pip install fails
-cubicweb-file
-cubicweb-localperms
-cubicweb-tag
+cubicweb-file == 1.18.0
+cubicweb-localperms == 0.3.2
+cubicweb-tag == 1.8.3
 
 ## cubicweb/devtools/test
 flake8
@@ -27,4 +27,4 @@ wsgicors >= 0.3
 pyramid_multiauth
 
 ## cubicweb/sobject/test
-cubicweb-comment
+cubicweb-comment == 1.12.2
