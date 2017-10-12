@@ -1437,6 +1437,16 @@ FROM cw_CWUser AS _X
 WHERE _X.cw_login ~ [0-9].*
 ''')
 
+    def test_aggregate_in_orderby(self):
+        self._check("Any X GROUPBY X ORDERBY ABS(COUNT(Y)) WHERE"
+                    "X is CWGROUP, Y is CWUSER, Y in_group X",
+                    '''SELECT rel_in_group1.eid_to
+FROM in_group_relation AS rel_in_group1, is_relation AS rel_is0, is_relation AS rel_is2
+WHERE rel_in_group1.eid_to=rel_is0.eid_from AND rel_in_group1.eid_from=rel_is2.eid_from
+GROUP BY rel_in_group1.eid_to
+ORDER BY ABS(COUNT(rel_in_group1.eid_from))
+''')
+
     def test_parser_parse(self):
         for rql, sql in PARSER:
             with self.subTest(rql=rql):

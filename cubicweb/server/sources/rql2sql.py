@@ -279,6 +279,14 @@ def sort_term_selection(sorts, rqlst, groups):
                         groups.append(vref)
 
 
+def is_in_aggregat(node):
+    while node:
+        node = node.parent
+        if isinstance(node, Function) and node.descr().aggregat:
+            return True
+    return False
+
+
 def fix_selection_and_group(rqlst, needwrap, selectsortterms,
                             sorts, groups, having):
     if selectsortterms and sorts:
@@ -288,13 +296,11 @@ def fix_selection_and_group(rqlst, needwrap, selectsortterms,
         # when a query is grouped, ensure sort terms are grouped as well
         for sortterm in sorts:
             term = sortterm.term
-            if not (isinstance(term, Constant) or
-                    (isinstance(term, Function) and
-                     get_func_descr(term.name).aggregat)):
-                for vref in term.iget_nodes(VariableRef):
-                    if not any(vref.is_equivalent(group) for group in groupvrefs):
-                        groups.append(vref)
-                        groupvrefs.append(vref)
+            for vref in term.iget_nodes(VariableRef):
+                if not (any(vref.is_equivalent(group) for group in groupvrefs)
+                        or is_in_aggregat(vref)):
+                    groups.append(vref)
+                    groupvrefs.append(vref)
     if needwrap and (groups or having):
         selectedidx = set(vref.name for term in rqlst.selection
                           for vref in term.get_nodes(VariableRef))
