@@ -73,6 +73,7 @@ cubicweb/sobjects/services.py
 cubicweb/sobjects/test/unittest_notification.py
 cubicweb/sobjects/test/unittest_register_user.py
 cubicweb/sobjects/textparsers.py
+cubicweb/statsd_logger.py
 cubicweb/test/data/libpython/cubicweb_comment/__init__.py
 cubicweb/test/data/libpython/cubicweb_comment/__pkginfo__.py
 cubicweb/test/data/libpython/cubicweb_email/entities.py
