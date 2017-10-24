@@ -350,13 +350,15 @@ class PyramidStartHandler(InstanceCommand):
 
         host = cwconfig['interface']
         port = cwconfig['port'] or 8080
+        url_scheme = ('https' if cwconfig['base-url'].startswith('https')
+                      else 'http')
         repo = app.application.registry['cubicweb.repository']
         warnings.warn(
             'the "pyramid" command does not start repository "looping tasks" '
             'anymore; use the standalone "scheduler" command if needed'
         )
         try:
-            waitress.serve(app, host=host, port=port)
+            waitress.serve(app, host=host, port=port, url_scheme=url_scheme)
         finally:
             repo.shutdown()
         if self._needreload:
