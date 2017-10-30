@@ -369,7 +369,7 @@ def get_principals(login, request):
     try:
         session = repo_connect(request, repo, eid=login)
         request._cw_cached_session = session
-    except:
+    except Exception:
         log.exception("Failed")
         raise
 

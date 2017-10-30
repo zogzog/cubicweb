@@ -102,7 +102,7 @@ def logerrors(logger):
         def newfn(*args, **kw):
             try:
                 return fn(*args, **kw)
-            except:
+            except Exception:
                 logger.exception("Error in %s" % fn.__name__)
         return newfn
     return wrap
