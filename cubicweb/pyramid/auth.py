@@ -121,16 +121,16 @@ class UpdateLoginTimeAuthenticationPolicy(object):
         return ()
 
     def remember(self, request, principal, **kw):
-        try:
-            repo = request.registry['cubicweb.repository']
-            with repo.internal_cnx() as cnx:
+        repo = request.registry['cubicweb.repository']
+        with repo.internal_cnx() as cnx:
+            try:
                 cnx.execute(
                     "SET U last_login_time %(now)s WHERE U eid %(user)s", {
                         'now': datetime.datetime.now(),
                         'user': principal})
                 cnx.commit()
-        except:
-            log.exception("Failed to update last_login_time")
+            except Exception:
+                log.exception("Failed to update last_login_time")
         return ()
 
     def forget(self, request):
