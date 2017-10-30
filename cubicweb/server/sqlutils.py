@@ -546,7 +546,7 @@ def _init_sqlite_connection(cnx):
     def weekday(ustr):
         try:
             dt = datetime.strptime(ustr, '%Y-%m-%d %H:%M:%S')
-        except:
+        except ValueError:
             dt = datetime.strptime(ustr, '%Y-%m-%d')
         # expect sunday to be 1, saturday 7 while weekday method return 0 for
         # monday
