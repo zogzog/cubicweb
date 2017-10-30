@@ -543,13 +543,11 @@ def _init_sqlite_connection(cnx):
         return _limit_size(text, maxsize)
     cnx.create_function("TEXT_LIMIT_SIZE", 2, limit_size2)
 
-    from logilab.common.date import strptime
-
     def weekday(ustr):
         try:
-            dt = strptime(ustr, '%Y-%m-%d %H:%M:%S')
+            dt = datetime.strptime(ustr, '%Y-%m-%d %H:%M:%S')
         except:
-            dt = strptime(ustr, '%Y-%m-%d')
+            dt = datetime.strptime(ustr, '%Y-%m-%d')
         # expect sunday to be 1, saturday 7 while weekday method return 0 for
         # monday
         return (dt.weekday() + 1) % 7
