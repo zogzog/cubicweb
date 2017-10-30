@@ -110,15 +110,15 @@ class RequestCWTC(CubicWebTC):
                 firstname=u'adrien',
                 in_group=req.find('CWGroup', name=u'users').one())
 
-            l = list(req.find_entities('CWUser', login=u'cdevienne'))
-            self.assertEqual(1, len(l))
-            self.assertEqual(l[0].firstname, u"Christophe")
+            users = list(req.find_entities('CWUser', login=u'cdevienne'))
+            self.assertEqual(1, len(users))
+            self.assertEqual(users[0].firstname, u"Christophe")
 
-            l = list(req.find_entities('CWUser', login=u'patanok'))
-            self.assertEqual(0, len(l))
+            users = list(req.find_entities('CWUser', login=u'patanok'))
+            self.assertEqual(0, len(users))
 
-            l = list(req.find_entities('CWUser'))
-            self.assertEqual(4, len(l))
+            users = list(req.find_entities('CWUser'))
+            self.assertEqual(4, len(users))
 
     def test_find(self):
         with self.admin_access.web_request() as req:
