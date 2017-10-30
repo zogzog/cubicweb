@@ -168,7 +168,7 @@ class ConcatFilesHandler(object):
                                     f.write(line)
                             f.write(b'\n')
                     f.close()
-                except:
+                except Exception:
                     os.remove(tmpfile)
                     raise
                 else:
