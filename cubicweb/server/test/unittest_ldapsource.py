@@ -105,10 +105,7 @@ def terminate_slapd(cls):
             sys.stdout.write(stdout)
             sys.stderr.write(stderr)
         config.info('DONE')
-    try:
-        shutil.rmtree(cls._tmpdir)
-    except:
-        pass
+    shutil.rmtree(cls._tmpdir, ignore_errors=True)
 
 
 def ldapsource(cnx):
