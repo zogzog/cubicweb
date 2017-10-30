@@ -66,7 +66,7 @@ class CreateCopyFromBufferTC(TestCase):
 
     # test buffer
     def test_create_copyfrom_buffer_tuple(self):
-        l = long if PY2 else int
+        l = long if PY2 else int  # noqa: E741
         data = ((42, l(42), 42.42, u'éléphant', DT.date(666, 1, 13), DT.time(6, 6, 6),
                  DT.datetime(666, 6, 13, 6, 6, 6)),
                 (6, l(6), 6.6, u'babar', DT.date(2014, 1, 14), DT.time(4, 2, 1),
