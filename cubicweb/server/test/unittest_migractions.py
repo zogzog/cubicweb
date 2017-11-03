@@ -24,7 +24,6 @@ from datetime import date
 from contextlib import contextmanager
 import tempfile
 
-from logilab.common.testlib import unittest_main, Tags, tag
 from logilab.common import tempattr
 
 from yams.constraints import UniqueConstraint
@@ -70,8 +69,6 @@ class MigrationTC(CubicWebTC):
     appid = 'data-migractions'
 
     configcls = MigrationConfig
-
-    tags = CubicWebTC.tags | Tags(('server', 'migration', 'migractions'))
 
     def _init_repo(self):
         super(MigrationTC, self)._init_repo()
@@ -510,7 +507,6 @@ class MigrationCommandsTC(MigrationTC):
             newconstraints = rdef.constraints
             self.assertEqual(len(newconstraints), 0)
 
-    @tag('longrun')
     def test_sync_schema_props_perms(self):
         with self.mh() as (cnx, mh):
             nbrqlexpr_start = cnx.execute('Any COUNT(X) WHERE X is RQLExpression')[0][0]
@@ -653,7 +649,6 @@ class MigrationCommandsTC(MigrationTC):
             finally:
                 mh.cmd_set_size_constraint('CWEType', 'description', None)
 
-    @tag('longrun')
     def test_add_drop_cube_and_deps(self):
         with self.mh() as (cnx, mh):
             schema = self.repo.schema
@@ -711,8 +706,6 @@ class MigrationCommandsTC(MigrationTC):
                 # next test may fail complaining of missing tables
                 cnx.commit()
 
-
-    @tag('longrun')
     def test_add_drop_cube_no_deps(self):
         with self.mh() as (cnx, mh):
             cubes = set(self.config.cubes())
@@ -738,7 +731,6 @@ class MigrationCommandsTC(MigrationTC):
                 mh.cmd_drop_cube('file')
             self.assertEqual(str(cm.exception), "can't remove cube file, used as a dependency")
 
-    @tag('longrun')
     def test_introduce_base_class(self):
         with self.mh() as (cnx, mh):
             mh.cmd_add_entity_type('Para')
@@ -1013,4 +1005,5 @@ class MigrationCommandsComputedTC(MigrationTC):
 
 
 if __name__ == '__main__':
-    unittest_main()
+    import unittest
+    unittest.main()
