@@ -18,8 +18,6 @@
 """Hooks for synchronizing computed attributes"""
 
 
-from cubicweb import _
-
 from collections import defaultdict
 
 from rql import nodes
@@ -33,6 +31,7 @@ class RecomputeAttributeOperation(hook.DataOperationMixIn, hook.Operation):
     recompute twice the same attribute
     """
     containercls = dict
+
     def add_data(self, computed_attribute, eid=None):
         try:
             self._container[computed_attribute].add(eid)
@@ -42,7 +41,7 @@ class RecomputeAttributeOperation(hook.DataOperationMixIn, hook.Operation):
     def precommit_event(self):
         for computed_attribute_rdef, eids in self.get_data().items():
             attr = computed_attribute_rdef.rtype
-            formula  = computed_attribute_rdef.formula
+            formula = computed_attribute_rdef.formula
             select = self.cnx.repo.vreg.rqlhelper.parse(formula).children[0]
             xvar = select.get_variable('X')
             select.add_selected(xvar, index=0)
@@ -151,7 +150,7 @@ class _FormulaDependenciesMatrix(object):
         # depending entity types {dep. etype: {computed rdef: dep. etype attributes}}
         self.computed_attribute_by_etype_attrs = defaultdict(lambda: defaultdict(set))
         # depending relations def {dep. rdef: [computed rdefs]
-        self.computed_attribute_by_relation = defaultdict(list) # by rdef
+        self.computed_attribute_by_relation = defaultdict(list)  # by rdef
         # Walk through all attributes definitions
         for rdef in schema.iter_computed_attributes():
             self.computed_attribute_by_etype[rdef.subject.type].append(rdef)
@@ -171,7 +170,8 @@ class _FormulaDependenciesMatrix(object):
                         object_etypes = rschema.objects(subject_etype)
                     for object_etype in object_etypes:
                         if rschema.final:
-                            attr_for_computations = self.computed_attribute_by_etype_attrs[subject_etype]
+                            attr_for_computations = self.computed_attribute_by_etype_attrs[
+                                subject_etype]
                             attr_for_computations[rdef].add(rschema.type)
                         else:
                             depend_on_rdef = rschema.rdefs[subject_etype, object_etype]
@@ -184,7 +184,7 @@ class _FormulaDependenciesMatrix(object):
             yield type('%sCreatedHook' % etype,
                        (EntityWithCACreatedHook,),
                        {'__regid__': regid,
-                        '__select__':  hook.Hook.__select__ & selector,
+                        '__select__': hook.Hook.__select__ & selector,
                         'computed_attributes': computed_attributes})
 
     def generate_relation_change_hooks(self):
@@ -198,11 +198,11 @@ class _FormulaDependenciesMatrix(object):
                 optimized_computed_attributes.append(
                     (computed_rdef,
                      _optimize_on(computed_rdef.formula_select, rdef.rtype))
-                     )
+                )
             yield type('%sModifiedHook' % rdef.rtype,
                        (RelationInvolvedInCAModifiedHook,),
                        {'__regid__': regid,
-                        '__select__':  hook.Hook.__select__ & selector,
+                        '__select__': hook.Hook.__select__ & selector,
                         'optimized_computed_attributes': optimized_computed_attributes})
 
     def generate_entity_update_hooks(self):
@@ -212,7 +212,7 @@ class _FormulaDependenciesMatrix(object):
             yield type('%sModifiedHook' % etype,
                        (AttributeInvolvedInCAModifiedHook,),
                        {'__regid__': regid,
-                        '__select__':  hook.Hook.__select__ & selector,
+                        '__select__': hook.Hook.__select__ & selector,
                         'attributes_computed_attributes': attributes_computed_attributes})
 
 

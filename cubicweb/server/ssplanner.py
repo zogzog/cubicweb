@@ -1,4 +1,4 @@
-# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -32,6 +32,7 @@ READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
 _CONSTANT = object()
 _FROM_SUBSTEP = object()
 
+
 def _extract_const_attributes(plan, rqlst, to_build):
     """add constant values to entity def, mark variables to be selected
     """
@@ -61,8 +62,9 @@ def _extract_const_attributes(plan, rqlst, to_build):
                 # create a relation between two newly created variables
                 plan.add_relation_def((edef, rtype, to_build[rhs.name]))
             else:
-                to_select.setdefault(edef, []).append( (rtype, rhs, 0) )
+                to_select.setdefault(edef, []).append((rtype, rhs, 0))
     return to_select
+
 
 def _extract_eid_consts(plan, rqlst):
     """return a dict mapping rqlst variable object to their eid if specified in
@@ -78,10 +80,10 @@ def _extract_eid_consts(plan, rqlst):
     for rel in rqlst.where.get_nodes(Relation):
         # only care for 'eid' relations ...
         if (rel.r_type == 'eid'
-            # ... that are not part of a NOT clause ...
-            and not rel.neged(strict=True)
-            # ... and where eid is specified by '=' operator.
-            and rel.children[1].operator == '='):
+                # ... that are not part of a NOT clause ...
+                and not rel.neged(strict=True)
+                # ... and where eid is specified by '=' operator.
+                and rel.children[1].operator == '='):
             lhs, rhs = rel.get_variable_parts()
             if isinstance(rhs, Constant):
                 eid = int(rhs.eval(plan.args))
@@ -94,6 +96,7 @@ def _extract_eid_consts(plan, rqlst):
                             cnx, 'read', eid=eid)
                 eidconsts[lhs.variable] = eid
     return eidconsts
+
 
 def _build_substep_query(select, origrqlst):
     """Finalize substep select query that should be executed to get proper
@@ -118,6 +121,7 @@ def _build_substep_query(select, origrqlst):
             select.set_having([sq.copy(select) for sq in origrqlst.having])
         return select
     return None
+
 
 class SSPlanner(object):
     """SingleSourcePlanner: build execution plan for rql queries
@@ -160,7 +164,7 @@ class SSPlanner(object):
         # add constant values to entity def, mark variables to be selected
         to_select = _extract_const_attributes(plan, rqlst, to_build)
         # add necessary steps to add relations and update attributes
-        step = InsertStep(plan) # insert each entity and its relations
+        step = InsertStep(plan)  # insert each entity and its relations
         step.children += self._compute_relation_steps(plan, rqlst, to_select)
         return (step,)
 
@@ -237,9 +241,8 @@ class SSPlanner(object):
         getrschema = self.schema.rschema
         select = Select()   # potential substep query
         selectedidx = {}    # local state
-        attributes = set()  # edited attributes
         updatedefs = []     # definition of update attributes/relations
-        selidx = residx = 0 # substep selection / resulting rset indexes
+        selidx = residx = 0  # substep selection / resulting rset indexes
         # search for eid const in the WHERE clause
         eidconsts = _extract_eid_consts(plan, rqlst)
         # build `updatedefs` describing things to update and add necessary
@@ -250,7 +253,7 @@ class SSPlanner(object):
                                  % relation.r_type)
             lhs, rhs = relation.get_variable_parts()
             lhskey = lhs.as_string()
-            if not lhskey in selectedidx:
+            if lhskey not in selectedidx:
                 if lhs.variable in eidconsts:
                     eid = eidconsts[lhs.variable]
                     lhsinfo = (_CONSTANT, eid, residx)
@@ -263,7 +266,7 @@ class SSPlanner(object):
             else:
                 lhsinfo = selectedidx[lhskey][:-1] + (None,)
             rhskey = rhs.as_string()
-            if not rhskey in selectedidx:
+            if rhskey not in selectedidx:
                 if isinstance(rhs, Constant):
                     rhsinfo = (_CONSTANT, rhs.eval(plan.args), residx)
                 elif getattr(rhs, 'variable', None) in eidconsts:
@@ -278,7 +281,7 @@ class SSPlanner(object):
             else:
                 rhsinfo = selectedidx[rhskey][:-1] + (None,)
             rschema = getrschema(relation.r_type)
-            updatedefs.append( (lhsinfo, rhsinfo, rschema) )
+            updatedefs.append((lhsinfo, rhsinfo, rschema))
         # the update step
         step = UpdateStep(plan, updatedefs)
         # when necessary add substep to fetch yet unknown values
@@ -359,7 +362,6 @@ class OneFetchStep(Step):
         # get results for query
         source = cnx.repo.system_source
         result = source.syntax_tree_search(cnx, union, args, cachekey)
-        #print 'ONEFETCH RESULT %s' % (result)
         return result
 
     def mytest_repr(self):
@@ -413,10 +415,10 @@ class InsertRelationsStep(Step):
                 if rorder == InsertRelationsStep.FINAL:
                     edef.edited_attribute(rtype, value)
                 elif rorder == InsertRelationsStep.RELATION:
-                    self.plan.add_relation_def( (edef, rtype, value) )
+                    self.plan.add_relation_def((edef, rtype, value))
                     edef.querier_pending_relations[(rtype, 'subject')] = value
                 else:
-                    self.plan.add_relation_def( (value, rtype, edef) )
+                    self.plan.add_relation_def((value, rtype, edef))
                     edef.querier_pending_relations[(rtype, 'object')] = value
             edefs.append(edef)
         self.plan.substitute_entity_def(base_edef, edefs)
@@ -451,6 +453,7 @@ class DeleteEntitiesStep(Step):
             cnx = self.plan.cnx
             cnx.repo.glob_delete_entities(cnx, todelete)
         return results
+
 
 class DeleteRelationsStep(Step):
     """step consisting in deleting relations"""
@@ -513,10 +516,11 @@ class UpdateStep(Step):
             repo.glob_update_entity(cnx, edited)
         return result
 
+
 def _handle_relterm(info, row, newrow):
     if info[0] is _CONSTANT:
         val = info[1]
-    else: # _FROM_SUBSTEP
+    else:  # _FROM_SUBSTEP
         val = row[info[1]]
     if info[-1] is not None:
         newrow.append(val)

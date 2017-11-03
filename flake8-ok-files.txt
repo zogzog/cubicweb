@@ -27,6 +27,7 @@ cubicweb/etwist/__init__.py
 cubicweb/etwist/request.py
 cubicweb/etwist/service.py
 cubicweb/ext/__init__.py
+cubicweb/hooks/synccomputed.py
 cubicweb/hooks/syncsources.py
 cubicweb/hooks/test/data/hooks.py
 cubicweb/hooks/test/unittest_notificationhooks.py
@@ -46,6 +47,7 @@ cubicweb/server/session.py
 cubicweb/server/sources/__init__.py
 cubicweb/server/sources/native.py
 cubicweb/server/sqlutils.py
+cubicweb/server/ssplanner.py
 cubicweb/server/utils.py
 cubicweb/server/test/datacomputed/migratedapp/schema.py
 cubicweb/server/test/datacomputed/schema.py
