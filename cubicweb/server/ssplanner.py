@@ -24,7 +24,7 @@ from rql.nodes import Constant, Relation
 
 from cubicweb import QueryError
 from cubicweb.schema import VIRTUAL_RTYPES
-from cubicweb.rqlrewrite import add_types_restriction
+from cubicweb.rqlrewrite import add_types_restriction, RQLRelationRewriter
 from cubicweb.server.edition import EditedEntity
 
 READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
@@ -296,6 +296,9 @@ class SSPlanner(object):
         union.append(select)
         select.clean_solutions(solutions)
         add_types_restriction(self.schema, select)
+        # Rewrite computed relations
+        rewriter = RQLRelationRewriter(plan.cnx)
+        rewriter.rewrite(union, plan.args)
         self.rqlhelper.annotate(union)
         return self.build_select_plan(plan, union)
 
