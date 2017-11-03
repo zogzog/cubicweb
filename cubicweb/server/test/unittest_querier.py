@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -111,13 +111,6 @@ class MakeDescriptionTC(unittest.TestCase):
 class UtilsTC(BaseQuerierTC):
     setUpClass = classmethod(setUpClass)
     tearDownClass = classmethod(tearDownClass)
-
-    def get_max_eid(self):
-        # no need for cleanup here
-        return None
-    def cleanup(self):
-        # no need for cleanup here
-        pass
 
     def test_preprocess_1(self):
         with self.admin_access.cnx() as cnx:
@@ -315,6 +308,17 @@ class UtilsTC(BaseQuerierTC):
 class QuerierTC(BaseQuerierTC):
     setUpClass = classmethod(setUpClass)
     tearDownClass = classmethod(tearDownClass)
+
+    def setUp(self):
+        super(QuerierTC, self).setUp()
+        with self.admin_access.cnx() as cnx:
+            self.maxeid = cnx.execute('Any MAX(X)')[0][0]
+
+    def tearDown(self):
+        super(QuerierTC, self).tearDown()
+        with self.admin_access.cnx() as cnx:
+            cnx.execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
+            cnx.commit()
 
     def test_unknown_eid(self):
         # should return an empty result set

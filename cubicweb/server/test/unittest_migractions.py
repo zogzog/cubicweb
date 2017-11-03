@@ -1,4 +1,4 @@
-# copyright 2003-2017 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -728,9 +728,6 @@ class MigrationCommandsTC(MigrationTC):
             finally:
                 mh.cmd_add_cube('fakeemail')
                 self.assertIn('fakeemail', self.config.cubes())
-                # trick: overwrite self.maxeid to avoid deletion of just reintroduced
-                #        types (and their associated tables!)
-                self.maxeid = cnx.execute('Any MAX(X)')[0][0] # XXXXXXX KILL KENNY
                 # why this commit is necessary is unclear to me (though without it
                 # next test may fail complaining of missing tables
                 cnx.commit()

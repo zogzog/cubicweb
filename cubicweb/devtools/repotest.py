@@ -142,22 +142,11 @@ class BaseQuerierTC(BaseTestCase):
         self.ueid = self.admin_access._user.eid
         assert self.ueid != -1
         self.repo._type_cache = {} # clear cache
-        self.maxeid = self.get_max_eid()
         do_monkey_patch()
         self._dumb_sessions = []
 
-    def get_max_eid(self):
-        with self.admin_access.cnx() as cnx:
-            return cnx.execute('Any MAX(X)')[0][0]
-
-    def cleanup(self):
-        with self.admin_access.cnx() as cnx:
-            cnx.execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
-            cnx.commit()
-
     def tearDown(self):
         undo_monkey_patch()
-        self.cleanup()
         assert self.admin_access._user.eid != -1
 
     def set_debug(self, debug):

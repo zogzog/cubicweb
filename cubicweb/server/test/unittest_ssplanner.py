@@ -1,4 +1,4 @@
-# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -43,9 +43,6 @@ class SSPlannerTC(BasePlannerTC):
         BasePlannerTC.setUp(self)
         self.planner = SSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
         self.system = self.o._repo.system_source
-
-    def tearDown(self):
-        BasePlannerTC.tearDown(self)
 
     def test_ordered_ambigous_sol(self):
         self._test('Any XN ORDERBY XN WHERE X name XN, X is IN (Basket, State, Folder)',

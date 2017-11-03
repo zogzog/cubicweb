@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -30,14 +30,6 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         repo, _cnx = handler.get_repo_and_cnx()
         self.__class__.repo = repo
         super(SQLGenAnnotatorTC, self).setUp()
-
-    def get_max_eid(self):
-        # no need for cleanup here
-        return None
-
-    def cleanup(self):
-        # no need for cleanup here
-        pass
 
     def test_0_1(self):
         with self.admin_access.cnx() as cnx:
