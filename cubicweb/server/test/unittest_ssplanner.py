@@ -45,20 +45,25 @@ class SSPlannerTC(BasePlannerTC):
         self.system = self.o._repo.system_source
 
     def test_ordered_ambigous_sol(self):
-        self._test('Any XN ORDERBY XN WHERE X name XN, X is IN (Basket, State, Folder)',
-                   [('OneFetchStep', [('Any XN ORDERBY XN WHERE X name XN, X is IN(Basket, State, Folder)',
-                                       [{'X': 'Basket', 'XN': 'String'},
-                                        {'X': 'State', 'XN': 'String'},
-                                        {'X': 'Folder', 'XN': 'String'}])],
-                     [])])
+        self._test(
+            'Any XN ORDERBY XN WHERE X name XN, X is IN (Basket, State, Folder)',
+            [('OneFetchStep', [('Any XN ORDERBY XN WHERE X name XN, '
+                                'X is IN(Basket, State, Folder)',
+                                [{'X': 'Basket', 'XN': 'String'},
+                                 {'X': 'State', 'XN': 'String'},
+                                 {'X': 'Folder', 'XN': 'String'}])],
+              [])])
 
     def test_groupeded_ambigous_sol(self):
-        self._test('Any XN,COUNT(X) GROUPBY XN WHERE X name XN, X is IN (Basket, State, Folder)',
-                   [('OneFetchStep', [('Any XN,COUNT(X) GROUPBY XN WHERE X name XN, X is IN(Basket, State, Folder)',
-                                       [{'X': 'Basket', 'XN': 'String'},
-                                        {'X': 'State', 'XN': 'String'},
-                                        {'X': 'Folder', 'XN': 'String'}])],
-                     [])])
+        self._test(
+            'Any XN,COUNT(X) GROUPBY XN WHERE X name XN, X is IN (Basket, State, Folder)',
+            [('OneFetchStep', [('Any XN,COUNT(X) GROUPBY XN WHERE X name XN, '
+                                'X is IN(Basket, State, Folder)',
+                                [{'X': 'Basket', 'XN': 'String'},
+                                 {'X': 'State', 'XN': 'String'},
+                                 {'X': 'Folder', 'XN': 'String'}])],
+              [])])
+
 
 if __name__ == '__main__':
     import unittest

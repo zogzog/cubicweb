@@ -61,8 +61,10 @@ cubicweb/server/test/data-schema2sql/__init__.py
 cubicweb/server/test/unittest_checkintegrity.py
 cubicweb/server/test/unittest_datafeed.py
 cubicweb/server/test/unittest_ldapsource.py
+cubicweb/server/test/unittest_migractions.py
 cubicweb/server/test/unittest_serverctl.py
 cubicweb/server/test/unittest_session.py
+cubicweb/server/test/unittest_ssplanner.py
 cubicweb/server/test/unittest_rqlannotation.py
 cubicweb/server/test/unittest_utils.py
 cubicweb/sobjects/notification.py
