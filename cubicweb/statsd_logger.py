@@ -58,6 +58,7 @@ or a method and the number of calls. It will send a message like::
 
 import time
 import socket
+from contextlib import contextmanager
 
 _bucket = 'cubicweb'
 _address = None
@@ -134,3 +135,17 @@ class statsd_timeit(object):
             return self
         import functools
         return functools.partial(self.__call__, obj)
+
+
+@contextmanager
+def statsd_timethis(ctxmsg):
+    if _address is not None:
+        t0 = time.time()
+    try:
+        yield
+    finally:
+        if _address is not None:
+            dt = 1000 * (time.time() - t0)
+            msg = '{0}.{1}:{2:.4f}|ms\n{0}.{1}:1|c\n'.format(
+                _bucket, ctxmsg, dt)
+            _socket.sendto(msg, _address)
