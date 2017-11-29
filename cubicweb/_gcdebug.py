@@ -19,6 +19,8 @@ from __future__ import print_function
 
 import gc, types, weakref
 
+from six import PY2
+
 from cubicweb.schema import CubicWebRelationSchema, CubicWebEntitySchema
 try:
     from cubicweb.web.request import _NeedAuthAccessMock
@@ -29,12 +31,16 @@ listiterator = type(iter([]))
 
 IGNORE_CLASSES = (
     type, tuple, dict, list, set, frozenset, type(len),
-    weakref.ref, weakref.WeakKeyDictionary,
+    weakref.ref,
     listiterator,
     property, classmethod,
     types.ModuleType, types.FunctionType, types.MethodType,
     types.MemberDescriptorType, types.GetSetDescriptorType,
     )
+if PY2:
+    # weakref.WeakKeyDictionary fails isinstance check on Python 3.5.
+    IGNORE_CLASSES += (weakref.WeakKeyDictionary, )
+
 if _NeedAuthAccessMock is not None:
     IGNORE_CLASSES = IGNORE_CLASSES + (_NeedAuthAccessMock,)
 
