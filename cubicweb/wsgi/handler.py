@@ -79,7 +79,7 @@ class WSGIResponse(object):
     """
     def __init__(self, code, req, body=None):
         text = STATUS_CODE_TEXT.get(code, 'UNKNOWN STATUS CODE')
-        self.status =  '%s %s' % (code, text)
+        self.status =  '%d %s' % (code, text)
         self.headers = list(chain(*[zip(repeat(k), v)
                                     for k, v in req.headers_out.getAllRawHeaders()]))
         self.headers = [(str(k), str(v)) for k, v in self.headers]
