@@ -347,6 +347,8 @@ class InsertPlan(ExecutionPlan):
     def add_relation_def(self, rdef):
         """add an relation definition to build"""
         edef, rtype, value = rdef
+        if self.schema[rtype].rule:
+            raise QueryError("'%s' is a computed relation" % rtype)
         self.r_defs.add(rdef)
         if not isinstance(edef, int):
             self._r_subj_index.setdefault(edef, []).append(rdef)

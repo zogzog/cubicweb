@@ -204,7 +204,10 @@ class SSPlanner(object):
             step.children += self._sel_variable_step(plan, rqlst, etype, var)
             steps.append(step)
         for relation in rqlst.main_relations:
-            step = DeleteRelationsStep(plan, relation.r_type)
+            rtype = relation.r_type
+            if self.schema[rtype].rule:
+                raise QueryError("'%s' is a computed relation" % rtype)
+            step = DeleteRelationsStep(plan, rtype)
             step.children += self._sel_relation_steps(plan, rqlst, relation)
             steps.append(step)
         return steps
@@ -493,6 +496,9 @@ class UpdateStep(Step):
         for i, row in enumerate(result):
             newrow = []
             for (lhsinfo, rhsinfo, rschema) in self.updatedefs:
+                if rschema.rule:
+                    raise QueryError("'%s' is a computed relation"
+                                     % rschema.type)
                 lhsval = _handle_relterm(lhsinfo, row, newrow)
                 rhsval = _handle_relterm(rhsinfo, row, newrow)
                 if rschema.final or rschema.inlined:

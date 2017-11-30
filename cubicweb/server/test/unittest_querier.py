@@ -19,6 +19,7 @@
 """unit tests for modules cubicweb.server.querier and cubicweb.server.ssplanner
 """
 
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta, tzinfo
 import unittest
 
@@ -1666,6 +1667,34 @@ class NonRegressionTC(CubicWebTC):
             self.assertEqual(
                 [[a1.eid]],
                 cnx.execute('Any A ORDERBY A WHERE U use_email A, U login "admin"').rows)
+
+    def test_computed_relation_in_write_queries(self):
+        """Computed relations are not allowed in main part of write queries."""
+        @contextmanager
+        def check(cnx):
+            with self.assertRaises(QueryError) as cm:
+                yield
+            self.assertIn("'user_login' is a computed relation",
+                          str(cm.exception))
+            cnx.rollback()
+
+        with self.admin_access.cnx() as cnx:
+            person = cnx.create_entity('Personne', nom=u'p')
+            cnx.commit()
+            # create
+            with check(cnx):
+                cnx.execute('INSERT CWUser X: X login "user", X user_login P'
+                            ' WHERE P is Personne, P nom "p"')
+            # update
+            bob = self.create_user(cnx, u'bob')
+            with check(cnx):
+                cnx.execute('SET U user_login P WHERE U login "bob", P nom "p"')
+            # delete
+            person.cw_set(login_user=bob)
+            cnx.commit()
+            with check(cnx):
+                cnx.execute('DELETE U user_login P WHERE U login "bob"')
+
 
 if __name__ == '__main__':
     unittest.main()
