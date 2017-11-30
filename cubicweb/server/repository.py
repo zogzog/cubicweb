@@ -923,10 +923,7 @@ class Repository(object):
                 for subjeid, objeid in eids_subj_obj:
                     print('ADD relation', subjeid, rtype, objeid)
             for subjeid, objeid in eids_subj_obj:
-                if rtype in relations_by_rtype:
-                    relations_by_rtype[rtype].append((subjeid, objeid))
-                else:
-                    relations_by_rtype[rtype] = [(subjeid, objeid)]
+                relations_by_rtype.setdefault(rtype, []).append((subjeid, objeid))
                 if not activintegrity:
                     continue
                 # take care to relation of cardinality '?1', as all eids will
