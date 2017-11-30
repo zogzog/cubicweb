@@ -346,11 +346,12 @@ class InsertPlan(ExecutionPlan):
 
     def add_relation_def(self, rdef):
         """add an relation definition to build"""
+        edef, rtype, value = rdef
         self.r_defs.add(rdef)
-        if not isinstance(rdef[0], int):
-            self._r_subj_index.setdefault(rdef[0], []).append(rdef)
-        if not isinstance(rdef[2], int):
-            self._r_obj_index.setdefault(rdef[2], []).append(rdef)
+        if not isinstance(edef, int):
+            self._r_subj_index.setdefault(edef, []).append(rdef)
+        if not isinstance(value, int):
+            self._r_obj_index.setdefault(value, []).append(rdef)
 
     def substitute_entity_def(self, edef, edefs):
         """substitute an incomplete entity definition by a list of complete
