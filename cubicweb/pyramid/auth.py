@@ -198,7 +198,8 @@ def includeme(config):
             session_prefix + 'secret', 'notsosecret')
         persistent_secret = settings.get(
             persistent_prefix + 'secret', 'notsosecret')
-        if 'notsosecret' in (session_secret, persistent_secret):
+        if ('notsosecret' in (session_secret, persistent_secret)
+                and config.registry['cubicweb.config'].mode != 'test'):
             warnings.warn('''
 
                 !! SECURITY WARNING !!
