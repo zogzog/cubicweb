@@ -47,6 +47,11 @@ class CubicWebPyramidConfiguration(BaseWebConfiguration, ServerConfiguration):
     options = merge_options(ServerConfiguration.options +
                             BaseWebConfiguration.options)
 
+    def init_log(self, *args, **kwargs):
+        """Rely on logging configuration in Pyramid's .ini file, do nothing
+        here.
+        """
+
     def write_development_ini(self, cubes):
         """Write a 'development.ini' file into apphome."""
         template_fpath = path.join(path.dirname(__file__), 'development.ini.tmpl')

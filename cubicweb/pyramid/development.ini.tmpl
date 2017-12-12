@@ -37,3 +37,47 @@ cubicweb.auth.authtkt.session.secret = %(auth-authtkt-session-secret)s
 [server:main]
 use = egg:waitress#main
 listen = 127.0.0.1:6543 [::1]:6543
+
+###
+# logging configuration
+# https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/logging.html
+###
+
+[loggers]
+keys = root, logilab, cubicweb, cubicweb_%(cubename)s
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = INFO
+handlers = console
+
+[logger_logilab]
+level = WARNING
+handlers = console
+qualname = logilab
+
+[logger_cubicweb]
+level = INFO
+handlers = console
+qualname = cubicweb
+
+[logger_cubicweb_%(cubename)s]
+level = DEBUG
+handlers = console
+qualname = cubicweb_%(cubename)s
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+class = logilab.common.logging_ext.ColorFormatter
+format = %%(asctime)s - (%%(name)s) %%(levelname)s: %%(message)s
+datefmt = %%Y-%%m-%%d %%H:%%M:%%S
