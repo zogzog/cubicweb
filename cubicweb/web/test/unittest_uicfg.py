@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,21 +15,24 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+
 import copy
 import warnings
 
-from logilab.common.testlib import tag
-from cubicweb.devtools.testlib import CubicWebTC
+from yams.buildobjs import RelationDefinition, EntityType
+
+from cubicweb.devtools.testlib import CubicWebTC, BaseTestCase
+from cubicweb.schema import build_schema_from_namespace
 from cubicweb.web import uihelper, formwidgets as fwdgs
 from cubicweb.web.views import uicfg
 
 abaa = uicfg.actionbox_appearsin_addmenu
 
+
 class UICFGTC(CubicWebTC):
 
     def test_default_actionbox_appearsin_addmenu_config(self):
         self.assertFalse(abaa.etype_get('TrInfo', 'wf_info_for', 'object', 'CWUser'))
-
 
 
 class DefinitionOrderTC(CubicWebTC):
@@ -41,19 +44,19 @@ class DefinitionOrderTC(CubicWebTC):
         for rtag in (uicfg.autoform_section, uicfg.autoform_field_kwargs):
             rtag._old_tagdefs = copy.deepcopy(rtag._tagdefs)
         new_def = (
-                    (('*', 'login', '*'),
-                         {'formtype':'main', 'section':'hidden'}),
-                    (('*', 'login', '*'),
-                         {'formtype':'muledit', 'section':'hidden'}),
-                    (('CWUser', 'login', '*'),
-                         {'formtype':'main', 'section':'attributes'}),
-                    (('CWUser', 'login', '*'),
-                         {'formtype':'muledit', 'section':'attributes'}),
-                    (('CWUser', 'login', 'String'),
-                         {'formtype':'main', 'section':'inlined'}),
-                    (('CWUser', 'login', 'String'),
-                         {'formtype':'inlined', 'section':'attributes'}),
-                    )
+            (('*', 'login', '*'),
+             {'formtype': 'main', 'section': 'hidden'}),
+            (('*', 'login', '*'),
+             {'formtype': 'muledit', 'section': 'hidden'}),
+            (('CWUser', 'login', '*'),
+             {'formtype': 'main', 'section': 'attributes'}),
+            (('CWUser', 'login', '*'),
+             {'formtype': 'muledit', 'section': 'attributes'}),
+            (('CWUser', 'login', 'String'),
+             {'formtype': 'main', 'section': 'inlined'}),
+            (('CWUser', 'login', 'String'),
+             {'formtype': 'inlined', 'section': 'attributes'}),
+        )
         for key, kwargs in new_def:
             uicfg.autoform_section.tag_subject_of(key, **kwargs)
 
@@ -62,13 +65,11 @@ class DefinitionOrderTC(CubicWebTC):
         for rtag in (uicfg.autoform_section, uicfg.autoform_field_kwargs):
             rtag._tagdefs = rtag._old_tagdefs
 
-    @tag('uicfg')
     def test_definition_order_hidden(self):
         result = uicfg.autoform_section.get('CWUser', 'login', 'String', 'subject')
         expected = set(['main_inlined', 'muledit_attributes', 'inlined_attributes'])
         self.assertSetEqual(result, expected)
 
-    @tag('uihelper', 'order', 'func')
     def test_uihelper_set_fields_order(self):
         afk_get = uicfg.autoform_field_kwargs.get
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {})
@@ -78,7 +79,6 @@ class DefinitionOrderTC(CubicWebTC):
             self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
 
-    @tag('uicfg', 'order', 'func')
     def test_uicfg_primaryview_set_fields_order(self):
         pvdc = uicfg.primaryview_display_ctrl
         pvdc.set_fields_order('CWUser', ('login', 'firstname', 'surname'))
@@ -86,7 +86,6 @@ class DefinitionOrderTC(CubicWebTC):
         self.assertEqual(pvdc.get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
         self.assertEqual(pvdc.get('CWUser', 'surname', 'String', 'subject'), {'order': 2})
 
-    @tag('uihelper', 'kwargs', 'func')
     def test_uihelper_set_field_kwargs(self):
         afk_get = uicfg.autoform_field_kwargs.get
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {})
@@ -97,7 +96,6 @@ class DefinitionOrderTC(CubicWebTC):
             self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'widget': wdg})
 
-    @tag('uihelper', 'hidden', 'func')
     def test_uihelper_hide_fields(self):
         # original conf : in_group is edited in 'attributes' section everywhere
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
@@ -117,13 +115,14 @@ class DefinitionOrderTC(CubicWebTC):
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
         self.assertCountEqual(section_conf, ['main_hidden', 'muledit_hidden'])
 
-    @tag('uihelper', 'hidden', 'formconfig')
     def test_uihelper_formconfig(self):
         afk_get = uicfg.autoform_field_kwargs.get
+
         class CWUserFormConfig(uihelper.FormConfig):
             etype = 'CWUser'
             hidden = ('in_group',)
             fields_order = ('login', 'firstname')
+
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
         self.assertCountEqual(section_conf, ['main_hidden', 'muledit_attributes'])
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
@@ -148,6 +147,55 @@ class UicfgRegistryTC(CubicWebTC):
         self.assertTrue(obj is custom_afs)
 
 
+def _schema():
+
+    class Personne(EntityType):
+        pass
+
+    class Societe(EntityType):
+        pass
+
+    class Tag(EntityType):
+        pass
+
+    class travaille(RelationDefinition):
+        subject = 'Personne'
+        object = 'Societe'
+
+    class tags(RelationDefinition):
+        subject = 'Tag'
+        object = ('Personne', 'Societe', 'Tag')
+
+    return build_schema_from_namespace(locals().items())
+
+
+class AutoformSectionTC(BaseTestCase):
+
+    def test_derivation(self):
+        schema = _schema()
+        afs = uicfg.AutoformSectionRelationTags()
+        afs.tag_subject_of(('Personne', 'travaille', '*'), 'main', 'relations')
+        afs.tag_object_of(('*', 'travaille', 'Societe'), 'main', 'relations')
+        afs.tag_subject_of(('Tag', 'tags', '*'), 'main', 'relations')
+
+        afs2 = afs.derive(__name__, afs.__select__)
+        afs2.tag_subject_of(('Personne', 'travaille', '*'), 'main', 'attributes')
+        afs2.tag_object_of(('*', 'travaille', 'Societe'), 'main', 'attributes')
+        afs2.tag_subject_of(('Tag', 'tags', 'Societe'), 'main', 'attributes')
+
+        afs.init(schema)
+        afs2.init(schema)
+
+        self.assertEqual(afs2.etype_get('Tag', 'tags', 'subject', 'Personne'),
+                         set(('main_relations', 'muledit_hidden', 'inlined_relations')))
+        self.assertEqual(afs2.etype_get('Tag', 'tags', 'subject', 'Societe'),
+                         set(('main_attributes', 'muledit_hidden', 'inlined_attributes')))
+        self.assertEqual(afs2.etype_get('Personne', 'travaille', 'subject', 'Societe'),
+                         set(('main_attributes', 'muledit_hidden', 'inlined_attributes')))
+        self.assertEqual(afs2.etype_get('Societe', 'travaille', 'object', 'Personne'),
+                         set(('main_attributes', 'muledit_hidden', 'inlined_attributes')))
+
+
 if __name__ == '__main__':
-    from logilab.common.testlib import unittest_main
-    unittest_main()
+    import unittest
+    unittest.main()

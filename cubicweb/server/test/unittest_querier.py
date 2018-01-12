@@ -1404,6 +1404,16 @@ Any P1,B,E WHERE P1 identity P2 WITH
             self.assertEqual(len(rset.rows), 1)
             self.assertEqual(rset.description, [('CWUser',)])
 
+    # computed relation tests ##################################################
+
+    def test_computed_relation_write_queries(self):
+        """Ensure we can use computed relation in WHERE clause of write queries"""
+        with self.admin_access.cnx() as cnx:
+            cnx.execute('INSERT Personne P: P nom "user", P login_user U WHERE NOT U user_login P')
+            cnx.execute('DELETE P login_user U WHERE U user_login P')
+            cnx.execute('DELETE Personne P WHERE U user_login P')
+            cnx.execute('SET U login "people" WHERE U user_login P')
+
     # ZT datetime tests ########################################################
 
     def test_tz_datetime(self):

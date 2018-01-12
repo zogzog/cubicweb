@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -54,12 +54,14 @@ Actions box configuration
    uicfg.actionbox_appearsin_addmenu.tag_object_of(('*', 'entry_of', 'Blog'), True)
 """
 
+from itertools import repeat
+
 from six import string_types
 
 from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool, RelationTagsSet,
                             RelationTagsDict, NoTargetRelationTagsDict,
-                            _ensure_str_key)
+                            rtags_chain, _ensure_str_key)
 from cubicweb.schema import META_RTYPES, INTERNAL_TYPES, WORKFLOW_TYPES
 
 
@@ -203,7 +205,16 @@ def _card_and_comp(sschema, rschema, oschema, role):
 
 
 class AutoformSectionRelationTags(RelationTagsSet):
-    """autoform relations'section"""
+    """autoform relations'section
+
+    Notice that unlike other rtags where wildcard handling is done when
+    retrieving some value, all values are expanded here during initialization
+    step.
+
+    For derived rtags, values specified for the 'main' form type are propagated
+    to the 'inlined' form type if unspecified. Others are fetched back from the
+    parent.
+    """
     __regid__ = 'autoform_section'
 
     _allowed_form_types = ('main', 'inlined', 'muledit')
@@ -215,7 +226,34 @@ class AutoformSectionRelationTags(RelationTagsSet):
 
     def init(self, schema, check=True):
         super(AutoformSectionRelationTags, self).init(schema, check)
-        self.apply(schema, self._initfunc_step2)
+        if self._parent is None:
+            self.apply(schema, self._initfunc_step2)
+        else:
+            # we still need to expand wildcard in defined keys
+            for key in list(self._tagdefs):
+                stype, rtype, otype, role = key
+                rschema = schema.rschema(rtype)
+                if stype == '*' and stype == '*':
+                    concrete_rdefs = rschema.rdefs.keys()
+                elif stype == '*':
+                    concrete_rdefs = zip(rschema.subjects(otype), repeat(otype))
+                elif otype == '*':
+                    concrete_rdefs = zip(repeat(stype), rschema.objects(stype))
+                else:
+                    concrete_rdefs = [(stype, otype)]
+                for sschema, oschema in concrete_rdefs:
+                    self._init(sschema, rschema, oschema, role)
+                    # also, we have to copy values from 'main' to 'inlined' and
+                    # for other undefined sections from the parent's rtag
+                    formsections = self.get(sschema, rschema, oschema, role)
+                    sectdict = _formsections_as_dict(formsections)
+                    parent_formsections = self._parent.get(sschema, rschema, oschema, role)
+                    parent_sectdict = _formsections_as_dict(parent_formsections)
+                    for formtype, section in parent_sectdict.items():
+                        if formtype not in sectdict:
+                            if formtype == 'inlined':
+                                section = sectdict.get('main', section)
+                            formsections.add('%s_%s' % (formtype, section))
 
     def _init(self, sschema, rschema, oschema, role):
         formsections = self.init_get(sschema, rschema, oschema, role)
@@ -300,7 +338,12 @@ class AutoformSectionRelationTags(RelationTagsSet):
 
     def get(self, *key):
         # overriden to avoid recomputing done in parent classes
-        return self._tagdefs.get(key, ())
+        for rtag in rtags_chain(self):
+            try:
+                return rtag._tagdefs[key]
+            except KeyError:
+                continue
+        return ()
 
     def relations_by_section(self, entity, formtype, section, permission,
                              strict=False):

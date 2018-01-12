@@ -88,7 +88,14 @@ class RelationTags(RegistrableRtags):
     def __repr__(self):
         # find a way to have more infos but keep it readable
         # (in error messages in case of an ambiguity for instance)
-        return '%s (%s): %s' % (id(self), self.__regid__, self.__class__)
+        return '<%s %s>' % (self.__regid__, self._short_repr())
+
+    def _short_repr(self):
+        # find a way to have more infos but keep it readable
+        # (in error messages in case of an ambiguity for instance)
+        return '%s@0x%x%s' % (
+            self.__module__, id(self),
+            ' derived from %s' % self._parent._short_repr() if self._parent else '')
 
     # dict compat
     def __getitem__(self, key):

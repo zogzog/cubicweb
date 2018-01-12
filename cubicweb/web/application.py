@@ -79,11 +79,11 @@ def anonymized_request(req):
     from cubicweb.web.views.authentication import Session
 
     orig_cnx = req.cnx
-    anon_cnx = anonymous_cnx(orig_cnx.session.repo)
+    anon_cnx = anonymous_cnx(orig_cnx.repo)
     try:
         with anon_cnx:
             # web request expect a session attribute on cnx referencing the web session
-            anon_cnx.session = Session(orig_cnx.session.repo, anon_cnx.user)
+            anon_cnx.session = Session(orig_cnx.repo, anon_cnx.user)
             req.set_cnx(anon_cnx)
             yield req
     finally:

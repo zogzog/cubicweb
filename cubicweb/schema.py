@@ -1,4 +1,4 @@
-# copyright 2003-2016 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,9 +19,8 @@
 
 from __future__ import print_function
 
-import pkgutil
 import re
-from os.path import join, basename
+from os.path import join
 from hashlib import md5
 from logging import getLogger
 from warnings import warn
@@ -29,7 +28,6 @@ from warnings import warn
 from six import PY2, text_type, string_types, add_metaclass
 from six.moves import range
 
-from logilab.common import tempattr
 from logilab.common.decorators import cached, clear_cache, monkeypatch, cachedproperty
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.deprecation import deprecated
@@ -44,14 +42,15 @@ from yams.constraints import (BaseConstraint, FormatConstraint,
                               cstr_json_dumps, cstr_json_loads)
 from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
                          cleanup_sys_modules, fill_schema_from_namespace)
+from yams.buildobjs import _add_relation as yams_add_relation
 
-from rql import parse, nodes, RQLSyntaxError, TypeResolverException
+from rql import parse, nodes, stmts, RQLSyntaxError, TypeResolverException
 from rql.analyze import ETypeResolver
 
 import cubicweb
+from cubicweb import server
 from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized, _
 
-from cubicweb import server
 
 PURE_VIRTUAL_RTYPES = set(('identity', 'has_text',))
 VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
@@ -602,6 +601,8 @@ def ERSchema_display_name(self, req, form='', context=None):
     a given form
     """
     return display_name(req, self.type, form, context)
+
+
 ERSchema.display_name = ERSchema_display_name
 
 
@@ -621,6 +622,8 @@ def get_groups(self, action):
         return frozenset(g for g in self.permissions[action] if isinstance(g, string_types))
     except KeyError:
         return ()
+
+
 PermissionMixIn.get_groups = get_groups
 
 
@@ -640,6 +643,8 @@ def get_rqlexprs(self, action):
         return tuple(g for g in self.permissions[action] if not isinstance(g, string_types))
     except KeyError:
         return ()
+
+
 PermissionMixIn.get_rqlexprs = get_rqlexprs
 
 
@@ -656,6 +661,8 @@ def set_action_permissions(self, action, permissions):
     orig_set_action_permissions(self, action, tuple(permissions))
     clear_cache(self, 'get_rqlexprs')
     clear_cache(self, 'get_groups')
+
+
 orig_set_action_permissions = PermissionMixIn.set_action_permissions
 PermissionMixIn.set_action_permissions = set_action_permissions
 
@@ -673,6 +680,8 @@ def has_local_role(self, action):
     if action in ('update', 'delete'):
         return 'owners' in self.get_groups(action)
     return False
+
+
 PermissionMixIn.has_local_role = has_local_role
 
 
@@ -681,6 +690,8 @@ def may_have_permission(self, action, req):
                                  self.has_perm(req, 'read')):
         return False
     return self.has_local_role(action) or self.has_perm(req, action)
+
+
 PermissionMixIn.may_have_permission = may_have_permission
 
 
@@ -691,6 +702,8 @@ def has_perm(self, _cw, action, **kwargs):
         return True
     except Unauthorized:
         return False
+
+
 PermissionMixIn.has_perm = has_perm
 
 
@@ -734,6 +747,8 @@ def check_perm(self, _cw, action, **kwargs):
            for rqlexpr in self.get_rqlexprs(action)):
         return
     raise Unauthorized(action, str(self))
+
+
 PermissionMixIn.check_perm = check_perm
 
 
@@ -818,7 +833,7 @@ class CubicWebEntitySchema(EntitySchema):
         """convenience method that returns the *main* (i.e. the first non meta)
         attribute defined in the entity schema
         """
-        for rschema, _ in self.attribute_definitions():
+        for rschema, __ in self.attribute_definitions():
             if not (rschema in META_RTYPES
                     or self.is_metadata(rschema)):
                 return rschema
@@ -1262,7 +1277,7 @@ class RepoEnforcedRQLConstraintMixIn(object):
             #
             # possible enhancement: check entity being created, it's probably
             # the main eid unless this is a composite relation
-            if eidto is None or 'S' in self.mainvars or not 'O' in self.mainvars:
+            if eidto is None or 'S' in self.mainvars or 'O' not in self.mainvars:
                 maineid = eidfrom
                 qname = role_name(rtype, 'subject')
             else:
@@ -1272,7 +1287,7 @@ class RepoEnforcedRQLConstraintMixIn(object):
                 msg = session._(self.msg)
             else:
                 msg = '%(constraint)s %(expression)s failed' % {
-                    'constraint':  session._(self.type()),
+                    'constraint': session._(self.type()),
                     'expression': self.expression}
             raise ValidationError(maineid, {qname: msg})
 
@@ -1319,9 +1334,6 @@ class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
 
 
 # workflow extensions #########################################################
-
-from yams.buildobjs import _add_relation as yams_add_relation
-
 
 class workflowable_definition(ybo.metadefinition):
     """extends default EntityType's metaclass to add workflow relations
@@ -1409,7 +1421,8 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
         """
         self.info('loading %s schemas', ', '.join(config.cubes()))
         try:
-            return super(CubicWebSchemaLoader, self).load(config, config.schema_modnames(), **kwargs)
+            return super(CubicWebSchemaLoader, self).load(
+                config, config.schema_modnames(), **kwargs)
         finally:
             # we've to cleanup modules imported from cubicweb.schemas as well
             cleanup_sys_modules([join(cubicweb.CW_SOFTWARE_ROOT, 'schemas')])
@@ -1448,29 +1461,36 @@ def vocabulary(self, entity=None, form=None):
             return self.regular_formats + tuple(NEED_PERM_FORMATS)
     return self.regular_formats
 
-# XXX itou for some Statement methods
-from rql import stmts
 
+# XXX itou for some Statement methods
 
 def bw_get_etype(self, name):
     return orig_get_etype(self, bw_normalize_etype(name))
+
+
 orig_get_etype = stmts.ScopeNode.get_etype
 stmts.ScopeNode.get_etype = bw_get_etype
 
 
 def bw_add_main_variable_delete(self, etype, vref):
     return orig_add_main_variable_delete(self, bw_normalize_etype(etype), vref)
+
+
 orig_add_main_variable_delete = stmts.Delete.add_main_variable
 stmts.Delete.add_main_variable = bw_add_main_variable_delete
 
 
 def bw_add_main_variable_insert(self, etype, vref):
     return orig_add_main_variable_insert(self, bw_normalize_etype(etype), vref)
+
+
 orig_add_main_variable_insert = stmts.Insert.add_main_variable
 stmts.Insert.add_main_variable = bw_add_main_variable_insert
 
 
 def bw_set_statement_type(self, etype):
     return orig_set_statement_type(self, bw_normalize_etype(etype))
+
+
 orig_set_statement_type = stmts.Select.set_statement_type
 stmts.Select.set_statement_type = bw_set_statement_type
