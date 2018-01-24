@@ -29,7 +29,7 @@ from inspect import isgeneratorfunction
 from itertools import chain
 from warnings import warn
 
-from six import text_type, string_types, reraise
+from six import binary_type, text_type, string_types, reraise
 from six.moves import range
 from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
 
@@ -758,7 +758,7 @@ class CubicWebTC(BaseTestCase):
         req.form will be setup using the url's query string
         """
         req = self.request(url=url)
-        if isinstance(url, unicode):
+        if isinstance(url, text_type):
             url = url.encode(req.encoding)  # req.setup_params() expects encoded strings
         querystring = urlparse(url)[-2]
         params = parse_qs(querystring)
@@ -772,7 +772,7 @@ class CubicWebTC(BaseTestCase):
         req.form will be setup using the url's query string
         """
         with self.admin_access.web_request(url=url) as req:
-            if isinstance(url, unicode):
+            if isinstance(url, text_type):
                 url = url.encode(req.encoding)  # req.setup_params() expects encoded strings
             querystring = urlparse(url)[-2]
             params = parse_qs(querystring)
@@ -1024,8 +1024,8 @@ class CubicWebTC(BaseTestCase):
                 position = getattr(exc, "position", (0,))[0]
                 if position:
                     # define filter
-                    if isinstance(content, str):
-                        content = unicode(content, sys.getdefaultencoding(), 'replace')
+                    if isinstance(content, binary_type):
+                        content = text_type(content, sys.getdefaultencoding(), 'replace')
                     content = validator.preprocess_data(content)
                     content = content.splitlines()
                     width = int(log(len(content), 10)) + 1
