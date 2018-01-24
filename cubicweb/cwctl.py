@@ -1078,7 +1078,7 @@ for cmdcls in (ListCommand,
 
 
 
-def run(args):
+def run(args=sys.argv[1:]):
     """command line tool"""
     import os
     filterwarnings('default', category=DeprecationWarning)
@@ -1093,4 +1093,4 @@ def run(args):
         sys.exit(2)
 
 if __name__ == '__main__':
-    run(sys.argv[1:])
+    run()
