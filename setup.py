@@ -23,7 +23,6 @@
 
 import io
 import os
-import sys
 from os.path import dirname, exists, isdir, join
 
 from setuptools import setup
@@ -68,24 +67,6 @@ def get_packages(directory, prefix):
                     result.append(package)
                 result += get_packages(absfile, result[-1])
     return result
-
-
-try:
-    import setuptools.command.easy_install # only if easy_install available
-    # monkey patch: Crack SandboxViolation verification
-    from setuptools.sandbox import DirectorySandbox as DS
-    old_ok = DS._ok
-    def _ok(self, path):
-        """Return True if ``path`` can be written during installation."""
-        out = old_ok(self, path) # here for side effect from setuptools
-        realpath = os.path.normcase(os.path.realpath(path))
-        allowed_path = os.path.normcase(sys.prefix)
-        if realpath.startswith(allowed_path):
-            out = True
-        return out
-    DS._ok = _ok
-except ImportError:
-    pass
 
 
 setup(
