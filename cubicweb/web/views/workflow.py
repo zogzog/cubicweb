@@ -26,7 +26,7 @@ from cubicweb import _
 
 import os
 
-from six import add_metaclass
+from six import add_metaclass, text_type
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated
@@ -313,7 +313,7 @@ def _wf_items_for_relation(req, wfeid, wfrelation, field):
     wf = req.entity_from_eid(wfeid)
     rschema = req.vreg.schema[field.name]
     param = 'toeid' if field.role == 'subject' else 'fromeid'
-    return sorted((e.view('combobox'), unicode(e.eid))
+    return sorted((e.view('combobox'), text_type(e.eid))
                   for e in getattr(wf, 'reverse_%s' % wfrelation)
                   if rschema.has_perm(req, 'add', **{param: e.eid}))
 
