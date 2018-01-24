@@ -22,10 +22,9 @@
 """
 
 import io
-import os
-from os.path import dirname, exists, isdir, join
+from os.path import dirname, join
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 here = dirname(__file__)
@@ -52,23 +51,6 @@ data_files = __pkginfo__['data_files']
 package_data = __pkginfo__['package_data']
 
 
-def get_packages(directory, prefix):
-    """return a list of subpackages for the given directory
-    """
-    result = []
-    for package in os.listdir(directory):
-        absfile = join(directory, package)
-        if isdir(absfile):
-            if exists(join(absfile, '__init__.py')) or \
-                   package in ('test', 'tests'):
-                if prefix:
-                    result.append('%s.%s' % (prefix, package))
-                else:
-                    result.append(package)
-                result += get_packages(absfile, result[-1])
-    return result
-
-
 setup(
     name=distname,
     version=version,
@@ -78,7 +60,7 @@ setup(
     long_description=long_description,
     author=author,
     author_email=author_email,
-    packages=[modname] + get_packages(join(here, modname), modname),
+    packages=find_packages(),
     package_data=package_data,
     data_files=data_files,
     include_package_data=True,

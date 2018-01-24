@@ -40,18 +40,27 @@ recursive-include cubicweb/schemas *.py *.sql
 
 recursive-include requirements *.txt
 
+recursive-include cubicweb/test *.py
 recursive-include cubicweb/test/data bootstrap_cubes *.py *.sql
 recursive-include cubicweb/test/data-rewrite bootstrap_cubes *.py
 recursive-include cubicweb/test/data_schemareader *.py
+recursive-include cubicweb/dataimport/test *.py
 recursive-include cubicweb/dataimport/test/data *.py *.csv *.txt
 recursive-include cubicweb/dataimport/test/data-massimport *.py
+recursive-include cubicweb/devtools/test *.py
 recursive-include cubicweb/devtools/test/data *.py *.txt *.js *.po.ref
+recursive-include cubicweb/entities/test *.py
 recursive-include cubicweb/entities/test/data *.py
+recursive-include cubicweb/etwist/test *.py
 recursive-include cubicweb/etwist/test/data *.py
+recursive-include cubicweb/ext/test *.py
 recursive-include cubicweb/ext/test/data *.py
+recursive-include cubicweb/hooks/test *.py
 recursive-include cubicweb/hooks/test/data-computed *.py
 recursive-include cubicweb/hooks/test/data *.py
+recursive-include cubicweb/sobjects/test *.py
 recursive-include cubicweb/sobjects/test/data bootstrap_cubes *.py
+recursive-include cubicweb/server/test *.py
 recursive-include cubicweb/server/test/data bootstrap_cubes *.py source* *.conf.in *.ldif
 recursive-include cubicweb/server/test/data-cwep002 *.py
 recursive-include cubicweb/server/test/datacomputed *.py
@@ -59,8 +68,10 @@ recursive-include cubicweb/server/test/data-schema2sql toignore
 recursive-include cubicweb/server/test/data-migractions bootstrap_cubes *.py
 recursive-include cubicweb/server/test/data-schemaserial *.py
 include cubicweb/web/test/testutils.js
+recursive-include cubicweb/web/test *.py
 recursive-include cubicweb/web/test/data bootstrap_cubes pouet.css *.py
 recursive-include cubicweb/web/test/data/static/jstests *.js *.html *.json
+recursive-include cubicweb/wsgi/test *.py
 
 include cubicweb/pyramid/development.ini.tmpl
 
