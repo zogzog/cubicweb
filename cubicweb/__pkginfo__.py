@@ -43,10 +43,6 @@ classifiers = [
     'Programming Language :: JavaScript',
 ]
 
-scripts = [s for s in glob.glob(join('bin', 'cubicweb-*'))
-           if not s.endswith('.bat')]
-
-
 _server_migration_dir = join(modname, 'misc', 'migration')
 _data_dir = join(modname, 'web', 'data')
 _wdoc_dir = join(modname, 'web', 'wdoc')

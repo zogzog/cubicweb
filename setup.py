@@ -49,22 +49,8 @@ with io.open('README', encoding='utf-8') as f:
 
 # import optional features
 distname = __pkginfo__['distname']
-scripts = __pkginfo__['scripts']
 data_files = __pkginfo__['data_files']
 package_data = __pkginfo__['package_data']
-
-
-def ensure_scripts(linux_scripts):
-    """
-    Creates the proper script names required for each platform
-    (taken from 4Suite)
-    """
-    from distutils import util
-    if util.get_platform()[:3] == 'win':
-        scripts_ = [script + '.bat' for script in linux_scripts]
-    else:
-        scripts_ = linux_scripts
-    return scripts_
 
 
 def get_packages(directory, prefix):
@@ -123,7 +109,6 @@ setup(
     author_email=author_email,
     packages=[modname] + get_packages(join(here, modname), modname),
     package_data=package_data,
-    scripts=ensure_scripts(scripts),
     data_files=data_files,
     include_package_data=True,
     install_requires=[
@@ -140,6 +125,9 @@ setup(
         'unittest2 >= 0.7.0',
     ],
     entry_points={
+        'console_scripts': [
+            'cubicweb-ctl = cubicweb.cwctl:run',
+        ],
         'paste.app_factory': [
             'pyramid_main=cubicweb.pyramid:pyramid_app',
         ],
