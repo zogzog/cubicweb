@@ -27,7 +27,7 @@ import sys
 from os.path import dirname, exists, isdir, join
 
 from setuptools import setup
-from distutils.command import install_data
+
 
 here = dirname(__file__)
 
@@ -70,16 +70,6 @@ def get_packages(directory, prefix):
     return result
 
 
-# re-enable copying data files in sys.prefix
-# overwrite install_data to use sys.prefix instead of the egg directory
-class MyInstallData(install_data.install_data):
-    """A class that manages data files installation"""
-    def run(self):
-        _old_install_dir = self.install_dir
-        if self.install_dir.endswith('egg'):
-            self.install_dir = sys.prefix
-        install_data.install_data.run(self)
-        self.install_dir = _old_install_dir
 try:
     import setuptools.command.easy_install # only if easy_install available
     # monkey patch: Crack SandboxViolation verification
@@ -164,9 +154,6 @@ setup(
         'zmq': [
             'pyzmq',
         ],
-    },
-    cmdclass={
-        'install_data': MyInstallData,
     },
     zip_safe=False,
 )
