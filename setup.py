@@ -24,11 +24,9 @@
 import io
 import os
 import sys
-import shutil
 from os.path import dirname, exists, isdir, join
 
 from setuptools import setup
-from setuptools.command import develop, install_lib
 from distutils.command import install_data
 
 here = dirname(__file__)
@@ -52,12 +50,8 @@ with io.open('README', encoding='utf-8') as f:
 # import optional features
 distname = __pkginfo__['distname']
 scripts = __pkginfo__['scripts']
-include_dirs = __pkginfo__['include_dirs']
 data_files = __pkginfo__['data_files']
 package_data = __pkginfo__['package_data']
-
-BASE_BLACKLIST = ('CVS', 'dist', 'build', '__buildlog')
-IGNORED_EXTENSIONS = ('.pyc', '.pyo', '.elc')
 
 
 def ensure_scripts(linux_scripts):
@@ -88,66 +82,6 @@ def get_packages(directory, prefix):
                     result.append(package)
                 result += get_packages(absfile, result[-1])
     return result
-
-def export(from_dir, to_dir,
-           blacklist=BASE_BLACKLIST,
-           ignore_ext=IGNORED_EXTENSIONS,
-           verbose=True):
-    try:
-        os.mkdir(to_dir)
-    except OSError as ex:
-        # file exists ?
-        import errno
-        if ex.errno != errno.EEXIST:
-            raise
-    else:
-        if verbose:
-            print('created %s directory' % to_dir)
-    for dirpath, dirnames, filenames in os.walk(from_dir):
-        for norecurs in blacklist:
-            try:
-                dirnames.remove(norecurs)
-            except ValueError:
-                pass
-            else:
-                if verbose:
-                    print('not recursing in %s' % join(dirpath, norecurs))
-        for dirname in dirnames:
-            src = join(dirpath, dirname)
-            dest = to_dir + src[len(from_dir):]
-            if not exists(dest):
-                if verbose:
-                    print('creating %s directory' % dest)
-                os.mkdir(dest)
-        for filename in filenames:
-            # don't include binary files
-            src = join(dirpath, filename)
-            dest = to_dir + src[len(from_dir):]
-            if filename[-4:] in ignore_ext:
-                continue
-            if filename[-1] == '~':
-                continue
-            if exists(dest):
-                os.remove(dest)
-            if verbose:
-                print('copying %s to %s' % (src, dest))
-            shutil.copy2(src, dest)
-
-
-class MyInstallLib(install_lib.install_lib):
-    """extend install_lib command to handle  package __init__.py and
-    include_dirs variable if necessary
-    """
-    def run(self):
-        """overridden from install_lib class"""
-        install_lib.install_lib.run(self)
-        # create Products.__init__.py if needed
-        # manually install included directories if any
-        if include_dirs:
-            for directory in include_dirs:
-                src = join(modname, directory)
-                dest = join(self.install_dir, src)
-                export(src, dest, verbose=self.verbose)
 
 
 # re-enable copying data files in sys.prefix
@@ -191,6 +125,7 @@ setup(
     package_data=package_data,
     scripts=ensure_scripts(scripts),
     data_files=data_files,
+    include_package_data=True,
     install_requires=[
         'six >= 1.4.0',
         'logilab-common >= 1.4.0',
@@ -243,7 +178,6 @@ setup(
         ],
     },
     cmdclass={
-        'install_lib': MyInstallLib,
         'install_data': MyInstallData,
     },
     zip_safe=False,

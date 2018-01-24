@@ -45,13 +45,6 @@ classifiers = [
 
 scripts = [s for s in glob.glob(join('bin', 'cubicweb-*'))
            if not s.endswith('.bat')]
-include_dirs = [join('test', 'data'),
-                join('server', 'test', 'data'),
-                join('hooks', 'test', 'data'),
-                join('web', 'test', 'data'),
-                join('devtools', 'data'),
-                join('devtools', 'test', 'data'),
-                'schemas', 'skeleton']
 
 
 _server_migration_dir = join(modname, 'misc', 'migration')
