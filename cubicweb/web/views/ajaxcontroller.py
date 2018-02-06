@@ -153,7 +153,7 @@ class AjaxController(Controller):
             result = func(*args)
         except (RemoteCallFailed, DirectResponse):
             raise
-        except ValidationError:
+        except ValidationError as exc:
             raise RemoteCallFailed(exc_message(exc, self._cw.encoding),
                                    status=http_client.BAD_REQUEST)
         except Exception as exc:
