@@ -19,7 +19,6 @@
 """cubicweb global packaging information for the cubicweb knowledge management
 software
 """
-import sys
 from os import listdir
 from os.path import join
 
@@ -43,13 +42,6 @@ classifiers = [
 ]
 
 _server_migration_dir = join(modname, 'misc', 'migration')
-
-_pyversion = '.'.join(str(num) for num in sys.version_info[0:2])
-if '--home' in sys.argv:
-    # --home install
-    pydir = 'python' + _pyversion
-else:
-    pydir = join('python' + _pyversion, 'site-packages')
 
 # data files that shall be copied into the main package directory
 package_data = {
