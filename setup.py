@@ -47,7 +47,6 @@ with io.open('README', encoding='utf-8') as f:
 
 # import optional features
 distname = __pkginfo__['distname']
-data_files = __pkginfo__['data_files']
 package_data = __pkginfo__['package_data']
 
 
@@ -62,7 +61,6 @@ setup(
     author_email=author_email,
     packages=find_packages(),
     package_data=package_data,
-    data_files=data_files,
     include_package_data=True,
     install_requires=[
         'six >= 1.4.0',

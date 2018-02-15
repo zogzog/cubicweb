@@ -1011,9 +1011,8 @@ the repository',
     @classmethod
     def migration_scripts_dir(cls):
         """cubicweb migration scripts directory"""
-        mdir = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'migration')
-        if not exists(mdir):
-            raise ConfigurationError('migration path %s doesn\'t exist' % mdir)
+        mdir = join(dirname(__file__), 'misc', 'migration')
+        assert exists(mdir), 'migration path %s does not exist' % mdir
         return mdir
 
     @classmethod

@@ -19,9 +19,6 @@
 """cubicweb global packaging information for the cubicweb knowledge management
 software
 """
-from os import listdir
-from os.path import join
-
 
 modname = distname = "cubicweb"
 
@@ -41,22 +38,8 @@ classifiers = [
     'Programming Language :: JavaScript',
 ]
 
-_server_migration_dir = join(modname, 'misc', 'migration')
-
 # data files that shall be copied into the main package directory
 package_data = {
     'cubicweb.web.views': ['*.pt'],
     'cubicweb.pyramid': ['development.ini.tmpl'],
 }
-
-try:
-    # data files that shall be copied outside the main package directory
-    data_files = [
-        # server data
-        [join('share', 'cubicweb', 'migration'),
-         [join(_server_migration_dir, filename)
-          for filename in listdir(_server_migration_dir)]],
-    ]
-except OSError:
-    # we are in an installed directory, don't care about this
-    pass

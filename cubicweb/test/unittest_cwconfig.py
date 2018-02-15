@@ -125,6 +125,12 @@ class CubicWebConfigurationTC(BaseTestCase):
         ApptestConfiguration.CUBES_PATH = []
         cleanup_sys_modules([self.datapath('libpython')])
 
+    def test_migration_scripts_dir(self):
+        mscripts = os.listdir(self.config.migration_scripts_dir())
+        self.assertIn('bootstrapmigration_repository.py', mscripts)
+        self.assertIn('postcreate.py', mscripts)
+        self.assertIn('3.24.0_Any.py', mscripts)
+
     @patch('pkg_resources.iter_entry_points', side_effect=iter_entry_points)
     def test_available_cubes(self, mock_iter_entry_points):
         expected_cubes = [
