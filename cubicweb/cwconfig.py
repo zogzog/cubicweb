@@ -484,13 +484,6 @@ this option is set to yes",
         return Configuration(options=PERSISTENT_OPTIONS)
 
     @classmethod
-    def shared_dir(cls):
-        """return the shared data directory (i.e. directory where standard
-        library views and data may be found)
-        """
-        return cls.cube_dir('shared')
-
-    @classmethod
     def i18n_lib_dir(cls):
         """return instance's i18n directory"""
         return join(dirname(__file__), 'i18n')

@@ -7,3 +7,8 @@ New features
 * For ``pyramid`` instance configuration kind, logging is not handled anymore
   by CubicWeb but should be configured through ``development.ini`` file
   following https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/logging.html.
+
+Backwards incompatible changes
+------------------------------
+
+* CubicWebConfiguration method 'shared_dir' got dropped.
