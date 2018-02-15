@@ -19,6 +19,7 @@
 """cubicweb.web.webconfig unit tests"""
 
 import os
+from os import path
 from unittest import TestCase
 
 from cubicweb.devtools import ApptestConfiguration, fake
@@ -51,6 +52,18 @@ class WebconfigTC(TestCase):
         self.assertTrue('web' in cubicwebcsspath or 'shared' in cubicwebcsspath,
                         'neither "web" nor "shared" found in cubicwebcsspath (%s)'
                         % cubicwebcsspath)
+
+    def test_locate_all_files(self):
+        wdocfiles = list(self.config.locate_all_files('toc.xml'))
+        for fpath in wdocfiles:
+            self.assertTrue(path.exists(fpath), fpath)
+        for expected in [path.join('cubes', 'file', 'wdoc', 'toc.xml'),
+                         path.join('cubes', 'shared', 'wdoc', 'toc.xml')]:
+            for fpath in wdocfiles:
+                if fpath.endswith(expected):
+                    break
+            else:
+                raise AssertionError('%s not found in %s' % (expected, wdocfiles))
 
     def test_sign_text(self):
         signature = self.config.sign_text(u'hôp')
