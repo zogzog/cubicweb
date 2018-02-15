@@ -391,8 +391,6 @@ CFGTYPE2ETYPE_MAP = {
     'float' : 'Float',
     }
 
-_forced_mode = os.environ.get('CW_MODE')
-assert _forced_mode in (None, 'system', 'user')
 
 try:
     _INSTALL_PREFIX = os.environ['CW_INSTALL_PREFIX']
@@ -415,11 +413,12 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     quick_start = False
 
     if 'VIRTUAL_ENV' in os.environ:
-        mode = _forced_mode or 'user'
+        mode = os.environ.get('CW_MODE', 'user')
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
     else:
-        mode = _forced_mode or 'system'
+        mode = os.environ.get('CW_MODE', 'system')
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
+    assert mode in ('system', 'user'), '"CW_MODE" should be either "user" or "system"'
 
     CUBES_DIR = realpath(abspath(os.environ.get('CW_CUBES_DIR', _CUBES_DIR)))
     CUBES_PATH = os.environ.get('CW_CUBES_PATH', '').split(os.pathsep)
