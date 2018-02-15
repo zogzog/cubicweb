@@ -493,7 +493,7 @@ this option is set to yes",
     @classmethod
     def i18n_lib_dir(cls):
         """return instance's i18n directory"""
-        return join(cls.shared_dir(), 'i18n')
+        return join(dirname(__file__), 'i18n')
 
     @classmethod
     def cw_languages(cls):

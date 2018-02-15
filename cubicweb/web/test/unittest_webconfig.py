@@ -58,7 +58,7 @@ class WebconfigTC(TestCase):
         for fpath in wdocfiles:
             self.assertTrue(path.exists(fpath), fpath)
         for expected in [path.join('cubes', 'file', 'wdoc', 'toc.xml'),
-                         path.join('cubes', 'shared', 'wdoc', 'toc.xml')]:
+                         path.join('cubicweb', 'web', 'wdoc', 'toc.xml')]:
             for fpath in wdocfiles:
                 if fpath.endswith(expected):
                     break

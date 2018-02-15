@@ -115,7 +115,7 @@ class GenStaticDataDirMixIn(object):
             cube_datadir = osp.join(cwcfg.cube_dir(cube), 'data')
             if osp.isdir(cube_datadir):
                 yield cube_datadir
-        yield osp.join(config.shared_dir(), 'data')
+        yield _DATA_DIR
 
 
 class WebUpgradeHandler(CommandHandler, GenStaticDataDirMixIn):
