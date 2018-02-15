@@ -26,7 +26,7 @@ import logging
 from threading import Thread
 from getpass import getpass
 
-from six import PY2
+from six import PY2, text_type
 from six.moves import input
 
 from passlib.utils import handlers as uh, to_hash_str
@@ -106,7 +106,7 @@ def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
         while not user:
             user = input('login: ')
         if PY2:
-            user = unicode(user, sys.stdin.encoding)
+            user = text_type(user, sys.stdin.encoding)
     passwd = getpass('%s: ' % passwdmsg)
     if confirm:
         while True:
