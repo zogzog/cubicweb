@@ -240,36 +240,6 @@ def guess_configuration(directory):
     return modes[0]
 
 
-def _find_prefix(start_path=None):
-    """Return the prefix path of CubicWeb installation.
-
-    Walk parent directories of `start_path` looking for one containing a
-    'share/cubicweb' directory. The first matching directory is assumed as the
-    prefix installation of CubicWeb.
-
-    If run from within a virtualenv, the virtualenv root is used as
-    `start_path`. Otherwise, `start_path` defaults to cubicweb package
-    directory path.
-    """
-    if start_path is None:
-        try:
-            prefix = os.environ['VIRTUAL_ENV']
-        except KeyError:
-            prefix = CW_SOFTWARE_ROOT
-    else:
-        prefix = start_path
-    if not isdir(prefix):
-        prefix = dirname(prefix)
-    old_prefix = None
-    while (not isdir(join(prefix, 'share', 'cubicweb'))
-           or prefix.endswith('.egg')):
-        if prefix == old_prefix:
-            return sys.prefix
-        old_prefix = prefix
-        prefix = dirname(prefix)
-    return prefix
-
-
 def _cube_pkgname(cube):
     if not cube.startswith('cubicweb_'):
         return 'cubicweb_' + cube
@@ -392,10 +362,7 @@ CFGTYPE2ETYPE_MAP = {
     }
 
 
-try:
-    _INSTALL_PREFIX = os.environ['CW_INSTALL_PREFIX']
-except KeyError:
-    _INSTALL_PREFIX = _find_prefix()
+_INSTALL_PREFIX = os.environ.get('CW_INSTALL_PREFIX', sys.prefix)
 _USR_INSTALL = _INSTALL_PREFIX == '/usr'
 
 class CubicWebNoAppConfiguration(ConfigurationMixIn):
@@ -414,12 +381,12 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
 
     if 'VIRTUAL_ENV' in os.environ:
         mode = os.environ.get('CW_MODE', 'user')
-        _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
     else:
         mode = os.environ.get('CW_MODE', 'system')
-        _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
     assert mode in ('system', 'user'), '"CW_MODE" should be either "user" or "system"'
 
+    _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
+    assert _CUBES_DIR  # XXX only meaningful if CW_CUBES_DIR is not set
     CUBES_DIR = realpath(abspath(os.environ.get('CW_CUBES_DIR', _CUBES_DIR)))
     CUBES_PATH = os.environ.get('CW_CUBES_PATH', '').split(os.pathsep)
 
