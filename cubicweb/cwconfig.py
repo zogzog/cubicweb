@@ -394,11 +394,6 @@ CFGTYPE2ETYPE_MAP = {
 _forced_mode = os.environ.get('CW_MODE')
 assert _forced_mode in (None, 'system', 'user')
 
-# CWDEV tells whether directories such as i18n/, web/data/, etc. (ie containing
-# some other resources than python libraries) are located with the python code
-# or as a 'shared' cube
-CWDEV = exists(join(CW_SOFTWARE_ROOT, 'i18n'))
-
 try:
     _INSTALL_PREFIX = os.environ['CW_INSTALL_PREFIX']
 except KeyError:
@@ -422,9 +417,6 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     if 'VIRTUAL_ENV' in os.environ:
         mode = _forced_mode or 'user'
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
-    elif CWDEV and _forced_mode != 'system':
-        mode = 'user'
-        _CUBES_DIR = join(CW_SOFTWARE_ROOT, '../../cubes')
     else:
         mode = _forced_mode or 'system'
         _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
@@ -497,15 +489,11 @@ this option is set to yes",
         """return the shared data directory (i.e. directory where standard
         library views and data may be found)
         """
-        if CWDEV:
-            return join(CW_SOFTWARE_ROOT, 'web')
         return cls.cube_dir('shared')
 
     @classmethod
     def i18n_lib_dir(cls):
         """return instance's i18n directory"""
-        if CWDEV:
-            return join(CW_SOFTWARE_ROOT, 'i18n')
         return join(cls.shared_dir(), 'i18n')
 
     @classmethod
@@ -1031,8 +1019,6 @@ the repository',
     @classmethod
     def migration_scripts_dir(cls):
         """cubicweb migration scripts directory"""
-        if CWDEV:
-            return join(CW_SOFTWARE_ROOT, 'misc', 'migration')
         mdir = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'migration')
         if not exists(mdir):
             raise ConfigurationError('migration path %s doesn\'t exist' % mdir)
