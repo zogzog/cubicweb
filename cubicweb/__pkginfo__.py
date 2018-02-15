@@ -21,8 +21,7 @@ software
 """
 import sys
 from os import listdir
-from os.path import join, isdir
-import glob
+from os.path import join
 
 
 modname = distname = "cubicweb"
@@ -44,11 +43,6 @@ classifiers = [
 ]
 
 _server_migration_dir = join(modname, 'misc', 'migration')
-_data_dir = join(modname, 'web', 'data')
-_wdoc_dir = join(modname, 'web', 'wdoc')
-_wdocimages_dir = join(_wdoc_dir, 'images')
-_views_dir = join(modname, 'web', 'views')
-_i18n_dir = join(modname, 'i18n')
 
 _pyversion = '.'.join(str(num) for num in sys.version_info[0:2])
 if '--home' in sys.argv:
@@ -70,27 +64,7 @@ try:
         [join('share', 'cubicweb', 'migration'),
          [join(_server_migration_dir, filename)
           for filename in listdir(_server_migration_dir)]],
-        # web data
-        [join('share', 'cubicweb', 'cubes', 'shared', 'data'),
-         [join(_data_dir, fname) for fname in listdir(_data_dir)
-          if not isdir(join(_data_dir, fname))]],
-        [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'images'),
-         [join(_data_dir, 'images', fname) for fname in listdir(join(_data_dir, 'images'))]],
-        [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'jquery-treeview'),
-         [join(_data_dir, 'jquery-treeview', fname) for fname in listdir(join(_data_dir, 'jquery-treeview'))
-          if not isdir(join(_data_dir, 'jquery-treeview', fname))]],
-        [join('share', 'cubicweb', 'cubes', 'shared', 'data', 'jquery-treeview', 'images'),
-         [join(_data_dir, 'jquery-treeview', 'images', fname)
-          for fname in listdir(join(_data_dir, 'jquery-treeview', 'images'))]],
-        [join('share', 'cubicweb', 'cubes', 'shared', 'wdoc'),
-         [join(_wdoc_dir, fname) for fname in listdir(_wdoc_dir)
-          if not isdir(join(_wdoc_dir, fname))]],
-        [join('share', 'cubicweb', 'cubes', 'shared', 'wdoc', 'images'),
-         [join(_wdocimages_dir, fname) for fname in listdir(_wdocimages_dir)]],
-        [join('share', 'cubicweb', 'cubes', 'shared', 'i18n'),
-         glob.glob(join(_i18n_dir, '*.po'))],
-        # skeleton
-        ]
+    ]
 except OSError:
     # we are in an installed directory, don't care about this
     pass
