@@ -38,16 +38,6 @@ from cubicweb.cwconfig import (
     CubicWebConfiguration, _expand_modname)
 
 
-def unabsolutize(path):
-    parts = path.split(os.sep)
-    for i, part in reversed(tuple(enumerate(parts))):
-        if part.startswith('cubicweb_'):
-            return os.sep.join([part[len('cubicweb_'):]] + parts[i + 1:])
-        if part.startswith('cubicweb') or part == 'legacy_cubes':
-            return os.sep.join(parts[i + 1:])
-    raise Exception('duh? %s' % path)
-
-
 def templibdir(func):
     """create a temporary directory and insert it in sys.path"""
     @functools.wraps(func)
