@@ -91,7 +91,10 @@ from contextlib import contextmanager
 from pyramid.compat import pickle
 from pyramid.session import SignedCookieSessionFactory
 
-from cubicweb import Binary
+from cubicweb import (
+    Binary,
+    UnknownEid,
+)
 
 
 log = logging.getLogger(__name__)
@@ -228,8 +231,16 @@ def CWSessionFactory(
                         'CWSession', cwsessiondata=data)
                     sessioneid = session.eid
                 else:
-                    session = cnx.entity_from_eid(sessioneid)
-                    session.cw_set(cwsessiondata=data)
+                    try:
+                        session = cnx.entity_from_eid(sessioneid)
+                    except UnknownEid:
+                        # Might occur if CWSession entity got dropped (e.g.
+                        # the whole db got recreated) while user's cookie is
+                        # still valid. We recreate the CWSession in this case.
+                        sessioneid = cnx.create_entity(
+                            'CWSession', cwsessiondata=data).eid
+                    else:
+                        session.cw_set(cwsessiondata=data)
                 cnx.commit()
 
             # Only if needed actually set the cookie
