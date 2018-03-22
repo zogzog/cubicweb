@@ -31,6 +31,7 @@ from cubicweb import ExecutionError
 from cubicweb.cwctl import CWCTL
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
+from cubicweb.web.webconfig import _DATA_DIR
 
 
 try:
