@@ -122,6 +122,7 @@ cubicweb/web/views/searchrestriction.py
 cubicweb/web/views/staticcontrollers.py
 cubicweb/web/views/workflow.py
 cubicweb/web/views/uicfg.py
+cubicweb/web/webctl.py
 cubicweb/xy.py
 cubicweb/pyramid/auth.py
 cubicweb/pyramid/bwcompat.py

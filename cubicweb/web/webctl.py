@@ -20,9 +20,8 @@ web configuration
 """
 from __future__ import print_function
 
-
-
-import os, os.path as osp
+import os
+import os.path as osp
 from shutil import copy, rmtree
 
 from logilab.common.shellutils import ASK
@@ -77,18 +76,19 @@ class GenStaticDataDirMixIn(object):
         if not dest:
             dest = osp.join(config.appdatahome, 'data')
         if osp.exists(dest):
-            if config.verbosity and (not ask_clean or
-                not (config.verbosity and
-                     ASK.confirm('Remove existing data directory %s?' % dest))):
+            if (config.verbosity
+                    and (not ask_clean
+                         or not (config.verbosity
+                                 and ASK.confirm('Remove existing data directory %s?' % dest)))):
                 raise ExecutionError('Directory %s already exists. '
                                      'Remove it first.' % dest)
             rmtreecontent(dest)
-        config.quick_start = True # notify this is not a regular start
+        config.quick_start = True  # notify this is not a regular start
         # list all resources (no matter their order)
         resources = set()
         for datadir in self._datadirs(config, repo=repo):
             for dirpath, dirnames, filenames in os.walk(datadir):
-                rel_dirpath = dirpath[len(datadir)+1:]
+                rel_dirpath = dirpath[len(datadir) + 1:]
                 resources.update(osp.join(rel_dirpath, f) for f in filenames)
 
         # locate resources and copy them to destination
