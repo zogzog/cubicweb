@@ -523,7 +523,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
           afs.set_muledit_editable('CWUser', ('firstname', 'surname', 'in_group'))
         """
         for attr in attrs:
-            self.edit_as_attr(self, etype, attr, formtype='muledit')
+            self.edit_as_attr(etype, attr, formtype='muledit')
 
 
 autoform_section = AutoformSectionRelationTags(__module__=__name__)
