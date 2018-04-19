@@ -110,6 +110,7 @@ cubicweb/web/formwidgets.py
 cubicweb/web/test/data/entities.py
 cubicweb/web/test/unittest_application.py
 cubicweb/web/test/unittest_http_headers.py
+cubicweb/web/test/unittest_propertysheet.py
 cubicweb/web/test/unittest_uicfg.py
 cubicweb/web/test/unittest_views_basetemplates.py
 cubicweb/web/test/unittest_views_cwsources.py

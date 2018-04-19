@@ -40,13 +40,13 @@ class PropertySheetTC(TestCase):
         self.assertEqual(ps['fontcolor'], 'black')
         # defined by sheet1, extended by sheet2
         self.assertEqual(ps['stylesheets'], ['http://cwtest.com/cubicweb.css',
-                                              'http://cwtest.com/mycube.css'])
+                                             'http://cwtest.com/mycube.css'])
         # lazy string defined by sheet1
         self.assertIsInstance(ps['lazy'], lazystr)
         self.assertEqual(str(ps['lazy']), '#FFFFFF')
         # test compilation
         self.assertEqual(ps.compile('a {bgcolor: %(bgcolor)s; size: 1%;}'),
-                          'a {bgcolor: #FFFFFF; size: 1%;}')
+                         'a {bgcolor: #FFFFFF; size: 1%;}')
         self.assertEqual(ps.process_resource(DATADIR, 'pouet.css'),
                          self.cachedir)
         self.assertFalse(ps.need_reload())
@@ -54,7 +54,7 @@ class PropertySheetTC(TestCase):
         self.assertTrue(ps.need_reload())
         ps.reload()
         self.assertFalse(ps.need_reload())
-        ps.process_resource(DATADIR, 'pouet.css') # put in cache
+        ps.process_resource(DATADIR, 'pouet.css')  # put in cache
         os.utime(self.data('pouet.css'), None)
         self.assertFalse(ps.need_reload())
 
