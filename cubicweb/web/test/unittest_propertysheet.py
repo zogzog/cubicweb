@@ -58,6 +58,13 @@ class PropertySheetTC(TestCase):
         os.utime(self.data('pouet.css'), None)
         self.assertFalse(ps.need_reload())
 
+    def test_chmod(self):
+        ps = PropertySheet(self.cachedir, datadir_url='http://cwtest.com')
+        ps.load(self.data('sheet1.py'))
+        rdir = ps.process_resource(DATADIR, 'pouet.css')
+        mode = os.stat(join(rdir, 'pouet.css')).st_mode
+        self.assertEqual(('%o' % mode)[-4:], '0644')
+
 
 if __name__ == '__main__':
     main()
