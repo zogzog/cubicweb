@@ -19,6 +19,7 @@
 
 from __future__ import print_function
 
+import os
 import sys
 import re
 import subprocess
@@ -48,13 +49,16 @@ lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
 
-def _run_command(cmd):
+def _run_command(cmd, extra_env=None):
+    env = os.environ.copy()
+    for key, value in (extra_env or {}).items():
+        env.setdefault(key, value)
     if isinstance(cmd, string_types):
         print(cmd)
-        return subprocess.call(cmd, shell=True)
+        return subprocess.call(cmd, shell=True, env=env)
     else:
         print(' '.join(cmd))
-        return subprocess.call(cmd)
+        return subprocess.call(cmd, env=env)
 
 
 def sqlexec(sqlstmts, cursor_or_execute, withpb=True,
@@ -342,18 +346,25 @@ class SQLAdapterMixIn(object):
         """open and return a connection to the database"""
         return self.dbhelper.get_connection()
 
+    def _backup_restore_env(self):
+        if (self.config['db-driver'] == 'postgres'
+                and self.config['db-password'] is not None):
+            return {'PGPASSWORD': self.config['db-password']}
+
     def backup_to_file(self, backupfile, confirm):
+        extra_env = self._backup_restore_env()
         for cmd in self.dbhelper.backup_commands(backupfile,
                                                  keepownership=False):
-            if _run_command(cmd):
+            if _run_command(cmd, extra_env=extra_env):
                 if not confirm('   [Failed] Continue anyway?', default='n'):
                     raise Exception('Failed command: %s' % cmd)
 
     def restore_from_file(self, backupfile, confirm, drop=True):
+        extra_env = self._backup_restore_env()
         for cmd in self.dbhelper.restore_commands(backupfile,
                                                   keepownership=False,
                                                   drop=drop):
-            if _run_command(cmd):
+            if _run_command(cmd, extra_env=extra_env):
                 if not confirm('   [Failed] Continue anyway?', default='n'):
                     raise Exception('Failed command: %s' % cmd)
 

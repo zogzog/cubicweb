@@ -240,36 +240,6 @@ def guess_configuration(directory):
     return modes[0]
 
 
-def _find_prefix(start_path=None):
-    """Return the prefix path of CubicWeb installation.
-
-    Walk parent directories of `start_path` looking for one containing a
-    'share/cubicweb' directory. The first matching directory is assumed as the
-    prefix installation of CubicWeb.
-
-    If run from within a virtualenv, the virtualenv root is used as
-    `start_path`. Otherwise, `start_path` defaults to cubicweb package
-    directory path.
-    """
-    if start_path is None:
-        try:
-            prefix = os.environ['VIRTUAL_ENV']
-        except KeyError:
-            prefix = CW_SOFTWARE_ROOT
-    else:
-        prefix = start_path
-    if not isdir(prefix):
-        prefix = dirname(prefix)
-    old_prefix = None
-    while (not isdir(join(prefix, 'share', 'cubicweb'))
-           or prefix.endswith('.egg')):
-        if prefix == old_prefix:
-            return sys.prefix
-        old_prefix = prefix
-        prefix = dirname(prefix)
-    return prefix
-
-
 def _cube_pkgname(cube):
     if not cube.startswith('cubicweb_'):
         return 'cubicweb_' + cube
@@ -391,18 +361,8 @@ CFGTYPE2ETYPE_MAP = {
     'float' : 'Float',
     }
 
-_forced_mode = os.environ.get('CW_MODE')
-assert _forced_mode in (None, 'system', 'user')
 
-# CWDEV tells whether directories such as i18n/, web/data/, etc. (ie containing
-# some other resources than python libraries) are located with the python code
-# or as a 'shared' cube
-CWDEV = exists(join(CW_SOFTWARE_ROOT, 'i18n'))
-
-try:
-    _INSTALL_PREFIX = os.environ['CW_INSTALL_PREFIX']
-except KeyError:
-    _INSTALL_PREFIX = _find_prefix()
+_INSTALL_PREFIX = os.environ.get('CW_INSTALL_PREFIX', sys.prefix)
 _USR_INSTALL = _INSTALL_PREFIX == '/usr'
 
 class CubicWebNoAppConfiguration(ConfigurationMixIn):
@@ -420,15 +380,13 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     quick_start = False
 
     if 'VIRTUAL_ENV' in os.environ:
-        mode = _forced_mode or 'user'
-        _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
-    elif CWDEV and _forced_mode != 'system':
-        mode = 'user'
-        _CUBES_DIR = join(CW_SOFTWARE_ROOT, '../../cubes')
+        mode = os.environ.get('CW_MODE', 'user')
     else:
-        mode = _forced_mode or 'system'
-        _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
+        mode = os.environ.get('CW_MODE', 'system')
+    assert mode in ('system', 'user'), '"CW_MODE" should be either "user" or "system"'
 
+    _CUBES_DIR = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'cubes')
+    assert _CUBES_DIR  # XXX only meaningful if CW_CUBES_DIR is not set
     CUBES_DIR = realpath(abspath(os.environ.get('CW_CUBES_DIR', _CUBES_DIR)))
     CUBES_PATH = os.environ.get('CW_CUBES_PATH', '').split(os.pathsep)
 
@@ -493,20 +451,9 @@ this option is set to yes",
         return Configuration(options=PERSISTENT_OPTIONS)
 
     @classmethod
-    def shared_dir(cls):
-        """return the shared data directory (i.e. directory where standard
-        library views and data may be found)
-        """
-        if CWDEV:
-            return join(CW_SOFTWARE_ROOT, 'web')
-        return cls.cube_dir('shared')
-
-    @classmethod
     def i18n_lib_dir(cls):
         """return instance's i18n directory"""
-        if CWDEV:
-            return join(CW_SOFTWARE_ROOT, 'i18n')
-        return join(cls.shared_dir(), 'i18n')
+        return join(dirname(__file__), 'i18n')
 
     @classmethod
     def cw_languages(cls):
@@ -1031,11 +978,8 @@ the repository',
     @classmethod
     def migration_scripts_dir(cls):
         """cubicweb migration scripts directory"""
-        if CWDEV:
-            return join(CW_SOFTWARE_ROOT, 'misc', 'migration')
-        mdir = join(_INSTALL_PREFIX, 'share', 'cubicweb', 'migration')
-        if not exists(mdir):
-            raise ConfigurationError('migration path %s doesn\'t exist' % mdir)
+        mdir = join(dirname(__file__), 'misc', 'migration')
+        assert exists(mdir), 'migration path %s does not exist' % mdir
         return mdir
 
     @classmethod

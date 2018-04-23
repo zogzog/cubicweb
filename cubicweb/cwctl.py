@@ -44,7 +44,7 @@ from logilab.common.configuration import merge_options
 from logilab.common.decorators import clear_cache
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
-from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
+from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CONFIGURATIONS
 from cubicweb.toolsutils import Command, rm, create_dir, underline_title
 from cubicweb.__pkginfo__ import version
 
@@ -760,7 +760,7 @@ given, appropriate sources for migration will be automatically selected \
         if cubicwebversion > applcubicwebversion:
             toupgrade.append(('cubicweb', applcubicwebversion, cubicwebversion))
         # only stop once we're sure we have something to do
-        if instance_running and not (CWDEV or self.config.nostartstop):
+        if instance_running and not self.config.nostartstop:
             StopInstanceCommand(self.logger).stop_instance(appid)
         # run cubicweb/componants migration scripts
         if self.config.fs_only or toupgrade:
@@ -783,7 +783,7 @@ given, appropriate sources for migration will be automatically selected \
         if helper:
             helper.postupgrade(repo)
         print('-> instance migrated.')
-        if instance_running and not (CWDEV or self.config.nostartstop):
+        if instance_running and not self.config.nostartstop:
             # restart instance through fork to get a proper environment, avoid
             # uicfg pb (and probably gettext catalogs, to check...)
             forkcmd = '%s start %s' % (sys.argv[0], appid)

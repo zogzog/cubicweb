@@ -35,17 +35,7 @@ from logilab.common.modutils import cleanup_sys_modules
 from cubicweb.devtools import ApptestConfiguration
 from cubicweb.devtools.testlib import BaseTestCase, TemporaryDirectory
 from cubicweb.cwconfig import (
-    CubicWebConfiguration, _find_prefix, _expand_modname)
-
-
-def unabsolutize(path):
-    parts = path.split(os.sep)
-    for i, part in reversed(tuple(enumerate(parts))):
-        if part.startswith('cubicweb_'):
-            return os.sep.join([part[len('cubicweb_'):]] + parts[i + 1:])
-        if part.startswith('cubicweb') or part == 'legacy_cubes':
-            return os.sep.join(parts[i + 1:])
-    raise Exception('duh? %s' % path)
+    CubicWebConfiguration, _expand_modname)
 
 
 def templibdir(func):
@@ -124,6 +114,12 @@ class CubicWebConfigurationTC(BaseTestCase):
     def tearDown(self):
         ApptestConfiguration.CUBES_PATH = []
         cleanup_sys_modules([self.datapath('libpython')])
+
+    def test_migration_scripts_dir(self):
+        mscripts = os.listdir(self.config.migration_scripts_dir())
+        self.assertIn('bootstrapmigration_repository.py', mscripts)
+        self.assertIn('postcreate.py', mscripts)
+        self.assertIn('3.24.0_Any.py', mscripts)
 
     @patch('pkg_resources.iter_entry_points', side_effect=iter_entry_points)
     def test_available_cubes(self, mock_iter_entry_points):
@@ -287,101 +283,6 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
         self.config.load_cwctl_plugins()
         self.assertIn('cubes.mycube.ccplugin', sys.modules, sorted(sys.modules))
         self.assertNotIn('cubicweb_mycube.ccplugin', sys.modules, sorted(sys.modules))
-
-
-class FindPrefixTC(unittest.TestCase):
-
-    def make_dirs(self, basedir, *args):
-        path = join(basedir, *args)
-        if not os.path.exists(path):
-            os.makedirs(path)
-        return path
-
-    def make_file(self, basedir, *args):
-        self.make_dirs(basedir, *args[:-1])
-        file_path = join(basedir, *args)
-        with open(file_path, 'w') as f:
-            f.write('""" None """')
-        return file_path
-
-    def test_samedir(self):
-        with TemporaryDirectory() as prefix:
-            self.make_dirs(prefix, 'share', 'cubicweb')
-            self.assertEqual(_find_prefix(prefix), prefix)
-
-    def test_samedir_filepath(self):
-        with TemporaryDirectory() as prefix:
-            self.make_dirs(prefix, 'share', 'cubicweb')
-            file_path = self.make_file(prefix, 'bob.py')
-            self.assertEqual(_find_prefix(file_path), prefix)
-
-    def test_dir_inside_prefix(self):
-        with TemporaryDirectory() as prefix:
-            self.make_dirs(prefix, 'share', 'cubicweb')
-            dir_path = self.make_dirs(prefix, 'bob')
-            self.assertEqual(_find_prefix(dir_path), prefix)
-
-    def test_file_in_dir_inside_prefix(self):
-        with TemporaryDirectory() as prefix:
-            self.make_dirs(prefix, 'share', 'cubicweb')
-            file_path = self.make_file(prefix, 'bob', 'toto.py')
-            self.assertEqual(_find_prefix(file_path), prefix)
-
-    def test_file_in_deeper_dir_inside_prefix(self):
-        with TemporaryDirectory() as prefix:
-            self.make_dirs(prefix, 'share', 'cubicweb')
-            file_path = self.make_file(prefix, 'bob', 'pyves', 'alain',
-                                       'adim', 'syt', 'toto.py')
-            self.assertEqual(_find_prefix(file_path), prefix)
-
-    def test_multiple_candidate_prefix(self):
-        with TemporaryDirectory() as tempdir:
-            self.make_dirs(tempdir, 'share', 'cubicweb')
-            prefix = self.make_dirs(tempdir, 'bob')
-            self.make_dirs(prefix, 'share', 'cubicweb')
-            file_path = self.make_file(prefix, 'pyves', 'alain',
-                                       'adim', 'syt', 'toto.py')
-            self.assertEqual(_find_prefix(file_path), prefix)
-
-    def test_sister_candidate_prefix(self):
-        with TemporaryDirectory() as prefix:
-            self.make_dirs(prefix, 'share', 'cubicweb')
-            self.make_dirs(prefix, 'bob', 'share', 'cubicweb')
-            file_path = self.make_file(prefix, 'bell', 'toto.py')
-            self.assertEqual(_find_prefix(file_path), prefix)
-
-    def test_multiple_parent_candidate_prefix(self):
-        with TemporaryDirectory() as tempdir:
-            self.make_dirs(tempdir, 'share', 'cubicweb')
-            prefix = self.make_dirs(tempdir, 'share', 'cubicweb', 'bob')
-            self.make_dirs(tempdir, 'share', 'cubicweb', 'bob', 'share',
-                           'cubicweb')
-            file_path = self.make_file(tempdir, 'share', 'cubicweb', 'bob',
-                                       'pyves', 'alain', 'adim', 'syt',
-                                       'toto.py')
-            self.assertEqual(_find_prefix(file_path), prefix)
-
-    def test_upper_candidate_prefix(self):
-        with TemporaryDirectory() as prefix:
-            self.make_dirs(prefix, 'share', 'cubicweb')
-            self.make_dirs(prefix, 'bell', 'bob', 'share', 'cubicweb')
-            file_path = self.make_file(prefix, 'bell', 'toto.py')
-            self.assertEqual(_find_prefix(file_path), prefix)
-
-    def test_no_prefix(self):
-        with TemporaryDirectory() as prefix:
-            self.assertEqual(_find_prefix(prefix), sys.prefix)
-
-    def test_virtualenv(self):
-        venv = os.environ.get('VIRTUAL_ENV')
-        try:
-            with TemporaryDirectory() as prefix:
-                os.environ['VIRTUAL_ENV'] = prefix
-                self.make_dirs(prefix, 'share', 'cubicweb')
-                self.assertEqual(_find_prefix(), prefix)
-        finally:
-            if venv:
-                os.environ['VIRTUAL_ENV'] = venv
 
 
 class ModnamesTC(unittest.TestCase):

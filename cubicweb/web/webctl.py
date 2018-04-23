@@ -20,9 +20,8 @@ web configuration
 """
 from __future__ import print_function
 
-
-
-import os, os.path as osp
+import os
+import os.path as osp
 from shutil import copy, rmtree
 
 from logilab.common.shellutils import ASK
@@ -31,6 +30,7 @@ from cubicweb import ExecutionError
 from cubicweb.cwctl import CWCTL
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
+from cubicweb.web.webconfig import _DATA_DIR
 
 
 try:
@@ -76,18 +76,19 @@ class GenStaticDataDirMixIn(object):
         if not dest:
             dest = osp.join(config.appdatahome, 'data')
         if osp.exists(dest):
-            if config.verbosity and (not ask_clean or
-                not (config.verbosity and
-                     ASK.confirm('Remove existing data directory %s?' % dest))):
+            if (config.verbosity
+                    and (not ask_clean
+                         or not (config.verbosity
+                                 and ASK.confirm('Remove existing data directory %s?' % dest)))):
                 raise ExecutionError('Directory %s already exists. '
                                      'Remove it first.' % dest)
             rmtreecontent(dest)
-        config.quick_start = True # notify this is not a regular start
+        config.quick_start = True  # notify this is not a regular start
         # list all resources (no matter their order)
         resources = set()
         for datadir in self._datadirs(config, repo=repo):
             for dirpath, dirnames, filenames in os.walk(datadir):
-                rel_dirpath = dirpath[len(datadir)+1:]
+                rel_dirpath = dirpath[len(datadir) + 1:]
                 resources.update(osp.join(rel_dirpath, f) for f in filenames)
 
         # locate resources and copy them to destination
@@ -115,7 +116,7 @@ class GenStaticDataDirMixIn(object):
             cube_datadir = osp.join(cwcfg.cube_dir(cube), 'data')
             if osp.isdir(cube_datadir):
                 yield cube_datadir
-        yield osp.join(config.shared_dir(), 'data')
+        yield _DATA_DIR
 
 
 class WebUpgradeHandler(CommandHandler, GenStaticDataDirMixIn):

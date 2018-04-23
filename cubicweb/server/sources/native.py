@@ -1261,6 +1261,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def fti_unindex_entities(self, cnx, entities):
         """remove text content for entities from the full text index
         """
+        if not cnx.repo.system_source.do_fti:
+            return
         cursor = cnx.cnxset.cu
         cursor_unindex_object = self.dbhelper.cursor_unindex_object
         try:
@@ -1272,6 +1274,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def fti_index_entities(self, cnx, entities):
         """add text content of created/modified entities to the full text index
         """
+        if not cnx.repo.system_source.do_fti:
+            return
         cursor_index_object = self.dbhelper.cursor_index_object
         cursor = cnx.cnxset.cu
         try:
@@ -1296,6 +1300,8 @@ class FTIndexEntityOp(hook.DataOperationMixIn, hook.LateOperation):
     def precommit_event(self):
         cnx = self.cnx
         source = cnx.repo.system_source
+        if not source.do_fti:
+            return
         pendingeids = cnx.transaction_data.get('pendingeids', ())
         done = cnx.transaction_data.setdefault('indexedeids', set())
         to_reindex = set()

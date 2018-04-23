@@ -73,6 +73,7 @@ cubicweb/sobjects/services.py
 cubicweb/sobjects/test/unittest_notification.py
 cubicweb/sobjects/test/unittest_register_user.py
 cubicweb/sobjects/textparsers.py
+cubicweb/statsd_logger.py
 cubicweb/test/data/libpython/cubicweb_comment/__init__.py
 cubicweb/test/data/libpython/cubicweb_comment/__pkginfo__.py
 cubicweb/test/data/libpython/cubicweb_email/entities.py
@@ -110,6 +111,7 @@ cubicweb/web/formwidgets.py
 cubicweb/web/test/data/entities.py
 cubicweb/web/test/unittest_application.py
 cubicweb/web/test/unittest_http_headers.py
+cubicweb/web/test/unittest_propertysheet.py
 cubicweb/web/test/unittest_uicfg.py
 cubicweb/web/test/unittest_views_basetemplates.py
 cubicweb/web/test/unittest_views_cwsources.py
@@ -122,6 +124,7 @@ cubicweb/web/views/searchrestriction.py
 cubicweb/web/views/staticcontrollers.py
 cubicweb/web/views/workflow.py
 cubicweb/web/views/uicfg.py
+cubicweb/web/webctl.py
 cubicweb/xy.py
 cubicweb/pyramid/auth.py
 cubicweb/pyramid/bwcompat.py

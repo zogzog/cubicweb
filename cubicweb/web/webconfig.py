@@ -23,7 +23,7 @@ from cubicweb import _
 import os
 import hmac
 from uuid import uuid4
-from os.path import join, exists, split, isdir
+from os.path import dirname, join, exists, split, isdir
 from warnings import warn
 
 from six import text_type
@@ -35,6 +35,9 @@ from logilab.common.configuration import merge_options
 from cubicweb import ConfigurationError
 from cubicweb.toolsutils import read_config
 from cubicweb.cwconfig import CubicWebConfiguration, register_persistent_options
+
+
+_DATA_DIR = join(dirname(__file__), 'data')
 
 
 register_persistent_options( (
@@ -204,7 +207,7 @@ class WebConfiguration(BaseWebConfiguration):
 
         ('captcha-font-file',
          {'type' : 'string',
-          'default': join(CubicWebConfiguration.shared_dir(), 'data', 'porkys.ttf'),
+          'default': join(_DATA_DIR, 'porkys.ttf'),
           'help': 'True type font to use for captcha image generation (you \
 must have the python imaging library installed to use captcha)',
           'group': 'web', 'level': 3,
@@ -327,7 +330,7 @@ have the python imaging library installed to use captcha)',
     @cached
     def _fs_path_locate(self, rid, rdirectory):
         """return the directory where the given resource may be found"""
-        path = [self.apphome] + self.cubes_path() + [join(self.shared_dir())]
+        path = [self.apphome] + self.cubes_path() + [dirname(__file__)]
         for directory in path:
             if exists(join(directory, rdirectory, rid)):
                 return directory
@@ -352,7 +355,7 @@ have the python imaging library installed to use captcha)',
 
     def locate_all_files(self, rid, rdirectory='wdoc'):
         """return all files corresponding to the given resource"""
-        path = [self.apphome] + self.cubes_path() + [join(self.shared_dir())]
+        path = [self.apphome] + self.cubes_path() + [dirname(__file__)]
         for directory in path:
             fpath = join(directory, rdirectory, rid)
             if exists(fpath):
@@ -399,7 +402,7 @@ have the python imaging library installed to use captcha)',
         self._init_uiprops(self.uiprops)
 
     def _init_uiprops(self, uiprops):
-        libuiprops = join(self.shared_dir(), 'data', 'uiprops.py')
+        libuiprops = join(_DATA_DIR, 'uiprops.py')
         uiprops.load(libuiprops)
         for path in reversed([self.apphome] + self.cubes_path()):
             self._load_ui_properties_file(uiprops, path)

@@ -109,6 +109,12 @@ class PropertySheet(dict):
             with os.fdopen(tmpfd, 'w') as stream:
                 stream.write(content)
             try:
+                mode = os.stat(sourcefile).st_mode
+                os.chmod(tmpfile, mode)
+            except IOError:
+                self.warning('Cannot set access mode for %s; you may encouter '
+                             'file permissions issues', cachefile)
+            try:
                 os.rename(tmpfile, cachefile)
             except OSError as err:
                 if err.errno != errno.EEXIST:

@@ -47,14 +47,13 @@ There are 3 kinds of statds_ message::
 There is also a decorator (``statsd_timeit``) that may be used to
 measure and send to the statsd_ server the time passed in a function
 or a method and the number of calls. It will send a message like::
-   
+
     <bucket>.<funcname>:<ms>|ms\n<bucket>.<funcname>:1|c\n
 
 
 .. _statsd: https://github.com/etsy/statsd
 
 """
-
 
 
 import time
@@ -112,10 +111,11 @@ class statsd_timeit(object):
     @property
     def __doc__(self):
         return self.callable.__doc__
+
     @property
     def __name__(self):
         return self.callable.__name__
-    
+
     def __call__(self, *args, **kw):
         if _address is None:
             return self.callable(*args, **kw)
@@ -123,13 +123,14 @@ class statsd_timeit(object):
         try:
             return self.callable(*args, **kw)
         finally:
-            dt = 1000*(time.time()-t0)
-            msg = '{0}.{1}:{2:.4f}|ms\n{0}.{1}:1|c\n'.format(_bucket, self.__name__, dt)
+            dt = 1000 * (time.time() - t0)
+            msg = '{0}.{1}:{2:.4f}|ms\n{0}.{1}:1|c\n'.format(
+                _bucket, self.__name__, dt)
             _socket.sendto(msg, _address)
-                
+
     def __get__(self, obj, objtype):
         """Support instance methods."""
-        if obj is None: # class method or some already wrapped method
+        if obj is None:  # class method or some already wrapped method
             return self
         import functools
         return functools.partial(self.__call__, obj)
