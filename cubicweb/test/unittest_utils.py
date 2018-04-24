@@ -109,6 +109,26 @@ class TestQueryCache(TestCase):
                           'itemcount': 10,
                           'permanentcount': 5})
 
+    def test_clear_on_overflow(self):
+        """Tests that only non-permanent items in the cache are wiped-out on ceiling overflow
+        """
+        c = QueryCache(ceiling=10)
+        # set 10 values
+        for x in range(10):
+            c[x] = x
+        # arrange for the first 5 to be permanent
+        for x in range(5):
+            for r in range(QueryCache._maxlevel + 2):
+                v = c[x]
+                self.assertEqual(v, x)
+        # Add the 11-th
+        c[10] = 10
+        self.assertEqual(c._usage_report(),
+                         {'transientcount': 0,
+                          'itemcount': 6,
+                          'permanentcount': 5})
+
+
 class UStringIOTC(TestCase):
     def test_boolean_value(self):
         self.assertTrue(UStringIO())

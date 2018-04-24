@@ -684,10 +684,20 @@ class QueryCache(object):
                     break
                 level = v
         else:
-            # we removed cruft but everything is permanent
+            # we removed cruft
             if len(self._data) >= self._max:
-                logger.warning('Cache %s is full.' % id(self))
-                self._clear()
+                if len(self._permanent) >= self._max:
+                    # we really are full with permanents => clear
+                    logger.warning('Cache %s is full.' % id(self))
+                    self._clear()
+                else:
+                    # pathological case where _transient was probably empty ...
+                    # drop all non-permanents
+                    to_drop = set(self._data.keys()).difference(self._permanent)
+                    for k in to_drop:
+                        # should not be in _transient
+                        assert k not in self._transient
+                        self._data.pop(k, None)
 
     def _usage_report(self):
         with self._lock:
