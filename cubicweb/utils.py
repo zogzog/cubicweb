@@ -639,6 +639,11 @@ class QueryCache(object):
         except KeyError:
             return default
 
+    def __iter__(self):
+        with self._lock:
+            for k, v in self._data.items():
+                yield k, v
+
     def __getitem__(self, k):
         with self._lock:
             if k in self._permanent:

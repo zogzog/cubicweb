@@ -155,6 +155,29 @@ class TestQueryCache(TestCase):
             self.assertEqual(v, -1)
 
 
+    def test_iterator(self):
+        """
+        Tests the iterating on key-value couples in the cache
+        """
+        c = QueryCache(ceiling=20)
+        # set 10 values
+        for x in range(10):
+            c[x] = x
+        # arrange for the first 5 to be permanent
+        for x in range(5):
+            for r in range(QueryCache._maxlevel + 2):
+                v = c[x]
+                self.assertEqual(v, x)
+        self.assertEqual(c._usage_report(),
+                         {'transientcount': 0,
+                          'itemcount': 10,
+                          'permanentcount': 5})
+        content = sorted(c)
+        for x in range(10):
+            self.assertEquals(x, content[x][0])
+            self.assertEquals(x, content[x][1])
+
+
 class UStringIOTC(TestCase):
     def test_boolean_value(self):
         self.assertTrue(UStringIO())
