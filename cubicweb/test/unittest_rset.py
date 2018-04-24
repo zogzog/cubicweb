@@ -444,6 +444,78 @@ class ResultSetTC(CubicWebTC):
             with self.assertRaises(MultipleResultsError):
                 req.execute('Any X WHERE X is CWUser').one()
 
+    def test_first(self):
+        with self.admin_access.web_request() as req:
+            req.create_entity('CWUser',
+                              login=u'cdevienne',
+                              upassword=u'cdevienne',
+                              surname=u'de Vienne',
+                              firstname=u'Christophe')
+            e = req.execute('Any X WHERE X login "cdevienne"').first()
+            self.assertEqual(e.surname, u'de Vienne')
+
+            e = req.execute(
+                'Any X, N WHERE X login "cdevienne", X surname N').first()
+            self.assertEqual(e.surname, u'de Vienne')
+
+            e = req.execute(
+                'Any N, X WHERE X login "cdevienne", X surname N').first(col=1)
+            self.assertEqual(e.surname, u'de Vienne')
+
+    def test_first_no_rows(self):
+        with self.admin_access.web_request() as req:
+            with self.assertRaises(NoResultError):
+                req.execute('Any X WHERE X login "patanok"').first()
+
+    def test_first_multiple_rows(self):
+        with self.admin_access.web_request() as req:
+            req.create_entity(
+                'CWUser', login=u'user1', upassword=u'cdevienne',
+                surname=u'de Vienne', firstname=u'Christophe')
+            req.create_entity(
+                'CWUser', login=u'user2', upassword='adim',
+                surname=u'di mascio', firstname=u'adrien')
+
+            e = req.execute('Any X ORDERBY X WHERE X is CWUser, '
+                            'X login LIKE "user%"').first()
+            self.assertEqual(e.login, 'user1')
+
+    def test_last(self):
+        with self.admin_access.web_request() as req:
+            req.create_entity('CWUser',
+                              login=u'cdevienne',
+                              upassword=u'cdevienne',
+                              surname=u'de Vienne',
+                              firstname=u'Christophe')
+            e = req.execute('Any X WHERE X login "cdevienne"').last()
+            self.assertEqual(e.surname, u'de Vienne')
+
+            e = req.execute(
+                'Any X, N WHERE X login "cdevienne", X surname N').last()
+            self.assertEqual(e.surname, u'de Vienne')
+
+            e = req.execute(
+                'Any N, X WHERE X login "cdevienne", X surname N').last(col=1)
+            self.assertEqual(e.surname, u'de Vienne')
+
+    def test_last_no_rows(self):
+        with self.admin_access.web_request() as req:
+            with self.assertRaises(NoResultError):
+                req.execute('Any X WHERE X login "patanok"').last()
+
+    def test_last_multiple_rows(self):
+        with self.admin_access.web_request() as req:
+            req.create_entity(
+                'CWUser', login=u'user1', upassword=u'cdevienne',
+                surname=u'de Vienne', firstname=u'Christophe')
+            req.create_entity(
+                'CWUser', login=u'user2', upassword='adim',
+                surname=u'di mascio', firstname=u'adrien')
+
+            e = req.execute('Any X ORDERBY X WHERE X is CWUser, '
+                            'X login LIKE "user%"').last()
+            self.assertEqual(e.login, 'user2')
+
     def test_related_entity_optional(self):
         with self.admin_access.web_request() as req:
             req.create_entity('Bookmark', title=u'aaaa', path=u'path')
