@@ -60,6 +60,7 @@ cubicweb/server/test/data-migractions/migratedapp/__init__.py
 cubicweb/server/test/data-schema2sql/__init__.py
 cubicweb/server/test/unittest_checkintegrity.py
 cubicweb/server/test/unittest_datafeed.py
+cubicweb/server/test/unittest_edition.py
 cubicweb/server/test/unittest_ldapsource.py
 cubicweb/server/test/unittest_migractions.py
 cubicweb/server/test/unittest_serverctl.py

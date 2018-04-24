@@ -155,5 +155,6 @@ class EditedEntity(dict):
         thecopy = EditedEntity(copy(self.entity))
         thecopy.entity.cw_attr_cache = copy(self.entity.cw_attr_cache)
         thecopy.entity._cw_related_cache = {}
+        thecopy.entity._cw_adapters_cache = {}
         thecopy.update(self, skipsec=False)
         return thecopy
