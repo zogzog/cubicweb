@@ -128,6 +128,32 @@ class TestQueryCache(TestCase):
                           'itemcount': 6,
                           'permanentcount': 5})
 
+    def test_get_with_default(self):
+        """
+        Tests the capability of QueryCache for retrieving items with a default value
+        """
+        c = QueryCache(ceiling=20)
+        # set 10 values
+        for x in range(10):
+            c[x] = x
+        # arrange for the first 5 to be permanent
+        for x in range(5):
+            for r in range(QueryCache._maxlevel + 2):
+                v = c[x]
+                self.assertEqual(v, x)
+        self.assertEqual(c._usage_report(),
+                         {'transientcount': 0,
+                          'itemcount': 10,
+                          'permanentcount': 5})
+        # Test defaults for existing (including in permanents)
+        for x in range(10):
+            v = c.get(x, -1)
+            self.assertEqual(v, x)
+        # Test defaults for others
+        for x in range(10, 15):
+            v = c.get(x, -1)
+            self.assertEqual(v, -1)
+
 
 class UStringIOTC(TestCase):
     def test_boolean_value(self):

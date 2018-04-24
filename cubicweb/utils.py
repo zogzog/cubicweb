@@ -627,6 +627,18 @@ class QueryCache(object):
         with self._lock:
             return len(self._data)
 
+    def get(self, k, default=None):
+        """Get the value associated to the specified key
+
+        :param k: The key to look for
+        :param default: The default value when the key is not found
+        :return: The associated value (or the default value)
+        """
+        try:
+            return self._data[k]
+        except KeyError:
+            return default
+
     def __getitem__(self, k):
         with self._lock:
             if k in self._permanent:
