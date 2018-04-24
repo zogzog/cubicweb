@@ -106,6 +106,7 @@ cubicweb/test/unittest_rqlrewrite.py
 cubicweb/test/unittest_rset.py
 cubicweb/test/unittest_rtags.py
 cubicweb/test/unittest_schema.py
+cubicweb/test/unittest_statsd.py
 cubicweb/test/unittest_toolsutils.py
 cubicweb/test/unittest_wfutils.py
 cubicweb/web/application.py
