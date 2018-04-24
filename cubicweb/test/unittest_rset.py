@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for module cubicweb.utils"""
+"""unit tests for module cubicweb.rset"""
 
 from six import string_types
 from six.moves import cPickle as pickle
