@@ -102,6 +102,7 @@ cubicweb/test/unittest_mail.py
 cubicweb/test/unittest_repoapi.py
 cubicweb/test/unittest_req.py
 cubicweb/test/unittest_rqlrewrite.py
+cubicweb/test/unittest_rset.py
 cubicweb/test/unittest_rtags.py
 cubicweb/test/unittest_schema.py
 cubicweb/test/unittest_toolsutils.py
