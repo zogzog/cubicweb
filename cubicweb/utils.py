@@ -627,6 +627,12 @@ class QueryCache(object):
         with self._lock:
             return len(self._data)
 
+    def items(self):
+        """Get an iterator over the dictionary's items: (key, value) pairs"""
+        with self._lock:
+            for k, v in self._data.items():
+                yield k, v
+
     def get(self, k, default=None):
         """Get the value associated to the specified key
 
@@ -641,8 +647,8 @@ class QueryCache(object):
 
     def __iter__(self):
         with self._lock:
-            for k, v in self._data.items():
-                yield k, v
+            for k in iter(self._data):
+                yield k
 
     def __getitem__(self, k):
         with self._lock:
