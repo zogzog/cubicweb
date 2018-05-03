@@ -58,7 +58,7 @@ class StaticFileController(Controller):
         debugmode = self._cw.vreg.config.debugmode
         if osp.isdir(path):
             if self.directory_listing_allowed:
-                return u''
+                return b''
             raise Forbidden(path)
         if not osp.isfile(path):
             raise NotFound()
@@ -79,7 +79,7 @@ class StaticFileController(Controller):
         # Real production environment should use dedicated static file serving.
         self._cw.set_header('last-modified', generateDateTime(os.stat(path).st_mtime))
         if self._cw.is_client_cache_valid():
-            return ''
+            return b''
         mimetype, encoding = mimetypes.guess_type(path)
         if mimetype is None:
             mimetype = 'application/octet-stream'
