@@ -26,8 +26,13 @@ import random
 import re
 import json
 
+from six import PY3
+
 from operator import itemgetter
-from inspect import getargspec
+if PY3:
+    from inspect import getfullargspec as getargspec
+else:
+    from inspect import getargspec
 from itertools import repeat
 from uuid import uuid4
 from warnings import warn
