@@ -19,19 +19,19 @@
 from __future__ import print_function
 
 
-
 # XXX move most of this in logilab.common (shellutils ?)
 
 import io
-import os, sys
+import os
+import sys
 import subprocess
-from os import listdir, makedirs, environ, chmod, walk, remove
-from os.path import exists, join, abspath, normpath
+from os import listdir, makedirs, chmod, walk, remove
+from os.path import exists, join, normpath
 import re
 from rlcompleter import Completer
 try:
     import readline
-except ImportError: # readline not available, no completion
+except ImportError:  # readline not available, no completion
     pass
 try:
     from os import symlink
@@ -44,11 +44,13 @@ from six import add_metaclass
 from logilab.common.clcommands import Command as BaseCommand
 from logilab.common.shellutils import ASK
 
-from cubicweb import warning # pylint: disable=E0611
+from cubicweb import warning  # pylint: disable=E0611
 from cubicweb import ConfigurationError, ExecutionError
 
+
 def underline_title(title, car='-'):
-    return title+'\n'+(car*len(title))
+    return title + '\n' + (car * len(title))
+
 
 def iter_dir(directory, condition_file=None, ignore=()):
     """iterate on a directory"""
@@ -56,11 +58,12 @@ def iter_dir(directory, condition_file=None, ignore=()):
         if sub in ('CVS', '.svn', '.hg'):
             continue
         if condition_file is not None and \
-               not exists(join(directory, sub, condition_file)):
+                not exists(join(directory, sub, condition_file)):
             continue
         if sub in ignore:
             continue
         yield sub
+
 
 def create_dir(directory):
     """create a directory if it doesn't exist yet"""
@@ -73,6 +76,7 @@ def create_dir(directory):
             raise
         print('-> no need to create existing directory %s' % directory)
 
+
 def create_symlink(source, target):
     """create a symbolic link"""
     if exists(target):
@@ -80,15 +84,18 @@ def create_symlink(source, target):
     symlink(source, target)
     print('[symlink] %s <-- %s' % (target, source))
 
+
 def create_copy(source, target):
     import shutil
     print('[copy] %s <-- %s' % (target, source))
     shutil.copy2(source, target)
 
+
 def rm(whatever):
     import shutil
     shutil.rmtree(whatever)
     print('-> removed %s' % whatever)
+
 
 def show_diffs(appl_file, ref_file, askconfirm=True):
     """interactivly replace the old file with the new file according to
@@ -122,7 +129,10 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
     else:
         print('no diff between %s and %s' % (appl_file, ref_file))
 
+
 SKEL_EXCLUDE = ('*.py[co]', '*.orig', '*~', '*_flymake.py')
+
+
 def copy_skeleton(skeldir, targetdir, context,
                   exclude=SKEL_EXCLUDE, askconfirm=False):
     import shutil
@@ -148,7 +158,7 @@ def copy_skeleton(skeldir, targetdir, context,
             if fname.endswith('.tmpl'):
                 tfpath = tfpath[:-5]
                 if not askconfirm or not exists(tfpath) or \
-                       ASK.confirm('%s exists, overwrite?' % tfpath):
+                        ASK.confirm('%s exists, overwrite?' % tfpath):
                     fill_templated_file(fpath, tfpath, context)
                     print('[generate] %s <-- %s' % (tfpath, fpath))
             elif exists(tfpath):
@@ -157,11 +167,13 @@ def copy_skeleton(skeldir, targetdir, context,
                 shutil.copyfile(fpath, tfpath)
                 shutil.copymode(fpath, tfpath)
 
+
 def fill_templated_file(fpath, tfpath, context):
     with io.open(fpath, encoding='ascii') as fobj:
         template = fobj.read()
     with io.open(tfpath, 'w', encoding='ascii') as fobj:
         fobj.write(template % context)
+
 
 def restrict_perms_to_user(filepath, log=None):
     """set -rw------- permission on the given file"""
@@ -198,7 +210,7 @@ def read_config(config_file, raise_if_unreadable=False):
                     # start a section
                     section = option[1:-1]
                     assert section not in config, \
-                           'Section %s is defined more than once' % section
+                        'Section %s is defined more than once' % section
                     config[section] = current = {}
                     continue
                 sys.stderr.write('ignoring malformed line\n%r\n' % line)
@@ -218,6 +230,7 @@ def read_config(config_file, raise_if_unreadable=False):
 
 _HDLRS = {}
 
+
 class metacmdhandler(type):
     def __new__(mcs, name, bases, classdict):
         cls = super(metacmdhandler, mcs).__new__(mcs, name, bases, classdict)
@@ -229,6 +242,7 @@ class metacmdhandler(type):
 @add_metaclass(metacmdhandler)
 class CommandHandler(object):
     """configuration specific helper for cubicweb-ctl commands"""
+
     def __init__(self, config):
         self.config = config
 
@@ -258,24 +272,25 @@ class Command(BaseCommand):
 
 CONNECT_OPTIONS = (
     ("user",
-     {'short': 'u', 'type' : 'string', 'metavar': '<user>',
+     {'short': 'u', 'type': 'string', 'metavar': '<user>',
       'help': 'connect as <user> instead of being prompted to give it.',
       }
      ),
     ("password",
-     {'short': 'p', 'type' : 'password', 'metavar': '<password>',
+     {'short': 'p', 'type': 'password', 'metavar': '<password>',
       'help': 'automatically give <password> for authentication instead of \
 being prompted to give it.',
       }),
     ("host",
-     {'short': 'H', 'type' : 'string', 'metavar': '<hostname>',
+     {'short': 'H', 'type': 'string', 'metavar': '<hostname>',
       'default': None,
       'help': 'specify the name server\'s host name. Will be detected by \
 broadcast if not provided.',
       }),
-    )
+)
 
-## cwshell helpers #############################################################
+# cwshell helpers #############################################################
+
 
 class AbstractMatcher(object):
     """Abstract class for CWShellCompleter's matchers.
@@ -350,7 +365,7 @@ class RQLExecuteMatcher(AbstractMatcher):
             'rql_offset': len(func_prefix) + 2,
             # incomplete rql query
             'rql_query': parameters_text,
-            }
+        }
 
     def possible_matches(self, text):
         """call ``rql.suggestions`` component to complete user's input.
@@ -372,6 +387,7 @@ class RQLExecuteMatcher(AbstractMatcher):
 class DefaultMatcher(AbstractMatcher):
     """Default matcher: delegate to standard's `rlcompleter.Completer`` class
     """
+
     def __init__(self, local_ctx):
         self.completer = Completer(local_ctx)
 
@@ -421,7 +437,7 @@ class CWShellCompleter(object):
                     self.matches = matches
                     break
             else:
-                return None # no matcher able to handle `text`
+                return None  # no matcher able to handle `text`
         try:
             return self.matches[state]
         except IndexError:
