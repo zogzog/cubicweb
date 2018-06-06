@@ -151,7 +151,7 @@ function getJSON(url, data, callback) {
               */
             var settings = $(this.element).data('settings');
             var value = this.valueMethod.apply( this.element, arguments );
-            if (settings.multiple & arguments.length === 0) {
+            if (settings.multiple && arguments.length === 0) {
                 return extractLast(value);
             }
             return value
