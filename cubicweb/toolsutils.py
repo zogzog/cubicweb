@@ -96,7 +96,7 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
     """
     import shutil
     pipe = subprocess.Popen(['diff', '-u', appl_file, ref_file], stdout=subprocess.PIPE)
-    diffs = pipe.stdout.read()
+    diffs = pipe.stdout.read().decode('utf-8')
     if diffs:
         if askconfirm:
             print()
