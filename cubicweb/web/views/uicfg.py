@@ -233,7 +233,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
             for key in list(self._tagdefs):
                 stype, rtype, otype, role = key
                 rschema = schema.rschema(rtype)
-                if stype == '*' and stype == '*':
+                if stype == '*' and otype == '*':
                     concrete_rdefs = rschema.rdefs.keys()
                 elif stype == '*':
                     concrete_rdefs = zip(rschema.subjects(otype), repeat(otype))
