@@ -45,7 +45,7 @@ class WebconfigTC(TestCase):
     def test_locate_resource(self):
         self.assertIn('FILE_ICON', self.config.uiprops)
         rname = self.config.uiprops['FILE_ICON'].replace(self.config.datadir_url, '')
-        self.assertIn('file', self.config.locate_resource(rname)[0].split(os.sep))
+        self.assertIn('cubicweb_file', self.config.locate_resource(rname)[0].split(os.sep))
         cubicwebcsspath = self.config.locate_resource('cubicweb.css')[0].split(os.sep)
 
         # 'shared' if tests under apycot
@@ -57,7 +57,7 @@ class WebconfigTC(TestCase):
         wdocfiles = list(self.config.locate_all_files('toc.xml'))
         for fpath in wdocfiles:
             self.assertTrue(path.exists(fpath), fpath)
-        for expected in [path.join('cubes', 'file', 'wdoc', 'toc.xml'),
+        for expected in [path.join('cubicweb_file', 'wdoc', 'toc.xml'),
                          path.join('cubicweb', 'web', 'wdoc', 'toc.xml')]:
             for fpath in wdocfiles:
                 if fpath.endswith(expected):
