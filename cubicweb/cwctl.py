@@ -148,7 +148,7 @@ class InstanceCommand(Command):
     def run_arg(self, appid):
         cmdmeth = getattr(self, '%s_instance' % self.name)
         try:
-            status = cmdmeth(appid)
+            status = cmdmeth(appid) or 0
         except (ExecutionError, ConfigurationError) as ex:
             sys.stderr.write('instance %s not %s: %s\n' % (
                     appid, self.actionverb, ex))
