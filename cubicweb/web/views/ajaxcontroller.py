@@ -163,7 +163,7 @@ class AjaxController(Controller):
                     fname, args, exc)
             raise RemoteCallFailed(exc_message(exc, self._cw.encoding))
         if result is None:
-            return ''
+            return b''
         # get unicode on @htmlize methods, encoded string on @jsonize methods
         elif isinstance(result, text_type):
             return result.encode(self._cw.encoding)
