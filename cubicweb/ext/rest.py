@@ -404,7 +404,7 @@ def rest_publish(context, data):
     """
     req = context._cw
     if isinstance(data, text_type):
-        encoding = 'unicode'
+        encoding = 'utf-8'
         # remove unprintable characters unauthorized in xml
         data = data.translate(ESC_UCAR_TABLE)
     else:

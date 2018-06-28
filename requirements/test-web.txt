@@ -1,3 +1,4 @@
+docutils
 Twisted < 16.0.0
 requests
 webtest
