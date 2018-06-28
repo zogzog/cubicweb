@@ -126,6 +126,7 @@ cubicweb/web/views/editcontroller.py
 cubicweb/web/views/json.py
 cubicweb/web/views/searchrestriction.py
 cubicweb/web/views/staticcontrollers.py
+cubicweb/web/views/wdoc.py
 cubicweb/web/views/workflow.py
 cubicweb/web/views/uicfg.py
 cubicweb/web/webctl.py

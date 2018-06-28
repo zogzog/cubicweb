@@ -21,15 +21,14 @@ CubicWeb and cubes
 """
 
 
+import io
 from itertools import chain
 from os.path import join
-from bisect import bisect_right
-from datetime import date
+from xml.etree.ElementTree import parse
 
-from logilab.common.changelog import ChangeLog
-from logilab.common.date import strptime, todate
+from six import text_type
+
 from logilab.common.registry import yes
-from logilab.mtconverter import CHARSET_DECL_RGX
 
 from cubicweb.predicates import match_form_params
 from cubicweb.view import StartupView
@@ -39,44 +38,38 @@ from cubicweb import _
 
 # table of content management #################################################
 
-try:
-    from xml.etree.ElementTree import parse
-except ImportError:
-    from elementtree.ElementTree import parse
 
-def build_toc_index(node, index):
+def build_toc_index(node, parent, index):
     try:
         nodeidx = node.attrib['resource']
-        assert not nodeidx in index, nodeidx
-        index[nodeidx] = node
+        assert nodeidx not in index, nodeidx
+        index[nodeidx] = node, parent
     except KeyError:
         pass
     for child in node:
-        build_toc_index(child, index)
-        child.parent = node
+        build_toc_index(child, node, index)
+
 
 def get_insertion_point(section, index):
     if section.attrib.get('insertafter'):
-        snode = index[section.attrib['insertafter']]
-        node = snode.parent
-        idx = node.getchildren().index(snode) + 1
+        snode, node = index[section.attrib['insertafter']]
+        idx = list(node).index(snode) + 1
     elif section.attrib.get('insertbefore'):
-        snode = index[section.attrib['insertbefore']]
-        node = snode.parent
+        snode, node = index[section.attrib['insertbefore']]
         idx = node.getchildren().index(snode)
     elif 'appendto' in section.attrib:
-        node = index[section.attrib['appendto']]
+        node, _ = index[section.attrib['appendto']]
         idx = None
     else:
         node, idx = None, None
     return node, idx
 
+
 def build_toc(config):
     alltocfiles = reversed(tuple(config.locate_all_files('toc.xml')))
     maintoc = parse(next(alltocfiles)).getroot()
-    maintoc.parent = None
     index = {}
-    build_toc_index(maintoc, index)
+    build_toc_index(maintoc, None, index)
     # insert component documentation into the tree according to their toc.xml
     # file
     for fpath in alltocfiles:
@@ -89,24 +82,26 @@ def build_toc(config):
                 node.append(section)
             else:
                 node.insert(idx, section)
-            section.parent = node
-            build_toc_index(section, index)
+            build_toc_index(section, node, index)
     return index
+
 
 def title_for_lang(node, lang):
     fallback_title = None
     for title in node.findall('title'):
         title_lang = title.attrib['{http://www.w3.org/XML/1998/namespace}lang']
         if title_lang == lang:
-            return unicode(title.text)
+            return text_type(title.text)
         if title_lang == 'en':
-            fallback_title = unicode(title.text)
+            fallback_title = text_type(title.text)
     return fallback_title
+
 
 def subsections(node):
     return [child for child in node if child.tag == 'section']
 
 # help views ##################################################################
+
 
 class InlineHelpView(StartupView):
     __select__ = match_form_params('fid')
@@ -126,23 +121,21 @@ class InlineHelpView(StartupView):
             raise NotFound
         self.tocindex = build_toc(vreg.config)
         try:
-            node = self.tocindex[fid]
+            node, parent = self.tocindex[fid]
         except KeyError:
-            node = None
+            node, parent = None, None
         else:
-            self.navigation_links(node)
+            self.navigation_links(node, parent)
             self.w(u'<div class="hr"></div>')
             self.w(u'<h1>%s</h1>' % (title_for_lang(node, self._cw.lang)))
-        data = open(join(resourcedir, rid)).read()
-        self.w(rest_publish(self, data))
+        with io.open(join(resourcedir, rid)) as f:
+            self.w(rest_publish(self, f.read()))
         if node is not None:
             self.subsections_links(node)
             self.w(u'<div class="hr"></div>')
-            self.navigation_links(node)
+            self.navigation_links(node, parent)
 
-    def navigation_links(self, node):
-        req = self._cw
-        parent = node.parent
+    def navigation_links(self, node, parent):
         if parent is None:
             return
         brothers = subsections(parent)
@@ -165,7 +158,7 @@ class InlineHelpView(StartupView):
         self.w(u'<span class="%s">' % htmlclass)
         self.w(u'%s : ' % self._cw._(msgid))
         self.w(u'<a href="%s">%s</a>' % (
-            self._cw.build_url('doc/'+node.attrib['resource']),
+            self._cw.build_url('doc/' + node.attrib['resource']),
             title_for_lang(node, self._cw.lang)))
         self.w(u'</span>\n')
 
@@ -178,12 +171,11 @@ class InlineHelpView(StartupView):
         self.w(u'<ul class="docsum">')
         for child in sub:
             self.w(u'<li><a href="%s">%s</a>' % (
-                self._cw.build_url('doc/'+child.attrib['resource']),
+                self._cw.build_url('doc/' + child.attrib['resource']),
                 title_for_lang(child, self._cw.lang)))
             self.subsections_links(child, False)
             self.w(u'</li>')
         self.w(u'</ul>\n')
-
 
 
 class InlineHelpImageView(StartupView):
@@ -203,8 +195,8 @@ class InlineHelpImageView(StartupView):
                 break
         else:
             raise NotFound
-        self.w(open(join(resourcedir, rid)).read())
-
+        with io.open(join(resourcedir, rid)) as f:
+            self.w(f.read())
 
 
 class HelpAction(action.Action):

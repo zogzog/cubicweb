@@ -229,7 +229,7 @@ def winclude_directive(name, arguments, options, content, lineno,
         include_file = io.FileInput(
             source_path=path, encoding=encoding,
             error_handler=state.document.settings.input_encoding_error_handler,
-            handle_io_errors=None)
+        )
     except IOError as error:
         severe = state_machine.reporter.severe(
               'Problems with "%s" directive path:\n%s: %s.'
@@ -404,7 +404,7 @@ def rest_publish(context, data):
     """
     req = context._cw
     if isinstance(data, text_type):
-        encoding = 'unicode'
+        encoding = 'utf-8'
         # remove unprintable characters unauthorized in xml
         data = data.translate(ESC_UCAR_TABLE)
     else:
