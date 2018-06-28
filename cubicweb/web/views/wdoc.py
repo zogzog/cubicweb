@@ -21,6 +21,7 @@ CubicWeb and cubes
 """
 
 
+import io
 from itertools import chain
 from os.path import join
 from xml.etree.ElementTree import parse
@@ -132,8 +133,8 @@ class InlineHelpView(StartupView):
             self.navigation_links(node)
             self.w(u'<div class="hr"></div>')
             self.w(u'<h1>%s</h1>' % (title_for_lang(node, self._cw.lang)))
-        data = open(join(resourcedir, rid)).read()
-        self.w(rest_publish(self, data))
+        with io.open(join(resourcedir, rid)) as f:
+            self.w(rest_publish(self, f.read()))
         if node is not None:
             self.subsections_links(node)
             self.w(u'<div class="hr"></div>')
@@ -200,7 +201,8 @@ class InlineHelpImageView(StartupView):
                 break
         else:
             raise NotFound
-        self.w(open(join(resourcedir, rid)).read())
+        with io.open(join(resourcedir, rid)) as f:
+            self.w(f.read())
 
 
 class HelpAction(action.Action):
