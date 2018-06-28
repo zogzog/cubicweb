@@ -23,6 +23,7 @@ CubicWeb and cubes
 
 from itertools import chain
 from os.path import join
+from xml.etree.ElementTree import parse
 
 from six import text_type
 
@@ -35,11 +36,6 @@ from cubicweb.web import NotFound, action
 from cubicweb import _
 
 # table of content management #################################################
-
-try:
-    from xml.etree.ElementTree import parse
-except ImportError:
-    from elementtree.ElementTree import parse
 
 
 def build_toc_index(node, index):
