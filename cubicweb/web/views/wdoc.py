@@ -39,29 +39,26 @@ from cubicweb import _
 # table of content management #################################################
 
 
-def build_toc_index(node, index):
+def build_toc_index(node, parent, index):
     try:
         nodeidx = node.attrib['resource']
         assert nodeidx not in index, nodeidx
-        index[nodeidx] = node
+        index[nodeidx] = node, parent
     except KeyError:
         pass
     for child in node:
-        build_toc_index(child, index)
-        child.parent = node
+        build_toc_index(child, node, index)
 
 
 def get_insertion_point(section, index):
     if section.attrib.get('insertafter'):
-        snode = index[section.attrib['insertafter']]
-        node = snode.parent
+        snode, node = index[section.attrib['insertafter']]
         idx = list(node).index(snode) + 1
     elif section.attrib.get('insertbefore'):
-        snode = index[section.attrib['insertbefore']]
-        node = snode.parent
+        snode, node = index[section.attrib['insertbefore']]
         idx = node.getchildren().index(snode)
     elif 'appendto' in section.attrib:
-        node = index[section.attrib['appendto']]
+        node, _ = index[section.attrib['appendto']]
         idx = None
     else:
         node, idx = None, None
@@ -71,9 +68,8 @@ def get_insertion_point(section, index):
 def build_toc(config):
     alltocfiles = reversed(tuple(config.locate_all_files('toc.xml')))
     maintoc = parse(next(alltocfiles)).getroot()
-    maintoc.parent = None
     index = {}
-    build_toc_index(maintoc, index)
+    build_toc_index(maintoc, None, index)
     # insert component documentation into the tree according to their toc.xml
     # file
     for fpath in alltocfiles:
@@ -86,8 +82,7 @@ def build_toc(config):
                 node.append(section)
             else:
                 node.insert(idx, section)
-            section.parent = node
-            build_toc_index(section, index)
+            build_toc_index(section, node, index)
     return index
 
 
@@ -126,11 +121,11 @@ class InlineHelpView(StartupView):
             raise NotFound
         self.tocindex = build_toc(vreg.config)
         try:
-            node = self.tocindex[fid]
+            node, parent = self.tocindex[fid]
         except KeyError:
-            node = None
+            node, parent = None, None
         else:
-            self.navigation_links(node)
+            self.navigation_links(node, parent)
             self.w(u'<div class="hr"></div>')
             self.w(u'<h1>%s</h1>' % (title_for_lang(node, self._cw.lang)))
         with io.open(join(resourcedir, rid)) as f:
@@ -138,10 +133,9 @@ class InlineHelpView(StartupView):
         if node is not None:
             self.subsections_links(node)
             self.w(u'<div class="hr"></div>')
-            self.navigation_links(node)
+            self.navigation_links(node, parent)
 
-    def navigation_links(self, node):
-        parent = node.parent
+    def navigation_links(self, node, parent):
         if parent is None:
             return
         brothers = subsections(parent)
