@@ -26,6 +26,8 @@ from os.path import join
 from bisect import bisect_right
 from datetime import date
 
+from six import text_type
+
 from logilab.common.changelog import ChangeLog
 from logilab.common.date import strptime, todate
 from logilab.common.registry import yes
@@ -98,9 +100,9 @@ def title_for_lang(node, lang):
     for title in node.findall('title'):
         title_lang = title.attrib['{http://www.w3.org/XML/1998/namespace}lang']
         if title_lang == lang:
-            return unicode(title.text)
+            return text_type(title.text)
         if title_lang == 'en':
-            fallback_title = unicode(title.text)
+            fallback_title = text_type(title.text)
     return fallback_title
 
 def subsections(node):
