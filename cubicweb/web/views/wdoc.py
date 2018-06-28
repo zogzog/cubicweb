@@ -58,7 +58,7 @@ def get_insertion_point(section, index):
     if section.attrib.get('insertafter'):
         snode = index[section.attrib['insertafter']]
         node = snode.parent
-        idx = node.getchildren().index(snode) + 1
+        idx = list(node).index(snode) + 1
     elif section.attrib.get('insertbefore'):
         snode = index[section.attrib['insertbefore']]
         node = snode.parent
