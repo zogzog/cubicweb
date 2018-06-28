@@ -131,7 +131,6 @@ class ManageView(StartupView):
                 label = display_name(req, etype, 'plural')
             else:
                 label = display_name(req, etype)
-            nb = req.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
             url = self._cw.build_url(etype)
             etypelink = u'&#160;<a href="%s">%s</a> (%d)' % (
                 xml_escape(url), label, nb)
