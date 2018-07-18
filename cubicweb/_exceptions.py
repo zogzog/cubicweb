@@ -98,7 +98,7 @@ class UniqueTogetherError(RepositoryError):
     def rtypes(self):
         if 'rtypes' in self.kwargs:
             return self.kwargs['rtypes']
-        cstrname = unicode(self.kwargs['cstrname'])
+        cstrname = text_type(self.kwargs['cstrname'])
         cstr = self.session.find('CWUniqueTogetherConstraint', name=cstrname).one()
         return sorted(rtype.name for rtype in cstr.relations)
 
