@@ -19,6 +19,7 @@
 database
 """
 
+from warnings import warn
 from io import BytesIO
 from os.path import exists
 from datetime import datetime, timedelta
@@ -157,11 +158,11 @@ class DataFeedSource(AbstractSource):
                     {'x': self.eid})
         cnx.commit()
 
-    def pull_data(self, cnx, force=False, raise_on_error=False, async=False):
+    def pull_data(self, cnx, force=False, raise_on_error=False, sync=True, **kwargs):
         """Launch synchronization of the source if needed.
 
-        If `async` is true, the method return immediatly a dictionnary containing the import log's
-        eid, and the actual synchronization is done asynchronously. If `async` is false, return some
+        If `sync` is false, the method return immediatly a dictionnary containing the import log's
+        eid, and the actual synchronization is done asynchronously. If `sync` is True, return some
         imports statistics (e.g. number of created and updated entities).
 
         This method is responsible to handle commit/rollback on the given connection.
@@ -176,10 +177,14 @@ class DataFeedSource(AbstractSource):
             self.error(str(exc))
             return {}
         try:
-            if async:
-                return self._async_pull_data(cnx, force, raise_on_error)
-            else:
+            if kwargs.get('async') is not None:
+                warn('[3.27] `async` is reserved keyword in py3.7 use `sync` param instead',
+                     DeprecationWarning)
+                sync = not kwargs['async']
+            if sync:
                 return self._pull_data(cnx, force, raise_on_error)
+            else:
+                return self._async_pull_data(cnx, force, raise_on_error)
         finally:
             cnx.rollback()  # rollback first in case there is some dirty transaction remaining
             self.release_synchronization_lock(cnx)
