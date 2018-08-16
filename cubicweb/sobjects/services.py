@@ -143,5 +143,5 @@ class SourceSynchronizationService(Service):
 
     def call(self, source_eid):
         source = self._cw.repo.source_by_eid(source_eid)
-        result = source.pull_data(self._cw, force=True, async=True)
+        result = source.pull_data(self._cw, force=True, sync=False)
         return result['import_log_eid']
