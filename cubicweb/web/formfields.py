@@ -1267,7 +1267,9 @@ def guess_field(eschema, rschema, role='subject', req=None, **kwargs):
                 if isinstance(cstr, SizeConstraint) and cstr.max is not None:
                     kwargs['max_length'] = cstr.max
         return fieldclass(**kwargs)
-    return RelationField.fromcardinality(card, **kwargs)
+    else:
+        fieldclass = kwargs.pop('fieldclass', RelationField)
+        return fieldclass.fromcardinality(card, **kwargs)
 
 
 FIELDS = {
