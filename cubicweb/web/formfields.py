@@ -1074,10 +1074,10 @@ class RelationField(Field):
     :class:`~cubicweb.web.formwidgets.Select`.
     """
 
-    @staticmethod
-    def fromcardinality(card, **kwargs):
+    @classmethod
+    def fromcardinality(cls, card, **kwargs):
         kwargs.setdefault('widget', fw.Select(multiple=card in '*+'))
-        return RelationField(**kwargs)
+        return cls(**kwargs)
 
     def choices(self, form, limit=None):
         """Take care, choices function for relation field instance should take
