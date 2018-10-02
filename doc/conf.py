@@ -54,7 +54,6 @@ with open(path) as f:
 extensions = [
   'sphinx.ext.autodoc', 
   'sphinx.ext.viewcode',
-  'logilab.common.sphinx_ext',
   ]
 
 autoclass_content = 'both'

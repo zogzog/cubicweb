@@ -4,7 +4,7 @@
 Hooks and Operations
 ====================
 
-.. autodocstring:: cubicweb.server.hook
+.. automodule:: cubicweb.server.hook
 
 
 Example using dataflow hooks

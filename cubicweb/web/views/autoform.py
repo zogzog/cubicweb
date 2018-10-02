@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """
-.. autodocstring:: cubicweb.web.views.autoform::AutomaticEntityForm
+.. autoclass:: AutomaticEntityForm
 
 Configuration through uicfg
 ```````````````````````````
