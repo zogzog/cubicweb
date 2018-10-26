@@ -32,6 +32,7 @@ from hashlib import sha1  # pylint: disable=E0611
 from os.path import abspath, join, exists, split, isdir, dirname
 from functools import partial
 
+import filelock
 from six import text_type
 from six.moves import cPickle as pickle
 
@@ -470,20 +471,23 @@ class TestDataBaseHandler(object):
         ``pre_setup_func`` to setup the database.
 
         This function backup any database it build"""
-        if self.has_cache(test_db_id):
-            return  # test_db_id, 'already in cache'
-        if test_db_id is DEFAULT_EMPTY_DB_ID:
-            self.init_test_database()
-        else:
-            print('Building %s for database %s' % (test_db_id, self.dbname))
-            self.build_db_cache(DEFAULT_EMPTY_DB_ID)
-            self.restore_database(DEFAULT_EMPTY_DB_ID)
-            self.get_repo(startup=True)
-            cnx = self.get_cnx()
-            with cnx:
-                pre_setup_func(cnx, self.config)
-                cnx.commit()
-        self.backup_database(test_db_id)
+        lockfile = join(self._ensure_test_backup_db_dir(),
+                        '{}.lock'.format(test_db_id))
+        with filelock.FileLock(lockfile):
+            if self.has_cache(test_db_id):
+                return  # test_db_id, 'already in cache'
+            if test_db_id is DEFAULT_EMPTY_DB_ID:
+                self.init_test_database()
+            else:
+                print('Building %s for database %s' % (test_db_id, self.dbname))
+                self.build_db_cache(DEFAULT_EMPTY_DB_ID)
+                self.restore_database(DEFAULT_EMPTY_DB_ID)
+                self.get_repo(startup=True)
+                cnx = self.get_cnx()
+                with cnx:
+                    pre_setup_func(cnx, self.config)
+                    cnx.commit()
+            self.backup_database(test_db_id)
 
 
 class NoCreateDropDatabaseHandler(TestDataBaseHandler):

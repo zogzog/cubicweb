@@ -28,6 +28,7 @@ Build-Depends:
  python-passlib,
  python-repoze.lru,
  python-wsgicors,
+ python-filelock,
  sphinx-common,
 Standards-Version: 3.9.6
 Homepage: https://www.cubicweb.org
@@ -51,6 +52,7 @@ Depends:
  python-passlib,
  python-tz,
  graphviz,
+ python-filelock,
  gettext,
 Recommends:
  cubicweb-ctl (= ${source:Version}),

@@ -74,6 +74,7 @@ setup(
         'pytz',
         'Markdown',
         'unittest2 >= 0.7.0',
+        'filelock',
     ],
     entry_points={
         'console_scripts': [
