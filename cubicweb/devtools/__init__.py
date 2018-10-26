@@ -427,11 +427,12 @@ class TestDataBaseHandler(object):
         raise ValueError('no initialization function for driver %r' % self.DRIVER)
 
     def has_cache(self, db_id):
-        """Check if a given database id exist in cb cache for the current config"""
-        cache_glob = self.absolute_backup_file('*', '*')
-        if cache_glob not in self.explored_glob:
-            self.discover_cached_db()
-        return self.db_cache_key(db_id) in self.db_cache
+        """Check if a given database id exist in db cache for the current config"""
+        key = self.db_cache_key(db_id)
+        if key in self.db_cache:
+            return True
+        self.discover_cached_db()
+        return key in self.db_cache
 
     def discover_cached_db(self):
         """Search available db_if for the current config"""
