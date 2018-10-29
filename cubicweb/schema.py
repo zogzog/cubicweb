@@ -297,8 +297,8 @@ class RQLExpression(object):
                     prefix, action, suffix = rel.r_type.split('_')
                 except ValueError:
                     continue
-                if (prefix != 'has' or suffix != 'permission' or
-                        action not in ('add', 'delete', 'update', 'read')):
+                if (prefix != 'has' or suffix != 'permission'
+                        or action not in ('add', 'delete', 'update', 'read')):
                     continue
                 if found is None:
                     found = []
@@ -696,8 +696,8 @@ def has_local_role(self, action):
 
 @_override_method(PermissionMixIn)
 def may_have_permission(self, action, req):
-    if action != 'read' and not (self.has_local_role('read') or
-                                 self.has_perm(req, 'read')):
+    if action != 'read' and not (self.has_local_role('read')
+                                 or self.has_perm(req, 'read')):
         return False
     return self.has_local_role(action) or self.has_perm(req, action)
 
@@ -1188,8 +1188,8 @@ def name_for(self, rdef):
 
     This name may be used as name for the constraint in the database.
     """
-    return 'cstr' + md5((rdef.subject.type + rdef.rtype.type + self.type() +
-                         (self.serialize() or '')).encode('ascii')).hexdigest()
+    return 'cstr' + md5((rdef.subject.type + rdef.rtype.type + self.type()
+                         + (self.serialize() or '')).encode('ascii')).hexdigest()
 
 
 class BaseRQLConstraint(RRQLExpression, BaseConstraint):
@@ -1455,9 +1455,9 @@ def vocabulary(self, entity=None, form=None):
     if cw is not None:
         if hasattr(cw, 'write_security'):  # test it's a session and not a request
             # cw is a server session
-            hasperm = (not cw.write_security or
-                       not cw.is_hook_category_activated('integrity') or
-                       cw.user.matching_groups(MAY_USE_TEMPLATE_FORMAT))
+            hasperm = (not cw.write_security
+                       or not cw.is_hook_category_activated('integrity')
+                       or cw.user.matching_groups(MAY_USE_TEMPLATE_FORMAT))
         else:
             hasperm = cw.user.matching_groups(MAY_USE_TEMPLATE_FORMAT)
         if hasperm:

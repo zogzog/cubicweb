@@ -100,9 +100,9 @@ def _annotate_select(annotator, rqlst):
                         ostinfo = rhs.children[0].variable.stinfo
                     else:
                         ostinfo = lhs.variable.stinfo
-                    if not (ostinfo.get('optcomparisons') or
-                            any(orel for orel in ostinfo['relations']
-                                if orel.optional and orel is not rel)):
+                    if not (ostinfo.get('optcomparisons')
+                            or any(orel for orel in ostinfo['relations']
+                                   if orel.optional and orel is not rel)):
                         break
             if rschema.final or (onlhs and rschema.inlined):
                 if rschema.type != 'has_text':

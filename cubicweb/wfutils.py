@@ -124,8 +124,8 @@ def setup_workflow(cnx, name, wfdef, cleanup=True):
         wf.cw_set(initial_state=states[wfdef['initial_state']])
 
     for trname, trdef in wfdef['transitions'].items():
-        tr = (wf.transition_by_name(trname) or
-              cnx.create_entity('Transition', name=trname))
+        tr = (wf.transition_by_name(trname)
+              or cnx.create_entity('Transition', name=trname))
         tr.cw_set(transition_of=wf)
         if trdef.get('tostate'):
             tr.cw_set(destination_state=states[trdef['tostate']])

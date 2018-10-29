@@ -54,9 +54,8 @@ def build_index_name(table, columns, prefix='idx_'):
     """Return a predictable-but-size-constrained name for an index on `table(*columns)`, using an
     md5 hash.
     """
-    return '%s%s' % (prefix, md5((table +
-                                  ',' +
-                                  ','.join(sorted(columns))).encode('ascii')).hexdigest())
+    return '%s%s' % (prefix, md5((
+        table + ',' + ','.join(sorted(columns))).encode('ascii')).hexdigest())
 
 
 def rschema_has_table(rschema, skip_relations):

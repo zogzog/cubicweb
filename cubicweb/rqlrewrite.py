@@ -278,10 +278,10 @@ class RQLRewriter(object):
         nbtrees = len(localchecks)
         myunion = union = select.parent
         # transform in subquery when len(localchecks)>1 and groups
-        if nbtrees > 1 and (select.orderby or select.groupby or
-                            select.having or select.has_aggregat or
-                            select.distinct or
-                            select.limit or select.offset):
+        if nbtrees > 1 and (select.orderby or select.groupby
+                            or select.having or select.has_aggregat
+                            or select.distinct
+                            or select.limit or select.offset):
             newselect = stmts.Select()
             # only select variables in subqueries
             origselection = select.selection

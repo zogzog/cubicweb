@@ -189,8 +189,8 @@ class InContextWithStateView(EntityView):
 class WorkflowActions(action.Action):
     """fill 'workflow' sub-menu of the actions box"""
     __regid__ = 'workflow'
-    __select__ = (action.Action.__select__ & one_line_rset() &
-                  relation_possible('in_state'))
+    __select__ = (action.Action.__select__ & one_line_rset()
+                  & relation_possible('in_state'))
 
     submenu = _('workflow')
     order = 10

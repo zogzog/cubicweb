@@ -78,7 +78,7 @@ class StatsdTC(TestCase):
             self.assertIn(value, DATA)
 
     def check_received_ms(self, value):
-        value = re.compile(value.replace('?', '\d'))
+        value = re.compile(value.replace('?', r'\d'))
         for i in range(10):
             if [x for x in DATA if value.match(x)]:
                 break

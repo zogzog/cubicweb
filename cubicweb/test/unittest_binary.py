@@ -33,7 +33,7 @@ class BinaryTC(TestCase):
         Binary(b'toto')
         Binary(bytearray(b'toto'))
         if PY2:
-            Binary(buffer('toto'))
+            Binary(buffer('toto'))  # noqa: F821
         else:
             Binary(memoryview(b'toto'))
         with self.assertRaises((AssertionError, TypeError)):
@@ -45,7 +45,7 @@ class BinaryTC(TestCase):
         b.write(b'toto')
         b.write(bytearray(b'toto'))
         if PY2:
-            b.write(buffer('toto'))
+            b.write(buffer('toto'))  # noqa: F821
         else:
             b.write(memoryview(b'toto'))
         with self.assertRaises((AssertionError, TypeError)):

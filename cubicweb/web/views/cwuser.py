@@ -43,8 +43,8 @@ _affk.tag_subject_of(('CWUser', 'in_group', 'CWGroup'),
 
 class UserPreferencesEntityAction(action.Action):
     __regid__ = 'prefs'
-    __select__ = (one_line_rset() & is_instance('CWUser') &
-                  match_user_groups('owners', 'managers'))
+    __select__ = (one_line_rset() & is_instance('CWUser')
+                  & match_user_groups('owners', 'managers'))
 
     title = _('preferences')
     category = 'mainactions'

@@ -112,7 +112,7 @@ class CubicWebPyramidHandler(object):
                 # earlier in the controllers, not here. In the end, the
                 # ValidationError should never by handled here.
                 content = self.appli.validation_error_handler(req, ex)
-            except cubicweb.web.RemoteCallFailed as ex:
+            except cubicweb.web.RemoteCallFailed:
                 # XXX The default pyramid error handler (or one that we provide
                 # for this exception) should be enough
                 # content = self.appli.ajax_error_handler(req, ex)

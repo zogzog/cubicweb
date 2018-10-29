@@ -400,8 +400,8 @@ class ITreeAdapter(view.EntityAdapter):
             path.append(entity.eid)
             try:
                 # check we are not jumping to another tree
-                if (adapter.tree_relation != self.tree_relation or
-                        adapter.child_role != self.child_role):
+                if (adapter.tree_relation != self.tree_relation
+                        or adapter.child_role != self.child_role):
                     break
                 entity = adapter.parent()
                 adapter = entity.cw_adapt_to('ITree')
