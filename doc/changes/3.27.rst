@@ -1,0 +1,15 @@
+3.27 (not yet released)
+=======================
+
+New features
+------------
+
+* Tests can now be run concurrently across multiple processes. You can use
+  `pytest-xdist`_ for that. For tests using `PostgresApptestConfiguration` you
+  should be aware that `startpgcluster()` can't run concurrently. Workaround is
+  to call pytest with ``--dist=loadfile`` to use a single test process per test
+  module or use an existing database cluster and set ``db-host`` and
+  ``db-port`` of ``devtools.DEFAULT_PSQL_SOURCES['system']`` accordingly.
+
+.. _pytest-xdist: https://github.com/pytest-dev/pytest-xdist
+
