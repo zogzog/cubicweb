@@ -59,7 +59,7 @@ class ChangeStateTextParser(TextParser):
 
          :<transition name>: #?<eid>
     """
-    instr_rgx = re.compile(':(\w+):\s*#?(\d+)', re.U)
+    instr_rgx = re.compile(r':(\w+):\s*#?(\d+)', re.U)
 
     def parse(self, caller, text):
         for trname, eid in self.instr_rgx.findall(text):

@@ -80,7 +80,7 @@ def typed_eid(eid):
 
 class Binary(BytesIO):
     """class to hold binary data. Use BytesIO to prevent use of unicode data"""
-    _allowed_types = (binary_type, bytearray, buffer if PY2 else memoryview)
+    _allowed_types = (binary_type, bytearray, buffer if PY2 else memoryview)  # noqa: F405
 
     def __init__(self, buf=b''):
         assert isinstance(buf, self._allowed_types), \

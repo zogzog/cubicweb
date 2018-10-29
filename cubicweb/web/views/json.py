@@ -138,8 +138,8 @@ class JsonErrorView(JsonMixIn, management.ErrorView):
 
     The returned json object will contain err / traceback informations.
     """
-    __select__ = (management.ErrorView.__select__ &
-                  _requested_vid('jsonexport', 'ejsonexport'))
+    __select__ = (management.ErrorView.__select__
+                  & _requested_vid('jsonexport', 'ejsonexport'))
 
     def call(self):
         errmsg, exclass, excinfo = self._excinfo()

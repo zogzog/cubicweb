@@ -44,8 +44,8 @@ class CubicWebPyramidConfiguration(BaseWebConfiguration, ServerConfiguration):
     cube_appobject_path = (BaseWebConfiguration.cube_appobject_path
                            | ServerConfiguration.cube_appobject_path)
 
-    options = merge_options(ServerConfiguration.options +
-                            BaseWebConfiguration.options)
+    options = merge_options(ServerConfiguration.options
+                            + BaseWebConfiguration.options)
 
     def init_log(self, *args, **kwargs):
         """Rely on logging configuration in Pyramid's .ini file, do nothing

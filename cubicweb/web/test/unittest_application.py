@@ -343,10 +343,10 @@ class ApplicationTC(CubicWebTC):
             }
             req.form.update(kwargs)
             req.form['_cw_entity_fields:%s' % dir_eid] = ','.join(
-                ['parent-%s' % role] +
-                [key.split(':')[0]
-                 for key in kwargs.keys()
-                 if not key.startswith('_')])
+                ['parent-%s' % role]
+                + [key.split(':')[0]
+                   for key in kwargs.keys()
+                   if not key.startswith('_')])
             self.expect_redirect_handle_request(req)
 
     def _edit_in_version(self, ticket_eid, version_eid, **kwargs):
@@ -360,10 +360,10 @@ class ApplicationTC(CubicWebTC):
             }
             req.form.update(kwargs)
             req.form['_cw_entity_fields:%s' % ticket_eid] = ','.join(
-                ['in_version-subject'] +
-                [key.split(':')[0]
-                 for key in kwargs.keys()
-                 if not key.startswith('_')])
+                ['in_version-subject']
+                + [key.split(':')[0]
+                   for key in kwargs.keys()
+                   if not key.startswith('_')])
             self.expect_redirect_handle_request(req)
 
     def test_create_and_link_directories(self):

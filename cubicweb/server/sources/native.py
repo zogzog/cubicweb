@@ -693,7 +693,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     cnx.cnxset.rollback()
                     if self.repo.config.mode != 'test':
                         self.debug('transaction has been rolled back')
-                except Exception as ex:
+                except Exception:
                     pass
             if ex.__class__.__name__ == 'IntegrityError':
                 # need string comparison because of various backends

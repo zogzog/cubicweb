@@ -129,7 +129,7 @@ def cw_to_pyramid(request):
              DeprecationWarning, stacklevel=2)
         request.body = ex.content
         request.status_int = ex.status
-    except cubicweb.web.Unauthorized as ex:
+    except cubicweb.web.Unauthorized:
         raise httpexceptions.HTTPForbidden(
             request.cw_request._(
                 'You\'re not authorized to access this page. '
@@ -143,7 +143,7 @@ def cw_to_pyramid(request):
                 'If you think it should be allowed, please contact the site '
                 'administrator.'),
             headers=cw_headers(request))
-    except (rql.BadRQLQuery, cubicweb.web.RequestError) as ex:
+    except (rql.BadRQLQuery, cubicweb.web.RequestError):
         raise
 
 
