@@ -254,10 +254,12 @@ e.g. :file:`cubes/myblog/views.py`, the code below:
 
   from cubicweb.web.views import basetemplates
 
+
   class MyHTMLPageFooter(basetemplates.HTMLPageFooter):
 
       def footer_content(self):
-	  self.w(u'This website has been created with <a href="http://cubicweb.org">CubicWeb</a>.')
+          self.w(u'This website has been created with <a href="http://cubicweb.org">CubicWeb</a>.')
+
 
   def registration_callback(vreg):
       vreg.register_all(globals().values(), __name__, (MyHTMLPageFooter,))
@@ -313,12 +315,14 @@ So... Some code! That we'll put again in the module ``views`` of our cube.
   from cubicweb.predicates import is_instance
   from cubicweb.web.views import primary
 
+
   class CommunityPrimaryView(primary.PrimaryView):
       __select__ = is_instance('Community')
 
       def cell_call(self, row, col):
           entity = self.cw_rset.get_entity(row, col)
           self.w(u'<h1>Welcome to the "%s" community</h1>' % entity.printable_value('name'))
+
           if entity.description:
               self.w(u'<p>%s</p>' % entity.printable_value('description'))
 
@@ -422,8 +426,10 @@ In this example:
       def cell_call(self, row, col):
           entity = self.cw_rset.get_entity(row, col)
           self.w(u'<h1>Welcome to the "%s" community</h1>' % entity.printable_value('name'))
+
           if entity.display_cw_logo():
               self.w(u'<img src="https://docs.cubicweb.org/_static/logo-cubicweb-small.svg"/>')
+
           if entity.description:
               self.w(u'<p>%s</p>' % entity.printable_value('description'))
 
@@ -476,6 +482,7 @@ them in our schema (:file:`schema.py`).
       cardinality = '1*'
       composite = 'object'
 
+
   class tags(RelationDefinition):
       subject = 'Tag'
       object = ('Community', 'BlogEntry')
@@ -519,13 +526,14 @@ implementation.
       __select__ = is_instance('Community')
 
       def render_entity_title(self, entity):
-	  self.w(u'<h1>Welcome to the "%s" community</h1>' % entity.printable_value('name'))
+          self.w(u'<h1>Welcome to the "%s" community</h1>' % entity.printable_value('name'))
 
       def render_entity_attributes(self, entity):
-	  if entity.display_cw_logo():
-	      self.w(u'<img src="https://docs.cubicweb.org/_static/logo-cubicweb-small.svg"/>')
-	  if entity.description:
-	      self.w(u'<p>%s</p>' % entity.printable_value('description'))
+          if entity.display_cw_logo():
+              self.w(u'<img src="https://docs.cubicweb.org/_static/logo-cubicweb-small.svg"/>')
+
+          if entity.description:
+              self.w(u'<p>%s</p>' % entity.printable_value('description'))
 
 It appears now properly:
 
