@@ -17,6 +17,14 @@ Then create and initialize your instance::
 
     cubicweb-ctl create blog myblog
 
+The `blog` argument is the cube on which you want to base your instance and
+`myblog` is the name of your instance.
+
+.. Note::
+
+   If you get an a permission error of this kind `OSError: [Errno 13]
+   Permission denied: '/etc/cubicweb.d/myblog'`, read the :ref:`next section`.
+
 You'll be asked a few questions, and you can keep the default answer for most of
 them. The one question you'll have to think about is the database you'll want to
 use for that instance. For a quick test, if you don't have `postgresql` installed
@@ -33,6 +41,7 @@ The `-D` option activates the debugging mode. Removing it will launch the instan
 as a daemon in the background, and ``cubicweb-ctl stop myblog`` will stop
 it in that case. 
 
+.. _AboutFileSystemPermissions:
 
 About file system permissions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,7 +71,7 @@ Then relaunch the database creation::
      cubicweb-ctl db-create myblog
 
 Other parameters, like web server or emails parameters, can be modified in the
-:file:`/etc/cubicweb.d/myblog/all-in-one.conf` file.
+:file:`/etc/cubicweb.d/myblog/all-in-one.conf` file (or :file:`~/etc/cubicweb.d/myblog/all-in-one.conf` depending on your configuration.)
 
 You'll have to restart the instance after modification in one of those files.
 
