@@ -98,7 +98,7 @@ the schema.
 
 This file defines the following:
 
-* a `Community` has a title and a description as attributes
+* a `Community` has a name and a description as attributes
 
   - the name is a string that is required and can't be longer than 50 characters
 
