@@ -117,6 +117,7 @@ Developpers
     :maxdepth: 1
     :glob:
 
+    How to contribute to the code base <https://hg.logilab.org/master/cubicweb/file/tip/README#l39>
     dev/*
 
 Indexes
