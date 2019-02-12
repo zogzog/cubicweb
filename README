@@ -50,4 +50,14 @@ through the *patchbomb* extension of Mercurial. Preferably, patches should be
 *in the message body* of emails. When submitting a revised version of a patch
 series, a prefix indicating the iteration number ``<n>`` of the series should
 be added to email subject prefixes; this can be achieved by specifying a
-``--flag v<n>`` option to ``hg email`` command.
+``--flag v<n>`` option to ``hg email`` command. If needed you can also use the
+--in-reply-to option.
+
+Examples:
+
+    hg email --to cubicweb-devel@lists.cubicweb.org --intro -r <start>::<end>
+    hg email --flag V2 --to cubicweb-devel@lists.cubicweb.org -r <start>::<end>
+
+Mailing list: https://lists.cubicweb.org/mailman/listinfo/cubicweb-devel
+Patchbomb extension: https://www.mercurial-scm.org/wiki/PatchbombExtension
+Good practice on sending email patches: https://www.mercurial-scm.org/wiki/ContributingChanges#Emailing_patches
