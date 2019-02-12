@@ -31,7 +31,7 @@ from cubicweb.pyramid import config
 class PyramidConfigTC(TestCase):
 
     def test_get_random_secret_key(self):
-        with patch('random.choice', return_value='0') as patched_choice:
+        with patch('random.SystemRandom.choice', return_value='0') as patched_choice:
             secret = config.get_random_secret_key()
         self.assertEqual(patched_choice.call_count, 50)
         self.assertEqual(secret, '0' * 50)
@@ -43,7 +43,7 @@ class PyramidConfigTC(TestCase):
             os.environ['CW_INSTANCES_DIR'] = instancedir
             try:
                 cfg = config.CubicWebPyramidConfiguration(appid)
-                with patch('random.choice', return_value='0') as patched_choice:
+                with patch('random.SystemRandom.choice', return_value='0') as patched_choice:
                     cfg.write_development_ini(['foo', 'bar'])
             finally:
                 os.environ.pop('CW_INSTANCES_DIR')
