@@ -135,7 +135,7 @@ One easy way, as we've no really valuable data in the instance would be to trash
 
   cubicweb-ctl stop myblog # or Ctrl-C in the terminal running the server in debug mode
   cubicweb-ctl delete myblog
-  cubicweb-ctl create myblog
+  cubicweb-ctl create myblog myblog
   cubicweb-ctl start -D myblog
 
 Another way is to add our cube to the instance using the cubicweb-ctl shell
