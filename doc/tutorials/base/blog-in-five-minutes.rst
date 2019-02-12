@@ -8,10 +8,16 @@ Get a blog running in five minutes!
 For Debian or Ubuntu users, first install the following packages
 (:ref:`DebianInstallation`)::
 
-    cubicweb, cubicweb-dev, cubicweb-blog
+    cubicweb, cubicweb-dev, cubicweb-twisted, cubicweb-blog
 
 Windows or Mac OS X users must install |cubicweb| from source (see
 :ref:`SourceInstallation` and :ref:`WindowsInstallation`).
+
+You can also install those packages using pip in a virtualenv::
+
+   virtualenv venv
+   source venv/bin/activate
+   pip install cubicweb[etwist] cubicweb-dev cubicweb-blog
 
 Then create and initialize your instance::
 
@@ -31,7 +37,12 @@ your instance by using: ::
 
 The `-D` option activates the debugging mode. Removing it will launch the instance
 as a daemon in the background, and ``cubicweb-ctl stop myblog`` will stop
-it in that case. 
+it in that case.
+
+.. Note::
+
+   If you get a traceback when going on the web interface make sure your
+   version of twisted is **inferior** to 17.
 
 
 About file system permissions
@@ -67,4 +78,3 @@ Other parameters, like web server or emails parameters, can be modified in the
 You'll have to restart the instance after modification in one of those files.
 
 This is it. Your blog is functional and running. Visit http://localhost:8080 and enjoy it!
-

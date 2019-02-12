@@ -64,6 +64,12 @@ Update your list of packages and perform the installation::
   apt-get update
   apt-get install cubicweb cubicweb-dev
 
+  # if you want pyramid, the recommended application server
+  apt-get install pyramid-cubicweb
+
+  # or if you want twisted (considered deprecated)
+  apt-get install cubicweb-twisted
+
 ``cubicweb`` installs the framework itself, allowing you to create new
 instances. ``cubicweb-dev`` installs the development environment
 allowing you to develop new cubes.
@@ -155,7 +161,11 @@ Make sure to choose the correct architecture and version of Python.
 
 Finally, install |cubicweb| and its dependencies, by running::
 
-  pip install cubicweb
+  # for pyramid, the recommended application server
+  pip install cubicweb[pyramid]
+
+  # or for twisted, considered deprecated (used by "cubicweb-ctl")
+  pip install cubicweb[etwist]
 
 Many other :ref:`cubes <AvailableCubes>` are available. A list is available at
 `PyPI <http://pypi.python.org/pypi?%3Aaction=search&term=cubicweb&submit=search>`_
