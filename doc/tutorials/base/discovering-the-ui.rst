@@ -29,7 +29,7 @@ Minimal configuration
 
 Before creating entities, let's change that 'unset title' thing that appears
 here and there. This comes from a |cubicweb| system properties. To set it,
-click on the 'site configuration link' in the pop-up menu behind your login name
+click on the 'configuration link' in the pop-up menu behind your login name
 in the upper left-hand corner
 
 .. image:: ../../images/tutos-base_user-menu_en.png

@@ -108,8 +108,8 @@ This file defines the following:
 * a `Community` may be linked to a `Blog` using the `community_blog` relation
 
   - ``*`` means a community may be linked to 0 to N blog, ``?`` means a blog may
-    be linked to 0 to 1 community. For completeness, remember that you can also
-    use ``+`` for 1 to N, and ``1`` for single, mandatory relation (e.g. one to one);
+    be linked to 0 to 1 community. For completeness, you can also use ``+`` for
+    1 to N, and ``1`` for single, mandatory relation (e.g. one to one);
 
   - this is a composite relation where `Community` (e.g. the subject of the
     relation) is the composite. That means that if you delete a community, its
@@ -185,7 +185,7 @@ and preferences. We'll now see how to do such thing.
 Defining your views
 ~~~~~~~~~~~~~~~~~~~
 
-|cubicweb| provides a lot of standard views in directory
+|cubicweb| provides a lot of standard views in the directory
 :file:`cubicweb/web/views/`. We already talked about 'primary' and 'list' views,
 which are views which apply to one ore more entities.
 
@@ -193,7 +193,7 @@ A view is defined by a python class which includes:
 
   - an identifier: all objects used to build the user interface in |cubicweb| are
     recorded in a registry and this identifier will be used as a key in that
-    registry. There may be multiple views for the same identifier.
+    registry to store the view. There may be multiple views for the same identifier.
 
   - a *selector*, which is a kind of filter telling how well a view suit to a
     particular context. When looking for a particular view (e.g. given an
@@ -331,10 +331,11 @@ What's going on here?
   some entity of the `Community` type. This is enough to get an higher score than
   the default view for entities of this type.
 
-* View applying to entities usually have to define `cell_call` as entry point,
-  and are given `row` and `col` arguments tell to which entity in the result set
-  the view is applied. We can then get this entity from the result set
-  (`self.cw_rset`) by using the `get_entity` method.
+* A view that applies to an entity usually have to define the method
+  `cell_call` as an entry point. This method will received the arguments
+  `row` and `col` that tell to which entity in the result set the view is
+  applied. We can then get this entity from the result set (`self.cw_rset`) by
+  using the `get_entity` method.
 
 * To ease thing, we access our entity's attribute for display using its
   printable_value method, which will handle formatting and escaping when
@@ -449,7 +450,7 @@ template language provides.
 
 
 A library of standard cubes is available from `CubicWeb Forge`_, to address a
-lot of common concerns such has manipulating people, files, things to do, etc. In
+lot of common concerns such has manipulating files, people, things to do, etc. In
 our community blog case, we could be interested for instance in functionalities
 provided by the `comment` and `tag` cubes. The former provides threaded
 discussion functionalities, the latter a simple tag mechanism to classify content.
@@ -485,7 +486,7 @@ both `Community` and `BlogEntry`. Various views from both `comment` and `tag`
 cubes will then be automatically displayed when one of those relations is
 supported.
 
-Let's synchronize the data model as we've done earlier: ::
+Let's install the cubes and synchronize the data model as we've done earlier: ::
 
 
   $ cubicweb-ctl stop myblog
