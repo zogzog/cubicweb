@@ -413,7 +413,7 @@ In this example:
   have had the same result)
 
 * we implemented here a method :meth:`display_cw_logo` which tests if the blog
-  entry title contains 'CW'.  It can then be used when you're writing code
+  entry title contains 'CubicWeb'. It can then be used when you're writing code
   involving 'Community' entities in your views, hooks, etc. For instance, you can
   modify your previous views as follows:
 
