@@ -7,11 +7,11 @@ Javascript Coding Standards
 
 Indentation rules
 ~~~~~~~~~~~~~~~~~
-- espace avant accolade ouvrante
 
-- retour à la ligne après accolade ouvrante (éventuellement pas
-  de retour à la ligne s'il y a tout sur la même ligne, mais ce n'est
-  pas le cas ici.
+- one space before an opening curly bracket ({)
+
+- line break after a closing curly bracket (}) (possibly no line break if
+  everything is on the same line)
 
 - no tabs
 

@@ -7,11 +7,12 @@ CSS Coding Standards
 
 Indentation rules
 ~~~~~~~~~~~~~~~~~
-- 2 espaces avant les propriétés
 
-- pas d'espace avant les ":", un espace après
+- 2 spaces before properties
 
-- 1 seul espace entre les différentes valeurs pour une même propriété
+- no space before ":", one space after
+
+- only one space between values of the same property
 
 
 Documentation
@@ -29,5 +30,3 @@ Recommendation
 
 - Avoid introducing a new CSS file for a few lines of CSS, at least while the
   framework doesn't include packing functionalities
-
-
