@@ -214,6 +214,11 @@ def includeme(config):
                 YOU SHOULD STOP THIS INSTANCE unless your really know what you
                 are doing !!
 
+                Please refer to to cubicweb-pyramid documentation on how to
+                write this pyramid.ini file:
+                https://cubicweb.readthedocs.io/en/latest/book/pyramid/settings/#pyramid-settings-file
+                Without it authentication WON'T work.
+
             ''')
 
         policies.append(
