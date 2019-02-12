@@ -49,12 +49,9 @@ framework. There are two running modes with *CubicWeb*:
 Within virtual environment
 ``````````````````````````
 
-If you are not administrator of you machine or if you need to play with some
-specific version of |cubicweb| you can use virtualenv_ a tool to create
-isolated Python environments.
-
-- instances are stored in :file:`<VIRTUAL_ENV>/etc/cubicweb.d`
-- temporary files (such as pid file) in :file:`<VIRTUAL_ENV>/var/run/cubicweb`
+When installed within a virtualenv, CubicWeb will look for instances data as in
+user mode by default, that is in $HOME/etc/cubicweb.d. However the
+CW_INSTANCES_DIR environment variable should be preferably used.
 
 .. _virtualenv: http://pypi.python.org/pypi/virtualenv
 
