@@ -115,7 +115,7 @@ class ServerConfiguration(CubicWebConfiguration):
         ('uid',
          {'type' : 'string',
           'default': None,
-          'help': 'if this option is set, use the specified user to start \
+          'help': 'unix user, if this option is set, use the specified user to start \
 the repository rather than the user running the command',
           'group': 'main', 'level': (CubicWebConfiguration.mode == 'installed') and 0 or 1,
           }),
