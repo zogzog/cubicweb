@@ -58,6 +58,9 @@ Examples:
     hg email --to cubicweb-devel@lists.cubicweb.org --intro -r <start>::<end>
     hg email --flag V2 --to cubicweb-devel@lists.cubicweb.org -r <start>::<end>
 
+If you have any questions you can also come on Logilab's public XMPP room using
+a XMPP client: public@conference.jabber.logilab.org
+
 Mailing list: https://lists.cubicweb.org/mailman/listinfo/cubicweb-devel
 Patchbomb extension: https://www.mercurial-scm.org/wiki/PatchbombExtension
 Good practice on sending email patches: https://www.mercurial-scm.org/wiki/ContributingChanges#Emailing_patches
