@@ -21,10 +21,12 @@ Here is the ``read`` security model I want:
 * only authenticated users can see people
 * everyone can see classifier entities, such as tag and zone
 
-Also, unless explicitly specified, the visibility of an image should be the same as
-its parent folder, as well as visibility of a comment should be the same as the
-commented entity. If there is no parent entity, the default visibility is
-``authenticated``.
+Also:
+
+* unless explicitly specified, the visibility of an image should be the same as
+its parent folder
+* the visibility of a comment should be the same as the commented entity
+* If there is no parent entity, the default visibility is ``authenticated``.
 
 Regarding write security, that's much easier:
 
@@ -42,10 +44,13 @@ bother with it in views: users will only see what they can see automatically.
 Step 1: configuring security into the schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In schema, you can grant access according to groups, or to some RQL expressions:
-users get access if the expression returns some results. To implement the read
-security defined earlier, groups are not enough, we'll need some RQL expression. Here
-is the idea:
+In the schema, you can grant access according to:
+
+* groups
+* to some RQL expressions: users get access if the expression returns some results
+
+To implement the read security defined earlier, groups are not enough, we'll
+need some RQL expression. Here is the idea:
 
 * add a `visibility` attribute on Folder, File and Comment, which may be one of
   the value explained above
