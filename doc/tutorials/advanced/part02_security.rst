@@ -419,8 +419,9 @@ Prior to those changes, I created an instance, fed it with some data, so I
 don't want to create a new one, but to migrate the existing one. Let's see how to
 do that.
 
-file named file:`<X.Y.Z>_Any.py` ('Any' being there mostly for historical reasons).
 Migration commands should be put in the cube's :file:`migration` directory, in a
+file named :file:`<X.Y.Z>_Any.py` ('Any' being there mostly for historical
+reasons and '<X.Y.Z>' being the version number of the cube we are going to release.)
 
 Here I'll create a :file:`migration/0.2.0_Any.py` file containing the following
 instructions:
