@@ -67,7 +67,7 @@ have seen last time):
    just type migration commands or arbitrary python code and type ENTER to execute it
    type "exit" or Ctrl-D to quit the shell and resume operation
    >>> storage_changed('File', 'data')
-   [........................]
+   [========================]
 
 
 That's it. Now, files added through the web ui will have their content stored on
