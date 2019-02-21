@@ -164,7 +164,7 @@ database step, thus skipping questions asked by the 'create' command.
 
 Once the instance and database are fully initialized, run ::
 
-  cubicweb-ctl start sytweb_instance
+  cubicweb-ctl start -D sytweb_instance
 
 to start the instance, check you can connect on it, etc...
 
