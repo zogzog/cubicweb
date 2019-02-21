@@ -52,10 +52,10 @@ In the schema, you can grant access according to:
 To implement the read security defined earlier, groups are not enough, we'll
 need some RQL expression. Here is the idea:
 
-* add a `visibility` attribute on Folder, File and Comment, which may be one of
+* add a `visibility` attribute on `Folder`, `File` and `Comment`, which may be one of
   the value explained above
+* add a `may_be_read_by` relation from `Folder`, `File` and `Comment` to `users`,
 
-* add a `may_be_read_by` relation from Folder, File and Comment to users,
   which will define who can see the entity
 
 * security propagation will be done in hook.
@@ -87,7 +87,7 @@ relations:
 
 We can note the following points:
 
-* we've added a new `visibility` attribute to folder, file, image and comment
+* we've added a new `visibility` attribute to `Folder`, `File`, `Image` and `Comment`
   using a `RelationDefinition`
 
 * `cardinality = '11'` means this attribute is required. This is usually hidden
@@ -186,7 +186,7 @@ In our case we will:
 
 * on entity creation, schedule an operation that will set default visibility
 
-* when a "parent" relation is added, propagate parent's visibility unless the
+* when a `parent` relation is added, propagate parent's visibility unless the
   child already has a visibility set
 
 Here is the code in cube's :file:`hooks.py`:
@@ -230,7 +230,7 @@ Notice:
   hook specific `match_rtype` selector.
 
 * usage of `DataOperationMixIn`: instead of adding an operation for each added entity,
-  DataOperationMixIn allows to create a single one and to store entity's eids to be
+  `DataOperationMixIn` allows to create a single one and to store entity's eids to be
   processed in the transaction data. This is a good pratice to avoid heavy
   operations manipulation cost when creating a lot of entities in the same
   transaction.
@@ -251,7 +251,7 @@ Notice:
     `self.rtype`)
 
 The `parent` visibility value is used to tell "propagate using parent security"
-because we want that attribute to be required, so we can't use None value else
+because we want that attribute to be required, so we can't use `None` value else
 we'll get an error before we get any chance to propagate...
 
 Now, we also want to propagate the `may_be_read_by` relation. Fortunately,
