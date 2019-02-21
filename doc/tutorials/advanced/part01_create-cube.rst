@@ -96,6 +96,8 @@ Now, I need to install all the dependencies::
 Step 4: glue everything together in my cube's schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Put this code in :file:`cubicweb-sytweb/cubicweb_sytweb/schema.py`:
+
 .. sourcecode:: python
 
     from yams.buildobjs import RelationDefinition

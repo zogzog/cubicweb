@@ -19,7 +19,7 @@ So, to improve this situation, I decided that I should:
 
 * customize the 404 page, proposing to login to anonymous.
 
-Here is the code, samples from my cube's `views.py` file:
+Here is the code, samples from my cube's :file:`views.py` file:
 
 .. sourcecode:: python
 
@@ -79,6 +79,8 @@ Another thing we can easily do to improve the site is... A nicer index page
 quite intimidating (that should change in a near future). I will provide a much
 simpler index page that simply list available folders (e.g. photo albums in that
 site).
+
+Here is the code, samples from my cube's :file:`views.py` file:
 
 .. sourcecode:: python
 
