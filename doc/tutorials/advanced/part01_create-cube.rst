@@ -63,7 +63,7 @@ Ok, now I'll tell my cube requires all this by editing :file:`cubicweb-sytweb/cu
 
   .. sourcecode:: python
 
-    __depends__ = {'cubicweb': '>= 3.10.0',
+    __depends__ = {'cubicweb': '>= 3.26.7',
                    'cubicweb-file': '>= 1.9.0',
 		   'cubicweb-folder': '>= 1.1.0',
 		   'cubicweb-person': '>= 1.2.0',
