@@ -149,6 +149,9 @@ do so using this new 'sytweb' cube, I run::
 
   cubicweb-ctl create sytweb sytweb_instance
 
+For simplicity you should use the sqlite database, it won't require
+configuration.
+
 Don't forget to say "yes" to the question: `Allow anonymous access ? [y/N]:`
 
 Hint: if you get an error while the database is initialized, you can
