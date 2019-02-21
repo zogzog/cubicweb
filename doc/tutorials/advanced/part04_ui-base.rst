@@ -28,26 +28,27 @@ Here is the code, samples from my cube's :file:`views.py` file:
     from cubicweb.web.views import error
     from cubicweb.predicates import anonymous_user
 
-    class FourOhFour(error.FourOhFour):
-	__select__ = error.FourOhFour.__select__ & anonymous_user()
 
-	def call(self):
-	    self.w(u"<h1>%s</h1>" % self._cw._('this resource does not exist'))
-	    self.w(u"<p>%s</p>" % self._cw._('have you tried to login?'))
+    class FourOhFour(error.FourOhFour):
+        __select__ = error.FourOhFour.__select__ & anonymous_user()
+
+        def call(self):
+            self.w(u"<h1>%s</h1>" % self._cw._('this resource does not exist'))
+            self.w(u"<p>%s</p>" % self._cw._('have you tried to login?'))
 
 
     class LoginBox(component.CtxComponent):
-	"""display a box containing links to all startup views"""
-	__regid__ = 'sytweb.loginbox'
-	__select__ = component.CtxComponent.__select__ & anonymous_user()
+        """display a box containing links to all startup views"""
+        __regid__ = 'sytweb.loginbox'
+        __select__ = component.CtxComponent.__select__ & anonymous_user()
 
-	title = _('Authenticate yourself')
-	order = 70
+        title = _('Authenticate yourself')
+        order = 70
 
-	def render_body(self, w):
-	    cw = self._cw
-	    form = cw.vreg['forms'].select('logform', cw)
-	    form.render(w=w, table_class='', display_progress_div=False)
+        def render_body(self, w):
+            cw = self._cw
+            form = cw.vreg['forms'].select('logform', cw)
+            form.render(w=w, table_class='', display_progress_div=False)
 
 The first class provides a new specific implementation of the default page you
 get on 404 error, to display an adapted message to anonymous user.
@@ -86,19 +87,21 @@ Here is the code, samples from my cube's :file:`views.py` file:
 
     from cubicweb.web.views import startup
 
+
     class IndexView(startup.IndexView):
-	def call(self, **kwargs):
-	    self.w(u'<div>\n')
-	    if self._cw.cnx.session.anonymous_session:
-		self.w(u'<h4>%s</h4>\n' % self._cw._('Public Albums'))
-	    else:
-		self.w(u'<h4>%s</h4>\n' % self._cw._('Albums for %s') % self._cw.user.login)
-	    self._cw.vreg['views'].select('tree', self._cw).render(w=self.w)
-	    self.w(u'</div>\n')
+        def call(self, **kwargs):
+            self.w(u'<div>\n')
+            if self._cw.cnx.session.anonymous_session:
+                self.w(u'<h4>%s</h4>\n' % self._cw._('Public Albums'))
+            else:
+                self.w(u'<h4>%s</h4>\n' % self._cw._('Albums for %s') % self._cw.user.login)
+            self._cw.vreg['views'].select('tree', self._cw).render(w=self.w)
+            self.w(u'</div>\n')
+
 
     def registration_callback(vreg):
-	vreg.register_all(globals().values(), __name__, (IndexView,))
-	vreg.register_and_replace(IndexView, startup.IndexView)
+        vreg.register_all(globals().values(), __name__, (IndexView,))
+        vreg.register_and_replace(IndexView, startup.IndexView)
 
 As you can see, we override the default index view found in
 `cubicweb.web.views.startup`, geting back nothing but its identifier and selector
@@ -149,9 +152,9 @@ we can see:
 .. sourcecode:: python
 
     class File(AnyEntity):
-	"""customized class for File entities"""
-	__regid__ = 'File'
-	fetch_attrs, cw_fetch_order = fetch_config(['data_name', 'title'])
+        """customized class for File entities"""
+        __regid__ = 'File'
+        fetch_attrs, cw_fetch_order = fetch_config(['data_name', 'title'])
 
 
 By default, `fetch_config` will return a `cw_fetch_order` method that will order
@@ -175,16 +178,16 @@ it's more logical stuff than view stuff:
 
     class FolderITreeAdapter(folder.FolderITreeAdapter):
 
-	def different_type_children(self, entities=True):
-	    rql = self.entity.cw_related_rql(self.tree_relation,
-					     self.parent_role, ('File',))
-	    rset = self._cw.execute(rql, {'x': self.entity.eid})
-	    if entities:
-		return list(rset.entities())
-	    return rset
+        def different_type_children(self, entities=True):
+            rql = self.entity.cw_related_rql(self.tree_relation,
+                                             self.parent_role, ('File',))
+            rset = self._cw.execute(rql, {'x': self.entity.eid})
+            if entities:
+                return list(rset.entities())
+            return rset
 
     def registration_callback(vreg):
-	vreg.register_and_replace(FolderITreeAdapter, folder.FolderITreeAdapter)
+        vreg.register_and_replace(FolderITreeAdapter, folder.FolderITreeAdapter)
 
 As you can see, we simple inherit from the adapter defined in the `folder` cube,
 then we override the `different_type_children` method to give a clue to the ORM's
@@ -216,23 +219,23 @@ cube's `views.py` file:
 
 
     class FileIPrevNextAdapter(navigation.IPrevNextAdapter):
-	__select__ = is_instance('File')
+        __select__ = is_instance('File')
 
-	def previous_entity(self):
-	    rset = self._cw.execute('File F ORDERBY FDN DESC LIMIT 1 WHERE '
-				    'X filed_under FOLDER, F filed_under FOLDER, '
-				    'F data_name FDN, X data_name > FDN, X eid %(x)s',
-				    {'x': self.entity.eid})
-	    if rset:
-		return rset.get_entity(0, 0)
+        def previous_entity(self):
+            rset = self._cw.execute('File F ORDERBY FDN DESC LIMIT 1 WHERE '
+                                    'X filed_under FOLDER, F filed_under FOLDER, '
+                                    'F data_name FDN, X data_name > FDN, X eid %(x)s',
+                                    {'x': self.entity.eid})
+            if rset:
+                return rset.get_entity(0, 0)
 
-	def next_entity(self):
-	    rset = self._cw.execute('File F ORDERBY FDN ASC LIMIT 1 WHERE '
-				    'X filed_under FOLDER, F filed_under FOLDER, '
-				    'F data_name FDN, X data_name < FDN, X eid %(x)s',
-				    {'x': self.entity.eid})
-	    if rset:
-		return rset.get_entity(0, 0)
+        def next_entity(self):
+            rset = self._cw.execute('File F ORDERBY FDN ASC LIMIT 1 WHERE '
+                                    'X filed_under FOLDER, F filed_under FOLDER, '
+                                    'F data_name FDN, X data_name < FDN, X eid %(x)s',
+                                    {'x': self.entity.eid})
+            if rset:
+                return rset.get_entity(0, 0)
 
 
 The `IPrevNext` interface implemented by the adapter simply consist in the
@@ -279,11 +282,11 @@ adapter for `File` entity, telling the a file's parent entity is its folder:
     from cubicweb.web.views import ibreadcrumbs
 
     class FileIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-	__select__ = is_instance('File')
+        __select__ = is_instance('File')
 
-	def parent_entity(self):
-	    if self.entity.filed_under:
-		return self.entity.filed_under[0]
+        def parent_entity(self):
+            if self.entity.filed_under:
+                return self.entity.filed_under[0]
 
 In that case, we simply use attribute notation provided by the ORM to get the
 folder in which the current file (e.g. `self.entity`) is located.

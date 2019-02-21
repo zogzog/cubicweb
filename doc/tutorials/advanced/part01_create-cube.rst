@@ -72,11 +72,11 @@ Ok, now I'll tell my cube requires all this by editing :file:`cubicweb-sytweb/cu
 
     __depends__ = {'cubicweb': '>= 3.26.7',
                    'cubicweb-file': '>= 1.9.0',
-		   'cubicweb-folder': '>= 1.1.0',
-		   'cubicweb-person': '>= 1.2.0',
-		   'cubicweb-comment': '>= 1.2.0',
-		   'cubicweb-tag': '>= 1.2.0',
-		   'cubicweb-zone': None}
+                   'cubicweb-folder': '>= 1.1.0',
+                   'cubicweb-person': '>= 1.2.0',
+                   'cubicweb-comment': '>= 1.2.0',
+                   'cubicweb-tag': '>= 1.2.0',
+                   'cubicweb-zone': None}
 
 Notice that you can express minimal version of the cube that should be used,
 `None` meaning whatever version available. All packages starting with 'cubicweb-'
@@ -102,27 +102,34 @@ Put this code in :file:`cubicweb-sytweb/cubicweb_sytweb/schema.py`:
 
     from yams.buildobjs import RelationDefinition
 
+
     class comments(RelationDefinition):
-	subject = 'Comment'
-	object = 'File'
-	cardinality = '1*'
-	composite = 'object'
+        subject = 'Comment'
+        object = 'File'
+        # a Comment can be on only one File
+        # but a File can have several comments
+        cardinality = '1*'
+        composite = 'object'
+
 
     class tags(RelationDefinition):
-	subject = 'Tag'
-	object = 'File'
+        subject = 'Tag'
+        object = 'File'
+
 
     class filed_under(RelationDefinition):
-	subject = 'File'
-	object = 'Folder'
+        subject = 'File'
+        object = 'Folder'
+
 
     class situated_in(RelationDefinition):
-	subject = 'File'
-	object = 'Zone'
+        subject = 'File'
+        object = 'Zone'
+
 
     class displayed_on(RelationDefinition):
-	subject = 'Person'
-	object = 'File'
+        subject = 'Person'
+        object = 'File'
 
 
 This schema:
