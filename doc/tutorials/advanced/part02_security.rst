@@ -36,7 +36,7 @@ Regarding write security, that's much easier:
 
 Now, let's implement that!
 
-Proper security in CubicWeb is done at the schema level, so you don't have to
+Proper security in CubicWeb is done **at the schema level**, so you don't have to
 bother with it in views: users will only see what they can see automatically.
 
 .. _adv_tuto_security:
