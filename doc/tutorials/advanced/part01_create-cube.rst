@@ -42,25 +42,29 @@ Step 3: pick building blocks into existing cubes
 Almost everything I want to handle in my web-site is somehow already modelized in
 existing cubes that I'll extend for my need. So I'll pick the following cubes:
 
-* `folder`, containing the `Folder` entity type, which will be used as
-  both 'album' and a way to map file system folders. Entities are
-  added to a given folder using the `filed_under` relation.
+* `folder <https://www.cubicweb.org/project/cubicweb-folder>`_, containing the
+  `Folder` entity type, which will be used as both 'album' and a way to map
+  file system folders. Entities are added to a given folder using the
+  `filed_under` relation.
 
-* `file`, containing `File` entity type, gallery view, and a file system import
-  utility.
+* `file <https://www.cubicweb.org/project/cubicweb-file>`_, containing `File`
+  entity type, gallery view, and a file system import utility.
 
-* `zone`, containing the `Zone` entity type for hierarchical geographical
-  zones. Entities (including sub-zones) are added to a given zone using the
-  `situated_in` relation.
+* `zone <https://www.cubicweb.org/project/cubicweb-zone>`_, containing the
+  `Zone` entity type for hierarchical geographical zones. Entities (including
+  sub-zones) are added to a given zone using the `situated_in` relation.
 
-* `person`, containing the `Person` entity type plus some basic views.
+* `person <https://www.cubicweb.org/project/cubicweb-person>`_, containing the
+  `Person` entity type plus some basic views.
 
-* `comment`, providing a full commenting system allowing one to comment entity types
-  supporting the `comments` relation by adding a `Comment` entity.
+* `comment <https://www.cubicweb.org/project/cubicweb-comment>`_, providing a
+  full commenting system allowing one to comment entity types supporting the
+  `comments` relation by adding a `Comment` entity.
 
-* `tag`, providing a full tagging system as an easy and powerful way to classify
-  entities supporting the `tags` relation by linking the to `Tag` entities. This
-  will allows navigation into a large number of picture.
+* `tag <https://www.cubicweb.org/project/cubicweb-tag>`_, providing a full
+  tagging system as an easy and powerful way to classify entities supporting
+  the `tags` relation by linking the to `Tag` entities. This will allows
+  navigation into a large number of picture.
 
 Ok, now I'll tell my cube requires all this by editing :file:`cubicweb-sytweb/cubicweb_sytweb/__pkginfo__.py`:
 
