@@ -58,7 +58,14 @@ need some RQL expression. Here is the idea:
   which will define who can see the entity
 * security propagation will be done in hooks
 
+.. Note::
 
+   What makes `visibility` an attribute and not a relation is that its object
+   is a primitive type, here `String`.
+
+   Other builtin primitives are String, Int, BigInt, Float, Decimal, Boolean,
+   Date, Datetime, Time, Interval, Byte and Password and for more information
+   read :ref:`EntityType`
 
 So the first thing to do is to modify my cube's :file:`schema.py` to define those
 relations:
