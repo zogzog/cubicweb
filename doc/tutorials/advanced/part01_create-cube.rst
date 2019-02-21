@@ -30,6 +30,9 @@ site using::
 
   cubicweb-ctl newcube sytweb
 
+Enter a short description and this will create your new cube in the
+`cubicweb-sytweb` folder.
+
 
 .. _adv_tuto_assemble_cubes:
 
