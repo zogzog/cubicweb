@@ -23,7 +23,6 @@ Here is the code, samples from my cube's `views.py` file:
 
 .. sourcecode:: python
 
-    from cubicweb.predicates import is_instance
     from cubicweb.web import component
     from cubicweb.web.views import error
     from cubicweb.predicates import anonymous_user
