@@ -55,10 +55,10 @@ need some RQL expression. Here is the idea:
 * add a `visibility` attribute on `Folder`, `File` and `Comment`, which may be one of
   the value explained above
 * add a `may_be_read_by` relation from `Folder`, `File` and `Comment` to `users`,
-
   which will define who can see the entity
+* security propagation will be done in hooks
 
-* security propagation will be done in hook.
+
 
 So the first thing to do is to modify my cube's :file:`schema.py` to define those
 relations:
