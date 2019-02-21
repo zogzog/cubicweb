@@ -27,6 +27,7 @@ commented entity. If there is no parent entity, the default visibility is
 ``authenticated``.
 
 Regarding write security, that's much easier:
+
 * anonymous can't write anything
 * authenticated users can only add comment
 * managers will add the remaining stuff
