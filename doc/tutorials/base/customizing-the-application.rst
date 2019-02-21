@@ -308,7 +308,7 @@ do that though if you're rewriting reusable cubes; everything is described in mo
 details in :ref:`primary_view`).
 
 
-So... Some code! That we'll put again in the module ``views`` (``myblog/views.py``) of our cube.
+So... Some code! That we'll put again in the module ``views`` (:file:`myblog/views.py`) of our cube.
 
 .. sourcecode:: python
 
@@ -383,7 +383,7 @@ entity:
 - defines a :attr:`__regid__` linked to the corresponding data type of your schema
 
 You may then want to add your own methods, override default implementation of some
-method, etc... To do so, write this code in ``myblog/entities.py``:
+method, etc... To do so, write this code in :file:`myblog/entities.py`:
 
 .. sourcecode:: python
 
@@ -519,7 +519,7 @@ hijacked. Let's change our view to make it more extensible, by keeping both our
 custom rendering but also extension points provided by the default
 implementation.
 
-In ``myblog/views.py``:
+In :file:`myblog/views.py`:
 
 
 .. sourcecode:: python

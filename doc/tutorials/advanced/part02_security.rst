@@ -55,7 +55,7 @@ is the idea:
 
 * security propagation will be done in hook.
 
-So the first thing to do is to modify my cube's schema.py to define those
+So the first thing to do is to modify my cube's :file:`schema.py` to define those
 relations:
 
 .. sourcecode:: python
@@ -96,7 +96,7 @@ We can note the following points:
   by default, which somewhat breaks our security model...
 
 Now, we should be able to define security rules in the schema, based on these new
-attribute and relation. Here is the code to add to *schema.py*:
+attribute and relation. Here is the code to add to :file:`schema.py`:
 
 .. sourcecode:: python
 
@@ -184,7 +184,7 @@ In our case we will:
 * when a "parent" relation is added, propagate parent's visibility unless the
   child already has a visibility set
 
-Here is the code in cube's *hooks.py*:
+Here is the code in cube's :file:`hooks.py`:
 
 .. sourcecode:: python
 
@@ -251,7 +251,7 @@ we'll get an error before we get any chance to propagate...
 
 Now, we also want to propagate the `may_be_read_by` relation. Fortunately,
 CubicWeb provides some base hook classes for such things, so we only have to add
-the following code to *hooks.py*:
+the following code to :file:`hooks.py`:
 
 .. sourcecode:: python
 
@@ -419,10 +419,10 @@ Prior to those changes, I created an instance, fed it with some data, so I
 don't want to create a new one, but to migrate the existing one. Let's see how to
 do that.
 
-Migration commands should be put in the cube's *migration* directory, in a
 file named file:`<X.Y.Z>_Any.py` ('Any' being there mostly for historical reasons).
+Migration commands should be put in the cube's :file:`migration` directory, in a
 
-Here I'll create a *migration/0.2.0_Any.py* file containing the following
+Here I'll create a :file:`migration/0.2.0_Any.py` file containing the following
 instructions:
 
 .. sourcecode:: python
@@ -431,7 +431,7 @@ instructions:
   add_relation_type('visibility')
   sync_schema_props_perms()
 
-Then I update the version number in the cube's *__pkginfo__.py* to 0.2.0. And
+Then I update the version number in the cube's :file:`__pkginfo__.py` to 0.2.0. And
 that's it! Those instructions will:
 
 * update the instance's schema by adding our two new relations and update the

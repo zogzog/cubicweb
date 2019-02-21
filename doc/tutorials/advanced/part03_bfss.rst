@@ -12,7 +12,7 @@ storage for the File 'data' attribute, which hold the actual file's content.
 
 Since the function to register a custom storage needs to have a repository
 instance as first argument, we've to call it in a server startup hook. So I added
-in `cubicweb_sytweb/hooks.py` :
+in :file:`cubicweb_sytweb/hooks.py` :
 
 .. sourcecode:: python
 
