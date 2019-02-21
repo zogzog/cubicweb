@@ -378,11 +378,11 @@ To run it type:
 
 .. sourcecode:: bash
 
-    $ python test/unittest_sytweb.py
-    ========================  unittest_sytweb.py  ========================
-    -> creating tables [....................]
+    $ python test/test_sytweb.py
+    ======================================================================
+    -> creating tables [====================]
     -> inserting default user and default groups.
-    -> storing the schema in the database [....................]
+    -> storing the schema in the database [====================]
     -> database for instance data initialized.
     .
     ----------------------------------------------------------------------
@@ -396,8 +396,8 @@ test instance. The second one will be much quicker:
 
 .. sourcecode:: bash
 
-    $ python test/unittest_sytweb.py
-    ========================  unittest_sytweb.py  ========================
+    $ python test/test_sytweb.py
+    ======================================================================
     .
     ----------------------------------------------------------------------
     Ran 1 test in 2.662s
