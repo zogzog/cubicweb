@@ -166,5 +166,5 @@ Once the instance and database are fully initialized, run ::
 
   cubicweb-ctl start -D sytweb_instance
 
-to start the instance, check you can connect on it, etc...
-
+to start the instance, check you can connect on it, etc... then go on
+http://localhost:8080 (or with another port if you've modified it)
