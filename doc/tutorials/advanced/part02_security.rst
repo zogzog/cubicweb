@@ -309,10 +309,10 @@ model, in :file:`test/test_sytweb.py`:
 
 .. sourcecode:: python
 
-    from cubicweb.devtools.testlib import CubicWebTC
+    from cubicweb.devtools import testlib
     from cubicweb import Binary
 
-    class SecurityTC(CubicWebTC):
+    class SecurityTC(testlib.CubicWebTC):
 
         def test_visibility_propagation(self):
             with self.admin_access.repo_cnx() as cnx:
@@ -355,8 +355,8 @@ model, in :file:`test/test_sytweb.py`:
                 self.assertEquals(1, len(cnx.execute('Folder X'))) # and to restricted folder
 
     if __name__ == '__main__':
-        from logilab.common.testlib import unittest_main
-        unittest_main()
+        from unittest import main
+        main()
 
 It's not complete, but shows most things you'll want to do in tests: adding some
 content, creating users and connecting as them in the test, etc...
