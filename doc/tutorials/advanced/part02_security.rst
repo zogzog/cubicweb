@@ -305,7 +305,7 @@ Security is tricky. Writing some tests for it is a very good idea. You should
 even write them first, as Test Driven Development recommends!
 
 Here is a small test case that will check the basis of our security
-model, in *test/unittest_sytweb.py*:
+model, in :file:`test/test_sytweb.py`:
 
 .. sourcecode:: python
 
