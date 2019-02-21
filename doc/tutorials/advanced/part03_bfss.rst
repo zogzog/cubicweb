@@ -22,6 +22,7 @@ in :file:`cubicweb_sytweb/hooks.py` :
     from cubicweb.server import hook
     from cubicweb.server.sources import storages
 
+
     class ServerStartupHook(hook.Hook):
         __regid__ = 'sytweb.serverstartup'
         events = ('server_startup', 'server_maintenance')

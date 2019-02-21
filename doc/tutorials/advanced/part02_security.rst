@@ -74,23 +74,25 @@ relations:
 
     from yams.constraints import StaticVocabularyConstraint
 
+
     class visibility(RelationDefinition):
-	subject = ('Folder', 'File', 'Comment')
-	object = 'String'
-	constraints = [StaticVocabularyConstraint(('public', 'authenticated',
-						   'restricted', 'parent'))]
-	default = 'parent'
-	cardinality = '11' # required
+        subject = ('Folder', 'File', 'Comment')
+        object = 'String'
+        constraints = [StaticVocabularyConstraint(('public', 'authenticated',
+                                                   'restricted', 'parent'))]
+        default = 'parent'
+        cardinality = '11'  # required
+
 
     class may_be_read_by(RelationDefinition):
         __permissions__ = {
-	    'read':   ('managers', 'users'),
-	    'add':    ('managers',),
-	    'delete': ('managers',),
-	    }
+            'read': ('managers', 'users'),
+            'add': ('managers',),
+            'delete': ('managers',),
+        }
 
-	subject = ('Folder', 'File', 'Comment',)
-	object = 'CWUser'
+        subject = ('Folder', 'File', 'Comment',)
+        object = 'CWUser'
 
 We can note the following points:
 
@@ -203,32 +205,37 @@ Here is the code in cube's :file:`hooks.py`:
     from cubicweb.predicates import is_instance
     from cubicweb.server import hook
 
+
     class SetVisibilityOp(hook.DataOperationMixIn, hook.Operation):
 
-	def precommit_event(self):
-	    for eid in self.get_data():
-		entity = self.cnx.entity_from_eid(eid)
-		if entity.visibility == 'parent':
-		    entity.cw_set(visibility=u'authenticated')
+        def precommit_event(self):
+            for eid in self.get_data():
+                entity = self.cnx.entity_from_eid(eid)
+
+                if entity.visibility == 'parent':
+                    entity.cw_set(visibility=u'authenticated')
+
 
     class SetVisibilityHook(hook.Hook):
-	__regid__ = 'sytweb.setvisibility'
-	__select__ = hook.Hook.__select__ & is_instance('Folder', 'File', 'Comment')
-	events = ('after_add_entity',)
+        __regid__ = 'sytweb.setvisibility'
+        __select__ = hook.Hook.__select__ & is_instance('Folder', 'File', 'Comment')
+        events = ('after_add_entity',)
 
-	def __call__(self):
-	    SetVisibilityOp.get_instance(self._cw).add_data(self.entity.eid)
+        def __call__(self):
+            SetVisibilityOp.get_instance(self._cw).add_data(self.entity.eid)
+
 
     class SetParentVisibilityHook(hook.Hook):
-	__regid__ = 'sytweb.setparentvisibility'
-	__select__ = hook.Hook.__select__ & hook.match_rtype('filed_under', 'comments')
-	events = ('after_add_relation',)
+        __regid__ = 'sytweb.setparentvisibility'
+        __select__ = hook.Hook.__select__ & hook.match_rtype('filed_under', 'comments')
+        events = ('after_add_relation',)
 
-	def __call__(self):
-	    parent = self._cw.entity_from_eid(self.eidto)
-	    child = self._cw.entity_from_eid(self.eidfrom)
-	    if child.visibility == 'parent':
-		child.cw_set(visibility=parent.visibility)
+        def __call__(self):
+            parent = self._cw.entity_from_eid(self.eidto)
+            child = self._cw.entity_from_eid(self.eidfrom)
+
+            if child.visibility == 'parent':
+                child.cw_set(visibility=parent.visibility)
 
 Notice:
 
@@ -272,29 +279,32 @@ the following code to :file:`hooks.py`:
     # relations where the "parent" entity is the object
     O_RELS = set(('filed_under', 'comments',))
 
+
     class AddEntitySecurityPropagationHook(hook.PropagateRelationHook):
-	"""propagate permissions when new entity are added"""
-	__regid__ = 'sytweb.addentity_security_propagation'
-	__select__ = (hook.PropagateRelationHook.__select__
-		      & hook.match_rtype_sets(S_RELS, O_RELS))
-	main_rtype = 'may_be_read_by'
-	subject_relations = S_RELS
-	object_relations = O_RELS
+        """propagate permissions when new entity are added"""
+        __regid__ = 'sytweb.addentity_security_propagation'
+        __select__ = (hook.PropagateRelationHook.__select__
+                      & hook.match_rtype_sets(S_RELS, O_RELS))
+        main_rtype = 'may_be_read_by'
+        subject_relations = S_RELS
+        object_relations = O_RELS
+
 
     class AddPermissionSecurityPropagationHook(hook.PropagateRelationAddHook):
-	"""propagate permissions when new entity are added"""
-	__regid__ = 'sytweb.addperm_security_propagation'
-	__select__ = (hook.PropagateRelationAddHook.__select__
-		      & hook.match_rtype('may_be_read_by',))
-	subject_relations = S_RELS
-	object_relations = O_RELS
+        """propagate permissions when new entity are added"""
+        __regid__ = 'sytweb.addperm_security_propagation'
+        __select__ = (hook.PropagateRelationAddHook.__select__
+                      & hook.match_rtype('may_be_read_by',))
+        subject_relations = S_RELS
+        object_relations = O_RELS
+
 
     class DelPermissionSecurityPropagationHook(hook.PropagateRelationDelHook):
-	__regid__ = 'sytweb.delperm_security_propagation'
-	__select__ = (hook.PropagateRelationDelHook.__select__
-		      & hook.match_rtype('may_be_read_by',))
-	subject_relations = S_RELS
-	object_relations = O_RELS
+        __regid__ = 'sytweb.delperm_security_propagation'
+        __select__ = (hook.PropagateRelationDelHook.__select__
+                      & hook.match_rtype('may_be_read_by',))
+        subject_relations = S_RELS
+        object_relations = O_RELS
 
 * the `AddEntitySecurityPropagationHook` will propagate the relation
   when `filed_under` or `comments` relations are added
@@ -323,6 +333,7 @@ model, in :file:`test/test_sytweb.py`:
 
     from cubicweb.devtools import testlib
     from cubicweb import Binary
+
 
     class SecurityTC(testlib.CubicWebTC):
 
@@ -378,6 +389,7 @@ model, in :file:`test/test_sytweb.py`:
                 # test security with permissions
                 self.assertEquals(2, len(cnx.execute('File X'))) # now toto has access to photo2
                 self.assertEquals(1, len(cnx.execute('Folder X'))) # and to restricted folder
+
 
     if __name__ == '__main__':
         from unittest import main
