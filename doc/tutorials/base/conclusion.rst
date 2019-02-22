@@ -15,4 +15,4 @@ into view writing and interface customisation... Yet a lot of fun stuff to
 discover! You will find more `tutorials and howtos`_ in the blog published on the
 CubicWeb.org website.
 
-.. _`tutorials and howtos`: http://www.cubicweb.org/view?rql=Any+X+ORDERBY+D+DESC+WHERE+X+is+BlogEntry%2C+T+tags+X%2C+T+name+IN+%28%22tutorial%22%2C+%22howto%22%29%2C+X+creation_date+D
+.. _`tutorials and howtos`: ../../tutorials
