@@ -47,6 +47,11 @@ h5 = tag('h5')
 tr = tag('tr')
 th = tag('th')
 td = tag('td')
+ul = tag('ul', escapecontent=False)
+ol = tag('ol', escapecontent=False)
+li = tag('li')
+i = tag('i')
+q = tag('q')
 iframe = tag('iframe')
 
 def select(name, id=None, multiple=False, options=[], **attrs):
