@@ -118,6 +118,7 @@ Developpers
     :glob:
 
     How to contribute to the code base <https://hg.logilab.org/master/cubicweb/file/tip/README#l39>
+    General contribution guide for cubes <https://www.logilab.org/Card/contributing>
     dev/*
 
 Indexes
