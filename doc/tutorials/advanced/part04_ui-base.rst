@@ -169,7 +169,7 @@ attribute (usually `modification_date`).
 
 To fix this, we've to help the ORM. We'll do this in the method from the `ITree`
 folder's adapter, used in the folder's primary view to display the folder's
-content. Here's the code, that I've put in our cube's `entities.py` file, since
+content. Here's the code, that I've put in our cube's :file:`entities.py` file, since
 it's more logical stuff than view stuff:
 
 .. sourcecode:: python
@@ -211,7 +211,7 @@ Now the easier parts. Let's start by adding some links on the file's primary vie
 to see the previous / next image in the same folder. CubicWeb's provide a
 component that do exactly that. To make it appears, one have to be adaptable to
 the `IPrevNext` interface. Here is the related code sample, extracted from our
-cube's `views.py` file:
+cube's :file:`views.py` file:
 
 .. sourcecode:: python
 
@@ -338,7 +338,7 @@ navigate through the web site to see if everything is ok...
 
 
 Once I've checked it's ok, I simply have to bump the version number in the
-`__pkginfo__` module to trigger a migration once I'll have updated the code on
+:file:`__pkginfo__` module to trigger a migration once I'll have updated the code on
 the production site. I can check then check the migration is also going fine, by
 first restoring a dump from the production site, then upgrading my test instance.
 
@@ -348,7 +348,7 @@ To generate a dump from the production site: ::
   pg_dump -Fc --username=syt --no-owner --file /home/syt/etc/cubicweb.d/sytweb/backup/tmpYIN0YI/system sytweb
   -> backup file /home/syt/etc/cubicweb.d/sytweb/backup/sytweb-2010-07-13_10-22-40.tar.gz
 
-I can now get back the dump file ('sytweb-2010-07-13_10-22-40.tar.gz') to my test
+I can now get back the dump file (:file:`sytweb-2010-07-13_10-22-40.tar.gz`) to my test
 machine (using `scp` for instance) to restore it and start migration: ::
 
   $ cubicweb-ctl db-restore sytweb sytweb-2010-07-13_10-22-40.tar.gz

@@ -55,7 +55,7 @@ the ``<body>`` has been written. How did I find this?  By looking in the
 :mod:`cubiweb.web.views.basetemplates` module, since I know that global page
 layouts sits there. I could also have grep the "body" tag in
 :mod:`cubicweb.web.views`... Finding this was the hardest part. Now all I need is
-to customize it to write that ``img`` tag, as below:
+to customize it to write that ``img`` tag, as below in :file:`views.py`:
 
 .. sourcecode:: python
 
@@ -175,7 +175,7 @@ the orange one:
 .. image:: ../../images/tutos-photowebsite_grey-box.png
 
 This is because CubicWeb's CSS include some variables which are
-expanded by values defined in uiprops file. In our case we controlled the
+expanded by values defined in :file:`uiprops.py` file. In our case we controlled the
 properties of the CSS `background` property of boxes with CSS class
 `contextualBoxTitleBg` and `incontextBoxTitleBg`.
 
