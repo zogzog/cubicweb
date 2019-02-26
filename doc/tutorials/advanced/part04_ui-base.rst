@@ -337,7 +337,7 @@ navigate through the web site to see if everything is ok...
 
    In the 'cubicweb-ctl i18ncube' command, `sytweb` refers to the **cube**, while
    in the two other, it refers to the **instance** (if you can't see the
-   difference, reread CubicWeb's concept chapter !).
+   difference, reread `CubicWeb's concept chapter <../../intro/concepts/>`_!).
 
 
 Once I've checked it's ok, I simply have to bump the version number in the
@@ -348,7 +348,10 @@ first restoring a dump from the production site, then upgrading my test instance
 To generate a dump from the production site: ::
 
   $ cubicweb-ctl db-dump sytweb_instance
+  # if it's postgresql
   pg_dump -Fc --username=syt --no-owner --file /home/syt/etc/cubicweb.d/sytweb/backup/tmpYIN0YI/system sytweb
+  # if it's sqlite
+  gzip -c /home/psycojoker/etc/cubicweb.d/sytweb_instance/sytweb_instance.sqlite
   -> backup file /home/syt/etc/cubicweb.d/sytweb/backup/sytweb-2010-07-13_10-22-40.tar.gz
 
 I can now get back the dump file (:file:`sytweb-2010-07-13_10-22-40.tar.gz`) to my test
