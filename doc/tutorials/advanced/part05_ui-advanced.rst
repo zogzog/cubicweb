@@ -62,6 +62,9 @@ to customize it to write that ``img`` tag, as below in :file:`views.py`:
 
 .. sourcecode:: python
 
+    from cubicweb.web.views import basetemplates
+
+
     class HTMLPageHeader(basetemplates.HTMLPageHeader):
         # override this since it's the easier way to have our bg image
         # as the first element following <body>
