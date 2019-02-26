@@ -363,7 +363,7 @@ machine (using `scp` for instance) to restore it and start migration: ::
 You'll have to answer some questions, as we've seen in `an earlier post`_.
 
 Now that everything is tested, I can transfer the new code to the production
-server, `apt-get upgrade` cubicweb and its dependencies, and eventually
+server, `pip install` CubicWeb and its dependencies, and eventually
 upgrade the production instance.
 
 
