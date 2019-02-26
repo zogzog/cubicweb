@@ -104,7 +104,7 @@ Here is the code, samples from my cube's :file:`views.py` file:
         vreg.register_and_replace(IndexView, startup.IndexView)
 
 As you can see, we override the default index view found in
-`cubicweb.web.views.startup`, geting back nothing but its identifier and selector
+`cubicweb.web.views.startup`, getting back nothing but its identifier and selector
 since we override the top level view's `call` method.
 
 .. Note::
@@ -115,7 +115,7 @@ since we override the top level view's `call` method.
   instead of the former index view.
 
 Also, we added a title that tries to make it more evident that the visitor is
-authenticated, or not. Hopefuly people will get it now!
+authenticated, or not. Hopefully people will get it now!
 
 
 .. figure:: ../../images/tutos-photowebsite_index-before.png
@@ -129,8 +129,8 @@ authenticated, or not. Hopefuly people will get it now!
    Our simpler, less intimidating, index page (still translated in french)
 
 
-Step 3: more navigation improvments
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3: more navigation improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are still a few problems I want to solve...
 
@@ -159,7 +159,7 @@ we can see:
 
 By default, `fetch_config` will return a `cw_fetch_order` method that will order
 on the first attribute in the list. So, we could expect to get files ordered by
-their name. But we don't.  What's up doc ?
+their name. But we don't. What's up doc?
 
 The problem is that files are related to folder using the `filed_under` relation.
 And that relation is ambiguous, eg it can lead to `File` entities, but also to
