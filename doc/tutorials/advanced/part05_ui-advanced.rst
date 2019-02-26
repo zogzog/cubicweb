@@ -218,6 +218,7 @@ the `Person displayed_on File` relation. We can do this simply by adding a
 
 .. sourcecode:: python
 
+    from cubicweb import _
     from logilab.common.decorators import monkeypatch
     from cubicweb import ValidationError
     from cubicweb.web.views import uicfg, component
