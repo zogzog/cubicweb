@@ -176,6 +176,7 @@ it's more logical stuff than view stuff:
 
     from cubes.folder import entities as folder
 
+
     class FolderITreeAdapter(folder.FolderITreeAdapter):
 
         def different_type_children(self, entities=True):
