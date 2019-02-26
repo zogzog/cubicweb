@@ -347,15 +347,15 @@ first restoring a dump from the production site, then upgrading my test instance
 
 To generate a dump from the production site: ::
 
-  $ cubicweb-ctl db-dump sytweb
+  $ cubicweb-ctl db-dump sytweb_instance
   pg_dump -Fc --username=syt --no-owner --file /home/syt/etc/cubicweb.d/sytweb/backup/tmpYIN0YI/system sytweb
   -> backup file /home/syt/etc/cubicweb.d/sytweb/backup/sytweb-2010-07-13_10-22-40.tar.gz
 
 I can now get back the dump file (:file:`sytweb-2010-07-13_10-22-40.tar.gz`) to my test
 machine (using `scp` for instance) to restore it and start migration: ::
 
-  $ cubicweb-ctl db-restore sytweb sytweb-2010-07-13_10-22-40.tar.gz
-  $ cubicweb-ctl upgrade sytweb
+  $ cubicweb-ctl db-restore sytweb_instance /path/path/to/sytweb-2010-07-13_10-22-40.tar.gz
+  $ cubicweb-ctl upgrade sytweb_instance
 
 You'll have to answer some questions, as we've seen in `an earlier post`_.
 
