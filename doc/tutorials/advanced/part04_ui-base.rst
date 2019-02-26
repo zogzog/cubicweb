@@ -370,4 +370,4 @@ upgrade the production instance.
 .. _`several improvments`: http://www.cubicweb.org/blogentry/1179899
 .. _`3.8`: http://www.cubicweb.org/blogentry/917107
 .. _`first blog of this series`: http://www.cubicweb.org/blogentry/824642
-.. _`an earlier post`: http://www.cubicweb.org/867464
+.. _`a previous part`: TutosPhotoWebSiteSecurity
