@@ -27,6 +27,9 @@ the cube's :file:`uiprops.py` file:
 
    LOGO = data('logo.jpg')
 
+.. Note::
+   If the file :file:`uiprops.py` doesn't exist in your cube, simply create it.
+
 The uiprops machinery is used to define some static file resources,
 such as the logo, default Javascript / CSS files, as well as CSS
 properties (we'll see that later).
