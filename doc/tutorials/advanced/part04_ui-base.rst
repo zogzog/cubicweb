@@ -360,7 +360,7 @@ machine (using `scp` for instance) to restore it and start migration: ::
   $ cubicweb-ctl db-restore sytweb_instance /path/path/to/sytweb-2010-07-13_10-22-40.tar.gz
   $ cubicweb-ctl upgrade sytweb_instance
 
-You'll have to answer some questions, as we've seen in `an earlier post`_.
+You might have to answer some questions, as we've seen in `a previous part`_.
 
 Now that everything is tested, I can transfer the new code to the production
 server, `pip install` CubicWeb and its dependencies, and eventually
