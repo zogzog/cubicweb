@@ -60,17 +60,17 @@ to customize it to write that ``img`` tag, as below:
 .. sourcecode:: python
 
     class HTMLPageHeader(basetemplates.HTMLPageHeader):
-	# override this since it's the easier way to have our bg image
-	# as the first element following <body>
-	def call(self, **kwargs):
+        # override this since it's the easier way to have our bg image
+        # as the first element following <body>
+        def call(self, **kwargs):
             self.w(u'<img id="bg-image" src="%sbackground.jpg" alt="background image"/>'
                    % self._cw.datadir_url)
-	    super(HTMLPageHeader, self).call(**kwargs)
+            super(HTMLPageHeader, self).call(**kwargs)
 
 
     def registration_callback(vreg):
-	vreg.register_all(globals().values(), __name__, (HTMLPageHeader))
-	vreg.register_and_replace(HTMLPageHeader, basetemplates.HTMLPageHeader)
+        vreg.register_all(globals().values(), __name__, (HTMLPageHeader))
+        vreg.register_and_replace(HTMLPageHeader, basetemplates.HTMLPageHeader)
 
 
 As you may have guessed, my background image is in a :file:`background.jpg` file
@@ -104,30 +104,30 @@ file, stored as usual in our :file:`data` directory:
      * avoid pb with the user actions menu
      */
     img#bg-image {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	z-index: 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
     }
 
     div#page, table#header, div#footer {
-	background: transparent;
-	position: relative;
+        background: transparent;
+        position: relative;
     }
 
     /* add some space around the logo
      */
     img#logo {
-	padding: 5px 15px 0px 15px;
+        padding: 5px 15px 0px 15px;
     }
 
     /* more dark font for metadata to have a chance to see them with the background
      *  image
      */
     div.metadata {
-	color: black;
+        color: black;
     }
 
 You can see here stuff explained in the cited page, with only a slight modification
@@ -193,6 +193,7 @@ user interface tweaks in our :file:`views.py` file:
   from cubes.zone import views as zone
   from cubes.tag import views as tag
 
+
   # change bookmarks box selector so it's only displayed on startup views
   bookmark.BookmarksBox.__select__ = bookmark.BookmarksBox.__select__ & none_rset()
   # move zone box to the left instead of in the context frame and tweak its order
@@ -216,62 +217,65 @@ the `Person displayed_on File` relation. We can do this simply by adding a
     from cubicweb.web.views import uicfg, component
     from cubicweb.web.views import basecontrollers
 
+
     # hide displayed_on relation using uicfg since it will be displayed by the box below
     uicfg.primaryview_section.tag_object_of(('*', 'displayed_on', '*'), 'hidden')
 
+
     class PersonBox(component.AjaxEditRelationCtxComponent):
-	__regid__ = 'sytweb.displayed-on-box'
-	# box position
-	order = 101
-	context = 'left'
-	# define relation to be handled
-	rtype = 'displayed_on'
-	role = 'object'
-	target_etype = 'Person'
-	# messages
-	added_msg = _('person has been added')
-	removed_msg = _('person has been removed')
-	# bind to js_* methods of the json controller
-	fname_vocabulary = 'unrelated_persons'
-	fname_validate = 'link_to_person'
-	fname_remove = 'unlink_person'
+        __regid__ = 'sytweb.displayed-on-box'
+        # box position
+        order = 101
+        context = 'left'
+        # define relation to be handled
+        rtype = 'displayed_on'
+        role = 'object'
+        target_etype = 'Person'
+        # messages
+        added_msg = _('person has been added')
+        removed_msg = _('person has been removed')
+        # bind to js_* methods of the json controller
+        fname_vocabulary = 'unrelated_persons'
+        fname_validate = 'link_to_person'
+        fname_remove = 'unlink_person'
 
 
     @monkeypatch(basecontrollers.JSonController)
     @basecontrollers.jsonize
     def js_unrelated_persons(self, eid):
-	"""return tag unrelated to an entity"""
-	rql = "Any F + ' ' + S WHERE P surname S, P firstname F, X eid %(x)s, NOT P displayed_on X"
-	return [name for (name,) in self._cw.execute(rql, {'x' : eid})]
+        """return tag unrelated to an entity"""
+        rql = "Any F + ' ' + S WHERE P surname S, P firstname F, X eid %(x)s, NOT P displayed_on X"
+        return [name for (name,) in self._cw.execute(rql, {'x' : eid})]
 
 
     @monkeypatch(basecontrollers.JSonController)
     def js_link_to_person(self, eid, people):
-	req = self._cw
-	for name in people:
-	    name = name.strip().title()
-	    if not name:
-		continue
-	    try:
-		firstname, surname = name.split(None, 1)
-	    except:
-		raise ValidationError(eid, {('displayed_on', 'object'): 'provide <first name> <surname>'})
-	    rset = req.execute('Person P WHERE '
-			       'P firstname %(firstname)s, P surname %(surname)s',
-			       locals())
-	    if rset:
-		person = rset.get_entity(0, 0)
-	    else:
-		person = req.create_entity('Person', firstname=firstname,
-						surname=surname)
-	    req.execute('SET P displayed_on X WHERE '
-			'P eid %(p)s, X eid %(x)s, NOT P displayed_on X',
-			{'p': person.eid, 'x' : eid})
+        req = self._cw
+        for name in people:
+            name = name.strip().title()
+            if not name:
+                continue
+            try:
+                firstname, surname = name.split(None, 1)
+            except:
+                raise ValidationError(eid, {('displayed_on', 'object'): 'provide <first name> <surname>'})
+            rset = req.execute('Person P WHERE '
+                               'P firstname %(firstname)s, P surname %(surname)s',
+                               locals())
+            if rset:
+                person = rset.get_entity(0, 0)
+            else:
+                person = req.create_entity('Person', firstname=firstname,
+                                                surname=surname)
+            req.execute('SET P displayed_on X WHERE '
+                        'P eid %(p)s, X eid %(x)s, NOT P displayed_on X',
+                        {'p': person.eid, 'x' : eid})
+
 
     @monkeypatch(basecontrollers.JSonController)
     def js_unlink_person(self, eid, personeid):
-	self._cw.execute('DELETE P displayed_on X WHERE P eid %(p)s, X eid %(x)s',
-			 {'p': personeid, 'x': eid})
+        self._cw.execute('DELETE P displayed_on X WHERE P eid %(p)s, X eid %(x)s',
+                         {'p': personeid, 'x': eid})
 
 
 You basically subclass to configure with some class attributes. The `fname_*`
@@ -327,13 +331,14 @@ attributes as we've done for the box. In our case, we'll define a subclass of
 
     from cubicweb.web import facet
 
+
     class DisplayedOnFacet(facet.RelationFacet):
-	__regid__ = 'displayed_on-facet'
-	# relation to be displayed
-	rtype = 'displayed_on'
-	role = 'object'
-	# view to use to display persons
-	label_vid = 'combobox'
+        __regid__ = 'displayed_on-facet'
+        # relation to be displayed
+        rtype = 'displayed_on'
+        role = 'object'
+        # view to use to display persons
+        label_vid = 'combobox'
 
 Let's say we also want to filter according to the `visibility` attribute. This is
 even simpler as we just have to derive from the :class:`AttributeFacet` class:
@@ -341,8 +346,8 @@ even simpler as we just have to derive from the :class:`AttributeFacet` class:
 .. sourcecode:: python
 
     class VisibilityFacet(facet.AttributeFacet):
-	__regid__ = 'visibility-facet'
-	rtype = 'visibility'
+        __regid__ = 'visibility-facet'
+        rtype = 'visibility'
 
 Now if I search for some pictures on my site, I get the following facets available:
 
