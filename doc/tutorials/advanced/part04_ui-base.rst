@@ -183,9 +183,12 @@ it's more logical stuff than view stuff:
             rql = self.entity.cw_related_rql(self.tree_relation,
                                              self.parent_role, ('File',))
             rset = self._cw.execute(rql, {'x': self.entity.eid})
+
             if entities:
                 return list(rset.entities())
+
             return rset
+
 
     def registration_callback(vreg):
         vreg.register_and_replace(FolderITreeAdapter, folder.FolderITreeAdapter)
