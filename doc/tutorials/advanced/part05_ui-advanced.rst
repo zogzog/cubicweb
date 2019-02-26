@@ -94,7 +94,7 @@ to newcomers here:
   attribute of the incoming request (e.g. `self._cw`).
 
 I won't explain again the :func:`registration_callback` stuff, you should understand it
-now!  If not, go back to previous posts in the series :)
+now!  If not, go back to `previous post in the series`_ :)
 
 Fine. Now all I've to do is to add a bit of CSS to get it to behave nicely (which
 is not the case at all for now). I'll put all this in a :file:`cubes.sytweb.css`
@@ -383,3 +383,4 @@ friends...
 
 .. _`CubicWeb 3.10`: http://www.cubicweb.org/blogentry/1330518
 .. _`here`: http://webdesign.about.com/od/css3/f/blfaqbgsize.htm
+.. _`previous post in the series`: part04_ui-base.rst
