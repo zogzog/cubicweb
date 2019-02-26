@@ -251,7 +251,7 @@ ascendant/descendant ordering and a strict comparison with current file's name
 
 Notice that this query supposes we wont have two files of the same name in the
 same folder, else things may go wrong. Fixing this is out of the scope of this
-blog. And as I would like to have at some point a smarter, context sensitive
+tutorial. And as I would like to have at some point a smarter, context sensitive
 previous/next entity, I'll probably never fix this query (though if I had to, I
 would probably choosing to add a constraint in the schema so that we can't add
 two files of the same name in a folder).
