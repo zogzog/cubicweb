@@ -28,7 +28,7 @@ For advanced features, have a look to:
 Cubicweb resources configuration
 --------------------------------
 
-.. autodocstring:: cubicweb.cwconfig
+.. automodule:: cubicweb.cwconfig
 
 
 .. _DatabaseInstallation:

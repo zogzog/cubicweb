@@ -25,6 +25,7 @@ pyramid >= 1.5.0
 waitress >= 0.8.9
 wsgicors >= 0.3
 pyramid_multiauth
+repoze.lru
 
 ## cubicweb/sobject/test
 cubicweb-comment == 1.12.2

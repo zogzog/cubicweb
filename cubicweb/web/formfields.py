@@ -1074,10 +1074,10 @@ class RelationField(Field):
     :class:`~cubicweb.web.formwidgets.Select`.
     """
 
-    @staticmethod
-    def fromcardinality(card, **kwargs):
+    @classmethod
+    def fromcardinality(cls, card, **kwargs):
         kwargs.setdefault('widget', fw.Select(multiple=card in '*+'))
-        return RelationField(**kwargs)
+        return cls(**kwargs)
 
     def choices(self, form, limit=None):
         """Take care, choices function for relation field instance should take
@@ -1267,7 +1267,9 @@ def guess_field(eschema, rschema, role='subject', req=None, **kwargs):
                 if isinstance(cstr, SizeConstraint) and cstr.max is not None:
                     kwargs['max_length'] = cstr.max
         return fieldclass(**kwargs)
-    return RelationField.fromcardinality(card, **kwargs)
+    else:
+        fieldclass = kwargs.pop('fieldclass', RelationField)
+        return fieldclass.fromcardinality(card, **kwargs)
 
 
 FIELDS = {

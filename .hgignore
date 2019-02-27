@@ -32,3 +32,4 @@ syntax: regexp
 ^doc/_build
 ^doc/js_api/
 test-results.xml
+ve

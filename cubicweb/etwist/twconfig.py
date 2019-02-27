@@ -76,7 +76,7 @@ class WebConfigurationBase(WebConfiguration):
         ('uid',
          {'type' : 'string',
           'default': None,
-          'help': 'if this option is set, use the specified user to start \
+          'help': 'unix user, if this option is set, use the specified user to start \
 the repository rather than the user running the command',
           'group': 'main', 'level': WebConfiguration.mode == 'system'
           }),
