@@ -67,7 +67,8 @@ to ``migration/postcreate.py``:
 
 .. sourcecode:: python
 
-  _ = unicode
+  from cubicweb import _
+
 
   moderators = add_entity('CWGroup', name=u"moderators")
 
