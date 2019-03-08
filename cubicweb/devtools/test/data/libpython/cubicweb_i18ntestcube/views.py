@@ -24,7 +24,7 @@ from cubicweb.web.views.uicfg import autoform_section as afs
 class MyAFS(uicfg.AutoformSectionRelationTags):
     __select__ = is_instance('ForumThread')
 
-_myafs = MyAFS()
+_myafs = MyAFS(__module__=__name__)
 
 _myafs.tag_object_of(('*', 'in_forum', 'Forum'), 'main', 'inlined')
 
