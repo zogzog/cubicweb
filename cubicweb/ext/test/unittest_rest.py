@@ -89,7 +89,7 @@ class RestTC(CubicWebTC):
             context = self.context(req)
             out = rest_publish(context, ':rql:`Any X WHERE X is CWUser:toto`')
             self.assertTrue(out.startswith("<p>an error occurred while interpreting this "
-                                           "rql directive: ObjectNotFound(%s'toto',)</p>" %
+                                           "rql directive: ObjectNotFound(%s'toto'" %
                                            ('' if PY3 else 'u')),
                             out)
 
