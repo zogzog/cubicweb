@@ -22,6 +22,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb.ext.rest import rest_publish
 
+
 class RestTC(CubicWebTC):
 
     def context(self, req):
@@ -31,10 +32,12 @@ class RestTC(CubicWebTC):
         with self.admin_access.web_request() as req:
             context = self.context(req)
             self.assertEqual(rest_publish(context, ':eid:`%s`' % context.eid),
-                             '<p><a class="reference" href="http://testing.fr/cubicweb/cwuser/admin">'
+                             '<p><a class="reference"'
+                             ' href="http://testing.fr/cubicweb/cwuser/admin">'
                              '#%s</a></p>\n' % context.eid)
             self.assertEqual(rest_publish(context, ':eid:`%s:some text`' % context.eid),
-                             '<p><a class="reference" href="http://testing.fr/cubicweb/cwuser/admin">'
+                             '<p><a class="reference"'
+                             ' href="http://testing.fr/cubicweb/cwuser/admin">'
                              'some text</a></p>\n')
 
     def test_bad_rest_no_crash(self):
@@ -72,7 +75,8 @@ class RestTC(CubicWebTC):
     def test_rql_role_with_vid(self):
         with self.admin_access.web_request() as req:
             context = self.context(req)
-            out = rest_publish(context, ':rql:`Any X ORDERBY XL WHERE X is CWUser, X login XL:table`')
+            out = rest_publish(context,
+                               ':rql:`Any X ORDERBY XL WHERE X is CWUser, X login XL:table`')
             self.assertTrue(out.endswith('<a href="http://testing.fr/cubicweb/cwuser/anon" '
                                          'title="">anon</a></td></tr>\n</tbody></table>'
                                          '</div></p>\n'))
@@ -122,7 +126,7 @@ class RestTC(CubicWebTC):
             out = rest_publish(context, """.. rql-table::""")
             self.assertIn("System Message: ERROR", out)
             self.assertIn("Content block expected for the &quot;rql-table&quot; "
-                          "directive; none found" , out)
+                          "directive; none found", out)
 
     def test_rqltable_norset(self):
         with self.admin_access.web_request() as req:
@@ -231,10 +235,11 @@ class RestTC(CubicWebTC):
    :colvids: %(colvids)s
 
    %(rql)s
-                """ % {'rql': rql,
-                       'colvids': ', '.join(["%d=%s" % (k, v)
-                                             for k, v in colvids.items()])
-                   })
+                """
+                % {'rql': rql,
+                   'colvids': ', '.join(["%d=%s" % (k, v)
+                                         for k, v in colvids.items()])}
+            )
             view = self.vreg['views'].select('table', req, rset=req.execute(rql))
             view.cellvids = colvids
             self.assertEqual(view.render(w=None)[49:], out[49:])

@@ -28,6 +28,7 @@ cubicweb/etwist/__init__.py
 cubicweb/etwist/request.py
 cubicweb/etwist/service.py
 cubicweb/ext/__init__.py
+cubicweb/ext/test/unittest_rest.py
 cubicweb/hooks/synccomputed.py
 cubicweb/hooks/syncsources.py
 cubicweb/hooks/test/data/hooks.py
