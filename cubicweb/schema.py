@@ -1177,14 +1177,13 @@ class CubicWebSchema(Schema):
 
 # additional cw specific constraints ###########################################
 
-@monkeypatch(BaseConstraint)
-def name_for(self, rdef):
+def constraint_name_for(constraint, rdef):
     """Return a unique, size controlled, name for this constraint applied to given `rdef`.
 
     This name may be used as name for the constraint in the database.
     """
-    return 'cstr' + md5((rdef.subject.type + rdef.rtype.type + self.type()
-                         + (self.serialize() or '')).encode('ascii')).hexdigest()
+    return 'cstr' + md5((rdef.subject.type + rdef.rtype.type + constraint.type()
+                         + (constraint.serialize() or '')).encode('ascii')).hexdigest()
 
 
 class BaseRQLConstraint(RRQLExpression, BaseConstraint):

@@ -27,6 +27,8 @@ from yams.constraints import (SizeConstraint, UniqueConstraint, Attribute,
 from logilab import database
 from logilab.common.decorators import monkeypatch
 
+from cubicweb.schema import constraint_name_for
+
 # default are usually not handled at the sql level. If you want them, set
 # SET_DEFAULT to True
 SET_DEFAULT = False
@@ -187,7 +189,7 @@ def check_constraint(rdef, constraint, dbhelper, prefix=''):
     constraint. Maybe (None, None) if the constraint is not handled in the backend.
     """
     attr = rdef.rtype.type
-    cstrname = constraint.name_for(rdef)
+    cstrname = constraint_name_for(constraint, rdef)
     if constraint.type() == 'BoundaryConstraint':
         value = constraint_value_as_sql(constraint.boundary, dbhelper, prefix)
         return cstrname, '%s%s %s %s' % (prefix, attr, constraint.operator, value)

@@ -27,6 +27,7 @@ from logilab.common.decorators import cached
 
 from cubicweb import (Unauthorized, ValidationError, view, ViolatedConstraint,
                       UniqueTogetherError)
+from cubicweb.schema import constraint_name_for
 from cubicweb.predicates import is_instance, relation_possible, match_exception
 
 
@@ -474,7 +475,7 @@ class IUserFriendlyCheckConstraint(IUserFriendlyError):
         for rschema, attrschema in eschema.attribute_definitions():
             rdef = rschema.rdef(eschema, attrschema)
             for constraint in rdef.constraints:
-                if cstrname == constraint.name_for(rdef):
+                if cstrname == constraint_name_for(constraint, rdef):
                     break
             else:
                 continue

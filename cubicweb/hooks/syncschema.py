@@ -37,6 +37,7 @@ from cubicweb import validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
                              CONSTRAINTS, UNIQUE_CONSTRAINTS, ETYPE_NAME_MAP)
+from cubicweb.schema import constraint_name_for
 from cubicweb.server import hook, schemaserial as ss, schema2sql as y2sql
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.hooks.synccomputed import RecomputeAttributeOperation
@@ -758,7 +759,7 @@ class CWConstraintDelOp(MemSchemaOperation):
                           'IntervalBoundConstraint',
                           'StaticVocabularyConstraint'):
             cnx.system_sql('ALTER TABLE %s%s DROP CONSTRAINT %s'
-                           % (SQL_PREFIX, rdef.subject, self.oldcstr.name_for(rdef)))
+                           % (SQL_PREFIX, rdef.subject, constraint_name_for(self.oldcstr, rdef)))
 
     def revertprecommit_event(self):
         # revert changes on in memory schema
@@ -812,7 +813,7 @@ class CWConstraintAddOp(hook.LateOperation, CWConstraintDelOp):
             # oldcstr is the new constraint when the attribute is being added in the same
             # transaction or when constraint value is updated. So we've to take care...
             if oldcstr is not None:
-                oldcstrname = self.oldcstr.name_for(rdef)
+                oldcstrname = constraint_name_for(self.oldcstr, rdef)
                 if oldcstrname != cstrname:
                     cnx.system_sql('ALTER TABLE %s%s DROP CONSTRAINT %s'
                                    % (SQL_PREFIX, rdef.subject, oldcstrname))

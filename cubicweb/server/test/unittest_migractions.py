@@ -31,6 +31,7 @@ from cubicweb import (ConfigurationError, ValidationError,
                       ExecutionError, Binary)
 from cubicweb.devtools import startpgcluster, stoppgcluster
 from cubicweb.devtools.testlib import CubicWebTC, TemporaryDirectory
+from cubicweb.schema import constraint_name_for
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import ServerMigrationHelper
 from cubicweb.server.sources import storages
@@ -616,7 +617,7 @@ class MigrationCommandsTC(MigrationTC):
             self.assertEqual(len(constraints), 1, constraints)
             rdef = migrschema['promo'].rdefs['Personne', 'String']
             cstr = rdef.constraint_by_type('StaticVocabularyConstraint')
-            self.assertIn(cstr.name_for(rdef), constraints)
+            self.assertIn(constraint_name_for(cstr, rdef), constraints)
 
     def _erqlexpr_rset(self, cnx, action, ertype):
         rql = 'RQLExpression X WHERE ET is CWEType, ET %s_permission X, ET name %%(name)s' % action
