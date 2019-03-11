@@ -4,6 +4,6 @@ ldap3 < 2
 cubicweb-basket
 cubicweb-card
 cubicweb-comment
-cubicweb-file
+cubicweb-file >= 2.2.2
 cubicweb-localperms
 cubicweb-tag

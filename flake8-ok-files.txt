@@ -13,6 +13,7 @@ cubicweb/dataimport/test/test_sqlgenstore.py
 cubicweb/dataimport/test/test_stores.py
 cubicweb/dataimport/test/unittest_importer.py
 cubicweb/devtools/test/data/cubes/i18ntestcube/__init__.py
+cubicweb/devtools/test/data/cubes/i18ntestcube/views.py
 cubicweb/devtools/test/data/cubes/__init__.py
 cubicweb/devtools/test/data/schema.py
 cubicweb/devtools/testlib.py
@@ -27,6 +28,7 @@ cubicweb/etwist/__init__.py
 cubicweb/etwist/request.py
 cubicweb/etwist/service.py
 cubicweb/ext/__init__.py
+cubicweb/ext/test/unittest_rest.py
 cubicweb/hooks/synccomputed.py
 cubicweb/hooks/syncsources.py
 cubicweb/hooks/test/data/hooks.py

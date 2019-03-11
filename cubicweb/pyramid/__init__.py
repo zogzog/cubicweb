@@ -24,17 +24,13 @@ import atexit
 import os
 import warnings
 
+from six.moves.configparser import SafeConfigParser
 import wsgicors
 
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from pyramid.config import Configurator
 from pyramid.exceptions import ConfigurationError
 from pyramid.settings import asbool, aslist
-
-try:
-    from configparser import SafeConfigParser
-except ImportError:
-    from ConfigParser import SafeConfigParser
 
 
 def config_from_cwconfig(cwconfig, settings=None):

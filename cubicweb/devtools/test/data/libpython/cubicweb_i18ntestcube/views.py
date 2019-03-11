@@ -21,10 +21,12 @@ from cubicweb.predicates import is_instance
 from cubicweb.web.views import primary, baseviews, uicfg
 from cubicweb.web.views.uicfg import autoform_section as afs
 
+
 class MyAFS(uicfg.AutoformSectionRelationTags):
     __select__ = is_instance('ForumThread')
 
-_myafs = MyAFS()
+
+_myafs = MyAFS(__module__=__name__)
 
 _myafs.tag_object_of(('*', 'in_forum', 'Forum'), 'main', 'inlined')
 
@@ -56,6 +58,7 @@ class ForumPrimaryView(primary.PrimaryView):
         _('Subject'), _('Created'), _('Answers'),
         _('Last answered')
         _('This forum does not have any thread yet.')
+
 
 class ForumThreadPrimaryView(primary.PrimaryView):
     __select__ = primary.PrimaryView.__select__ & is_instance('ForumThread')
