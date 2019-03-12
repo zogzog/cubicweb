@@ -480,10 +480,8 @@ class QuerierHelper(object):
     def set_schema(self, schema):
         self.schema = schema
         self.clear_caches()
-        rqlhelper = self._repo.vreg.rqlhelper
-        self._annotate = rqlhelper.annotate
         # rql planner
-        self._planner = SSPlanner(schema, rqlhelper)
+        self._planner = SSPlanner(schema, self._repo.vreg.rqlhelper)
         # sql generation annotator
         self.sqlgen_annotate = SQLGenAnnotator(schema).annotate
 
@@ -549,7 +547,7 @@ class QuerierHelper(object):
             # Rewrite computed relations
             rewriter = RQLRelationRewriter(cnx)
             rewriter.rewrite(rqlst, args)
-            self._annotate(rqlst)
+            self._repo.vreg.rqlhelper.annotate(rqlst)
             if args:
                 # different SQL generated when some argument is None or not (IS
                 # NULL). This should be considered when computing sql cache key

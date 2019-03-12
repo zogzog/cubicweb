@@ -523,9 +523,8 @@ class SecurityTC(BaseSecurityTC):
             with self.new_access(u'iaminusersgrouponly').repo_cnx() as cnx:
                 rqlst = self.repo.vreg.rqlhelper.parse('Any X WHERE X is_instance_of Societe')
                 self.repo.vreg.solutions(cnx, rqlst, {})
-                querier = cnx.repo.querier
-                querier._annotate(rqlst)
-                plan = querier.plan_factory(rqlst, {}, cnx)
+                self.repo.vreg.rqlhelper.annotate(rqlst)
+                plan = cnx.repo.querier.plan_factory(rqlst, {}, cnx)
                 plan.preprocess(rqlst)
                 self.assertEqual(
                     rqlst.as_string(),
