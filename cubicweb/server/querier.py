@@ -171,10 +171,6 @@ class ExecutionPlan(object):
         # tracing token for debugging
         self.rql_query_tracing_token = None
 
-    def annotate_rqlst(self):
-        if not self.rqlst.annotated:
-            self.rqlhelper.annotate(self.rqlst)
-
     def add_step(self, step):
         """add a step to the plan"""
         self.steps.append(step)
