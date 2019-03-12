@@ -167,7 +167,6 @@ class ExecutionPlan(object):
         # various resource accesors
         self.querier = querier
         self.schema = querier.schema
-        self.sqlannotate = querier.sqlgen_annotate
         self.rqlhelper = cnx.vreg.rqlhelper
 
     def annotate_rqlst(self):
@@ -219,7 +218,7 @@ class ExecutionPlan(object):
             noinvariant = ()
         if cached is None:
             self.rqlhelper.simplify(union)
-            self.sqlannotate(union)
+            self.querier.sqlgen_annotate(union)
             set_qdata(self.schema.rschema, union, noinvariant)
         if union.has_text_query:
             self.cache_key = None
