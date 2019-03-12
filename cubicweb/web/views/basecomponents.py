@@ -26,12 +26,9 @@ from cubicweb import _
 from logilab.mtconverter import xml_escape
 from logilab.common.registry import yes
 from logilab.common.deprecation import class_renamed
-from rql import parse
 
-from cubicweb.predicates import (match_form_params, match_context,
-                                 multi_etypes_rset, configuration_values,
+from cubicweb.predicates import (match_context, configuration_values,
                                  anonymous_user, authenticated_user)
-from cubicweb.schema import display_name
 from cubicweb.utils import wrap_on_write
 from cubicweb.uilib import toggle_action
 from cubicweb.web import component
