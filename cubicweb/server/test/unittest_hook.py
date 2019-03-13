@@ -63,9 +63,11 @@ class HookCalled(Exception):
     pass
 
 
-config = devtools.TestServerConfiguration('data', __file__)
-config.bootstrap_cubes()
-schema = config.load_schema()
+def setUpModule():
+    global config, schema
+    config = devtools.TestServerConfiguration('data', __file__)
+    config.bootstrap_cubes()
+    schema = config.load_schema()
 
 def tearDownModule(*args):
     global config, schema
