@@ -128,12 +128,9 @@ class CubicWebConfigurationTC(BaseTestCase):
             'cubicweb_file', 'cubicweb_forge', 'localperms',
             'cubicweb_mycube', 'tag',
         ]
-        self._test_available_cubes(expected_cubes)
+        self.assertEqual(self.config.available_cubes(), expected_cubes)
         mock_iter_entry_points.assert_called_once_with(
             group='cubicweb.cubes', name=None)
-
-    def _test_available_cubes(self, expected_cubes):
-        self.assertEqual(self.config.available_cubes(), expected_cubes)
 
     def test_reorder_cubes(self):
         # forge depends on email and file and comment
@@ -218,7 +215,7 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
             # test dependencies
             'card', 'file', 'localperms', 'tag',
         ]))
-        self._test_available_cubes(expected_cubes)
+        self.assertEqual(self.config.available_cubes(), expected_cubes)
 
     def test_reorder_cubes_recommends(self):
         from cubes.comment import __pkginfo__ as comment_pkginfo
