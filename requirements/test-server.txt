@@ -1,5 +1,5 @@
 mock
-psycopg2
+psycopg2-binary
 ldap3 < 2
 cubicweb-basket
 cubicweb-card
