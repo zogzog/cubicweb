@@ -26,131 +26,6 @@ from rql.nodes import Relation, VariableRef, Constant, Variable, Or
 from rql.utils import common_parent
 
 
-def _annotate_select(annotator, rqlst):
-    has_text_query = False
-    for subquery in rqlst.with_:
-        if annotator._annotate_union(subquery.query):
-            has_text_query = True
-    getrschema = annotator.schema.rschema
-    for var in rqlst.defined_vars.values():
-        stinfo = var.stinfo
-        if stinfo.get('ftirels'):
-            has_text_query = True
-        if stinfo['attrvar']:
-            stinfo['invariant'] = False
-            stinfo['principal'] = _select_main_var(stinfo['rhsrelations'])
-            continue
-        if stinfo['typerel'] is None:
-            # those particular queries should be executed using the system
-            # entities table unless there is some type restriction
-            if not stinfo['relations']:
-                # Any X, Any MAX(X)...
-                stinfo['invariant'] = True
-                stinfo['principal'] = None
-                continue
-            if (any(rel for rel in stinfo['relations']
-                    if rel.r_type == 'eid' and rel.operator() != '=')
-                    and not any(r for r in var.stinfo['relations'] - var.stinfo['rhsrelations']
-                                if r.r_type != 'eid'
-                                and (getrschema(r.r_type).inlined or getrschema(r.r_type).final))):
-                # Any X WHERE X eid > 2
-                stinfo['invariant'] = True
-                stinfo['principal'] = None
-                continue
-        if stinfo['selected'] and var.valuable_references() == 1 + bool(stinfo['constnode']):
-            # "Any X", "Any X, Y WHERE X attr Y"
-            stinfo['invariant'] = False
-            continue
-        joins = set()
-        invariant = False
-        for ref in var.references():
-            rel = ref.relation()
-            if rel is None or rel.is_types_restriction():
-                continue
-            lhs, rhs = rel.get_parts()
-            onlhs = ref is lhs
-            role = 'subject' if onlhs else 'object'
-            if rel.r_type == 'eid':
-                if not (onlhs and len(stinfo['relations']) > 1):
-                    break
-                if not stinfo['constnode']:
-                    joins.add((rel, role))
-                continue
-            elif rel.r_type == 'identity':
-                # identity can't be used as principal, so check other relation are used
-                # XXX explain rhs.operator == '='
-                if rhs.operator != '=' or len(stinfo['relations']) <= 1:
-                    break
-                joins.add((rel, role))
-                continue
-            rschema = getrschema(rel.r_type)
-            if rel.optional:
-                if rel in stinfo.get('optrelations', ()):
-                    # optional variable can't be invariant if this is the lhs
-                    # variable of an inlined relation
-                    if rel not in stinfo['rhsrelations'] and rschema.inlined:
-                        break
-                # variable used as main variable of an optional relation can't
-                # be invariant, unless we can use some other relation as
-                # reference for the outer join
-                elif not stinfo['constnode']:
-                    break
-                elif len(stinfo['relations']) == 2:
-                    if onlhs:
-                        ostinfo = rhs.children[0].variable.stinfo
-                    else:
-                        ostinfo = lhs.variable.stinfo
-                    if not (ostinfo.get('optcomparisons')
-                            or any(orel for orel in ostinfo['relations']
-                                   if orel.optional and orel is not rel)):
-                        break
-            if rschema.final or (onlhs and rschema.inlined):
-                if rschema.type != 'has_text':
-                    # need join anyway if the variable appears in a final or
-                    # inlined relation
-                    break
-                joins.add((rel, role))
-                continue
-            if not stinfo['constnode']:
-                if rschema.inlined and rel.neged(strict=True):
-                    # if relation is inlined, can't be invariant if that
-                    # variable is used anywhere else.
-                    # see 'Any P WHERE NOT N ecrit_par P, N eid 512':
-                    # sql for 'NOT N ecrit_par P' is 'N.ecrit_par is NULL' so P
-                    # can use N.ecrit_par as principal
-                    if (stinfo['selected'] or len(stinfo['relations']) > 1):
-                        break
-            joins.add((rel, role))
-        else:
-            # if there is at least one ambigous relation and no other to
-            # restrict types, can't be invariant since we need to filter out
-            # other types
-            if not annotator.is_ambiguous(var):
-                invariant = True
-        stinfo['invariant'] = invariant
-        if invariant and joins:
-            # remember rqlst/solutions analyze information
-            # we have to select a kindof "main" relation which will "extrajoins"
-            # the other
-            # priority should be given to relation which are not in inner queries
-            # (eg exists)
-            try:
-                stinfo['principal'] = principal = _select_principal(var.scope, joins)
-                if getrschema(principal.r_type).inlined:
-                    # the scope of the lhs variable must be equal or outer to the
-                    # rhs variable's scope (since it's retrieved from lhs's table)
-                    sstinfo = principal.children[0].variable.stinfo
-                    sstinfo['scope'] = common_parent(sstinfo['scope'], stinfo['scope']).scope
-            except CantSelectPrincipal:
-                stinfo['invariant'] = False
-    # see unittest_rqlannotation. test_has_text_security_cache_bug
-    # XXX probably more to do, but yet that work without more...
-    for col_alias in rqlst.aliases.values():
-        if col_alias.stinfo.get('ftirels'):
-            has_text_query = True
-    return has_text_query
-
-
 class CantSelectPrincipal(Exception):
     """raised when no 'principal' variable can be found"""
 
@@ -245,6 +120,7 @@ def set_qdata(getrschema, union, noinvariant):
 
 
 class SQLGenAnnotator(object):
+
     def __init__(self, schema):
         self.schema = schema
         self.nfdomain = frozenset(eschema.type for eschema in schema.entities()
@@ -255,8 +131,8 @@ class SQLGenAnnotator(object):
         job (read sql generation)
 
         a variable is tagged as invariant if:
-        * it's a non final variable
-        * it's not used as lhs in any final or inlined relation
+        * it is a non final variable
+        * it is not used as lhs in any final or inlined relation
         * there is no type restriction on this variable (either explicit in the
           syntax tree or because a solution for this variable has been removed
           due to security filtering)
@@ -267,7 +143,132 @@ class SQLGenAnnotator(object):
     def _annotate_union(self, union):
         has_text_query = False
         for select in union.children:
-            if _annotate_select(self, select):
+            if self._annotate_select(select):
+                has_text_query = True
+        return has_text_query
+
+    def _annotate_select(self, rqlst):
+        has_text_query = False
+        for subquery in rqlst.with_:
+            if self._annotate_union(subquery.query):
+                has_text_query = True
+        getrschema = self.schema.rschema
+        for var in rqlst.defined_vars.values():
+            stinfo = var.stinfo
+            if stinfo.get('ftirels'):
+                has_text_query = True
+            if stinfo['attrvar']:
+                stinfo['invariant'] = False
+                stinfo['principal'] = _select_main_var(stinfo['rhsrelations'])
+                continue
+            if stinfo['typerel'] is None:
+                # those particular queries should be executed using the system
+                # entities table unless there is some type restriction
+                if not stinfo['relations']:
+                    # Any X, Any MAX(X)...
+                    stinfo['invariant'] = True
+                    stinfo['principal'] = None
+                    continue
+                if (any(rel for rel in stinfo['relations']
+                        if rel.r_type == 'eid' and rel.operator() != '=')
+                        and not any(r for r in var.stinfo['relations'] - var.stinfo['rhsrelations']
+                                    if r.r_type != 'eid'
+                                    and (getrschema(r.r_type).inlined
+                                         or getrschema(r.r_type).final))):
+                    # Any X WHERE X eid > 2
+                    stinfo['invariant'] = True
+                    stinfo['principal'] = None
+                    continue
+            if stinfo['selected'] and var.valuable_references() == 1 + bool(stinfo['constnode']):
+                # "Any X", "Any X, Y WHERE X attr Y"
+                stinfo['invariant'] = False
+                continue
+            joins = set()
+            invariant = False
+            for ref in var.references():
+                rel = ref.relation()
+                if rel is None or rel.is_types_restriction():
+                    continue
+                lhs, rhs = rel.get_parts()
+                onlhs = ref is lhs
+                role = 'subject' if onlhs else 'object'
+                if rel.r_type == 'eid':
+                    if not (onlhs and len(stinfo['relations']) > 1):
+                        break
+                    if not stinfo['constnode']:
+                        joins.add((rel, role))
+                    continue
+                elif rel.r_type == 'identity':
+                    # identity can't be used as principal, so check other relation are used
+                    # XXX explain rhs.operator == '='
+                    if rhs.operator != '=' or len(stinfo['relations']) <= 1:
+                        break
+                    joins.add((rel, role))
+                    continue
+                rschema = getrschema(rel.r_type)
+                if rel.optional:
+                    if rel in stinfo.get('optrelations', ()):
+                        # optional variable can't be invariant if this is the lhs
+                        # variable of an inlined relation
+                        if rel not in stinfo['rhsrelations'] and rschema.inlined:
+                            break
+                    # variable used as main variable of an optional relation can't
+                    # be invariant, unless we can use some other relation as
+                    # reference for the outer join
+                    elif not stinfo['constnode']:
+                        break
+                    elif len(stinfo['relations']) == 2:
+                        if onlhs:
+                            ostinfo = rhs.children[0].variable.stinfo
+                        else:
+                            ostinfo = lhs.variable.stinfo
+                        if not (ostinfo.get('optcomparisons')
+                                or any(orel for orel in ostinfo['relations']
+                                       if orel.optional and orel is not rel)):
+                            break
+                if rschema.final or (onlhs and rschema.inlined):
+                    if rschema.type != 'has_text':
+                        # need join anyway if the variable appears in a final or
+                        # inlined relation
+                        break
+                    joins.add((rel, role))
+                    continue
+                if not stinfo['constnode']:
+                    if rschema.inlined and rel.neged(strict=True):
+                        # if relation is inlined, can't be invariant if that
+                        # variable is used anywhere else.
+                        # see 'Any P WHERE NOT N ecrit_par P, N eid 512':
+                        # sql for 'NOT N ecrit_par P' is 'N.ecrit_par is NULL' so P
+                        # can use N.ecrit_par as principal
+                        if (stinfo['selected'] or len(stinfo['relations']) > 1):
+                            break
+                joins.add((rel, role))
+            else:
+                # if there is at least one ambigous relation and no other to
+                # restrict types, can't be invariant since we need to filter out
+                # other types
+                if not self.is_ambiguous(var):
+                    invariant = True
+            stinfo['invariant'] = invariant
+            if invariant and joins:
+                # remember rqlst/solutions analyze information
+                # we have to select a kindof "main" relation which will "extrajoins"
+                # the other
+                # priority should be given to relation which are not in inner queries
+                # (eg exists)
+                try:
+                    stinfo['principal'] = principal = _select_principal(var.scope, joins)
+                    if getrschema(principal.r_type).inlined:
+                        # the scope of the lhs variable must be equal or outer to the
+                        # rhs variable's scope (since it's retrieved from lhs's table)
+                        sstinfo = principal.children[0].variable.stinfo
+                        sstinfo['scope'] = common_parent(sstinfo['scope'], stinfo['scope']).scope
+                except CantSelectPrincipal:
+                    stinfo['invariant'] = False
+        # see unittest_rqlannotation. test_has_text_security_cache_bug
+        # XXX probably more to do, but yet that work without more...
+        for col_alias in rqlst.aliases.values():
+            if col_alias.stinfo.get('ftirels'):
                 has_text_query = True
         return has_text_query
 
