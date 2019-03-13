@@ -30,9 +30,13 @@ from cubicweb.schema import display_name
 from cubicweb.predicates import no_cnx, one_line_rset
 from cubicweb.view import View
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
-                                      RawBoxItem, BoxSeparator)
+                                      RawBoxItem)
 from cubicweb.web.action import UnregisteredAction
-from cubicweb.web.component import AjaxEditRelationCtxComponent, EditRelationMixIn
+from cubicweb.web.component import (
+    AjaxEditRelationCtxComponent,
+    EditRelationMixIn,
+    Separator,
+)
 
 
 def sort_by_category(actions, categories_in_order=None):
@@ -183,7 +187,7 @@ class EditRelationBoxTemplate(EditRelationMixIn, EntityBoxTemplate):
         unrelated = self.unrelated_boxitems(entity)
         box.extend(related)
         if related and unrelated:
-            box.append(BoxSeparator())
+            box.append(Separator())
         box.extend(unrelated)
         box.render(self.w)
 
