@@ -113,6 +113,7 @@ cubicweb/test/unittest_toolsutils.py
 cubicweb/test/unittest_wfutils.py
 cubicweb/toolsutils.py
 cubicweb/web/application.py
+cubicweb/web/box.py
 cubicweb/web/formwidgets.py
 cubicweb/web/test/data/entities.py
 cubicweb/web/test/unittest_application.py
