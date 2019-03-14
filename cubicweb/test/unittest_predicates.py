@@ -31,10 +31,8 @@ from cubicweb.predicates import (is_instance, adaptable, match_kwargs, match_use
                                  multi_lines_rset, score_entity, is_in_state,
                                  rql_condition, relation_possible, match_form_params,
                                  paginated_rset)
-from cubicweb.selectors import on_transition # XXX on_transition is deprecated
 from cubicweb.view import EntityAdapter
 from cubicweb.web import action
-
 
 
 class ImplementsTC(CubicWebTC):
@@ -146,65 +144,6 @@ class WorkflowSelectorTC(CubicWebTC):
                 selector(None, req, rset=rset)
             self.assertEqual(str(cm.exception),
                              "wf_test: unknown state(s): unknown,weird")
-
-    def test_on_transition(self):
-        with self.statefull_stuff() as (req, wf_entity, rset, adapter):
-            for transition in ('validate', 'forsake'):
-                selector = on_transition(transition)
-                self.assertEqual(selector(None, req, rset=rset), 0)
-
-            adapter.fire_transition('validate')
-            req.cnx.commit(); wf_entity.cw_clear_all_caches()
-            self.assertEqual(adapter.state, 'validated')
-
-            clear_cache(rset, 'get_entity')
-
-            selector = on_transition("validate")
-            self.assertEqual(selector(None, req, rset=rset), 1)
-            selector = on_transition("validate", "forsake")
-            self.assertEqual(selector(None, req, rset=rset), 1)
-            selector = on_transition("forsake")
-            self.assertEqual(selector(None, req, rset=rset), 0)
-
-            adapter.fire_transition('forsake')
-            req.cnx.commit(); wf_entity.cw_clear_all_caches()
-            self.assertEqual(adapter.state, 'abandoned')
-
-            clear_cache(rset, 'get_entity')
-
-            selector = on_transition("validate")
-            self.assertEqual(selector(None, req, rset=rset), 0)
-            selector = on_transition("validate", "forsake")
-            self.assertEqual(selector(None, req, rset=rset), 1)
-            selector = on_transition("forsake")
-            self.assertEqual(selector(None, req, rset=rset), 1)
-
-    def test_on_transition_unvalid_names(self):
-        with self.statefull_stuff() as (req, wf_entity, rset, adapter):
-            selector = on_transition("unknown")
-            with self.assertRaises(ValueError) as cm:
-                selector(None, req, rset=rset)
-            self.assertEqual(str(cm.exception),
-                             "wf_test: unknown transition(s): unknown")
-            selector = on_transition("weird", "unknown", "validate", "weird")
-            with self.assertRaises(ValueError) as cm:
-                selector(None, req, rset=rset)
-            self.assertEqual(str(cm.exception),
-                             "wf_test: unknown transition(s): unknown,weird")
-
-    def test_on_transition_with_no_effect(self):
-        """selector will not be triggered with `change_state()`"""
-        with self.statefull_stuff() as (req, wf_entity, rset, adapter):
-            adapter.change_state('validated')
-            req.cnx.commit(); wf_entity.cw_clear_all_caches()
-            self.assertEqual(adapter.state, 'validated')
-
-            selector = on_transition("validate")
-            self.assertEqual(selector(None, req, rset=rset), 0)
-            selector = on_transition("validate", "forsake")
-            self.assertEqual(selector(None, req, rset=rset), 0)
-            selector = on_transition("forsake")
-            self.assertEqual(selector(None, req, rset=rset), 0)
 
 
 class RelationPossibleTC(CubicWebTC):

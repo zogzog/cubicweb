@@ -36,7 +36,6 @@ from logging import getLogger
 from six.moves import range, queue
 
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.deprecation import deprecated
 
 from yams import BadSchemaDefinition
 from rql.utils import rqlvar_maker
@@ -323,14 +322,6 @@ class Repository(object):
                        for sourceent, source in self._sources())
         return mapping
 
-    @property
-    @deprecated("[3.25] use source_by_eid(<eid>)")
-    def sources_by_eid(self):
-        mapping = {self.system_source.eid: self.system_source}
-        mapping.update((sourceent.eid, source)
-                       for sourceent, source in self._sources())
-        return mapping
-
     def _sources(self):
         if self.config.quick_start:
             return
@@ -516,31 +507,6 @@ class Repository(object):
 
     # public (dbapi) interface ################################################
 
-    @deprecated("[3.19] use _cw.call_service('repo_stats')")
-    def stats(self):  # XXX restrict to managers session?
-        """Return a dictionary containing some statistics about the repository
-        resources usage.
-
-        This is a public method, not requiring a session id.
-
-        This method is deprecated in favor of using _cw.call_service('repo_stats')
-        """
-        with self.internal_cnx() as cnx:
-            return cnx.call_service('repo_stats')
-
-    @deprecated("[3.19] use _cw.call_service('repo_gc_stats')")
-    def gc_stats(self, nmax=20):
-        """Return a dictionary containing some statistics about the repository
-        memory usage.
-
-        This is a public method, not requiring a session id.
-
-        nmax is the max number of (most) referenced object returned as
-        the 'referenced' result
-        """
-        with self.internal_cnx() as cnx:
-            return cnx.call_service('repo_gc_stats', nmax=nmax)
-
     def get_schema(self):
         """Return the instance schema.
 
@@ -561,16 +527,11 @@ class Repository(object):
         cubes.remove('cubicweb')
         return cubes
 
-    def get_option_value(self, option, foreid=None):
+    def get_option_value(self, option):
         """Return the value for `option` in the configuration.
 
         This is a public method, not requiring a session id.
-
-        `foreid` argument is deprecated and now useless (as of 3.19).
         """
-        if foreid is not None:
-            warn('[3.19] foreid argument is deprecated', DeprecationWarning,
-                 stacklevel=2)
         # XXX we may want to check we don't give sensible information
         return self.config[option]
 
@@ -630,17 +591,6 @@ class Repository(object):
             return self.querier.execute(cnx, 'Any K,V WHERE P is CWProperty,'
                                         'P pkey K, P value V, NOT P for_user U',
                                         build_descr=False)
-
-    @deprecated("[3.19] Use session.call_service('register_user') instead'")
-    def register_user(self, login, password, email=None, **kwargs):
-        """check a user with the given login exists, if not create it with the
-        given password. This method is designed to be used for anonymous
-        registration on public web site.
-        """
-        with self.internal_cnx() as cnx:
-            cnx.call_service('register_user', login=login, password=password,
-                             email=email, **kwargs)
-            cnx.commit()
 
     def find_users(self, fetch_attrs, **query_attrs):
         """yield user attributes for cwusers matching the given query_attrs

@@ -26,7 +26,6 @@ from functools import partial
 
 from six.moves import range
 
-from logilab.common.deprecation import deprecated
 from logilab.common.registry import yes
 from logilab.mtconverter import xml_escape
 

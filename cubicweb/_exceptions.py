@@ -102,14 +102,6 @@ class UniqueTogetherError(RepositoryError):
         cstr = self.session.find('CWUniqueTogetherConstraint', name=cstrname).one()
         return sorted(rtype.name for rtype in cstr.relations)
 
-    @cachedproperty
-    def args(self):
-        warn('[3.18] UniqueTogetherError.args is deprecated, just use '
-             'the .rtypes accessor.',
-             DeprecationWarning)
-        # the first argument, etype, is never used and was never garanteed anyway
-        return None, self.rtypes
-
 
 class ViolatedConstraint(RepositoryError):
     def __init__(self, cnx, cstrname):

@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 from yams.buildobjs import EntityType, String, Int, SubjectRelation, RelationDefinition
 
+from cubicweb import _
+
 THISYEAR = 2014
 
 class Person(EntityType):

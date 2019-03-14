@@ -42,7 +42,6 @@ from logging import getLogger
 from six import text_type
 
 from logilab.mtconverter import xml_escape
-from logilab.common.deprecation import deprecated
 from logilab.common.date import ustrftime
 
 from cubicweb import Binary
@@ -441,14 +440,6 @@ class HTMLStream(object):
         self._htmlattrs = [('lang', req.lang)]
         # keep main_stream's reference on req for easier text/html demoting
         req.main_stream = self
-
-    @deprecated('[3.17] there are no namespaces in html, xhtml is not served any longer')
-    def add_namespace(self, prefix, uri):
-        pass
-
-    @deprecated('[3.17] there are no namespaces in html, xhtml is not served any longer')
-    def set_namespaces(self, namespaces):
-        pass
 
     def add_htmlattr(self, attrname, attrvalue):
         self._htmlattrs.append( (attrname, attrvalue) )

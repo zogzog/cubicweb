@@ -18,19 +18,13 @@
 """The `ResultSet` class which is returned as result of an rql query"""
 
 
-from warnings import warn
-
 from six import PY3, text_type
 from six.moves import range
 
-from logilab.common import nullobject
 from logilab.common.decorators import cached, clear_cache, copy_cache
 from rql import nodes, stmts
 
 from cubicweb import NotAnEntity, NoResultError, MultipleResultsError, UnknownEid
-
-
-_MARKER = nullobject()
 
 
 class ResultSet(object):
@@ -52,10 +46,7 @@ class ResultSet(object):
     :param rql: the original RQL query string
     """
 
-    def __init__(self, results, rql, args=None, description=None, rqlst=None):
-        if rqlst is not None:
-            warn('[3.20] rqlst parameter is deprecated',
-                 DeprecationWarning, stacklevel=2)
+    def __init__(self, results, rql, args=None, description=None):
         self.rows = results
         self.rowcount = results and len(results) or 0
         # original query and arguments
@@ -363,25 +354,17 @@ class ResultSet(object):
         rset.limited = (limit, offset)
         return rset
 
-    def printable_rql(self, encoded=_MARKER):
+    def printable_rql(self):
         """return the result set's origin rql as a string, with arguments
         substitued
         """
-        if encoded is not _MARKER:
-            warn('[3.21] the "encoded" argument is deprecated', DeprecationWarning)
         encoding = self.req.encoding
         rqlstr = self.syntax_tree().as_string(kwargs=self.args)
         if PY3:
             return rqlstr
-        # sounds like we get encoded or unicode string due to a bug in as_string
-        if not encoded:
-            if isinstance(rqlstr, text_type):
-                return rqlstr
-            return text_type(rqlstr, encoding)
-        else:
-            if isinstance(rqlstr, text_type):
-                return rqlstr.encode(encoding)
+        if isinstance(rqlstr, text_type):
             return rqlstr
+        return text_type(rqlstr, encoding)
 
     # client helper methods ###################################################
 

@@ -30,9 +30,7 @@ import warnings
 import zlib
 
 from six import PY2, binary_type, text_type
-from six.moves import builtins
 
-from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 from yams.constraints import BASE_CONVERTERS, BASE_CHECKERS
 from yams.schema import role_name as rname
@@ -68,14 +66,6 @@ CW_SOFTWARE_ROOT = __path__[0]  # noqa
 # '_' is available to mark internationalized string but should not be used to
 # do the actual translation
 _ = text_type
-if not hasattr(builtins, '_'):
-    builtins._ = deprecated("[3.22] Use 'from cubicweb import _'")(_)
-
-
-# convert eid to the right type, raise ValueError if it's not a valid eid
-@deprecated('[3.17] typed_eid() was removed. replace it with int() when needed.')
-def typed_eid(eid):
-    return int(eid)
 
 
 class Binary(BytesIO):

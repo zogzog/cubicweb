@@ -32,7 +32,6 @@ from six import PY2, PY3, text_type, binary_type, string_types, integer_types
 
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
-from logilab.common.deprecation import deprecated
 
 from cubicweb import _
 from cubicweb.utils import js_dumps
@@ -142,10 +141,6 @@ PRINTERS = {
     'Decimal': print_float,
     'Interval': print_timedelta,
     }
-
-@deprecated('[3.14] use req.printable_value(attrtype, value, ...)')
-def printable_value(req, attrtype, value, props=None, displaytime=True):
-    return req.printable_value(attrtype, value, props, displaytime)
 
 def css_em_num_value(vreg, propname, default):
     """ we try to read an 'em' css property

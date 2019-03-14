@@ -28,7 +28,6 @@ from logging import getLogger
 
 from six import text_type
 
-from logilab.common.deprecation import deprecated
 from logilab.common.registry import objectify_predicate
 
 from cubicweb import QueryError, ProgrammingError, schema, server
@@ -73,15 +72,6 @@ def repairing(cls, req, **kwargs):
     return req.vreg.config.repairing
 
 
-@deprecated('[3.17] use <object>.allow/deny_all_hooks_but instead')
-def hooks_control(obj, mode, *categories):
-    assert mode in (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
-    if mode == HOOKS_ALLOW_ALL:
-        return obj.allow_all_hooks_but(*categories)
-    elif mode == HOOKS_DENY_ALL:
-        return obj.deny_all_hooks_but(*categories)
-
-
 class _hooks_control(object):
     """context manager to control activated hooks categories.
 
@@ -121,11 +111,6 @@ class _hooks_control(object):
     def __exit__(self, exctype, exc, traceback):
         self.cnx._hooks_mode = self.old_mode
         self.cnx._hooks_categories = self.old_categories
-
-
-@deprecated('[3.17] use <object>.security_enabled instead')
-def security_enabled(obj, *args, **kwargs):
-    return obj.security_enabled(*args, **kwargs)
 
 
 class _security_enabled(object):
@@ -390,11 +375,6 @@ class Connection(RequestSessionBase):
     # shared data handling ###################################################
 
     @property
-    @deprecated('[3.25] use transaction_data or req.session.data', stacklevel=3)
-    def data(self):
-        return self.transaction_data
-
-    @property
     def rql_rewriter(self):
         return self._rewriter
 
@@ -408,24 +388,6 @@ class Connection(RequestSessionBase):
         self.pruned_hooks_cache = {}
         self.local_perm_cache.clear()
         self.rewriter = RQLRewriter(self)
-
-    @deprecated('[3.19] cnxset are automatically managed now.'
-                ' stop using explicit set and free.')
-    def set_cnxset(self):
-        pass
-
-    @deprecated('[3.19] cnxset are automatically managed now.'
-                ' stop using explicit set and free.')
-    def free_cnxset(self, ignoremode=False):
-        pass
-
-    @property
-    @contextmanager
-    @_open_only
-    @deprecated('[3.21] a cnxset is automatically set on __enter__ call now.'
-                ' stop using .ensure_cnx_set')
-    def ensure_cnx_set(self):
-        yield
 
     # Entity cache management #################################################
     #
@@ -701,12 +663,6 @@ class Connection(RequestSessionBase):
     def entity_type(self, eid):
         """Return entity type for the entity with id `eid`."""
         return self.repo.type_from_eid(eid, self)
-
-    @deprecated('[3.24] use entity_type(eid) instead')
-    @_open_only
-    def entity_metas(self, eid):
-        """Return a dictionary {type}) for the entity with id `eid`."""
-        return {'type': self.repo.type_from_eid(eid, self)}
 
     # core method #############################################################
 

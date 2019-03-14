@@ -18,7 +18,7 @@
 
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb import ObjectNotFound
-from cubicweb.req import RequestSessionBase, FindEntityError
+from cubicweb.req import RequestSessionBase
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import Unauthorized
 
@@ -62,63 +62,11 @@ class RequestCWTC(CubicWebTC):
         with self.admin_access.repo_cnx() as session:
             self.assertEqual(session.base_url(), base_url)
 
-    def test_secure_deprecated(self):
-        with self.admin_access.cnx() as cnx:
-            with self.assertWarns(DeprecationWarning):
-                cnx.base_url(secure=True)
-            with self.assertRaises(TypeError):
-                cnx.base_url(thing=42)
-            with self.assertWarns(DeprecationWarning):
-                cnx.build_url('ah', __secure__='whatever')
-
     def test_view_catch_ex(self):
         with self.admin_access.web_request() as req:
             rset = req.execute('CWUser X WHERE X login "hop"')
             self.assertEqual(req.view('oneline', rset, 'null'), '')
             self.assertRaises(ObjectNotFound, req.view, 'onelinee', rset, 'null')
-
-    def test_find_one_entity(self):
-        with self.admin_access.web_request() as req:
-            req.create_entity(
-                'CWUser', login=u'cdevienne', upassword=u'cdevienne',
-                surname=u'de Vienne', firstname=u'Christophe',
-                in_group=req.find('CWGroup', name=u'users').one())
-
-            req.create_entity(
-                'CWUser', login=u'adim', upassword='adim', surname=u'di mascio',
-                firstname=u'adrien',
-                in_group=req.find('CWGroup', name=u'users').one())
-
-            u = req.find_one_entity('CWUser', login=u'cdevienne')
-            self.assertEqual(u.firstname, u"Christophe")
-
-            with self.assertRaises(FindEntityError):
-                req.find_one_entity('CWUser', login=u'patanok')
-
-            with self.assertRaises(FindEntityError):
-                req.find_one_entity('CWUser')
-
-    def test_find_entities(self):
-        with self.admin_access.web_request() as req:
-            req.create_entity(
-                'CWUser', login=u'cdevienne', upassword=u'cdevienne',
-                surname=u'de Vienne', firstname=u'Christophe',
-                in_group=req.find('CWGroup', name=u'users').one())
-
-            req.create_entity(
-                'CWUser', login=u'adim', upassword='adim', surname=u'di mascio',
-                firstname=u'adrien',
-                in_group=req.find('CWGroup', name=u'users').one())
-
-            users = list(req.find_entities('CWUser', login=u'cdevienne'))
-            self.assertEqual(1, len(users))
-            self.assertEqual(users[0].firstname, u"Christophe")
-
-            users = list(req.find_entities('CWUser', login=u'patanok'))
-            self.assertEqual(0, len(users))
-
-            users = list(req.find_entities('CWUser'))
-            self.assertEqual(4, len(users))
 
     def test_find(self):
         with self.admin_access.web_request() as req:

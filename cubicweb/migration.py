@@ -35,7 +35,6 @@ from logilab.common.decorators import cached
 from logilab.common.configuration import REQUIRED, read_old_config
 from logilab.common.shellutils import ASK
 from logilab.common.changelog import Version
-from logilab.common.deprecation import deprecated
 
 from cubicweb import ConfigurationError, ExecutionError
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
@@ -414,10 +413,6 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         if newcubes:
             self.config.add_cubes(newcubes)
         return newcubes
-
-    @deprecated('[3.20] use drop_cube() instead of remove_cube()')
-    def cmd_remove_cube(self, cube, removedeps=False):
-        return self.cmd_drop_cube(cube, removedeps)
 
     def cmd_drop_cube(self, cube, removedeps=False):
         if removedeps:

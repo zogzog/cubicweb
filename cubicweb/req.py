@@ -17,7 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Base class for request/session"""
 
-from warnings import warn
 from datetime import time, datetime, timedelta
 
 from six import PY2, PY3, text_type
@@ -26,13 +25,11 @@ from six.moves.urllib.parse import (parse_qs, parse_qsl,
                                     urlsplit, urlunsplit)
 
 from logilab.common.decorators import cached
-from logilab.common.deprecation import deprecated
 from logilab.common.date import ustrftime, strptime, todate, todatetime
 
 from rql.utils import rqlvar_maker
 
-from cubicweb import (Unauthorized, NoSelectableObject, NoResultError,
-                      MultipleResultsError, uilib)
+from cubicweb import Unauthorized, NoSelectableObject, uilib
 from cubicweb.rset import ResultSet
 
 ONESECOND = timedelta(0, 1, 0)
@@ -182,29 +179,6 @@ class RequestSessionBase(object):
         cls = self.vreg['etypes'].etype_class(etype)
         return cls.cw_instantiate(self.execute, **kwargs)
 
-    @deprecated('[3.18] use find(etype, **kwargs).entities()')
-    def find_entities(self, etype, **kwargs):
-        """find entities of the given type and attribute values.
-
-        >>> users = find_entities('CWGroup', name=u'users')
-        >>> groups = find_entities('CWGroup')
-        """
-        return self.find(etype, **kwargs).entities()
-
-    @deprecated('[3.18] use find(etype, **kwargs).one()')
-    def find_one_entity(self, etype, **kwargs):
-        """find one entity of the given type and attribute values.
-        raise :exc:`FindEntityError` if can not return one and only one entity.
-
-        >>> users = find_one_entity('CWGroup', name=u'users')
-        >>> groups = find_one_entity('CWGroup')
-        Exception()
-        """
-        try:
-            return self.find(etype, **kwargs).one()
-        except (NoResultError, MultipleResultsError) as e:
-            raise FindEntityError("%s: (%s, %s)" % (str(e), etype, kwargs))
-
     def find(self, etype, **kwargs):
         """find entities of the given type and attribute values.
 
@@ -248,33 +222,6 @@ class RequestSessionBase(object):
         if first in ('insert', 'set', 'delete'):
             raise Unauthorized(self._('only select queries are authorized'))
 
-    def get_cache(self, cachename):
-        """cachename should be dotted names as in :
-
-        - cubicweb.mycache
-        - cubes.blog.mycache
-        - etc.
-        """
-        warn.warning('[3.19] .get_cache will disappear soon. '
-                     'Distributed caching mechanisms are being introduced instead.'
-                     'Other caching mechanism can be used more reliably '
-                     'to the same effect.',
-                     DeprecationWarning)
-        if cachename in CACHE_REGISTRY:
-            cache = CACHE_REGISTRY[cachename]
-        else:
-            cache = CACHE_REGISTRY[cachename] = Cache()
-        _now = datetime.now()
-        if _now > cache.latest_cache_lookup + ONESECOND:
-            ecache = self.execute(
-                'Any C,T WHERE C is CWCache, C name %(name)s, C timestamp T',
-                {'name': cachename}).get_entity(0, 0)
-            cache.latest_cache_lookup = _now
-            if not ecache.valid(cache.cache_creation_date):
-                cache.clear()
-                cache.cache_creation_date = _now
-        return cache
-
     # url generation methods ##################################################
 
     def build_url(self, *args, **kwargs):
@@ -296,9 +243,6 @@ class RequestSessionBase(object):
         #     not try to process it and directly call req.build_url()
         base_url = kwargs.pop('base_url', None)
         if base_url is None:
-            if kwargs.pop('__secure__', None) is not None:
-                warn('[3.25] __secure__ argument is deprecated',
-                     DeprecationWarning, stacklevel=2)
             base_url = self.base_url()
         path = self.build_url_path(method, kwargs)
         if not kwargs:
@@ -505,12 +449,7 @@ class RequestSessionBase(object):
             raise ValueError(self._('can\'t parse %(value)r (expected %(format)s)')
                              % {'value': value, 'format': format})
 
-    def base_url(self, **kwargs):
+    def base_url(self):
         """Return the root url of the instance."""
-        secure = kwargs.pop('secure', None)
-        if secure is not None:
-            warn('[3.25] secure argument is deprecated', DeprecationWarning, stacklevel=2)
-        if kwargs:
-            raise TypeError('base_url got unexpected keyword arguments %s' % ', '.join(kwargs))
         url = self.vreg.config['base-url']
         return url if url is None else url.rstrip('/') + '/'

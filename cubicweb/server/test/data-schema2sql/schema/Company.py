@@ -18,6 +18,8 @@
 from yams.buildobjs import EntityType, RelationType, RelationDefinition, \
      SubjectRelation, String
 
+from cubicweb import _
+
 class Company(EntityType):
     name = String()
 

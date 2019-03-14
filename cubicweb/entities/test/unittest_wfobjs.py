@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from cubicweb import ValidationError
+from cubicweb import _, ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 
 def add_wf(shell, etype, name=None, default=False):

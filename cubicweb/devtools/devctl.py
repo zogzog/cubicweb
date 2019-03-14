@@ -30,7 +30,6 @@ import sys
 from datetime import datetime, date
 from os import getcwd, mkdir, chdir, path as osp
 import pkg_resources
-from warnings import warn
 
 from pytz import UTC
 
@@ -481,12 +480,7 @@ class I18nCubeMessageExtractor(object):
         print('-> extracting messages:', end=' ')
         potfiles = []
         # static messages
-        if osp.exists(osp.join('i18n', 'entities.pot')):
-            warn('entities.pot is deprecated, rename file '
-                 'to static-messages.pot (%s)'
-                 % osp.join('i18n', 'entities.pot'), DeprecationWarning)
-            potfiles.append(osp.join('i18n', 'entities.pot'))
-        elif osp.exists(osp.join('i18n', 'static-messages.pot')):
+        if osp.exists(osp.join('i18n', 'static-messages.pot')):
             potfiles.append(osp.join('i18n', 'static-messages.pot'))
         # messages from schema
         potfiles.append(self.schemapot())

@@ -13,3 +13,7 @@ New features
 
 .. _pytest-xdist: https://github.com/pytest-dev/pytest-xdist
 
+Deprecated code drops
+---------------------
+
+Most code deprecated until version 3.25 has been dropped.

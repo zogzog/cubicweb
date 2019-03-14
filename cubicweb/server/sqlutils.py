@@ -34,7 +34,6 @@ from pytz import utc
 
 from logilab import database as db, common as lgc
 from logilab.common.shellutils import ProgressBar, DummyProgressBar
-from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.date import utctime, utcdatetime, strptime
 from logilab.database.sqlgen import SQLGenerator
@@ -236,21 +235,6 @@ class ConnectionWrapper(object):
         self._source.info('trying to reconnect')
         self.cnx = self._source.get_connection()
         self.cu = self.cnx.cursor()
-
-    @deprecated('[3.19] use .cu instead')
-    def __getitem__(self, uri):
-        assert uri == 'system'
-        return self.cu
-
-    @deprecated('[3.19] use repo.system_source instead')
-    def source(self, uid):
-        assert uid == 'system'
-        return self._source
-
-    @deprecated('[3.19] use .cnx instead')
-    def connection(self, uid):
-        assert uid == 'system'
-        return self.cnx
 
 
 class SqliteConnectionWrapper(ConnectionWrapper):

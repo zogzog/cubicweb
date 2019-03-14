@@ -251,7 +251,6 @@ from logging import getLogger
 from itertools import chain
 
 from logilab.common.decorators import classproperty, cached
-from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.registry import (NotPredicate, OrPredicate,
                                      objectify_predicate)
@@ -427,10 +426,6 @@ def enabled_category(cls, req, **kwargs):
 @objectify_predicate
 def issued_from_user_query(cls, req, **kwargs):
     return 0 if req.hooks_in_progress else 1
-
-from_dbapi_query = class_renamed('from_dbapi_query',
-                                 issued_from_user_query,
-                                 message='[3.21] ')
 
 
 class rechain(object):
@@ -737,11 +732,6 @@ class Operation(object):
         # execution information
         self.processed = None # 'precommit', 'commit'
         self.failed = False
-
-    @property
-    @deprecated('[3.19] Operation.session is deprecated, use Operation.cnx instead')
-    def session(self):
-        return self.cnx
 
     def register(self, cnx):
         cnx.add_operation(self, self.insert_index())

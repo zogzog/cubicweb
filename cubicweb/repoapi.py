@@ -17,27 +17,17 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Official API to access the content of a repository."""
 
-from warnings import warn
-
-from six import add_metaclass
-
-from logilab.common.deprecation import class_deprecated
-
 from cubicweb import AuthenticationError
 from cubicweb.server.session import Connection
 
 
-def get_repository(uri=None, config=None, vreg=None):
+def get_repository(config, vreg=None):
     """get a repository for the given URI or config/vregistry (in case we're
     loading the repository for a client, eg web server, configuration).
 
     The returned repository may be an in-memory repository or a proxy object
     using a specific RPC method, depending on the given URI.
     """
-    if uri is not None:
-        warn('[3.22] get_repository only wants a config')
-
-    assert config is not None, 'get_repository(config=config)'
     return config.repository(vreg)
 
 
@@ -63,8 +53,3 @@ def anonymous_cnx(repo):
     anon_login, anon_password = anoninfo
     # use vreg's repository cache
     return connect(repo, anon_login, password=anon_password)
-
-
-@add_metaclass(class_deprecated)
-class ClientConnection(Connection):
-    __deprecation_warning__ = '[3.20] %(cls)s is deprecated, use Connection instead'

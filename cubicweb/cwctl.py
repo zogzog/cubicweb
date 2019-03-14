@@ -873,13 +873,6 @@ sources for migration will be automatically selected.",
           'group': 'local'
           }),
 
-        ('repo-uri',
-         {'short': 'H', 'type' : 'string', 'metavar': '<protocol>://<[host][:port]>',
-          'help': 'URI of the CubicWeb repository to connect to. URI can be \
-a ZMQ URL or inmemory:// (default) use an in-memory repository. THIS OPTION IS DEPRECATED, \
-directly give URI as instance id instead',
-          'group': 'remote'
-          }),
         )
 
     def _get_mih(self, appid):
@@ -899,12 +892,6 @@ directly give URI as instance id instead',
 
     def run(self, args):
         appuri = args.pop(0)
-        if self.config.repo_uri:
-            warn('[3.16] --repo-uri option is deprecated, directly give the URI as instance id',
-                 DeprecationWarning)
-            if urlparse(self.config.repo_uri).scheme == 'inmemory':
-                appuri = '%s/%s' % (self.config.repo_uri.rstrip('/'), appuri)
-
         mih, shutdown_callback = self._get_mih(appuri)
         try:
             with mih.cnx:

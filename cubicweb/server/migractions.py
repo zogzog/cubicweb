@@ -43,7 +43,6 @@ from contextlib import contextmanager
 
 from six import PY2, text_type
 
-from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
 
 from yams.buildobjs import EntityType
@@ -1385,20 +1384,6 @@ class ServerMigrationHelper(MigrationHelper):
         """find entities of the given type and attribute values"""
         return self.cnx.find(etype, **kwargs)
 
-    @deprecated("[3.19] use find(*args, **kwargs).entities() instead")
-    def cmd_find_entities(self, etype, **kwargs):
-        """find entities of the given type and attribute values"""
-        return self.cnx.find(etype, **kwargs).entities()
-
-    @deprecated("[3.19] use find(*args, **kwargs).one() instead")
-    def cmd_find_one_entity(self, etype, **kwargs):
-        """find one entity of the given type and attribute values.
-
-        raise :exc:`cubicweb.req.FindEntityError` if can not return one and only
-        one entity.
-        """
-        return self.cnx.find(etype, **kwargs).one()
-
     def cmd_update_etype_fti_weight(self, etype, weight):
         if self.repo.system_source.dbdriver == 'postgres':
             self.sqlexec('UPDATE appears SET weight=%(weight)s '
@@ -1547,10 +1532,6 @@ class ServerMigrationHelper(MigrationHelper):
             self.sqlexec(sql)
         if commit:
             self.commit()
-
-    @deprecated("[3.15] use rename_relation_type(oldname, newname)")
-    def cmd_rename_relation(self, oldname, newname, commit=True):
-        self.cmd_rename_relation_type(oldname, newname, commit)
 
 
 class ForRqlIterator:

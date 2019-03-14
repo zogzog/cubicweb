@@ -31,7 +31,6 @@ from six.moves import range
 
 from logilab.common.decorators import cached, clear_cache, monkeypatch, cachedproperty
 from logilab.common.logging_ext import set_log_methods
-from logilab.common.deprecation import deprecated
 from logilab.common.textutils import splitstrip
 from logilab.common.graph import get_cycles
 
@@ -992,10 +991,6 @@ class CubicWebRelationSchema(PermissionMixIn, RelationSchema):
                 if not rdef.has_perm(_cw, action, **kwargs):
                     return False
         return True
-
-    @deprecated('use .rdef(subjtype, objtype).role_cardinality(role)')
-    def cardinality(self, subjtype, objtype, target):
-        return self.rdef(subjtype, objtype).role_cardinality(target)
 
 
 class CubicWebSchema(Schema):

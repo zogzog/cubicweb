@@ -45,9 +45,9 @@ from cubicweb.statsd_logger import statsd_timeit, statsd_c
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
 
-def empty_rset(rql, args, rqlst=None):
+def empty_rset(rql, args):
     """build an empty result set object"""
-    return ResultSet([], rql, args, rqlst=rqlst)
+    return ResultSet([], rql, args)
 
 
 # permission utilities ########################################################

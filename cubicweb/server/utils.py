@@ -32,8 +32,6 @@ from six.moves import input
 from passlib.utils import handlers as uh, to_hash_str
 from passlib.context import CryptContext
 
-from logilab.common.deprecation import deprecated
-
 from cubicweb.md5crypt import crypt as md5crypt
 
 
@@ -81,17 +79,6 @@ def crypt_password(passwd, salt=None):
         pass
     # wrong password
     return b''
-
-
-@deprecated('[3.22] no more necessary, directly get eschema.eid')
-def eschema_eid(cnx, eschema):
-    """get eid of the CWEType entity for the given yams type.
-
-    This used to be necessary because when the schema has been loaded from the
-    file-system, not from the database, (e.g. during tests), eschema.eid was
-    not set.
-    """
-    return eschema.eid
 
 
 DEFAULT_MSG = 'we need a manager connection on the repository \

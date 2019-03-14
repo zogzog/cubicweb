@@ -32,20 +32,3 @@ META_RTYPE_PERMS = PUB_SYSTEM_REL_PERMS # XXX deprecates
 # permissions for relation type that should only set by hooks using unsafe
 # execute, readable by anyone
 HOOKS_RTYPE_PERMS = RO_REL_PERMS # XXX deprecates
-
-
-from logilab.common.modutils import LazyObject
-from logilab.common.deprecation import deprecated
-class MyLazyObject(LazyObject):
-
-    def _getobj(self):
-        try:
-            return super(MyLazyObject, self)._getobj()
-        except ImportError:
-            raise ImportError('In cubicweb 3.14, function %s has been moved to '
-                              'cube localperms. Install it first.' % self.obj)
-
-for name in ('xperm', 'xexpr', 'xrexpr', 'xorexpr', 'sexpr', 'restricted_sexpr',
-             'restricted_oexpr', 'oexpr', 'relxperm', 'relxexpr', '_perm'):
-    msg = '[3.14] import %s from cubes.localperms' % name
-    globals()[name] = deprecated(msg, name=name, doc='deprecated')(MyLazyObject('cubes.localperms', name))

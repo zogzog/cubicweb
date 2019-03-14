@@ -27,8 +27,7 @@ from operator import eq
 from six import string_types, integer_types
 from six.moves import range
 
-from logilab.common.deprecation import deprecated
-from logilab.common.registry import Predicate, objectify_predicate, yes
+from logilab.common.registry import Predicate, objectify_predicate
 
 from yams.schema import BASE_TYPES, role_name
 from rql.nodes import Function
@@ -37,8 +36,6 @@ from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
                       CW_EVENT_MANAGER, role)
 from cubicweb.uilib import eid_param
 from cubicweb.schema import split_expression
-
-yes = deprecated('[3.15] import yes() from use logilab.common.registry')(yes)
 
 
 # abstract predicates / mixin helpers ###########################################
@@ -85,12 +82,7 @@ class EClassPredicate(Predicate):
       - `accept_none` is False and some cell in the column has a None value
         (this may occurs with outer join)
     """
-    def __init__(self, once_is_enough=None, accept_none=True, mode='all'):
-        if once_is_enough is not None:
-            warn("[3.14] once_is_enough is deprecated, use mode='any'",
-                 DeprecationWarning, stacklevel=2)
-            if once_is_enough:
-                mode = 'any'
+    def __init__(self, accept_none=True, mode='all'):
         assert mode in ('any', 'all'), 'bad mode %s' % mode
         self.once_is_enough = mode == 'any'
         self.accept_none = accept_none
@@ -672,8 +664,8 @@ class score_entity(EntityPredicate):
     See :class:`~cubicweb.predicates.EntityPredicate` documentation for entity
     lookup / score rules according to the input context.
     """
-    def __init__(self, scorefunc, once_is_enough=None, mode='all'):
-        super(score_entity, self).__init__(mode=mode, once_is_enough=once_is_enough)
+    def __init__(self, scorefunc, mode='all'):
+        super(score_entity, self).__init__(mode=mode)
         def intscore(*args, **kwargs):
             score = scorefunc(*args, **kwargs)
             if not score:
@@ -690,8 +682,8 @@ class has_mimetype(EntityPredicate):
     You can give 'image/' to match any image for instance, or 'image/png' to match
     only PNG images.
     """
-    def __init__(self, mimetype, once_is_enough=None, mode='all'):
-        super(has_mimetype, self).__init__(mode=mode, once_is_enough=once_is_enough)
+    def __init__(self, mimetype, mode='all'):
+        super(has_mimetype, self).__init__(mode=mode)
         self.mimetype = mimetype
 
     def score_entity(self, entity):
@@ -995,8 +987,8 @@ class rql_condition(EntityPredicate):
     See :class:`~cubicweb.predicates.EntityPredicate` documentation for entity
     lookup / score rules according to the input context.
     """
-    def __init__(self, expression, once_is_enough=None, mode='all', user_condition=False):
-        super(rql_condition, self).__init__(mode=mode, once_is_enough=once_is_enough)
+    def __init__(self, expression, mode='all', user_condition=False):
+        super(rql_condition, self).__init__(mode=mode)
         self.user_condition = user_condition
         if user_condition:
             rql = 'Any COUNT(U) WHERE U eid %%(u)s, %s' % expression
@@ -1391,8 +1383,8 @@ class attribute_edited(EntityPredicate):
      is_instance('Version') & (match_transition('ready') |
                                attribute_edited('publication_date'))
     """
-    def __init__(self, attribute, once_is_enough=None, mode='all'):
-        super(attribute_edited, self).__init__(mode=mode, once_is_enough=once_is_enough)
+    def __init__(self, attribute, mode='all'):
+        super(attribute_edited, self).__init__(mode=mode)
         self._attribute = attribute
 
     def score_entity(self, entity):

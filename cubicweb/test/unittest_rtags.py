@@ -137,18 +137,6 @@ class RelationTagsDictTC(BaseTestCase):
                          {'key0': 'val00', 'key4': 'val4'})
 
 
-class DeprecatedInstanceWithoutModule(BaseTestCase):
-
-    def test_deprecated_instance_without_module(self):
-        class SubRelationTags(RelationTags):
-            pass
-        with self.assertWarnsRegex(
-            DeprecationWarning,
-            'instantiate SubRelationTags with __module__=__name__',
-        ):
-            SubRelationTags()
-
-
 if __name__ == '__main__':
     import unittest
     unittest.main()

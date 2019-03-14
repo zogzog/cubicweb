@@ -195,7 +195,6 @@ from warnings import filterwarnings
 from six import text_type
 
 from logilab.common.decorators import cached, classproperty
-from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods, init_log
 from logilab.common.configuration import (Configuration, Method,
                                           ConfigurationMixIn, merge_options,
@@ -1358,7 +1357,6 @@ set_log_methods(CubicWebNoAppConfiguration,
 
 # alias to get a configuration instance from an instance id
 instance_configuration = CubicWebConfiguration.config_for
-application_configuration = deprecated('use instance_configuration')(instance_configuration)
 
 
 _EXT_REGISTERED = False

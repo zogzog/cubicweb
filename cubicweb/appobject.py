@@ -31,26 +31,10 @@ common to all the application objects.
 
 from logging import getLogger
 
-from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.logging_ext import set_log_methods
 
-# first line imports for bw compat
-from logilab.common.registry import (objectify_predicate, traced_selection, Predicate,
-                                     RegistrableObject, yes)
+from logilab.common.registry import RegistrableObject, yes
 
-
-objectify_selector = deprecated('[3.15] objectify_selector has been '
-                                'renamed to objectify_predicates in '
-                                'logilab.common.registry')(objectify_predicate)
-traced_selection = deprecated('[3.15] traced_selection has been '
-                              'moved to logilab.common.registry')(traced_selection)
-Selector = class_renamed('Selector', Predicate,
-                         '[3.15] Selector has been renamed to Predicate '
-                         'in logilab.common.registry')
-
-@deprecated('[3.15] lltrace decorator can now be removed')
-def lltrace(func):
-    return func
 
 # the base class for all appobjects ############################################
 
@@ -156,6 +140,3 @@ class AppObject(RegistrableObject):
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 set_log_methods(AppObject, getLogger('cubicweb.appobject'))
-
-# defined here to avoid warning on usage on the AppObject class
-yes = deprecated('[3.15] yes has been moved to logilab.common.registry')(yes)
