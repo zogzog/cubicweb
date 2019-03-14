@@ -28,7 +28,6 @@ from __future__ import print_function
 from six import text_type, string_types
 
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.deprecation import deprecated
 
 from cubicweb.entities import AnyEntity, fetch_config
 from cubicweb.view import EntityAdapter

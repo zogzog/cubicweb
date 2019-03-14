@@ -21,7 +21,6 @@
 
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import clear_cache
-from logilab.common.registry import yes
 
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -65,32 +64,12 @@ class MetadataTC(BaseEntityTC):
                          {'description_format': ('format', 'description')})
 
     def test_fti_rql_method(self):
-        class EmailAddress(AnyEntity):
-            __regid__ = 'EmailAddress'
-            __select__ = AnyEntity.__select__ & yes(2)
-
-            @classmethod
-            def cw_fti_index_rql_queries(cls, req):
-                return ['EmailAddress Y']
-
         with self.admin_access.web_request() as req:
             req.create_entity('EmailAddress', address=u'foo@bar.com')
             eclass = self.vreg['etypes'].etype_class('EmailAddress')
-            # deprecated
-            self.assertEqual(['Any X, ADDRESS, ALIAS WHERE X is EmailAddress, '
-                              'X address ADDRESS, X alias ALIAS'],
-                             eclass.cw_fti_index_rql_queries(req))
-
             self.assertEqual(['Any X, ADDRESS, ALIAS ORDERBY X LIMIT 1000 WHERE X is EmailAddress, '
                               'X address ADDRESS, X alias ALIAS, X eid > 0'],
                              [rset.rql for rset in eclass.cw_fti_index_rql_limit(req)])
-
-            # test backwards compatibility with custom method
-            with self.temporary_appobjects(EmailAddress):
-                self.vreg['etypes'].clear_caches()
-                eclass = self.vreg['etypes'].etype_class('EmailAddress')
-                self.assertEqual(['EmailAddress Y'],
-                                 [rset.rql for rset in eclass.cw_fti_index_rql_limit(req)])
 
 
 class EmailAddressTC(BaseEntityTC):
