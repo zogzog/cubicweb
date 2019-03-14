@@ -11,7 +11,7 @@ Pygments
 mock
 #fyzz XXX pip install fails
 cubicweb-file == 1.18.0
-cubicweb-localperms == 0.3.2
+cubicweb-localperms
 cubicweb-tag == 1.8.3
 
 ## cubicweb/devtools/test

@@ -125,7 +125,7 @@ class CubicWebConfigurationTC(BaseTestCase):
     def test_available_cubes(self, mock_iter_entry_points):
         expected_cubes = [
             'card', 'comment', 'cubicweb_comment', 'cubicweb_email', 'file',
-            'cubicweb_file', 'cubicweb_forge', 'localperms',
+            'cubicweb_file', 'cubicweb_forge',
             'cubicweb_mycube', 'tag',
         ]
         self.assertEqual(self.config.available_cubes(), expected_cubes)
@@ -215,7 +215,7 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
             'email',
             'file',
             'forge',
-            'localperms',
+            'cubicweb_localperms',
             'mycube',
             'tag',
         ]
