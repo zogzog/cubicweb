@@ -209,12 +209,16 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
         ApptestConfiguration.CUBES_PATH = []
 
     def test_available_cubes(self):
-        expected_cubes = sorted(set([
-            # local cubes
-            'comment', 'email', 'file', 'forge', 'mycube',
-            # test dependencies
-            'card', 'file', 'localperms', 'tag',
-        ]))
+        expected_cubes = [
+            'card',
+            'comment',
+            'email',
+            'file',
+            'forge',
+            'localperms',
+            'mycube',
+            'tag',
+        ]
         self.assertEqual(self.config.available_cubes(), expected_cubes)
 
     def test_reorder_cubes_recommends(self):
