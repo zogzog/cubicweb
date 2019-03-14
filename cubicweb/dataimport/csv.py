@@ -20,7 +20,6 @@ from __future__ import absolute_import, print_function
 
 import codecs
 import csv as csvmod
-import warnings
 
 from six import PY2, PY3, string_types
 
@@ -41,15 +40,8 @@ def count_lines(stream_or_filename):
 
 
 def ucsvreader_pb(stream_or_path, encoding='utf-8', delimiter=',', quotechar='"',
-                  skipfirst=False, withpb=True, skip_empty=True, separator=None,
-                  quote=None):
+                  skipfirst=False, withpb=True, skip_empty=True):
     """same as :func:`ucsvreader` but a progress bar is displayed as we iter on rows"""
-    if separator is not None:
-        delimiter = separator
-        warnings.warn("[3.20] 'separator' kwarg is deprecated, use 'delimiter' instead")
-    if quote is not None:
-        quotechar = quote
-        warnings.warn("[3.20] 'quote' kwarg is deprecated, use 'quotechar' instead")
     if isinstance(stream_or_path, string_types):
         stream = open(stream_or_path, 'rb')
     else:
@@ -68,8 +60,7 @@ def ucsvreader_pb(stream_or_path, encoding='utf-8', delimiter=',', quotechar='"'
 
 
 def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
-               skipfirst=False, ignore_errors=False, skip_empty=True,
-               separator=None, quote=None):
+               skipfirst=False, ignore_errors=False, skip_empty=True):
     """A csv reader that accepts files with any encoding and outputs unicode
     strings
 
@@ -79,12 +70,6 @@ def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
     """
     if PY3:
         stream = codecs.getreader(encoding)(stream)
-    if separator is not None:
-        delimiter = separator
-        warnings.warn("[3.20] 'separator' kwarg is deprecated, use 'delimiter' instead")
-    if quote is not None:
-        quotechar = quote
-        warnings.warn("[3.20] 'quote' kwarg is deprecated, use 'quotechar' instead")
     it = iter(csvmod.reader(stream, delimiter=delimiter, quotechar=quotechar))
     if not ignore_errors:
         if skipfirst:

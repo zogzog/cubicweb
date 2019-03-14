@@ -68,7 +68,7 @@ from six import add_metaclass
 import pytz
 
 from logilab.common.decorators import cached
-from logilab.common.deprecation import deprecated, class_deprecated
+from logilab.common.deprecation import class_deprecated
 
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES
 from cubicweb.server.edition import EditedEntity
@@ -149,23 +149,6 @@ class RQLObjectStore(NullStore):
     def commit(self):
         return self._commit()
 
-    @deprecated("[3.19] use cnx.find(*args, **kwargs).entities() instead")
-    def find_entities(self, *args, **kwargs):
-        return self._cnx.find(*args, **kwargs).entities()
-
-    @deprecated("[3.19] use cnx.find(*args, **kwargs).one() instead")
-    def find_one_entity(self, *args, **kwargs):
-        return self._cnx.find(*args, **kwargs).one()
-
-    @deprecated('[3.21] use prepare_insert_entity instead')
-    def create_entity(self, *args, **kwargs):
-        eid = self.prepare_insert_entity(*args, **kwargs)
-        return self._cnx.entity_from_eid(eid)
-
-    @deprecated('[3.21] use prepare_insert_relation instead')
-    def relate(self, eid_from, rtype, eid_to, **kwargs):
-        self.prepare_insert_relation(eid_from, rtype, eid_to, **kwargs)
-
 
 class NoHookRQLObjectStore(RQLObjectStore):
     """Store that works by accessing low-level CubicWeb's source API, with all hooks deactivated. It
@@ -240,21 +223,6 @@ class NoHookRQLObjectStore(RQLObjectStore):
         if rschema.symmetric:
             self._add_relation(self._cnx, eid_to, rtype, eid_from, rschema.inlined)
         self._nb_inserted_relations += 1
-
-    @property
-    @deprecated('[3.21] deprecated')
-    def nb_inserted_entities(self):
-        return self._nb_inserted_entities
-
-    @property
-    @deprecated('[3.21] deprecated')
-    def nb_inserted_types(self):
-        return self._nb_inserted_types
-
-    @property
-    @deprecated('[3.21] deprecated')
-    def nb_inserted_relations(self):
-        return self._nb_inserted_relations
 
 
 class MetadataGenerator(object):

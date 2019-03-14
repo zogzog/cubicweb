@@ -32,4 +32,3 @@ def callfunc_every(func, number, iterable):
 from cubicweb.dataimport.stores import *
 from cubicweb.dataimport.pgstore import *
 from cubicweb.dataimport.csv import *
-from cubicweb.dataimport.deprecated import *

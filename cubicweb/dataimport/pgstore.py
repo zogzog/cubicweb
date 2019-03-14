@@ -29,8 +29,6 @@ from collections import defaultdict
 from six import string_types, integer_types, text_type, add_metaclass
 from six.moves import cPickle as pickle, range
 
-from logilab.common.deprecation import class_deprecated
-
 from cubicweb.utils import make_uid
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.dataimport.stores import NoHookRQLObjectStore
@@ -196,75 +194,6 @@ def _create_copyfrom_buffer(data, columns=None, **convert_opts):
             formatted_row.append(value)
         rows.append('\t'.join(formatted_row))
     return StringIO('\n'.join(rows))
-
-
-@add_metaclass(class_deprecated)
-class SQLGenObjectStore(NoHookRQLObjectStore):
-    """Controller of the data import process. This version is based
-    on direct insertions throught SQL command (COPY FROM or execute many).
-
-    >>> store = SQLGenObjectStore(cnx)
-    >>> store.create_entity('Person', ...)
-    >>> store.flush()
-    """
-    __deprecation_warning__ = '[3.23] this class is deprecated, use MassiveObjectStore instead'
-
-    def __init__(self, cnx, dump_output_dir=None, nb_threads_statement=1):
-        """
-        Initialize a SQLGenObjectStore.
-
-        Parameters:
-
-          - cnx: connection on the cubicweb instance
-          - dump_output_dir: a directory to dump failed statements
-            for easier recovery. Default is None (no dump).
-        """
-        super(SQLGenObjectStore, self).__init__(cnx)
-        ### hijack default source
-        self._system_source = SQLGenSourceWrapper(
-            self._system_source, cnx.vreg.schema,
-            dump_output_dir=dump_output_dir)
-        ### XXX This is done in super().__init__(), but should be
-        ### redone here to link to the correct source
-        self._add_relation = self._system_source.add_relation
-        self.indexes_etypes = {}
-        if nb_threads_statement != 1:
-            warnings.warn('[3.21] SQLGenObjectStore is no longer threaded', DeprecationWarning)
-
-    def flush(self):
-        """Flush data to the database"""
-        self._system_source.flush()
-
-    def relate(self, subj_eid, rtype, obj_eid, **kwargs):
-        if subj_eid is None or obj_eid is None:
-            return
-        # XXX Could subjtype be inferred ?
-        self._add_relation(self._cnx, subj_eid, rtype, obj_eid,
-                           self.rschema(rtype).inlined, **kwargs)
-        if self.rschema(rtype).symmetric:
-            self._add_relation(self._cnx, obj_eid, rtype, subj_eid,
-                               self.rschema(rtype).inlined, **kwargs)
-
-    def drop_indexes(self, etype):
-        """Drop indexes for a given entity type"""
-        if etype not in self.indexes_etypes:
-            cu = self._cnx.cnxset.cu
-            def index_to_attr(index):
-                """turn an index name to (database) attribute name"""
-                return index.replace(etype.lower(), '').replace('idx', '').strip('_')
-            indices = [(index, index_to_attr(index))
-                       for index in self._system_source.dbhelper.list_indices(cu, etype)
-                       # Do not consider 'cw_etype_pkey' index
-                       if not index.endswith('key')]
-            self.indexes_etypes[etype] = indices
-        for index, attr in self.indexes_etypes[etype]:
-            self._cnx.system_sql('DROP INDEX %s' % index)
-
-    def create_indexes(self, etype):
-        """Recreate indexes for a given entity type"""
-        for index, attr in self.indexes_etypes.get(etype, []):
-            sql = 'CREATE INDEX %s ON cw_%s(%s)' % (index, etype, attr)
-            self._cnx.system_sql(sql)
 
 
 ###########################################################################
