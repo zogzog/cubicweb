@@ -17,18 +17,10 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """basic plot views"""
 
-
-from cubicweb import _
-
-from six import add_metaclass
-from six.moves import range
-
-from logilab.common.date import datetime2ticks
-from logilab.common.deprecation import class_deprecated
 from logilab.common.registry import objectify_predicate
 from logilab.mtconverter import xml_escape
 
-from cubicweb.utils import UStringIO, json_dumps
+from cubicweb.utils import UStringIO
 from cubicweb.predicates import multi_columns_rset
 from cubicweb.web.views import baseviews
 
@@ -85,89 +77,6 @@ class PlotWidget(object):
 
     def _render(self, *args, **kwargs):
         raise NotImplementedError
-
-
-@add_metaclass(class_deprecated)
-class FlotPlotWidget(PlotWidget):
-    """PlotRenderer widget using Flot"""
-    __deprecation_warning__ = '[3.14] cubicweb.web.views.plots module is deprecated, use the jqplot cube instead'
-    onload = u"""
-var fig = jQuery('#%(figid)s');
-if (fig.attr('cubicweb:type') != 'prepared-plot') {
-    %(plotdefs)s
-    jQuery.plot(jQuery('#%(figid)s'), [%(plotdata)s],
-        {points: {show: true},
-         lines: {show: true},
-         grid: {hoverable: true},
-         /*yaxis : {tickFormatter : suffixFormatter},*/
-         xaxis: {mode: %(mode)s}});
-    jQuery('#%(figid)s').data({mode: %(mode)s, dateformat: %(dateformat)s});
-    jQuery('#%(figid)s').bind('plothover', onPlotHover);
-    fig.attr('cubicweb:type','prepared-plot');
-}
-"""
-
-    def __init__(self, labels, plots, timemode=False):
-        self.labels = labels
-        self.plots = plots # list of list of couples
-        self.timemode = timemode
-
-    def dump_plot(self, plot):
-        if self.timemode:
-            plot = [(datetime2ticks(x), y) for x, y in plot]
-        return json_dumps(plot)
-
-    def _render(self, req, width=500, height=400):
-        if req.ie_browser():
-            req.add_js('excanvas.js')
-        req.add_js(('jquery.flot.js', 'cubicweb.flot.js'))
-        figid = u'figure%s' % next(req.varmaker)
-        plotdefs = []
-        plotdata = []
-        self.w(u'<div id="%s" style="width: %spx; height: %spx;"></div>' %
-               (figid, width, height))
-        for idx, (label, plot) in enumerate(zip(self.labels, self.plots)):
-            plotid = '%s_%s' % (figid, idx)
-            plotdefs.append('var %s = %s;' % (plotid, self.dump_plot(plot)))
-            # XXX ugly but required in order to not crash my demo
-            plotdata.append("{label: '%s', data: %s}" % (label.replace(u'&', u''), plotid))
-        fmt = req.property_value('ui.date-format') # XXX datetime-format
-        # XXX TODO make plot options customizable
-        req.html_headers.add_onload(self.onload %
-                                    {'plotdefs': '\n'.join(plotdefs),
-                                     'figid': figid,
-                                     'plotdata': ','.join(plotdata),
-                                     'mode': self.timemode and "'time'" or 'null',
-                                     'dateformat': '"%s"' % fmt})
-
-
-@add_metaclass(class_deprecated)
-class PlotView(baseviews.AnyRsetView):
-    __deprecation_warning__ = '[3.14] cubicweb.web.views.plots module is deprecated, use the jqplot cube instead'
-    __regid__ = 'plot'
-    title = _('generic plot')
-    __select__ = multi_columns_rset() & all_columns_are_numbers()
-    timemode = False
-    paginable = False
-
-    def call(self, width=500, height=400):
-        # prepare data
-        rqlst = self.cw_rset.syntax_tree()
-        # XXX try to make it work with unions
-        varnames = [var.name for var in rqlst.children[0].get_selected_variables()][1:]
-        abscissa = [row[0] for row in self.cw_rset]
-        plots = []
-        nbcols = len(self.cw_rset.rows[0])
-        for col in range(1, nbcols):
-            data = [row[col] for row in self.cw_rset]
-            plots.append(filterout_nulls(abscissa, data))
-        plotwidget = FlotPlotWidget(varnames, plots, timemode=self.timemode)
-        plotwidget.render(self._cw, width, height, w=self.w)
-
-
-class TimeSeriePlotView(PlotView):
-    __select__ = multi_columns_rset() & columns_are_date_then_numbers()
-    timemode = True
 
 
 try:

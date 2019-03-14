@@ -71,7 +71,6 @@ from six.moves import http_client
 
 from logilab.common.date import strptime
 from logilab.common.registry import yes
-from logilab.common.deprecation import deprecated
 
 from cubicweb import ObjectNotFound, NoSelectableObject, ValidationError
 from cubicweb.appobject import AppObject
@@ -443,16 +442,6 @@ def external_resource(self, resource):
 def unload_page_data(self):
     """remove user's session data associated to current pageid"""
     self._cw.session.data.pop(self._cw.pageid, None)
-
-@ajaxfunc(output_type='json')
-@deprecated("[3.13] use jQuery.cookie(cookiename, cookievalue, {path: '/'}) in js land instead")
-def set_cookie(self, cookiename, cookievalue):
-    """generates the Set-Cookie HTTP reponse header corresponding
-    to `cookiename` / `cookievalue`.
-    """
-    cookiename, cookievalue = str(cookiename), str(cookievalue)
-    self._cw.set_cookie(cookiename, cookievalue)
-
 
 
 @ajaxfunc

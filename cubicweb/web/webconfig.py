@@ -29,7 +29,6 @@ from warnings import warn
 from six import text_type
 
 from logilab.common.decorators import cached, cachedproperty
-from logilab.common.deprecation import deprecated
 from logilab.common.configuration import merge_options
 
 from cubicweb import ConfigurationError
@@ -291,10 +290,6 @@ have the python imaging library installed to use captcha)',
             if key == 'ui.fckeditor' and not self.fckeditor_installed():
                 continue
             yield key, pdef
-
-    @deprecated('[3.22] call req.cnx.repo.get_versions() directly')
-    def vc_config(self):
-        return self.repository().get_versions()
 
     @cachedproperty
     def _instance_salt(self):

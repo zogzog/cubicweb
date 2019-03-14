@@ -760,18 +760,6 @@ class ApplicationTC(CubicWebTC):
             req.form['rql'] = 'rql:Any OV1, X WHERE X custom_workflow OV1?'
             self.app_handle_request(req)
 
-    def test_handle_deprecation(self):
-        """Test deprecation warning for *_handle methods."""
-        with self.admin_access.web_request(url='foo') as req:
-            with self.assertWarns(DeprecationWarning) as cm:
-                self.app.core_handle(req, 'foo')
-            self.assertIn('path argument got removed from "core_handle"',
-                          str(cm.warning))
-            with self.assertWarns(DeprecationWarning) as cm:
-                self.app.main_handle_request('foo', req)
-            self.assertIn('entry point arguments are now (req, path)',
-                          str(cm.warning))
-
 
 if __name__ == '__main__':
     unittest_main()

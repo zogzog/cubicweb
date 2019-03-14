@@ -23,10 +23,8 @@ form
 from cubicweb import _
 
 import copy
-from warnings import warn
 
 from logilab.mtconverter import xml_escape
-from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.decorators import cached
 
 from cubicweb import neg_role
@@ -388,9 +386,6 @@ class AutoClickAndEditFormView(EntityView):
         self._add_action(divid, args, edit_related, add_related, delete_related)
         self._del_action(divid, args, edit_related, add_related, delete_related)
         self._close_form_wrapper()
-
-
-ClickAndEditFormView = class_renamed('ClickAndEditFormView', AutoClickAndEditFormView)
 
 
 @ajaxfunc(output_type='xhtml')

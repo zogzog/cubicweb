@@ -55,7 +55,6 @@ from six import text_type
 from rql.nodes import VariableRef, Constant
 
 from logilab.mtconverter import xml_escape
-from logilab.common.deprecation import deprecated
 
 from cubicweb.predicates import paginated_rset, sorted_rset, adaptable
 from cubicweb.uilib import cut

@@ -63,7 +63,6 @@ from logilab.mtconverter import xml_escape
 from logilab.common.graph import has_path
 from logilab.common.decorators import cached, cachedproperty
 from logilab.common.date import datetime2ticks, ustrftime, ticks2datetime
-from logilab.common.deprecation import deprecated
 from logilab.common.registry import yes
 
 from rql import nodes, utils
@@ -88,12 +87,6 @@ def rtype_facet_title(facet):
 def get_facet(req, facetid, select, filtered_variable):
     return req.vreg['facets'].object_by_id(facetid, req, select=select,
                                            filtered_variable=filtered_variable)
-
-@deprecated('[3.13] filter_hiddens moved to cubicweb.web.views.facets with '
-            'slightly modified prototype')
-def filter_hiddens(w, baserql, **kwargs):
-    from cubicweb.web.views.facets import filter_hiddens
-    return filter_hiddens(w, baserql, wdgs=kwargs.pop('facets'), **kwargs)
 
 
 ## rqlst manipulation functions used by facets ################################
@@ -163,15 +156,6 @@ def prepare_select(select, filtered_variable):
             select.undefine_variable(dvar)
     # global tree config: DISTINCT, LIMIT, OFFSET
     select.set_distinct(True)
-
-@deprecated('[3.13] use init_facets instead')
-def prepare_facets_rqlst(rqlst, args=None):
-    assert len(rqlst.children) == 1, 'FIXME: union not yet supported'
-    select = rqlst.children[0]
-    filtered_variable = get_filtered_variable(select)
-    baserql = select.as_string(args)
-    prepare_select(select, filtered_variable)
-    return filtered_variable, baserql
 
 def prepare_vocabulary_select(select, filtered_variable, rtype, role,
                               select_target_entity=True):
@@ -370,11 +354,6 @@ def _get_var(select, varname, varmap):
         return var
 
 
-_prepare_vocabulary_rqlst = deprecated('[3.13] renamed prepare_vocabulary_select')(
-    prepare_vocabulary_select)
-_cleanup_rqlst = deprecated('[3.13] renamed to cleanup_select')(cleanup_select)
-
-
 ## base facet classes ##########################################################
 
 class AbstractFacet(AppObject):
@@ -478,11 +457,6 @@ class AbstractFacet(AppObject):
     @property
     def wdgclass(self):
         raise NotImplementedError
-
-    @property
-    @deprecated('[3.13] renamed .select')
-    def rqlst(self):
-        return self.select
 
 
 class VocabularyFacet(AbstractFacet):

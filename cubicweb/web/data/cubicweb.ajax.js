@@ -473,19 +473,8 @@ function _loadDynamicFragments(node) {
         }
         // else: rebuild full url by fetching cubicweb:rql, cubicweb:vid, etc.
         var rql = $fragment.attr('cubicweb:rql');
-        var items = $fragment.attr('cubicweb:vid').split('&');
-        var vid = items[0];
+        var vid = $fragment.attr('cubicweb:vid');
         var extraparams = {};
-        // case where vid='myvid&param1=val1&param2=val2': this is a deprecated abuse-case
-        if (items.length > 1) {
-            cw.log("[3.5] you're using extraargs in cubicweb:vid " +
-                   "attribute, this is deprecated, consider using " +
-                   "loadurl instead");
-            for (var j = 1; j < items.length; j++) {
-                var keyvalue = items[j].split('=');
-                extraparams[keyvalue[0]] = keyvalue[1];
-            }
-        }
         var actrql = $fragment.attr('cubicweb:actualrql');
         if (actrql) {
             extraparams['actualrql'] = actrql;
@@ -678,23 +667,6 @@ function loadNow(eltsel, holesel, reloadable) {
 function triggerLoad(divid) {
     jQuery('#lazy-' + divid).trigger('load_' + divid);
 }
-
-/* DEPRECATED *****************************************************************/
-
-// still used in cwo and keyword cubes at least
-reloadComponent = cw.utils.deprecatedFunction(
-    '[3.9] reloadComponent() is deprecated, use loadxhtml instead',
-    function(compid, rql, registry, nodeid, extraargs) {
-        registry = registry || 'components';
-        rql = rql || '';
-        nodeid = nodeid || (compid + 'Component');
-        extraargs = extraargs || {};
-        var node = cw.jqNode(nodeid);
-        return node.loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('component', null, compid,
-                                                          rql, registry, extraargs));
-    }
-);
-
 
 function remoteExec(fname /* ... */) {
     setProgressCursor();

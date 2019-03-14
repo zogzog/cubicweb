@@ -19,15 +19,10 @@
 
 
 
-import os
 import sys
-import tempfile
-
-from six import add_metaclass
 
 from rql import nodes
 from logilab.mtconverter import xml_escape
-from logilab.common.deprecation import class_deprecated
 
 
 def need_table_view(rset, schema):
@@ -126,23 +121,3 @@ def add_etype_button(req, etype, csscls='addButton right', **urlkwargs):
         return u'<a href="%s" class="%s">%s</a>' % (
             xml_escape(url), csscls, req.__('New %s' % etype))
     return u''
-
-
-
-@add_metaclass(class_deprecated)
-class TmpFileViewMixin(object):
-    __deprecation_warning__ = '[3.18] %(cls)s is deprecated'
-    binary = True
-    content_type = 'application/octet-stream'
-    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
-
-    def call(self):
-        self.cell_call()
-
-    def cell_call(self, row=0, col=0):
-        self.cw_row, self.cw_col = row, col # in case one needs it
-        fd, tmpfile = tempfile.mkstemp('.png')
-        os.close(fd)
-        self._generate(tmpfile)
-        self.w(open(tmpfile, 'rb').read())
-        os.unlink(tmpfile)

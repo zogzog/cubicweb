@@ -426,15 +426,6 @@ function IFRAME(params) {
 // backward compat
 CubicWeb = cw;
 
-jQuery.extend(cw, {
-    require: cw.utils.deprecatedFunction(
-        '[3.9] CubicWeb.require() is not used anymore',
-        function(module) {}),
-    provide: cw.utils.deprecatedFunction(
-        '[3.9] CubicWeb.provide() is not used anymore',
-        function(module) {})
-});
-
 jQuery(document).ready(function() {
     $(cw).trigger('server-response', [false, document]);
 });

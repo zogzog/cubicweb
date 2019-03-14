@@ -10,17 +10,6 @@ jQuery.extend(cw.htmlhelpers, {
 
 
 /**
- * .. function:: baseuri()
- *
- * returns the document's baseURI.
- */
-baseuri = cw.utils.deprecatedFunction(
-    "[3.20] baseuri() is deprecated, use BASE_URL instead",
-    function () {
-        return BASE_URL;
-    });
-
-/**
  * .. function:: setProgressCursor()
  *
  * set body's cursor to 'progress'

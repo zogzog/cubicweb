@@ -23,7 +23,6 @@ from warnings import warn
 from six import add_metaclass
 
 from logilab.common.decorators import iclassmethod
-from logilab.common.deprecation import deprecated
 
 from cubicweb.appobject import AppObject
 from cubicweb.view import NOINDEX, NOFOLLOW

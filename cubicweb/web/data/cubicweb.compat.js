@@ -18,12 +18,3 @@ function map(func, array) {
     }
     return result;
 }
-
-
-// skm cube still uses this
-getNodeAttribute = cw.utils.deprecatedFunction(
-    '[3.9] getNodeAttribute(node, attr) is deprecated, use $(node).attr(attr)',
-    function(node, attribute) {
-        return $(node).attr(attribute);
-    }
-);

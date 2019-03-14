@@ -25,7 +25,6 @@ from cubicweb import _
 from six.moves import range
 
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, xml_escape
-from logilab.common.deprecation import class_renamed, deprecated
 
 from cubicweb import tags
 from cubicweb.view import EntityView

@@ -25,7 +25,6 @@ from six.moves.urllib.parse import urlsplit, urlunsplit, urljoin, parse_qs
 import lxml
 
 from logilab.common.testlib import unittest_main
-from logilab.common.decorators import monkeypatch
 
 from cubicweb import Binary, NoSelectableObject, ValidationError, transaction as tx
 from cubicweb.schema import RRQLExpression
@@ -37,7 +36,6 @@ from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
 from cubicweb.web import Redirect, RemoteCallFailed, http_headers, formfields as ff
 from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
-from cubicweb.web.views.basecontrollers import JSonController, xhtmlize, jsonize
 from cubicweb.web.views.ajaxcontroller import ajaxfunc, AjaxFunction
 from cubicweb.server.session import Connection
 from cubicweb.server.hook import Hook, Operation
@@ -760,8 +758,8 @@ class EditControllerTC(CubicWebTC):
         with self.admin_access.web_request(url='edit') as req:
             p = self.create_user(req, u"doe")
             # do not try to skip 'primary_email' for this test
-            old_skips = p.__class__.skip_copy_for
-            p.__class__.skip_copy_for = ()
+            old_skips = p.__class__.cw_skip_copy_for
+            p.__class__.cw_skip_copy_for = ()
             try:
                 e = req.create_entity('EmailAddress', address=u'doe@doe.com')
                 req.execute('SET P use_email E, P primary_email E WHERE P eid %(p)s, E eid %(e)s',
@@ -786,7 +784,7 @@ class EditControllerTC(CubicWebTC):
                 rset = req.execute('CWUser P WHERE P surname "Boom"')
                 self.assertEqual(len(rset), 0)
             finally:
-                p.__class__.skip_copy_for = old_skips
+                p.__class__.cw_skip_copy_for = old_skips
 
     def test_regr_inlined_forms(self):
         with self.admin_access.web_request() as req:
@@ -1018,64 +1016,6 @@ class AjaxControllerTC(CubicWebTC):
                 pass
         self.assertEqual(cm.exception.status, 400)
         self.assertEqual(cm.exception.reason, 'no foo method')
-
-
-class JSonControllerTC(AjaxControllerTC):
-    # NOTE: this class performs the same tests as AjaxController but with
-    #       deprecated 'json' controller (i.e. check backward compatibility)
-    tested_controller = 'json'
-
-    def setUp(self):
-        super(JSonControllerTC, self).setUp()
-        self.exposed_remote_funcs = [fname for fname in dir(JSonController)
-                                     if fname.startswith('js_')]
-
-    def tearDown(self):
-        super(JSonControllerTC, self).tearDown()
-        for funcname in dir(JSonController):
-            # remove functions added dynamically during tests
-            if funcname.startswith('js_') and funcname not in self.exposed_remote_funcs:
-                delattr(JSonController, funcname)
-
-    def test_monkeypatch_jsoncontroller(self):
-        with self.assertRaises(RemoteCallFailed):
-            with self.remote_calling('foo'):
-                pass
-        @monkeypatch(JSonController)
-        def js_foo(self):
-            return u'hello'
-        with self.remote_calling('foo') as (res, _):
-            self.assertEqual(res, b'hello')
-
-    def test_monkeypatch_jsoncontroller_xhtmlize(self):
-        with self.assertRaises(RemoteCallFailed):
-            with self.remote_calling('foo'):
-                pass
-        @monkeypatch(JSonController)
-        @xhtmlize
-        def js_foo(self):
-            return u'hello'
-        with self.remote_calling('foo') as (res, _):
-            self.assertEqual(b'<div>hello</div>', res)
-
-    def test_monkeypatch_jsoncontroller_jsonize(self):
-        with self.assertRaises(RemoteCallFailed):
-            with self.remote_calling('foo'):
-                pass
-        @monkeypatch(JSonController)
-        @jsonize
-        def js_foo(self):
-            return 12
-        with self.remote_calling('foo') as (res, _):
-            self.assertEqual(res, b'12')
-
-    def test_monkeypatch_jsoncontroller_stdfunc(self):
-        @monkeypatch(JSonController)
-        @jsonize
-        def js_reledit_form(self):
-            return 12
-        with self.remote_calling('reledit_form') as (res, _):
-            self.assertEqual(res, b'12')
 
 
 class UndoControllerTC(CubicWebTC):

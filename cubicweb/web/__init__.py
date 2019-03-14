@@ -23,7 +23,6 @@ publisher to get a full CubicWeb web application
 from cubicweb import _
 
 from six.moves.urllib.parse import quote as urlquote
-from logilab.common.deprecation import deprecated
 
 from cubicweb.web._exceptions import *
 from cubicweb.utils import json_dumps

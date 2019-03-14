@@ -25,7 +25,6 @@
 from cubicweb import _
 
 from logilab.common.textutils import unormalize
-from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb.view import StartupView
@@ -167,7 +166,3 @@ class IndexView(ManageView):
     """
     __regid__ = 'index'
     title = _('view_index')
-
-    @deprecated('[3.11] display_folders method is deprecated, backport it if needed')
-    def display_folders(self):
-        return 'Folder' in self._cw.vreg.schema and self._cw.execute('Any COUNT(X) WHERE X is Folder')[0][0]

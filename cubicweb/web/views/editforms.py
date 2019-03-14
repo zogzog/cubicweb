@@ -26,7 +26,6 @@ from copy import copy
 from six.moves import range
 
 from logilab.common.registry import yes
-from logilab.common.deprecation import class_moved
 
 from cubicweb import _
 from cubicweb import tags
@@ -299,9 +298,3 @@ class TableEditFormView(FormViewMixIn, EntityView):
                                              copy_nav_params=True,
                                              formvid='edition')
         form.render(w=self.w)
-
-
-# click and edit handling ('reledit') ##########################################
-
-ClickAndEditFormView = class_moved(reledit.ClickAndEditFormView)
-AutoClickAndEditFormView = class_moved(reledit.AutoClickAndEditFormView)

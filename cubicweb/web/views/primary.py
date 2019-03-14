@@ -40,9 +40,6 @@ views describled below. For instance:
 
 from cubicweb import _
 
-from warnings import warn
-
-from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized, NoSelectableObject

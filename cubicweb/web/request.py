@@ -34,7 +34,6 @@ from six.moves.http_cookies import SimpleCookie
 from rql.utils import rqlvar_maker
 
 from logilab.common.decorators import cached
-from logilab.common.deprecation import deprecated
 
 from cubicweb import AuthenticationError
 from cubicweb.req import RequestSessionBase
@@ -161,16 +160,6 @@ class _CubicWebRequestBase(RequestSessionBase):
             pid = make_uid(id(self))
             self.html_headers.define_var('pageid', pid, override=False)
         self.pageid = pid
-
-    def _get_json_request(self):
-        warn('[3.15] self._cw.json_request is deprecated, use self._cw.ajax_request instead',
-             DeprecationWarning, stacklevel=2)
-        return self.ajax_request
-    def _set_json_request(self, value):
-        warn('[3.15] self._cw.json_request is deprecated, use self._cw.ajax_request instead',
-             DeprecationWarning, stacklevel=2)
-        self.ajax_request = value
-    json_request = property(_get_json_request, _set_json_request)
 
     @property
     def authmode(self):
@@ -696,15 +685,6 @@ class _CubicWebRequestBase(RequestSessionBase):
         # XXX replace by False once validate_cache bw compat method is dropped
         return None
 
-    @deprecated('[3.18] use .is_client_cache_valid() method instead')
-    def validate_cache(self):
-        """raise a `StatusResponse` exception if a cached page along the way
-        exists and is still usable.
-        """
-        status_code = self.is_client_cache_valid()
-        if status_code is not None:
-            raise StatusResponse(status_code)
-
     # abstract methods to override according to the web front-end #############
 
     def http_method(self):
@@ -812,26 +792,13 @@ class _CubicWebRequestBase(RequestSessionBase):
         values = _parse_accept_header(accepteds, value_parser, value_sort_key)
         return (raw_value for (raw_value, parsed_value, score) in values)
 
-    @deprecated('[3.17] demote_to_html is deprecated as we always serve html')
-    def demote_to_html(self):
-        """helper method to dynamically set request content type to text/html
-
-        The global doctype and xmldec must also be changed otherwise the browser
-        will display '<[' at the beginning of the page
-        """
-        pass
-
-
     # xml doctype #############################################################
 
-    def set_doctype(self, doctype, reset_xmldecl=None):
+    def set_doctype(self, doctype):
         """helper method to dynamically change page doctype
 
         :param doctype: the new doctype, e.g. '<!DOCTYPE html>'
         """
-        if reset_xmldecl is not None:
-            warn('[3.17] reset_xmldecl is deprecated as we only serve html',
-                 DeprecationWarning, stacklevel=2)
         self.main_stream.set_doctype(doctype)
 
     # page data management ####################################################
@@ -877,16 +844,6 @@ class _CubicWebRequestBase(RequestSessionBase):
     def ie_browser(self):
         useragent = self.useragent()
         return useragent and 'MSIE' in useragent
-
-    @deprecated('[3.17] xhtml_browser is deprecated (xhtml is no longer served)')
-    def xhtml_browser(self):
-        """return True if the browser is considered as xhtml compatible.
-
-        If the instance is configured to always return text/html and not
-        application/xhtml+xml, this method will always return False, even though
-        this is semantically different
-        """
-        return False
 
     def html_content_type(self):
         return 'text/html'

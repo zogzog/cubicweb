@@ -20,8 +20,6 @@
 
 from cubicweb import _
 
-from warnings import warn
-
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
 from logilab.common.registry import objectify_predicate, yes
@@ -129,7 +127,7 @@ class FacetFilterMixIn(object):
     needs_js = ['cubicweb.ajax.js', 'cubicweb.facets.js']
     needs_css = ['cubicweb.facets.css']
 
-    def generate_form(self, w, rset, divid, vid, vidargs=None, mainvar=None,
+    def generate_form(self, w, rset, divid, vid, mainvar=None,
                       paginate=False, cssclass='', hiddens=None, **kwargs):
         """display a form to filter some view's content
 
@@ -163,12 +161,7 @@ class FacetFilterMixIn(object):
         self._cw.add_css(self.needs_css)
         self._cw.html_headers.define_var('facetLoadingMsg',
                                          self._cw._('facet-loading-msg'))
-        if vidargs is not None:
-            warn("[3.14] vidargs is deprecated. Maybe you're using some TableView?",
-                 DeprecationWarning, stacklevel=2)
-        else:
-            vidargs = {}
-        vidargs = dict((k, v) for k, v in vidargs.items() if v)
+        vidargs = {}
         facetargs = xml_escape(json_dumps([divid, vid, paginate, vidargs]))
         w(u'<form id="%sForm" class="%s" method="post" action="" '
           'cubicweb:facetargs="%s" >' % (divid, cssclass, facetargs))

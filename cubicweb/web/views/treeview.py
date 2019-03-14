@@ -22,8 +22,6 @@ plugin.
 
 from cubicweb import _
 
-from warnings import warn
-
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import make_uid, json
@@ -150,11 +148,7 @@ class TreeView(EntityView):
 jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
 
     def call(self, subvid=None, treeid=None,
-             initial_load=True, initial_thru_ajax=None, **morekwargs):
-        if initial_thru_ajax is not None:
-            msg = '[3.24] initial_thru_ajax argument is deprecated'
-            warn(msg, DeprecationWarning, stacklevel=2)
-
+             initial_load=True, **morekwargs):
         subvid, treeid = self._init_params(subvid, treeid,
                                            initial_load, morekwargs)
         ulid = ' '

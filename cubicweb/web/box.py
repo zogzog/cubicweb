@@ -23,7 +23,7 @@ from cubicweb import _
 from six import add_metaclass
 
 from logilab.mtconverter import xml_escape
-from logilab.common.deprecation import class_deprecated, class_renamed
+from logilab.common.deprecation import class_deprecated
 
 from cubicweb import Unauthorized, role as get_role
 from cubicweb.schema import display_name
@@ -33,7 +33,6 @@ from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
                                       RawBoxItem)
 from cubicweb.web.action import UnregisteredAction
 from cubicweb.web.component import (
-    AjaxEditRelationCtxComponent,
     EditRelationMixIn,
     Separator,
 )
@@ -195,8 +194,3 @@ class EditRelationBoxTemplate(EditRelationMixIn, EntityBoxTemplate):
         label = super(EditRelationBoxTemplate, self).box_item(
             entity, etarget, rql, label)
         return RawBoxItem(label, liclass=u'invisible')
-
-
-AjaxEditRelationBoxTemplate = class_renamed(
-    'AjaxEditRelationBoxTemplate', AjaxEditRelationCtxComponent,
-    '[3.10] AjaxEditRelationBoxTemplate has been renamed to AjaxEditRelationCtxComponent (%(cls)s)')

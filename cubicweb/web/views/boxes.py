@@ -28,12 +28,9 @@ Additional boxes (disabled by default):
 
 from cubicweb import _
 
-from warnings import warn
-
 from six import text_type, add_metaclass
 
 from logilab.mtconverter import xml_escape
-from logilab.common.deprecation import class_deprecated
 
 from cubicweb import Unauthorized
 from cubicweb.predicates import (match_user_groups, match_kwargs,
@@ -229,28 +226,6 @@ class RsetBox(component.CtxComponent):
                       initargs=self.cw_extra_kwargs)
 
  # helper classes ##############################################################
-
-@add_metaclass(class_deprecated)
-class SideBoxView(EntityView):
-    """helper view class to display some entities in a sidebox"""
-    __deprecation_warning__ = '[3.10] SideBoxView is deprecated, use RsetBox instead (%(cls)s)'
-
-    __regid__ = 'sidebox'
-
-    def call(self, title=u'', **kwargs):
-        """display a list of entities by calling their <item_vid> view"""
-        if 'dispctrl' in self.cw_extra_kwargs:
-            # XXX do not modify dispctrl!
-            self.cw_extra_kwargs['dispctrl'].setdefault('subvid', 'outofcontext')
-            self.cw_extra_kwargs['dispctrl'].setdefault('use_list_limit', 1)
-        if title:
-            self.cw_extra_kwargs['title'] = title
-        self.cw_extra_kwargs.setdefault('context', 'incontext')
-        box = self._cw.vreg['ctxcomponents'].select(
-            'rsetbox', self._cw, rset=self.cw_rset, vid='autolimited',
-            **self.cw_extra_kwargs)
-        box.render(self.w)
-
 
 class ContextualBoxLayout(component.Layout):
     __select__ = match_context('incontext', 'left', 'right') & contextual()
