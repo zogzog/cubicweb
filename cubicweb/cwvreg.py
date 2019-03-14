@@ -250,15 +250,6 @@ class ActionsRegistry(CWRegistry):
                       key=lambda x: x.order)
 
     def possible_actions(self, req, rset=None, **kwargs):
-        if not kwargs:
-            raise ValueError("ActionsRegistry.possible_actions should always be "
-                             "called with additional keywords arguments (in "
-                             "addition of req and the optional argument rset) "
-                             "to optimised cache computation but you provided "
-                             "none.\n\nFor exemple if you are working on a view, "
-                             "provide the view as a keyword argument to "
-                             "possible_actions like this: view=my_view.")
-
         if rset is None:
             actions = self.poss_visible_objects(req, rset=rset, **kwargs)
         else:
