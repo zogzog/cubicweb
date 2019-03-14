@@ -25,7 +25,7 @@ from __future__ import print_function
 # completion). So import locally in command helpers.
 import sys
 from warnings import filterwarnings
-from os import remove, listdir, system, pathsep
+from os import listdir, system, pathsep
 from os.path import exists, join, isdir
 
 try:
@@ -462,183 +462,10 @@ class DeleteInstanceCommand(Command):
 
 # instance commands ########################################################
 
-class StartInstanceCommand(InstanceCommandFork):
-    """Start the given instances. If no instance is given, start them all.
-
-    <instance>...
-      identifiers of the instances to start. If no instance is
-      given, start them all.
-    """
-    name = 'start'
-    actionverb = 'started'
-    options = (
-        ("debug",
-         {'short': 'D', 'action': 'store_true',
-          'help': 'start server in debug mode.'}),
-        ("force",
-         {'short': 'f', 'action': 'store_true',
-          'default': False,
-          'help': 'start the instance even if it seems to be already \
-running.'}),
-        ('profile',
-         {'short': 'P', 'type': 'string', 'metavar': '<stat file>',
-          'default': None,
-          'help': 'profile code and use the specified file to store stats',
-          }),
-        ('loglevel',
-         {'short': 'l', 'type': 'choice', 'metavar': '<log level>',
-          'default': None, 'choices': ('debug', 'info', 'warning', 'error'),
-          'help': 'debug if -D is set, error otherwise',
-          }),
-        ('param',
-         {'short': 'p', 'type': 'named', 'metavar': 'key1:value1,key2:value2',
-          'default': {},
-          'help': 'override <key> configuration file option with <value>.',
-          }),
-    )
-
-    def start_instance(self, appid):
-        """start the instance's server"""
-        try:
-            import twisted  # noqa
-        except ImportError:
-            msg = (
-                "Twisted is required by the 'start' command\n"
-                "Either install it, or use one of the alternative commands:\n"
-                "- '{ctl} pyramid {appid}'\n"
-                "- '{ctl} wsgi {appid}'\n")
-            raise ExecutionError(msg.format(ctl='cubicweb-ctl', appid=appid))
-        config = cwcfg.config_for(appid, debugmode=self['debug'])
-        # override config file values with cmdline options
-        config.cmdline_options = self.config.param
-        init_cmdline_log_threshold(config, self['loglevel'])
-        if self['profile']:
-            config.global_set_option('profile', self.config.profile)
-        helper = self.config_helper(config, cmdname='start')
-        pidf = config['pid-file']
-        if exists(pidf) and not self['force']:
-            msg = "%s seems to be running. Remove %s by hand if necessary or use \
-the --force option."
-            raise ExecutionError(msg % (appid, pidf))
-        if helper.start_server(config) == 1:
-            print('instance %s started' % appid)
-
-
 def init_cmdline_log_threshold(config, loglevel):
     if loglevel is not None:
         config.global_set_option('log-threshold', loglevel.upper())
         config.init_log(config['log-threshold'], force=True)
-
-
-class StopInstanceCommand(InstanceCommand):
-    """Stop the given instances.
-
-    <instance>...
-      identifiers of the instances to stop. If no instance is
-      given, stop them all.
-    """
-    name = 'stop'
-    actionverb = 'stopped'
-
-    def stop_instance(self, appid):
-        """stop the instance's server"""
-        config = cwcfg.config_for(appid)
-        helper = self.config_helper(config, cmdname='stop')
-        helper.poststop()  # do this anyway
-        pidf = config['pid-file']
-        if not exists(pidf):
-            sys.stderr.write("%s doesn't exist.\n" % pidf)
-            return
-        import signal
-        pid = int(open(pidf).read().strip())
-        try:
-            kill(pid, signal.SIGTERM)
-        except Exception:
-            sys.stderr.write("process %s seems already dead.\n" % pid)
-        else:
-            try:
-                wait_process_end(pid)
-            except ExecutionError as ex:
-                sys.stderr.write('%s\ntrying SIGKILL\n' % ex)
-                try:
-                    kill(pid, signal.SIGKILL)
-                except Exception:
-                    # probably dead now
-                    pass
-                wait_process_end(pid)
-        try:
-            remove(pidf)
-        except OSError:
-            # already removed by twistd
-            pass
-        print('instance %s stopped' % appid)
-
-
-class RestartInstanceCommand(StartInstanceCommand):
-    """Restart the given instances.
-
-    <instance>...
-      identifiers of the instances to restart. If no instance is
-      given, restart them all.
-    """
-    name = 'restart'
-    actionverb = 'restarted'
-
-    def restart_instance(self, appid):
-        StopInstanceCommand(self.logger).stop_instance(appid)
-        self.start_instance(appid)
-
-
-class ReloadConfigurationCommand(RestartInstanceCommand):
-    """Reload the given instances. This command is equivalent to a
-    restart for now.
-
-    <instance>...
-      identifiers of the instances to reload. If no instance is
-      given, reload them all.
-    """
-    name = 'reload'
-
-    def reload_instance(self, appid):
-        self.restart_instance(appid)
-
-
-class StatusCommand(InstanceCommand):
-    """Display status information about the given instances.
-
-    <instance>...
-      identifiers of the instances to status. If no instance is
-      given, get status information about all registered instances.
-    """
-    name = 'status'
-    options = ()
-
-    @staticmethod
-    def status_instance(appid):
-        """print running status information for an instance"""
-        status = 0
-        for mode in cwcfg.possible_configurations(appid):
-            config = cwcfg.config_for(appid, mode)
-            print('[%s-%s]' % (appid, mode), end=' ')
-            try:
-                pidf = config['pid-file']
-            except KeyError:
-                print('buggy instance, pid file not specified')
-                continue
-            if not exists(pidf):
-                print("doesn't seem to be running")
-                status = 1
-                continue
-            pid = int(open(pidf).read().strip())
-            # trick to guess whether or not the process is running
-            try:
-                getpgid(pid)
-            except OSError:
-                print("should be running with pid %s but the process can not be found" % pid)
-                status = 1
-                continue
-            print("running with pid %s" % (pid))
-        return status
 
 
 class UpgradeInstanceCommand(InstanceCommandFork):
@@ -675,11 +502,6 @@ class UpgradeInstanceCommand(InstanceCommandFork):
           'default': False,
           'help': 'do NOT update config file if set.'}),
 
-        ('nostartstop',
-         {'short': 'n', 'action': 'store_true',
-          'default': False,
-          'help': 'don\'t try to stop instance before migration and to restart it after.'}),
-
         ('verbosity',
          {'short': 'v', 'type': 'int', 'metavar': '<0..2>',
           'default': 1,
@@ -707,7 +529,6 @@ given, appropriate sources for migration will be automatically selected \
         print('\n' + underline_title('Upgrading the instance %s' % appid))
         from logilab.common.changelog import Version
         config = cwcfg.config_for(appid)
-        instance_running = exists(config['pid-file'])
         config.repairing = True  # notice we're not starting the server
         config.verbosity = self.config.verbosity
         set_sources_mode = getattr(config, 'set_sources_mode', None)
@@ -739,9 +560,6 @@ given, appropriate sources for migration will be automatically selected \
             applcubicwebversion = vcconf.get('cubicweb')
         if cubicwebversion > applcubicwebversion:
             toupgrade.append(('cubicweb', applcubicwebversion, cubicwebversion))
-        # only stop once we're sure we have something to do
-        if instance_running and not self.config.nostartstop:
-            StopInstanceCommand(self.logger).stop_instance(appid)
         # run cubicweb/componants migration scripts
         if self.config.fs_only or toupgrade:
             for cube, fromversion, toversion in toupgrade:
@@ -763,13 +581,6 @@ given, appropriate sources for migration will be automatically selected \
         if helper:
             helper.postupgrade(repo)
         print('-> instance migrated.')
-        if instance_running and not self.config.nostartstop:
-            # restart instance through fork to get a proper environment, avoid
-            # uicfg pb (and probably gettext catalogs, to check...)
-            forkcmd = '%s start %s' % (sys.argv[0], appid)
-            status = system(forkcmd)
-            if status:
-                print('%s exited with status %s' % (forkcmd, status))
         print()
 
     def i18nupgrade(self, config):
@@ -1037,8 +848,6 @@ if WSGI_CHOICES:
 
 for cmdcls in (ListCommand,
                CreateInstanceCommand, DeleteInstanceCommand,
-               StartInstanceCommand, StopInstanceCommand, RestartInstanceCommand,
-               ReloadConfigurationCommand, StatusCommand,
                UpgradeInstanceCommand,
                ListVersionsInstanceCommand,
                ShellCommand,

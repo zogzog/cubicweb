@@ -13,6 +13,13 @@ New features
 
 .. _pytest-xdist: https://github.com/pytest-dev/pytest-xdist
 
+Backwards incompatible changes
+------------------------------
+
+* ``cubicweb-ctl`` commands "start", "stop", "restart", "reload" and "status"
+  have been removed because they relied on the Twisted web server backend that
+  is no longer maintained nor working with Python 3.
+
 Deprecated code drops
 ---------------------
 
