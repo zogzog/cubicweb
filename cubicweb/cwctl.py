@@ -26,7 +26,7 @@ from __future__ import print_function
 import sys
 from warnings import warn, filterwarnings
 from os import remove, listdir, system, pathsep
-from os.path import exists, join, isdir, dirname, abspath
+from os.path import exists, join, isdir
 
 try:
     from os import kill, getpgid
@@ -397,7 +397,6 @@ class CreateInstanceCommand(Command):
                     config.input_config(section, self.config.config_level)
         # write down configuration
         config.save()
-        self._handle_win32(config, appid)
         print('-> generated config %s' % config.main_config_file())
         # handle i18n files structure
         # in the first cube given
@@ -423,29 +422,6 @@ class CreateInstanceCommand(Command):
         print('\n-> creation done for %s\n' % repr(config.apphome)[1:-1])
         if not self.config.no_db_create:
             helper.postcreate(self.config.automatic, self.config.config_level)
-
-    def _handle_win32(self, config, appid):
-        if sys.platform != 'win32':
-            return
-        service_template = """
-import sys
-import win32serviceutil
-sys.path.insert(0, r"%(CWPATH)s")
-
-from cubicweb.etwist.service import CWService
-
-classdict = {'_svc_name_': 'cubicweb-%(APPID)s',
-             '_svc_display_name_': 'CubicWeb ' + '%(CNAME)s',
-             'instance': '%(APPID)s'}
-%(CNAME)sService = type('%(CNAME)sService', (CWService,), classdict)
-
-if __name__ == '__main__':
-    win32serviceutil.HandleCommandLine(%(CNAME)sService)
-"""
-        open(join(config.apphome, 'win32svc.py'), 'wb').write(
-            service_template % {'APPID': appid,
-                                'CNAME': appid.capitalize(),
-                                'CWPATH': abspath(join(dirname(__file__), '..'))})
 
 
 class DeleteInstanceCommand(Command):
