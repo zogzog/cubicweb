@@ -27,7 +27,6 @@ from math import log
 from contextlib import contextmanager
 from inspect import isgeneratorfunction
 from itertools import chain
-from warnings import warn
 
 from six import binary_type, text_type, string_types, reraise
 from six.moves import range
@@ -39,7 +38,7 @@ from logilab.common.testlib import Tags, nocoverage
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
 from logilab.common.decorators import cached, classproperty, clear_cache, iclassmethod
-from logilab.common.deprecation import deprecated, class_deprecated
+from logilab.common.deprecation import class_deprecated
 from logilab.common.shellutils import getlogin
 
 from cubicweb import (ValidationError, NoSelectableObject, AuthenticationError,
@@ -453,14 +452,6 @@ class CubicWebTC(BaseTestCase):
 
     # user / session management ###############################################
 
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def user(self, req=None):
-        """return the application schema"""
-        if req is None:
-            return self.request().user
-        else:
-            return req.user
-
     @iclassmethod  # XXX turn into a class method
     def create_user(self, req, login=None, groups=('users',), password=None,
                     email=None, commit=True, **kwargs):
@@ -671,15 +662,6 @@ class CubicWebTC(BaseTestCase):
         publisher.error_handler = raise_error_handler
         return publisher
 
-    @deprecated('[3.19] use the .remote_calling method')
-    def remote_call(self, fname, *args):
-        """remote json call simulation"""
-        dump = json.dumps
-        args = [dump(arg) for arg in args]
-        req = self.request(fname=fname, pageid='123', arg=args)
-        ctrl = self.vreg['controllers'].select('ajax', req)
-        return ctrl.publish(), req
-
     @contextmanager
     def remote_calling(self, fname, *args, **kwargs):
         """remote json call simulation"""
@@ -688,18 +670,8 @@ class CubicWebTC(BaseTestCase):
             ctrl = self.vreg['controllers'].select('ajax', req)
             yield ctrl.publish(), req
 
-    def app_handle_request(self, req, path=None):
-        if path is not None:
-            warn('[3.24] path argument got removed from app_handle_request parameters, '
-                 'give it to the request constructor', DeprecationWarning)
-            if req.relative_path(False) != path:
-                req._url = path
+    def app_handle_request(self, req):
         return self.app.core_handle(req)
-
-    @deprecated("[3.15] app_handle_request is the new and better way"
-                " (beware of small semantic changes)")
-    def app_publish(self, *args, **kwargs):
-        return self.app_handle_request(*args, **kwargs)
 
     def ctrl_publish(self, req, ctrl='edit', rset=None):
         """call the publish method of the edit controller"""
@@ -750,20 +722,6 @@ class CubicWebTC(BaseTestCase):
         if fields:
             form['_cw_fields'] = ','.join(sorted(fields))
         return form
-
-    @deprecated('[3.19] use .admin_request_from_url instead')
-    def req_from_url(self, url):
-        """parses `url` and builds the corresponding CW-web request
-
-        req.form will be setup using the url's query string
-        """
-        req = self.request(url=url)
-        if isinstance(url, text_type):
-            url = url.encode(req.encoding)  # req.setup_params() expects encoded strings
-        querystring = urlparse(url)[-2]
-        params = parse_qs(querystring)
-        req.setup_params(params)
-        return req
 
     @contextmanager
     def admin_request_from_url(self, url):
@@ -843,11 +801,6 @@ class CubicWebTC(BaseTestCase):
         self.assertTrue(300 <= req.status_out < 400, req.status_out)
         location = req.get_response_header('location')
         return self._parse_location(req, location)
-
-    @deprecated("[3.15] expect_redirect_handle_request is the new and better way"
-                " (beware of small semantic changes)")
-    def expect_redirect_publish(self, *args, **kwargs):
-        return self.expect_redirect_handle_request(*args, **kwargs)
 
     def set_auth_mode(self, authmode, anonuser=None):
         self.set_option('auth-mode', authmode)

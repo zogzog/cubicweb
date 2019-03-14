@@ -24,8 +24,6 @@ from io import BytesIO
 
 from lxml import etree
 
-from logilab.common.deprecation import class_deprecated, class_renamed
-
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE
 
 STRICT_DOCTYPE = str(STRICT_DOCTYPE)
@@ -130,11 +128,6 @@ class XMLValidator(Validator):
     def __init__(self):
         Validator.__init__(self)
         self.parser = etree.XMLParser()
-
-SaxOnlyValidator = class_renamed('SaxOnlyValidator',
-                                 XMLValidator,
-                                 '[3.17] you should use the '
-                                 'XMLValidator class instead')
 
 
 class XMLSyntaxValidator(Validator):
