@@ -1,5 +1,6 @@
 cubicweb/__init__.py
 cubicweb/__main__.py
+cubicweb/cwctl.py
 cubicweb/dataimport/csv.py
 cubicweb/dataimport/importer.py
 cubicweb/dataimport/massive_store.py
