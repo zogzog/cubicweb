@@ -20,17 +20,11 @@
 
 
 from logilab.common.textutils import normalize_text
-from logilab.common.deprecation import deprecated
 
 from cubicweb import RegistryNotFound
 from cubicweb.predicates import is_instance
 from cubicweb.server import hook
 from cubicweb.sobjects.supervising import SupervisionMailOp
-
-
-@deprecated('[3.17] use notify_on_commit instead')
-def RenderAndSendNotificationView(cnx, view, viewargs=None):
-    notify_on_commit(cnx, view, viewargs)
 
 
 def notify_on_commit(cnx, view, viewargs=None):
