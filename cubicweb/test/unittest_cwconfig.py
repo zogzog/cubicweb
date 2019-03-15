@@ -187,72 +187,6 @@ class CubicWebConfigurationTC(BaseTestCase):
         self.assertNotIn('cubes.mycube.ccplugin', sys.modules, sorted(sys.modules))
         self.assertIn('cubicweb_mycube.ccplugin', sys.modules, sorted(sys.modules))
 
-
-class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
-
-    @classmethod
-    def setUpClass(cls):
-        pass
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
-    def setUp(self):
-        self.custom_cubes_dir = self.datapath('legacy_cubes')
-        cleanup_sys_modules([self.custom_cubes_dir, ApptestConfiguration.CUBES_DIR])
-        super(CubicWebConfigurationWithLegacyCubesTC, self).setUp()
-        self.config.__class__.CUBES_PATH = [self.custom_cubes_dir]
-        self.config.adjust_sys_path()
-
-    def tearDown(self):
-        ApptestConfiguration.CUBES_PATH = []
-
-    def test_available_cubes(self):
-        expected_cubes = [
-            'card',
-            'comment',
-            'email',
-            'file',
-            'forge',
-            'cubicweb_localperms',
-            'mycube',
-            'tag',
-        ]
-        self.assertEqual(self.config.available_cubes(), expected_cubes)
-
-    def test_reorder_cubes_recommends(self):
-        from cubes.comment import __pkginfo__ as comment_pkginfo
-        self._test_reorder_cubes_recommends(comment_pkginfo)
-
-    def test_cubes_path(self):
-        # make sure we don't import the email cube, but the stdlib email package
-        import email
-        self.assertNotEqual(dirname(email.__file__), self.config.CUBES_DIR)
-        self.config.__class__.CUBES_PATH = [self.custom_cubes_dir]
-        self.assertEqual(self.config.cubes_search_path(),
-                         [self.custom_cubes_dir, self.config.CUBES_DIR])
-        self.config.__class__.CUBES_PATH = [self.custom_cubes_dir,
-                                            self.config.CUBES_DIR, 'unexistant']
-        # filter out unexistant and duplicates
-        self.assertEqual(self.config.cubes_search_path(),
-                         [self.custom_cubes_dir,
-                          self.config.CUBES_DIR])
-        self.assertIn('mycube', self.config.available_cubes())
-        # test cubes python path
-        self.config.adjust_sys_path()
-        import cubes
-        self.assertEqual(cubes.__path__, self.config.cubes_search_path())
-        # this import should succeed once path is adjusted
-        from cubes import mycube
-        self.assertEqual(mycube.__path__, [join(self.custom_cubes_dir, 'mycube')])
-        # file cube should be overriden by the one found in data/cubes
-        sys.modules.pop('cubes.file')
-        if hasattr(cubes, 'file'):
-            del cubes.file
-        from cubes import file
-        self.assertEqual(file.__path__, [join(self.custom_cubes_dir, 'file')])
-
     def test_config_value_from_environment_str(self):
         self.assertIsNone(self.config['base-url'])
         os.environ['CW_BASE_URL'] = 'https://www.cubicweb.org'
@@ -279,11 +213,6 @@ class CubicWebConfigurationWithLegacyCubesTC(CubicWebConfigurationTC):
             self.assertEqual(self.config['allow-email-login'], result)
         finally:
             del os.environ['CW_ALLOW_EMAIL_LOGIN']
-
-    def test_ccplugin_modname(self):
-        self.config.load_cwctl_plugins()
-        self.assertIn('cubes.mycube.ccplugin', sys.modules, sorted(sys.modules))
-        self.assertNotIn('cubicweb_mycube.ccplugin', sys.modules, sorted(sys.modules))
 
 
 class ModnamesTC(unittest.TestCase):
