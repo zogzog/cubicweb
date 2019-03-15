@@ -84,10 +84,10 @@ def temp_config(appid, instance_dir, cubes_dir, cubes):
 
 def iter_entry_points(group, name):
     """Mock pkg_resources.iter_entry_points to yield EntryPoint from
-    packages found in test/data/libpython even though these are not
+    packages found in test/data even though these are not
     installed.
     """
-    libpython = CubicWebConfigurationTC.datapath('libpython')
+    libpython = CubicWebConfigurationTC.datapath()
     prefix = 'cubicweb_'
     for pkgname in os.listdir(libpython):
         if not pkgname.startswith(prefix):
@@ -101,11 +101,11 @@ class CubicWebConfigurationTC(BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
-        sys.path.append(cls.datapath('libpython'))
+        sys.path.append(cls.datapath())
 
     @classmethod
     def tearDownClass(cls):
-        sys.path.remove(cls.datapath('libpython'))
+        sys.path.remove(cls.datapath())
 
     def setUp(self):
         self.config = ApptestConfiguration('data', __file__)
@@ -113,7 +113,7 @@ class CubicWebConfigurationTC(BaseTestCase):
 
     def tearDown(self):
         ApptestConfiguration.CUBES_PATH = []
-        cleanup_sys_modules([self.datapath('libpython')])
+        cleanup_sys_modules([self.datapath()])
 
     def test_migration_scripts_dir(self):
         mscripts = os.listdir(self.config.migration_scripts_dir())
@@ -124,9 +124,14 @@ class CubicWebConfigurationTC(BaseTestCase):
     @patch('pkg_resources.iter_entry_points', side_effect=iter_entry_points)
     def test_available_cubes(self, mock_iter_entry_points):
         expected_cubes = [
-            'card', 'comment', 'cubicweb_comment', 'cubicweb_email', 'file',
-            'cubicweb_file', 'cubicweb_forge',
-            'cubicweb_mycube', 'tag',
+            'cubicweb_card',
+            'cubicweb_comment',
+            'cubicweb_email',
+            'cubicweb_file',
+            'cubicweb_forge',
+            'cubicweb_localperms',
+            'cubicweb_mycube',
+            'cubicweb_tag',
         ]
         self.assertEqual(self.config.available_cubes(), expected_cubes)
         mock_iter_entry_points.assert_called_once_with(
