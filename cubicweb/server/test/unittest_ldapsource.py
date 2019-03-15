@@ -148,6 +148,9 @@ class LDAPFeedTestBase(CubicWebTC):
 
     @classmethod
     def pre_setup_database(cls, cnx, config):
+        if sys.version_info[:2] >= (3, 7):
+            raise unittest.SkipTest(
+                'ldapfeed is not currently compatible with Python 3.7')
         cnx.create_entity('CWSource', name=u'ldap', type=u'ldapfeed', parser=u'ldapfeed',
                           url=URL, config=CONFIG_LDAPFEED)
 
