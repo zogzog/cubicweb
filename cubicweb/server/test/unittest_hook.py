@@ -30,10 +30,6 @@ from cubicweb.hooks import integrity, syncschema
 
 class OperationsTC(CubicWebTC):
 
-    def setUp(self):
-        CubicWebTC.setUp(self)
-        self.hm = self.repo.hm
-
     def test_late_operation(self):
         with self.admin_access.repo_cnx() as cnx:
             l1 = hook.LateOperation(cnx)
