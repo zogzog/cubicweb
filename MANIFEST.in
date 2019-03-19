@@ -68,6 +68,8 @@ recursive-include cubicweb/server/test/data-migractions bootstrap_cubes *.py
 recursive-include cubicweb/server/test/data-schemaserial *.py
 include cubicweb/web/test/testutils.js
 recursive-include cubicweb/web/test *.py
+include cubicweb/web/test/data/cubicweb_file/data/file.png
+include cubicweb/web/test/data/cubicweb_file/wdoc/toc.xml
 recursive-include cubicweb/web/test/data bootstrap_cubes pouet.css *.py
 recursive-include cubicweb/web/test/data/static/jstests *.js *.html *.json
 recursive-include cubicweb/wsgi/test *.py
