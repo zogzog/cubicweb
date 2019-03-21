@@ -18,8 +18,6 @@
 """utilities for instances migration"""
 from __future__ import print_function
 
-
-
 import sys
 import os
 import logging
@@ -268,11 +266,20 @@ class MigrationHelper(object):
         banner = """entering the migration python shell
 just type migration commands or arbitrary python code and type ENTER to execute it
 type "exit" or Ctrl-D to quit the shell and resume operation"""
-        interact(banner, local=local_ctx)
+
+        # use ipython if available
         try:
-            readline.write_history_file(histfile)
-        except IOError:
-            pass
+            from IPython import start_ipython
+            print(banner)
+            start_ipython(argv=[], user_ns=local_ctx)
+        except ImportError:
+            interact(banner, local=local_ctx)
+
+            try:
+                readline.write_history_file(histfile)
+            except IOError:
+                pass
+
         # delete instance's confirm attribute to avoid questions
         del self.confirm
         self.need_wrap = True
