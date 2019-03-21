@@ -38,43 +38,43 @@ class WebConfigurationBase(WebConfiguration):
     options = merge_options((
         # ctl configuration
         ('port',
-         {'type' : 'int',
+         {'type': 'int',
           'default': None,
           'help': 'http server port number (default to 8080)',
           'group': 'web', 'level': 0,
           }),
         ('interface',
-         {'type' : 'string',
+         {'type': 'string',
           'default': '0.0.0.0',
           'help': 'http server address on which to listen (default to everywhere)',
           'group': 'web', 'level': 1,
           }),
         ('max-post-length',
-         {'type' : 'bytes',
+         {'type': 'bytes',
           'default': '100MB',
           'help': 'maximum length of HTTP request. Default to 100 MB.',
           'group': 'web', 'level': 1,
           }),
         ('profile',
-         {'type' : 'string',
+         {'type': 'string',
           'default': None,
           'help': 'profile code and use the specified file to store stats if this option is set',
           'group': 'web', 'level': 3,
           }),
         ('host',
-         {'type' : 'string',
+         {'type': 'string',
           'default': None,
           'help': 'host name if not correctly detectable through gethostname',
           'group': 'main', 'level': 1,
           }),
         ('pid-file',
-         {'type' : 'string',
+         {'type': 'string',
           'default': Method('default_pid_file'),
           'help': 'repository\'s pid file',
           'group': 'main', 'level': 2,
           }),
         ('uid',
-         {'type' : 'string',
+         {'type': 'string',
           'default': None,
           'help': 'unix user, if this option is set, use the specified user to start \
 the repository rather than the user running the command',
@@ -87,7 +87,7 @@ the repository rather than the user running the command',
 much greater than connection-poolsize",
           'group': 'web', 'level': 3,
           }),
-        ) + WebConfiguration.options)
+    ) + WebConfiguration.options)
 
     def server_file(self):
         return join(self.apphome, '%s-%s.py' % (self.appid, self.name))
@@ -103,8 +103,14 @@ class AllInOneConfiguration(WebConfigurationBase, ServerConfiguration):
     options = merge_options(WebConfigurationBase.options
                             + ServerConfiguration.options)
 
-    cubicweb_appobject_path = WebConfigurationBase.cubicweb_appobject_path | ServerConfiguration.cubicweb_appobject_path
-    cube_appobject_path = WebConfigurationBase.cube_appobject_path | ServerConfiguration.cube_appobject_path
+    cubicweb_appobject_path = (
+        WebConfigurationBase.cubicweb_appobject_path
+        | ServerConfiguration.cubicweb_appobject_path
+    )
+    cube_appobject_path = (
+        WebConfigurationBase.cube_appobject_path
+        | ServerConfiguration.cube_appobject_path
+    )
 
 
 CONFIGURATIONS.append(AllInOneConfiguration)
