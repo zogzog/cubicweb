@@ -29,7 +29,7 @@ from warnings import warn
 from six import text_type
 
 from logilab.common.decorators import cached, cachedproperty
-from logilab.common.configuration import merge_options
+from logilab.common.configuration import Method, merge_options
 
 from cubicweb import ConfigurationError
 from cubicweb.cwconfig import CubicWebConfiguration, register_persistent_options
@@ -449,3 +449,39 @@ have the python imaging library installed to use captcha)',
     def static_file_del(self, rpath):
         if self.static_file_exists(rpath):
             os.remove(join(self.static_directory, rpath))
+
+
+class WebConfigurationBase(WebConfiguration):
+    """web instance (in a web server) client of a RQL server"""
+
+    options = merge_options((
+        # ctl configuration
+        ('port',
+         {'type': 'int',
+          'default': None,
+          'help': 'http server port number (default to 8080)',
+          'group': 'web', 'level': 0,
+          }),
+        ('interface',
+         {'type': 'string',
+          'default': '0.0.0.0',
+          'help': 'http server address on which to listen (default to everywhere)',
+          'group': 'web', 'level': 1,
+          }),
+        ('max-post-length',  # XXX specific to "wsgi" server
+         {'type': 'bytes',
+          'default': '100MB',
+          'help': 'maximum length of HTTP request. Default to 100 MB.',
+          'group': 'web', 'level': 1,
+          }),
+        ('pid-file',
+         {'type': 'string',
+          'default': Method('default_pid_file'),
+          'help': 'repository\'s pid file',
+          'group': 'main', 'level': 2,
+          }),
+    ) + WebConfiguration.options)
+
+    def default_base_url(self):
+        from socket import getfqdn
+        return 'http://%s:%s/' % (self['host'] or getfqdn().lower(), self['port'] or 8080)

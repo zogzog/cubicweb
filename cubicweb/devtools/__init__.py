@@ -41,7 +41,7 @@ from logilab.common.decorators import cached, clear_cache
 from cubicweb import ExecutionError
 from cubicweb import schema, cwconfig
 from cubicweb.server.serverconfig import ServerConfiguration
-from cubicweb.etwist.twconfig import WebConfigurationBase
+from cubicweb.web.webconfig import WebConfigurationBase
 
 cwconfig.CubicWebConfiguration.cls_adjust_sys_path()
 

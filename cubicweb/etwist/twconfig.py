@@ -22,39 +22,19 @@
   if the repository part of the software is installed
 """
 
-
 from os.path import join
 
-from logilab.common.configuration import Method, merge_options
+from logilab.common.configuration import merge_options
 
 from cubicweb.cwconfig import CONFIGURATIONS
 from cubicweb.server.serverconfig import ServerConfiguration
-from cubicweb.web.webconfig import WebConfiguration
+from cubicweb.web.webconfig import WebConfiguration, WebConfigurationBase
 
 
-class WebConfigurationBase(WebConfiguration):
-    """web instance (in a twisted web server) client of a RQL server"""
-
+class AllInOneConfiguration(WebConfigurationBase, ServerConfiguration):
+    """repository and web instance in the same twisted process"""
+    name = 'all-in-one'
     options = merge_options((
-        # ctl configuration
-        ('port',
-         {'type': 'int',
-          'default': None,
-          'help': 'http server port number (default to 8080)',
-          'group': 'web', 'level': 0,
-          }),
-        ('interface',
-         {'type': 'string',
-          'default': '0.0.0.0',
-          'help': 'http server address on which to listen (default to everywhere)',
-          'group': 'web', 'level': 1,
-          }),
-        ('max-post-length',
-         {'type': 'bytes',
-          'default': '100MB',
-          'help': 'maximum length of HTTP request. Default to 100 MB.',
-          'group': 'web', 'level': 1,
-          }),
         ('profile',
          {'type': 'string',
           'default': None,
@@ -66,12 +46,6 @@ class WebConfigurationBase(WebConfiguration):
           'default': None,
           'help': 'host name if not correctly detectable through gethostname',
           'group': 'main', 'level': 1,
-          }),
-        ('pid-file',
-         {'type': 'string',
-          'default': Method('default_pid_file'),
-          'help': 'repository\'s pid file',
-          'group': 'main', 'level': 2,
           }),
         ('uid',
          {'type': 'string',
@@ -87,21 +61,8 @@ the repository rather than the user running the command',
 much greater than connection-poolsize",
           'group': 'web', 'level': 3,
           }),
-    ) + WebConfiguration.options)
-
-    def server_file(self):
-        return join(self.apphome, '%s-%s.py' % (self.appid, self.name))
-
-    def default_base_url(self):
-        from socket import getfqdn
-        return 'http://%s:%s/' % (self['host'] or getfqdn().lower(), self['port'] or 8080)
-
-
-class AllInOneConfiguration(WebConfigurationBase, ServerConfiguration):
-    """repository and web instance in the same twisted process"""
-    name = 'all-in-one'
-    options = merge_options(WebConfigurationBase.options
-                            + ServerConfiguration.options)
+    ) + WebConfigurationBase.options + ServerConfiguration.options
+    )
 
     cubicweb_appobject_path = (
         WebConfigurationBase.cubicweb_appobject_path
@@ -111,6 +72,9 @@ class AllInOneConfiguration(WebConfigurationBase, ServerConfiguration):
         WebConfigurationBase.cube_appobject_path
         | ServerConfiguration.cube_appobject_path
     )
+
+    def server_file(self):
+        return join(self.apphome, '%s-%s.py' % (self.appid, self.name))
 
 
 CONFIGURATIONS.append(AllInOneConfiguration)
