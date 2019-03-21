@@ -20,8 +20,6 @@ http server
 """
 from __future__ import print_function
 
-
-
 import random
 import threading
 import socket
@@ -31,7 +29,6 @@ from six.moves.urllib.parse import urlparse
 
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.devtools import ApptestConfiguration
 
 
 def get_available_port(ports_scan):
@@ -53,7 +50,7 @@ def get_available_port(ports_scan):
     for port in ports_scan:
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock = s.connect(("localhost", port))
+            s.connect(("localhost", port))
         except socket.error as err:
             if err.args[0] in (111, 106):
                 return port
@@ -80,7 +77,7 @@ class _CubicWebServerTC(CubicWebTC):
         If no user is provided, admin connection are used.
         """
         if user is None:
-            user  = self.admlogin
+            user = self.admlogin
             passwd = self.admpassword
         if passwd is None:
             passwd = user
@@ -94,7 +91,7 @@ class _CubicWebServerTC(CubicWebTC):
     def web_logout(self, user='admin', pwd=None):
         """Log out current http user"""
         if self._ident_cookie is not None:
-            response = self.web_get('logout')
+            self.web_get('logout')
         self._ident_cookie = None
 
     def web_request(self, path='', method='GET', body=None, headers=None):
@@ -109,8 +106,8 @@ class _CubicWebServerTC(CubicWebTC):
             headers['Cookie'] = self._ident_cookie
         self._web_test_cnx.request(method, '/' + path, headers=headers, body=body)
         response = self._web_test_cnx.getresponse()
-        response.body = response.read() # to chain request
-        response.read = lambda : response.body
+        response.body = response.read()  # to chain request
+        response.read = lambda: response.body
         return response
 
     def web_get(self, path='', body=None, headers=None):
@@ -119,7 +116,7 @@ class _CubicWebServerTC(CubicWebTC):
     def setUp(self):
         super(_CubicWebServerTC, self).setUp()
         port = self.config['port'] or get_available_port(self.ports_range)
-        self.config.global_set_option('port', port) # force rewrite here
+        self.config.global_set_option('port', port)  # force rewrite here
         self.config.global_set_option('base-url', 'http://127.0.0.1:%d/' % port)
         # call load_configuration again to let the config reset its datadir_url
         self.config.load_configuration()

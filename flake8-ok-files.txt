@@ -12,6 +12,7 @@ cubicweb/dataimport/test/test_pgstore.py
 cubicweb/dataimport/test/test_massive_store.py
 cubicweb/dataimport/test/test_stores.py
 cubicweb/dataimport/test/unittest_importer.py
+cubicweb/devtools/httptest.py
 cubicweb/devtools/test/data/cubes/i18ntestcube/__init__.py
 cubicweb/devtools/test/data/cubes/i18ntestcube/views.py
 cubicweb/devtools/test/data/cubes/__init__.py
