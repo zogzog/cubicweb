@@ -20,6 +20,8 @@ Backwards incompatible changes
   have been removed because they relied on the Twisted web server backend that
   is no longer maintained nor working with Python 3.
 
+* Twisted web server support has been removed.
+
 Deprecated code drops
 ---------------------
 

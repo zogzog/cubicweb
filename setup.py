@@ -91,9 +91,6 @@ setup(
         'crypto': [
             'pycrypto',
         ],
-        'etwist': [
-            'Twisted < 16.0.0',
-        ],
         'ext': [
             'docutils >= 0.6',
         ],

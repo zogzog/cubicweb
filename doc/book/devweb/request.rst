@@ -107,10 +107,9 @@ request objects (grouped by category):
     *while a request is executed*
 
 Please note that this class is abstract and that a concrete implementation
-will be provided by the *frontend* web used (in particular *twisted* as of
-today). For the views or others that are executed on the server side,
-most of the interface of `Request` is defined in the session associated
-to the client.
+will be provided by the *frontend* web used. For the views or others that are
+executed on the server side, most of the interface of `Request` is defined in
+the session associated to the client.
 
 API
 ```

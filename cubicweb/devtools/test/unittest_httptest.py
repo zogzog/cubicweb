@@ -20,50 +20,10 @@
 from six.moves import http_client
 
 from logilab.common.testlib import Tags
-from cubicweb.devtools.httptest import CubicWebServerTC, CubicWebWsgiTC
+from cubicweb.devtools.httptest import CubicWebServerTC
 
 
-class TwistedCWAnonTC(CubicWebServerTC):
-
-    def test_response(self):
-        try:
-            response = self.web_get()
-        except http_client.NotConnected as ex:
-            self.fail("Can't connection to test server: %s" % ex)
-
-    def test_response_anon(self):
-        response = self.web_get()
-        self.assertEqual(response.status, http_client.OK)
-
-    def test_base_url(self):
-        if self.config['base-url'] not in self.web_get().read().decode('ascii'):
-            self.fail('no mention of base url in retrieved page')
-
-
-class TwistedCWIdentTC(CubicWebServerTC):
-    test_db_id = 'httptest-cwident'
-    anonymous_allowed = False
-    tags = CubicWebServerTC.tags | Tags(('auth',))
-
-    def test_response_denied(self):
-        response = self.web_get()
-        self.assertEqual(response.status, http_client.FORBIDDEN)
-
-    def test_login(self):
-        response = self.web_get()
-        if response.status != http_client.FORBIDDEN:
-            self.skipTest('Already authenticated, "test_response_denied" must have failed')
-        # login
-        self.web_login(self.admlogin, self.admpassword)
-        response = self.web_get()
-        self.assertEqual(response.status, http_client.OK, response.body)
-        # logout
-        self.web_logout()
-        response = self.web_get()
-        self.assertEqual(response.status, http_client.FORBIDDEN, response.body)
-
-
-class WsgiCWAnonTC(CubicWebWsgiTC):
+class WsgiCWAnonTC(CubicWebServerTC):
 
     def test_response(self):
         try:
@@ -80,7 +40,7 @@ class WsgiCWAnonTC(CubicWebWsgiTC):
             self.fail('no mention of base url in retrieved page')
 
 
-class WsgiCWIdentTC(CubicWebWsgiTC):
+class WsgiCWIdentTC(CubicWebServerTC):
     test_db_id = 'httptest-cwident'
     anonymous_allowed = False
     tags = CubicWebServerTC.tags | Tags(('auth',))

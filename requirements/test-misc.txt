@@ -2,7 +2,6 @@
 
 ## shared by several test folders
 docutils
-Twisted < 16.0.0
 webtest
 
 ## cubicweb/test

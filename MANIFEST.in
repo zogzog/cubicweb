@@ -50,8 +50,6 @@ recursive-include cubicweb/devtools/test *.py
 recursive-include cubicweb/devtools/test/data *.py *.txt *.js *.po.ref
 recursive-include cubicweb/entities/test *.py
 recursive-include cubicweb/entities/test/data *.py
-recursive-include cubicweb/etwist/test *.py
-recursive-include cubicweb/etwist/test/data *.py
 recursive-include cubicweb/ext/test *.py
 recursive-include cubicweb/ext/test/data *.py
 recursive-include cubicweb/hooks/test *.py

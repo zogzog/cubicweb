@@ -19,8 +19,6 @@ to have installed in order for CubicWeb to work:
 
 * lxml - http://codespeak.net/lxml - http://pypi.python.org/pypi/lxml
 
-* twisted - http://twistedmatrix.com/ - http://pypi.python.org/pypi/Twisted
-
 * logilab-common - http://www.logilab.org/project/logilab-common -
   http://pypi.python.org/pypi/logilab-common/
 

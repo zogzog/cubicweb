@@ -670,7 +670,7 @@ this option is set to yes",
 
     @classmethod
     def load_available_configs(cls):
-        for confmod in ('web.webconfig',  'etwist.twconfig',
+        for confmod in ('web.webconfig',
                         'server.serverconfig', 'pyramid.config'):
             try:
                 __import__('cubicweb.%s' % confmod)
@@ -681,7 +681,7 @@ this option is set to yes",
     @classmethod
     def load_cwctl_plugins(cls):
         cls.cls_adjust_sys_path()
-        for ctlmod in ('web.webctl',  'etwist.twctl', 'server.serverctl',
+        for ctlmod in ('web.webctl', 'server.serverctl',
                        'devtools.devctl', 'pyramid.pyramidctl'):
             try:
                 __import__('cubicweb.%s' % ctlmod)

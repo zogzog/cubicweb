@@ -67,9 +67,6 @@ Update your list of packages and perform the installation::
   # if you want pyramid, the recommended application server
   apt-get install pyramid-cubicweb
 
-  # or if you want twisted (considered deprecated)
-  apt-get install cubicweb-twisted
-
 ``cubicweb`` installs the framework itself, allowing you to create new
 instances. ``cubicweb-dev`` installs the development environment
 allowing you to develop new cubes.
@@ -137,8 +134,7 @@ published on the `The Python Package Index`_.
 
 A working compilation chain is needed to build the modules that include C
 extensions. If you really do not want to compile anything, installing `lxml <http://lxml.de/>`_,
-`Twisted Web <http://twistedmatrix.com/trac/wiki/Downloads/>`_ and `libgecode
-<http://www.gecode.org/>`_ will help.
+and `libgecode <http://www.gecode.org/>`_ will help.
 
 For Debian, these minimal dependencies can be obtained by doing::
 
@@ -155,17 +151,12 @@ For Windows, you can install pre-built packages (possible `source
 - setuptools http://www.lfd.uci.edu/~gohlke/pythonlibs/#setuptools
 - libxml-python http://www.lfd.uci.edu/~gohlke/pythonlibs/#libxml-python>
 - lxml http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml and
-- twisted http://www.lfd.uci.edu/~gohlke/pythonlibs/#twisted
 
 Make sure to choose the correct architecture and version of Python.
 
 Finally, install |cubicweb| and its dependencies, by running::
 
-  # for pyramid, the recommended application server
   pip install cubicweb[pyramid]
-
-  # or for twisted, considered deprecated (used by "cubicweb-ctl")
-  pip install cubicweb[etwist]
 
 Many other :ref:`cubes <AvailableCubes>` are available. A list is available at
 `PyPI <http://pypi.python.org/pypi?%3Aaction=search&term=cubicweb&submit=search>`_

@@ -26,7 +26,7 @@ from logilab.common.configuration import merge_options
 from cubicweb.cwconfig import CONFIGURATIONS
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.toolsutils import fill_templated_file
-from cubicweb.web.webconfig import BaseWebConfiguration
+from cubicweb.web.webconfig import BaseWebConfiguration, WebConfigurationBase
 
 
 def get_random_secret_key():
@@ -67,3 +67,29 @@ class CubicWebPyramidConfiguration(BaseWebConfiguration, ServerConfiguration):
 
 
 CONFIGURATIONS.append(CubicWebPyramidConfiguration)
+
+
+class AllInOneConfiguration(WebConfigurationBase, ServerConfiguration):
+    """repository and web instance in the same Pyramid process"""
+    name = 'all-in-one'
+    options = merge_options((
+        ('profile',
+         {'type': 'string',
+          'default': None,
+          'help': 'profile code and use the specified file to store stats if this option is set',
+          'group': 'web', 'level': 3,
+          }),
+    ) + WebConfigurationBase.options + ServerConfiguration.options
+    )
+
+    cubicweb_appobject_path = (
+        WebConfigurationBase.cubicweb_appobject_path
+        | ServerConfiguration.cubicweb_appobject_path
+    )
+    cube_appobject_path = (
+        WebConfigurationBase.cube_appobject_path
+        | ServerConfiguration.cube_appobject_path
+    )
+
+
+CONFIGURATIONS.append(AllInOneConfiguration)

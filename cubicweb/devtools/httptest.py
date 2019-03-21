@@ -26,7 +26,6 @@ import random
 import threading
 import socket
 
-from six import PY3
 from six.moves import range, http_client
 from six.moves.urllib.parse import urlparse
 
@@ -64,7 +63,7 @@ def get_available_port(ports_scan):
 
 
 class _CubicWebServerTC(CubicWebTC):
-    """Class for running a Twisted-based test web server.
+    """Base class for running a test web server.
     """
     ports_range = range(7000, 8000)
 
@@ -132,52 +131,6 @@ class _CubicWebServerTC(CubicWebTC):
 
 
 class CubicWebServerTC(_CubicWebServerTC):
-    def start_server(self):
-        if PY3:
-            self.skipTest('not using twisted on python3')
-        from twisted.internet import reactor
-        from cubicweb.etwist.server import run
-        # use a semaphore to avoid starting test while the http server isn't
-        # fully initilialized
-        semaphore = threading.Semaphore(0)
-        def safe_run(*args, **kwargs):
-            try:
-                run(*args, **kwargs)
-            finally:
-                semaphore.release()
-
-        reactor.addSystemEventTrigger('after', 'startup', semaphore.release)
-        t = threading.Thread(target=safe_run, name='cubicweb_test_web_server',
-                args=(self.config, True), kwargs={'repo': self.repo})
-        self.web_thread = t
-        t.start()
-        semaphore.acquire()
-        if not self.web_thread.isAlive():
-            # XXX race condition with actual thread death
-            raise RuntimeError('Could not start the web server')
-        #pre init utils connection
-        parseurl = urlparse(self.config['base-url'])
-        assert parseurl.port == self.config['port'], (self.config['base-url'], self.config['port'])
-        self._web_test_cnx = http_client.HTTPConnection(parseurl.hostname,
-                                                        parseurl.port)
-        self._ident_cookie = None
-
-    def stop_server(self, timeout=15):
-        """Stop the webserver, waiting for the thread to return"""
-        from twisted.internet import reactor
-        if self._web_test_cnx is None:
-            self.web_logout()
-            self._web_test_cnx.close()
-        try:
-            reactor.stop()
-            self.web_thread.join(timeout)
-            assert not self.web_thread.isAlive()
-
-        finally:
-            reactor.__init__()
-
-
-class CubicWebWsgiTC(CubicWebServerTC):
     def start_server(self):
         from cubicweb.wsgi.handler import CubicWebWSGIApplication
         from wsgiref import simple_server

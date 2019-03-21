@@ -63,6 +63,20 @@ class PyramidCreateHandler(serverctl.RepositoryCreateHandler,
         self.config.write_development_ini(cubes)
 
 
+class AllInOneCreateHandler(serverctl.RepositoryCreateHandler,
+                            WebCreateHandler):
+    """configuration to get an instance running in a Pyramid web server
+    integrating a repository server in the same process
+    """
+    cfgname = 'all-in-one'
+
+    def bootstrap(self, cubes, automatic=False, inputlevel=0):
+        """bootstrap this configuration"""
+        serverctl.RepositoryCreateHandler.bootstrap(self, cubes, automatic, inputlevel)
+        WebCreateHandler.bootstrap(self, cubes, automatic, inputlevel)
+        # TODO: write pyramid.ini file
+
+
 class PyramidStartHandler(InstanceCommand):
     """Start an interactive pyramid server.
 

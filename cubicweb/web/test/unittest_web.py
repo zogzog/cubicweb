@@ -28,7 +28,7 @@ except (ImportError, AssertionError):
     requests = None
 
 from logilab.common.testlib import TestCase, unittest_main
-from cubicweb.devtools.httptest import CubicWebWsgiTC
+from cubicweb.devtools.httptest import CubicWebServerTC
 from cubicweb.devtools.fake import FakeRequest
 
 class AjaxReplaceUrlTC(TestCase):
@@ -56,7 +56,7 @@ class AjaxReplaceUrlTC(TestCase):
             req.html_headers.post_inlined_scripts[0])
 
 
-class FileUploadTC(CubicWebWsgiTC):
+class FileUploadTC(CubicWebServerTC):
 
     def setUp(self):
         "Skip whole test class if a suitable requests module is not available"
@@ -101,7 +101,7 @@ class FileUploadTC(CubicWebWsgiTC):
         self.assertDictEqual(expect, loads(webreq.text))
 
 
-class LanguageTC(CubicWebWsgiTC):
+class LanguageTC(CubicWebServerTC):
 
     def test_language_neg(self):
         headers = {'Accept-Language': 'fr'}
@@ -132,7 +132,7 @@ class LanguageTC(CubicWebWsgiTC):
         self.assertIn('HttpOnly', webreq.getheader('set-cookie'))
 
 
-class MiscOptionsTC(CubicWebWsgiTC):
+class MiscOptionsTC(CubicWebServerTC):
     @classmethod
     def setUpClass(cls):
         super(MiscOptionsTC, cls).setUpClass()

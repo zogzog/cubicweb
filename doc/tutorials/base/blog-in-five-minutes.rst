@@ -8,7 +8,7 @@ Get a blog running in five minutes!
 For Debian or Ubuntu users, first install the following packages
 (:ref:`DebianInstallation`)::
 
-    cubicweb, cubicweb-dev, cubicweb-twisted, cubicweb-blog
+    cubicweb, cubicweb-dev, cubicweb-pyramid, cubicweb-blog
 
 Windows or Mac OS X users must install |cubicweb| from source (see
 :ref:`SourceInstallation` and :ref:`WindowsInstallation`).
@@ -17,7 +17,7 @@ You can also install those packages using pip in a virtualenv::
 
    virtualenv venv
    source venv/bin/activate
-   pip install cubicweb[etwist] cubicweb-dev cubicweb-blog
+   pip install cubicweb[pyramid] cubicweb-dev cubicweb-blog
 
 Then create and initialize your instance::
 
@@ -38,19 +38,16 @@ and configured (see :ref:`PostgresqlConfiguration`), it's highly recommended to
 choose `sqlite` when asked for which database driver to use, since it has a much
 simple setup (no database server needed).
 
+Then, you need to setup the CubicWeb Pyramid interface, as document at
+:ref:`pyramid_settings`.
+
 One the process is completed (including database initialisation), you can start
 your instance by using: ::
 
-    cubicweb-ctl start -D myblog
+    cubicweb-ctl pyramid -D myblog
 
 The `-D` option activates the debugging mode. Removing it will launch the instance
-as a daemon in the background, and ``cubicweb-ctl stop myblog`` will stop
-it in that case.
-
-.. Note::
-
-   If you get a traceback when going on the web interface make sure your
-   version of twisted is **inferior** to 17.
+as a daemon in the background.
 
 .. _AboutFileSystemPermissions:
 

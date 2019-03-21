@@ -32,10 +32,6 @@ correctly. So, first of all, you must install them :
   applications (including Eclipse + pydev, which is an arguably good
   IDE for Python under Windows).
 
-* `Twisted <http://twistedmatrix.com/trac/>`_ is an event-driven
-  networking engine
-  (`Download Twisted <http://twistedmatrix.com/trac/>`_)
-
 * `lxml <http://codespeak.net/lxml/>`_ library
   (version >=2.2.1) allows working with XML and HTML
   (`Download lxml <http://pypi.python.org/pypi/lxml/2.2.1>`_)

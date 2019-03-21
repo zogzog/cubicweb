@@ -12,7 +12,7 @@ Fisrt I need a python virtual environment with cubicweb::
 
   virtualenv python-2.7.5_cubicweb
   . /python-2.7.5_cubicweb/bin/activate
-  pip install cubicweb[etwist]
+  pip install cubicweb[pyramid]
 
 
 Step 2: creating a new cube for my web site

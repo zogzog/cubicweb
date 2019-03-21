@@ -7,11 +7,7 @@ What happens when an HTTP request is issued ?
 
 The story begins with the ``CubicWebPublisher.main_publish``
 method. We do not get upper in the bootstrap process because it is
-dependant on the used HTTP library. With `twisted`_ however,
-``cubicweb.etwist.server.CubicWebRootResource.render_request`` is the
-real entry point.
-
-.. _`twisted`: http://twistedmatrix.com/trac/
+dependant on the used HTTP library.
 
 What main_publish does:
 
