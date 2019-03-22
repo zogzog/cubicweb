@@ -22,7 +22,6 @@ from __future__ import print_function
 import functools
 import sys
 from uuid import uuid4
-from warnings import warn
 from contextlib import contextmanager
 from logging import getLogger
 
@@ -676,14 +675,8 @@ class Connection(RequestSessionBase):
         return rset
 
     @_open_only
-    def rollback(self, free_cnxset=None, reset_pool=None):
+    def rollback(self):
         """rollback the current transaction"""
-        if free_cnxset is not None:
-            warn('[3.21] free_cnxset is now unneeded',
-                 DeprecationWarning, stacklevel=2)
-        if reset_pool is not None:
-            warn('[3.13] reset_pool is now unneeded',
-                 DeprecationWarning, stacklevel=2)
         cnxset = self.cnxset
         assert cnxset is not None
         try:
@@ -702,14 +695,8 @@ class Connection(RequestSessionBase):
             self.clear()
 
     @_open_only
-    def commit(self, free_cnxset=None, reset_pool=None):
+    def commit(self):
         """commit the current session's transaction"""
-        if free_cnxset is not None:
-            warn('[3.21] free_cnxset is now unneeded',
-                 DeprecationWarning, stacklevel=2)
-        if reset_pool is not None:
-            warn('[3.13] reset_pool is now unneeded',
-                 DeprecationWarning, stacklevel=2)
         assert self.cnxset is not None
         cstate = self.commit_state
         if cstate == 'uncommitable':

@@ -58,7 +58,6 @@ case the store requires additional work once everything is done.
 .. autoclass:: cubicweb.dataimport.stores.MetadataGenerator
 """
 import inspect
-import warnings
 from datetime import datetime
 from copy import copy
 from itertools import count
@@ -115,13 +114,9 @@ class RQLObjectStore(NullStore):
     """Store that works by making RQL queries, hence with all the cubicweb's machinery activated.
     """
 
-    def __init__(self, cnx, commit=None):
-        if commit is not None:
-            warnings.warn('[3.19] commit argument should not be specified '
-                          'as the cnx object already provides it.',
-                          DeprecationWarning, stacklevel=2)
+    def __init__(self, cnx):
         self._cnx = cnx
-        self._commit = commit or cnx.commit
+        self._commit = cnx.commit
         # XXX 3.21 deprecated attributes
         self.eids = {}
         self.types = {}

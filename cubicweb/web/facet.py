@@ -53,7 +53,6 @@ to skip those classes...
 from cubicweb import _
 
 from functools import reduce
-from warnings import warn
 from copy import deepcopy
 from datetime import datetime, timedelta
 
@@ -717,15 +716,6 @@ class RelationFacet(VocabularyFacet):
 
     # internal utilities #######################################################
 
-    @cached
-    def _support_and_compat(self):
-        support = self.support_and
-        if callable(support):
-            warn('[3.13] %s.support_and is now a property' % self.__class__,
-                 DeprecationWarning)
-            support = support()
-        return support
-
     def value_restriction(self, restrvar, rel, value):
         # XXX handle rel is None case in RQLPathFacet?
         if self.restr_attr != 'eid':
@@ -740,7 +730,7 @@ class RelationFacet(VocabularyFacet):
                 rel.parent.replace(rel, nodes.Not(rel))
         elif self.operator == 'OR':
             # set_distinct only if rtype cardinality is > 1
-            if self._support_and_compat():
+            if self.support_and:
                 self.select.set_distinct(True)
             # multiple ORed values: using IN is fine
             if '' in value:
@@ -1516,7 +1506,7 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
     def height(self):
         """ title, optional and/or dropdown, len(items) or upper limit """
         return (1.5 + # title + small magic constant
-                int(self.facet._support_and_compat() +
+                int(self.facet.support_and +
                     min(len(self.items), self.css_overflow_limit)))
 
     @property
@@ -1536,14 +1526,14 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
             cssclass += ' hideFacetBody'
         w(u'<div class="%s" cubicweb:facetName="%s">%s</div>\n' %
           (cssclass, xml_escape(self.facet.__regid__), title))
-        if self.facet._support_and_compat():
+        if self.facet.support_and:
             self._render_and_or(w)
         cssclass = 'facetBody vocabularyFacet'
         if not self.facet.start_unfolded:
             cssclass += ' hidden'
         overflow = self.overflows
         if overflow:
-            if self.facet._support_and_compat():
+            if self.facet.support_and:
                 cssclass += ' vocabularyFacetBodyWithLogicalSelector'
             else:
                 cssclass += ' vocabularyFacetBody'

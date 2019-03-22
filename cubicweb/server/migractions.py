@@ -49,9 +49,9 @@ from yams.buildobjs import EntityType
 from yams.constraints import SizeConstraint
 from yams.schema import RelationDefinitionSchema
 
-from cubicweb import CW_SOFTWARE_ROOT, AuthenticationError, ExecutionError
+from cubicweb import CW_SOFTWARE_ROOT, ETYPE_NAME_MAP, AuthenticationError, ExecutionError
 from cubicweb.predicates import is_instance
-from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
+from cubicweb.schema import (META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
 from cubicweb.cwvreg import CW_EVENT_MANAGER

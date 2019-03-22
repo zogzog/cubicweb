@@ -33,10 +33,10 @@ from yams import buildobjs as ybo, convert_default_value
 from logilab.common.decorators import clear_cache
 
 from cubicweb import _
-from cubicweb import validation_error
+from cubicweb import validation_error, ETYPE_NAME_MAP
 from cubicweb.predicates import is_instance
 from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
-                             CONSTRAINTS, UNIQUE_CONSTRAINTS, ETYPE_NAME_MAP)
+                             CONSTRAINTS, UNIQUE_CONSTRAINTS)
 from cubicweb.schema import constraint_name_for
 from cubicweb.server import hook, schemaserial as ss, schema2sql as y2sql
 from cubicweb.server.sqlutils import SQL_PREFIX

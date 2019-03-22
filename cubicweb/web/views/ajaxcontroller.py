@@ -63,7 +63,6 @@ implement the ``__call__`` method:
 
 
 
-from warnings import warn
 from functools import partial
 
 from six import PY2, text_type
@@ -118,23 +117,11 @@ class AjaxController(Controller):
         except KeyError:
             raise RemoteCallFailed('no method specified',
                                    status=http_client.BAD_REQUEST)
-        # 1/ check first for old-style (JSonController) ajax func for bw compat
         try:
-            func = getattr(basecontrollers.JSonController, 'js_%s' % fname)
-            if PY2:
-                func = func.__func__
-            func = partial(func, self)
-        except AttributeError:
-            # 2/ check for new-style (AjaxController) ajax func
-            try:
-                func = self._cw.vreg['ajax-func'].select(fname, self._cw)
-            except ObjectNotFound:
-                raise RemoteCallFailed('no %s method' % fname,
-                                       status=http_client.BAD_REQUEST)
-        else:
-            warn('[3.15] remote function %s found on JSonController, '
-                 'use AjaxFunction / @ajaxfunc instead' % fname,
-                 DeprecationWarning, stacklevel=2)
+            func = self._cw.vreg['ajax-func'].select(fname, self._cw)
+        except ObjectNotFound:
+            raise RemoteCallFailed('no %s method' % fname,
+                                   status=http_client.BAD_REQUEST)
         debug_mode = self._cw.vreg.config.debugmode
         # no <arg> attribute means the callback takes no argument
         args = self._cw.form.get('arg', ())

@@ -24,7 +24,6 @@ import os
 import hmac
 from uuid import uuid4
 from os.path import dirname, join, exists, split, isdir
-from warnings import warn
 
 from six import text_type
 
@@ -339,11 +338,6 @@ have the python imaging library installed to use captcha)',
         if directory is None:
             return None, None
         if self['use-uicache'] and rdirectory == 'data' and rid.endswith('.css'):
-            if rid == 'cubicweb.old.css':
-                # @import('cubicweb.css') in css
-                warn('[3.20] cubicweb.old.css has been renamed back to cubicweb.css',
-                     DeprecationWarning)
-                rid = 'cubicweb.css'
             return self.ensure_uid_directory(
                 self.uiprops.process_resource(
                     join(directory, rdirectory), rid)), rid
@@ -404,14 +398,6 @@ have the python imaging library installed to use captcha)',
             self._load_ui_properties_file(uiprops, path)
         self._load_ui_properties_file(uiprops, self.apphome)
         datadir_url = uiprops.context['datadir_url']
-        if (datadir_url + '/cubicweb.old.css') in uiprops['STYLESHEETS']:
-            warn('[3.20] cubicweb.old.css has been renamed back to cubicweb.css',
-                 DeprecationWarning)
-            idx = uiprops['STYLESHEETS'].index(datadir_url + '/cubicweb.old.css')
-            uiprops['STYLESHEETS'][idx] = datadir_url + '/cubicweb.css'
-        if datadir_url + '/cubicweb.reset.css' in uiprops['STYLESHEETS']:
-            warn('[3.20] cubicweb.reset.css is obsolete', DeprecationWarning)
-            uiprops['STYLESHEETS'].remove(datadir_url + '/cubicweb.reset.css')
         cubicweb_js_url = datadir_url + '/cubicweb.js'
         if cubicweb_js_url not in uiprops['JAVASCRIPTS']:
             uiprops['JAVASCRIPTS'].insert(0, cubicweb_js_url)

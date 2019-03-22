@@ -24,7 +24,6 @@ import re
 from os.path import join
 from hashlib import md5
 from logging import getLogger
-from warnings import warn
 
 from six import PY2, text_type, string_types, add_metaclass
 from six.moves import range
@@ -44,12 +43,12 @@ from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
                          cleanup_sys_modules, fill_schema_from_namespace)
 from yams.buildobjs import _add_relation as yams_add_relation
 
-from rql import parse, nodes, stmts, RQLSyntaxError, TypeResolverException
+from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 from rql.analyze import ETypeResolver
 
 import cubicweb
 from cubicweb import server
-from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized, _
+from cubicweb import ValidationError, Unauthorized, _
 
 
 PURE_VIRTUAL_RTYPES = set(('identity', 'has_text',))
@@ -569,15 +568,6 @@ def order_eschemas(eschemas):
     return eschemas
 
 
-def bw_normalize_etype(etype):
-    if etype in ETYPE_NAME_MAP:
-        msg = '%s has been renamed to %s, please update your code' % (
-            etype, ETYPE_NAME_MAP[etype])
-        warn(msg, DeprecationWarning, stacklevel=4)
-        etype = ETYPE_NAME_MAP[etype]
-    return etype
-
-
 def display_name(req, key, form='', context=None):
     """return a internationalized string for the key (schema entity or relation
     name) in a given form
@@ -1033,7 +1023,6 @@ class CubicWebSchema(Schema):
 
     def add_entity_type(self, edef):
         edef.name = str(edef.name)
-        edef.name = bw_normalize_etype(edef.name)
         if not re.match(self.etype_name_re, edef.name):
             raise BadSchemaDefinition(
                 '%r is not a valid name for an entity type. It should start '
@@ -1079,8 +1068,6 @@ class CubicWebSchema(Schema):
         :param: the newly created or just completed relation schema
         """
         rdef.name = rdef.name.lower()
-        rdef.subject = bw_normalize_etype(rdef.subject)
-        rdef.object = bw_normalize_etype(rdef.object)
         rdefs = super(CubicWebSchema, self).add_relation_def(rdef)
         if rdefs:
             try:
@@ -1457,27 +1444,3 @@ def vocabulary(self, entity=None, form=None):
         if hasperm:
             return self.regular_formats + tuple(NEED_PERM_FORMATS)
     return self.regular_formats
-
-
-# XXX itou for some Statement methods
-
-@_override_method(stmts.ScopeNode, pass_original=True)
-def get_etype(self, name, _orig):
-    return _orig(self, bw_normalize_etype(name))
-
-
-@_override_method(stmts.Delete, method_name='add_main_variable',
-                  pass_original=True)
-def _add_main_variable_delete(self, etype, vref, _orig):
-    return _orig(self, bw_normalize_etype(etype), vref)
-
-
-@_override_method(stmts.Insert, method_name='add_main_variable',
-                  pass_original=True)
-def _add_main_variable_insert(self, etype, vref, _orig):
-    return _orig(self, bw_normalize_etype(etype), vref)
-
-
-@_override_method(stmts.Select, pass_original=True)
-def set_statement_type(self, etype, _orig):
-    return _orig(self, bw_normalize_etype(etype))

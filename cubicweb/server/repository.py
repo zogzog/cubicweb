@@ -28,7 +28,6 @@ repository mainly:
 
 from __future__ import print_function
 
-from warnings import warn
 from itertools import chain
 from contextlib import contextmanager
 from logging import getLogger
@@ -824,10 +823,6 @@ class Repository(object):
         # operation (register pending eids before actual deletion to avoid
         # multiple call to glob_delete_entities)
         op = hook.CleanupDeletedEidsCacheOp.get_instance(cnx)
-        if not isinstance(eids, (set, frozenset)):
-            warn('[3.13] eids should be given as a set', DeprecationWarning,
-                 stacklevel=2)
-            eids = frozenset(eids)
         eids = eids - op._container
         op._container |= eids
         data_by_etype = {}  # values are [list of entities]

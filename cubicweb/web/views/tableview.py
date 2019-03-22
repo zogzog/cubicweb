@@ -63,7 +63,6 @@ above and implement your own class.
 
 from cubicweb import _
 
-from warnings import warn
 from copy import copy
 from types import MethodType
 
@@ -605,7 +604,7 @@ class RsetTableView(TableMixIn, AnyRsetView):
         return self.__regid__ == 'table'
 
     def call(self, headers=None, displaycols=None, cellvids=None,
-             paginate=None, **kwargs):
+             paginate=None):
         if self.headers:
             self.headers = [h and self._cw._(h) for h in self.headers]
         if (headers or displaycols or cellvids or paginate):
@@ -617,15 +616,7 @@ class RsetTableView(TableMixIn, AnyRsetView):
                 self.cellvids = cellvids
             if paginate is not None:
                 self.paginable = paginate
-        if kwargs:
-            # old table view arguments that we can safely ignore thanks to
-            # selectors
-            if len(kwargs) > 1:
-                msg = '[3.14] %s arguments are deprecated' % ', '.join(kwargs)
-            else:
-                msg = '[3.14] %s argument is deprecated' % ', '.join(kwargs)
-            warn(msg, DeprecationWarning, stacklevel=2)
-        super(RsetTableView, self).call(**kwargs)
+        super(RsetTableView, self).call()
 
     def main_var_index(self):
         """returns the index of the first non-attribute variable among the RQL

@@ -1076,7 +1076,7 @@ class is_in_state(score_entity):
                            ','.join(str(s) for s in self.expected))
 
 
-def on_fire_transition(etype, tr_names, from_state_name=None):
+def on_fire_transition(etype, tr_names):
     """Return 1 when entity of the type `etype` is going through transition of
     a name included in `tr_names`.
 
@@ -1088,8 +1088,6 @@ def on_fire_transition(etype, tr_names, from_state_name=None):
 
     See :class:`cubicweb.entities.wfobjs.TrInfo` for more information.
     """
-    if from_state_name is not None:
-        warn("on_fire_transition's from_state_name argument is unused", DeprecationWarning)
     if isinstance(tr_names, string_types):
         tr_names = set((tr_names,))
     def match_etype_and_transition(trinfo):

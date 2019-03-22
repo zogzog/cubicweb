@@ -23,7 +23,6 @@
 import itertools
 
 from contextlib import contextmanager
-from warnings import warn
 from cgi import FieldStorage
 
 import rql
@@ -124,11 +123,6 @@ def cw_to_pyramid(request):
         assert 300 <= ex.status < 400
         raise httpexceptions.status_map[ex.status](
             ex.location, headers=cw_headers(request))
-    except cubicweb.web.StatusResponse as ex:
-        warn('[3.16] StatusResponse is deprecated use req.status_out',
-             DeprecationWarning, stacklevel=2)
-        request.body = ex.content
-        request.status_int = ex.status
     except cubicweb.web.Unauthorized:
         raise httpexceptions.HTTPForbidden(
             request.cw_request._(

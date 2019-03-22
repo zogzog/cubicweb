@@ -77,8 +77,6 @@ views use those text views as a basis.
 
 from cubicweb import _
 
-from warnings import warn
-
 from six.moves import range
 
 from logilab.mtconverter import TransformError, xml_escape
@@ -368,11 +366,8 @@ class SimpleListView(ListItemView):
 
         :param listid: the DOM id to use for the root element
         """
-        if subvid is None and 'vid' in kwargs:
-            warn("should give a 'subvid' argument instead of 'vid'",
-                 DeprecationWarning, stacklevel=2)
-        else:
-            kwargs['vid'] = subvid
+        assert 'vid' not in kwargs
+        kwargs['vid'] = subvid
         return super(SimpleListView, self).call(**kwargs)
 
 

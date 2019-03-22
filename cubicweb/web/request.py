@@ -23,7 +23,6 @@ import base64
 from hashlib import sha1  # pylint: disable=E0611
 from calendar import timegm
 from datetime import date, datetime
-from warnings import warn
 from io import BytesIO
 
 from six import PY2, text_type, string_types
@@ -461,12 +460,6 @@ class _CubicWebRequestBase(RequestSessionBase):
         Give maxage = None to have a "session" cookie expiring when the
         client close its browser
         """
-        if isinstance(name, SimpleCookie):
-            warn('[3.13] set_cookie now takes name and value as two first '
-                 'argument, not anymore cookie object and name',
-                 DeprecationWarning, stacklevel=2)
-            secure = name[value]['secure']
-            name, value = value, name[value].value
         if maxage: # don't check is None, 0 may be specified
             assert expires is None, 'both max age and expires cant be specified'
             expires = maxage + time.time()
@@ -483,12 +476,8 @@ class _CubicWebRequestBase(RequestSessionBase):
                         expires=expires, secure=secure, httponly=httponly)
         self.headers_out.addHeader('Set-cookie', cookie)
 
-    def remove_cookie(self, name, bwcompat=None):
+    def remove_cookie(self, name):
         """remove a cookie by expiring it"""
-        if bwcompat is not None:
-            warn('[3.13] remove_cookie now take only a name as argument',
-                 DeprecationWarning, stacklevel=2)
-            name = bwcompat
         self.set_cookie(name, '', maxage=0, expires=date(2000, 1, 1))
 
     def set_content_type(self, content_type, filename=None, encoding=None,

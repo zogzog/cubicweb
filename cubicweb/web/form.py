@@ -18,8 +18,6 @@
 """abstract form classes for CubicWeb web client"""
 
 
-from warnings import warn
-
 from six import add_metaclass
 
 from logilab.common.decorators import iclassmethod
@@ -273,10 +271,7 @@ class Form(AppObject):
             try:
                 return self.form_valerror.errors.pop(field.role_name())
             except KeyError:
-                if field.role and field.name in self.form_valerror:
-                    warn('%s: errors key of attribute/relation should be suffixed by "-<role>"'
-                         % self.form_valerror.__class__, DeprecationWarning)
-                    return self.form_valerror.errors.pop(field.name)
+                pass
         return None
 
     def remaining_errors(self):

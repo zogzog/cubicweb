@@ -29,8 +29,8 @@ from logilab.common.shellutils import ProgressBar, DummyProgressBar
 
 from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo, constraints
 
-from cubicweb import Binary
-from cubicweb.schema import (KNOWN_RPROPERTIES, CONSTRAINTS, ETYPE_NAME_MAP,
+from cubicweb import Binary, ETYPE_NAME_MAP
+from cubicweb.schema import (KNOWN_RPROPERTIES, CONSTRAINTS,
                              VIRTUAL_RTYPES)
 from cubicweb.server import sqlutils, schema2sql as y2sql
 

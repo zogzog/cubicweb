@@ -35,7 +35,6 @@ else:
     from inspect import getargspec
 from itertools import repeat
 from uuid import uuid4
-from warnings import warn
 from threading import Lock
 from logging import getLogger
 
@@ -447,11 +446,8 @@ class HTMLStream(object):
     def set_htmlattrs(self, attrs):
         self._htmlattrs = attrs
 
-    def set_doctype(self, doctype, reset_xmldecl=None):
+    def set_doctype(self, doctype):
         self.doctype = doctype
-        if reset_xmldecl is not None:
-            warn('[3.17] xhtml is no more supported',
-                 DeprecationWarning, stacklevel=2)
 
     @property
     def htmltag(self):

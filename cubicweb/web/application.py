@@ -23,7 +23,6 @@ import json
 import sys
 from time import clock, time
 from contextlib import contextmanager
-from warnings import warn
 
 from six import text_type, binary_type
 from six.moves import http_client
@@ -37,7 +36,7 @@ from cubicweb import (
 from cubicweb.repoapi import anonymous_cnx
 from cubicweb.web import cors
 from cubicweb.web import (
-    LOGGER, StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
+    LOGGER, DirectResponse, Redirect, NotFound, LogOut,
     RemoteCallFailed, InvalidSession, RequestError, PublishException)
 
 # make session manager available through a global variable so the debug view can
@@ -357,11 +356,6 @@ class CubicWebPublisher(object):
                 # Return directly an empty 200
                 req.status_out = 200
                 result = b''
-            except StatusResponse as ex:
-                warn('[3.16] StatusResponse is deprecated use req.status_out',
-                     DeprecationWarning, stacklevel=2)
-                result = ex.content
-                req.status_out = ex.status
             except Redirect as ex:
                 # Redirect may be raised by edit controller when everything went
                 # fine, so attempt to commit

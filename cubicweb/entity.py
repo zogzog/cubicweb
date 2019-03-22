@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Base class for entity objects manipulated in clients"""
 
-from warnings import warn
-
 from six import text_type, string_types, integer_types
 from six.moves import range
 
@@ -363,34 +361,8 @@ class Entity(AppObject):
                 etypecls._fetch_restrictions(var, select, fetchattrs,
                                              user, None, visited=visited)
             if ordermethod is not None:
-                try:
-                    cmeth = getattr(cls, ordermethod)
-                    warn('[3.14] %s %s class method should be renamed to cw_%s'
-                         % (cls.__regid__, ordermethod, ordermethod),
-                         DeprecationWarning)
-                except AttributeError:
-                    cmeth = getattr(cls, 'cw_' + ordermethod)
-                if support_args(cmeth, 'select'):
-                    cmeth(select, attr, var)
-                else:
-                    warn('[3.14] %s should now take (select, attr, var) and '
-                         'modify the syntax tree when desired instead of '
-                         'returning something' % cmeth, DeprecationWarning)
-                    orderterm = cmeth(attr, var.name)
-                    if orderterm is not None:
-                        try:
-                            var, order = orderterm.split()
-                        except ValueError:
-                            if '(' in orderterm:
-                                cls.error('ignore %s until %s is upgraded',
-                                          orderterm, cmeth)
-                                orderterm = None
-                            elif not ' ' in orderterm.strip():
-                                var = orderterm
-                                order = 'ASC'
-                        if orderterm is not None:
-                            select.add_sort_var(select.get_variable(var),
-                                                order=='ASC')
+                cmeth = getattr(cls, 'cw_' + ordermethod)
+                cmeth(select, attr, var)
 
     @classmethod
     @cached
@@ -640,10 +612,8 @@ class Entity(AppObject):
             kwargs['rql'] = 'Any X WHERE X eid %s' % self.eid
         return self._cw.build_url(method, **kwargs)
 
-    def rest_path(self, *args, **kwargs): # XXX cw_rest_path
+    def rest_path(self): # XXX cw_rest_path
         """returns a REST-like (relative) path for this entity"""
-        if args or kwargs:
-            warn("[3.24] rest_path doesn't take parameters anymore", DeprecationWarning)
         mainattr, needcheck = self.cw_rest_attr_info()
         etype = str(self.e_schema)
         path = etype.lower()
