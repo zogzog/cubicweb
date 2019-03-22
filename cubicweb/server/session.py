@@ -38,7 +38,6 @@ from cubicweb.server.edition import EditedEntity
 
 
 NO_UNDO_TYPES = schema.SCHEMA_TYPES.copy()
-NO_UNDO_TYPES.add('CWCache')
 NO_UNDO_TYPES.add('CWSession')
 NO_UNDO_TYPES.add('CWDataImport')
 # is / is_instance_of are usually added by sql hooks except when using

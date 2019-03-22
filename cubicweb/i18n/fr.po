@@ -258,12 +258,6 @@ msgstr "Attribut"
 msgid "CWAttribute_plural"
 msgstr "Attributs"
 
-msgid "CWCache"
-msgstr "Cache applicatif"
-
-msgid "CWCache_plural"
-msgstr "Caches applicatifs"
-
 msgid "CWComputedRType"
 msgstr "Relation virtuelle"
 
@@ -548,9 +542,6 @@ msgstr "Nouveau signet"
 msgid "New CWAttribute"
 msgstr "Nouvelle définition de relation finale"
 
-msgid "New CWCache"
-msgstr "Nouveau cache applicatif"
-
 msgid "New CWComputedRType"
 msgstr "Nouvelle relation virtuelle"
 
@@ -774,9 +765,6 @@ msgstr "Ce signet :"
 msgid "This CWAttribute:"
 msgstr "Cette définition de relation finale :"
 
-msgid "This CWCache:"
-msgstr "Ce cache applicatif :"
-
 msgid "This CWComputedRType:"
 msgstr "Cette relation virtuelle :"
 
@@ -985,18 +973,6 @@ msgstr "un nombre flottant est attendu"
 msgid "a number (in seconds) or 20s, 10min, 24h or 4d are expected"
 msgstr "un nombre (en seconde) ou 20s, 10min, 24h ou 4d sont attendus"
 
-msgid ""
-"a simple cache entity characterized by a name and a validity date. The "
-"target application is responsible for updating timestamp when necessary to "
-"invalidate the cache (typically in hooks). Also, checkout the AppObject."
-"get_cache() method."
-msgstr ""
-"un cache simple caractérisé par un nom et une date de validité. C'est\n"
-"le code de l'instance qui est responsable de mettre à jour la date de\n"
-"validité lorsque le cache doit être invalidé (en général dans un hook).\n"
-"Pour récupérer un cache, il faut utiliser utiliser la méthode\n"
-"get_cache(cachename)."
-
 msgid "abstract base class for transitions"
 msgstr "classe de base abstraite pour les transitions"
 
@@ -1121,9 +1097,6 @@ msgid "add a Bookmark"
 msgstr ""
 
 msgid "add a CWAttribute"
-msgstr ""
-
-msgid "add a CWCache"
 msgstr ""
 
 msgid "add a CWComputedRType"
@@ -3248,10 +3221,6 @@ msgctxt "BaseTransition"
 msgid "name"
 msgstr "nom"
 
-msgctxt "CWCache"
-msgid "name"
-msgstr "nom"
-
 msgctxt "CWComputedRType"
 msgid "name"
 msgstr "nom"
@@ -3295,9 +3264,6 @@ msgstr "nom"
 msgctxt "WorkflowTransition"
 msgid "name"
 msgstr "nom"
-
-msgid "name of the cache"
-msgstr "nom du cache applicatif"
 
 msgid ""
 "name of the main variables which should be used in the selection if "
@@ -4121,13 +4087,6 @@ msgstr "cette ressource est introuvable"
 msgid "thursday"
 msgstr "jeudi"
 
-msgid "timestamp"
-msgstr "date"
-
-msgctxt "CWCache"
-msgid "timestamp"
-msgstr "valide depuis"
-
 msgid "timetable"
 msgstr "emploi du temps"
 
@@ -4627,8 +4586,39 @@ msgstr "vous avez été déconnecté"
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
 
+#~ msgid "CWCache"
+#~ msgstr "Cache applicatif"
+
+#~ msgid "CWCache_plural"
+#~ msgstr "Caches applicatifs"
+
+#~ msgid "New CWCache"
+#~ msgstr "Nouveau cache applicatif"
+
+#~ msgid "This CWCache:"
+#~ msgstr "Ce cache applicatif :"
+
+#~ msgid ""
+#~ "a simple cache entity characterized by a name and a validity date. The "
+#~ "target application is responsible for updating timestamp when necessary "
+#~ "to invalidate the cache (typically in hooks). Also, checkout the "
+#~ "AppObject.get_cache() method."
+#~ msgstr ""
+#~ "un cache simple caractérisé par un nom et une date de validité. C'est\n"
+#~ "le code de l'instance qui est responsable de mettre à jour la date de\n"
+#~ "validité lorsque le cache doit être invalidé (en général dans un hook).\n"
+#~ "Pour récupérer un cache, il faut utiliser utiliser la méthode\n"
+#~ "get_cache(cachename)."
+
 #~ msgid "generic plot"
 #~ msgstr "tracé de courbes standard"
+
+#~ msgctxt "CWCache"
+#~ msgid "name"
+#~ msgstr "nom"
+
+#~ msgid "name of the cache"
+#~ msgstr "nom du cache applicatif"
 
 #~ msgid "no repository sessions found"
 #~ msgstr "aucune session trouvée"
@@ -4639,3 +4629,10 @@ msgstr "vous devriez probablement supprimer cette propriété"
 #~ msgid "the system source has its configuration stored on the file-system"
 #~ msgstr ""
 #~ "la source système a sa configuration stockée sur le système de fichier"
+
+#~ msgid "timestamp"
+#~ msgstr "date"
+
+#~ msgctxt "CWCache"
+#~ msgid "timestamp"
+#~ msgstr "valide depuis"

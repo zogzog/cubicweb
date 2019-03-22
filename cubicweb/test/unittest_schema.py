@@ -171,7 +171,7 @@ class SchemaReaderClassTest(TestCase):
         expected_entities = [
             'Ami', 'BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
             'Date', 'Datetime', 'Decimal',
-            'CWCache', 'CWComputedRType', 'CWConstraint',
+            'CWComputedRType', 'CWConstraint',
             'CWConstraintType', 'CWDataImport', 'CWEType',
             'CWAttribute', 'CWGroup', 'EmailAddress',
             'CWRelation', 'CWPermission', 'CWProperty', 'CWRType', 'CWSession',
@@ -227,7 +227,7 @@ class SchemaReaderClassTest(TestCase):
             'specializes', 'start_timestamp', 'state_of', 'status', 'subworkflow',
             'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
 
-            'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille',
+            'tags', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille',
             'type',
 
             'upassword', 'update_permission', 'url', 'uri', 'use_email',
@@ -512,7 +512,6 @@ class CompositeSchemaTC(CubicWebTC):
                      ('cw_source', 'BaseTransition', 'CWSource', 'object'),
                      ('cw_source', 'Bookmark', 'CWSource', 'object'),
                      ('cw_source', 'CWAttribute', 'CWSource', 'object'),
-                     ('cw_source', 'CWCache', 'CWSource', 'object'),
                      ('cw_source', 'CWComputedRType', 'CWSource', 'object'),
                      ('cw_source', 'CWConstraint', 'CWSource', 'object'),
                      ('cw_source', 'CWConstraintType', 'CWSource', 'object'),

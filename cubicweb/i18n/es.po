@@ -262,12 +262,6 @@ msgstr "Atributo"
 msgid "CWAttribute_plural"
 msgstr "Atributos"
 
-msgid "CWCache"
-msgstr "Cache"
-
-msgid "CWCache_plural"
-msgstr "Caches"
-
 msgid "CWComputedRType"
 msgstr ""
 
@@ -550,9 +544,6 @@ msgstr "Agregar a Favoritos"
 msgid "New CWAttribute"
 msgstr "Nueva definición de relación final"
 
-msgid "New CWCache"
-msgstr "Agregar Caché"
-
 msgid "New CWComputedRType"
 msgstr ""
 
@@ -772,9 +763,6 @@ msgstr "Este favorito:"
 msgid "This CWAttribute:"
 msgstr "Esta definición de relación final:"
 
-msgid "This CWCache:"
-msgstr "Este Caché:"
-
 msgid "This CWComputedRType:"
 msgstr ""
 
@@ -983,18 +971,6 @@ msgstr "un número flotante es requerido"
 msgid "a number (in seconds) or 20s, 10min, 24h or 4d are expected"
 msgstr "se espera un número (en segundos) ó 20s, 10min, 24h ó 4d "
 
-msgid ""
-"a simple cache entity characterized by a name and a validity date. The "
-"target application is responsible for updating timestamp when necessary to "
-"invalidate the cache (typically in hooks). Also, checkout the AppObject."
-"get_cache() method."
-msgstr ""
-"un caché simple caracterizado por un nombre y una fecha de validez. Es\n"
-"el código de la instancia quién es responsable de actualizar la fecha de\n"
-"validez mientras el caché debe ser invalidado (en general en un hook).\n"
-"Para recuperar un caché, hace falta utilizar el método\n"
-"get_cache(cachename)."
-
 msgid "abstract base class for transitions"
 msgstr "Clase de base abstracta para la transiciones"
 
@@ -1119,9 +1095,6 @@ msgid "add a Bookmark"
 msgstr ""
 
 msgid "add a CWAttribute"
-msgstr ""
-
-msgid "add a CWCache"
 msgstr ""
 
 msgid "add a CWComputedRType"
@@ -3245,10 +3218,6 @@ msgctxt "BaseTransition"
 msgid "name"
 msgstr "Nombre"
 
-msgctxt "CWCache"
-msgid "name"
-msgstr "Nombre"
-
 msgctxt "CWComputedRType"
 msgid "name"
 msgstr ""
@@ -3292,9 +3261,6 @@ msgstr "Nombre"
 msgctxt "WorkflowTransition"
 msgid "name"
 msgstr "Nombre"
-
-msgid "name of the cache"
-msgstr "Nombre del Caché"
 
 msgid ""
 "name of the main variables which should be used in the selection if "
@@ -4115,13 +4081,6 @@ msgstr "Este recurso no existe"
 msgid "thursday"
 msgstr "Jueves"
 
-msgid "timestamp"
-msgstr "Fecha"
-
-msgctxt "CWCache"
-msgid "timestamp"
-msgstr "Válido desde"
-
 msgid "timetable"
 msgstr "Tablero de tiempos"
 
@@ -4648,6 +4607,12 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgid "Browse by category"
 #~ msgstr "Busca por categoría"
 
+#~ msgid "CWCache"
+#~ msgstr "Cache"
+
+#~ msgid "CWCache_plural"
+#~ msgstr "Caches"
+
 #~ msgid "CWSourceSchemaConfig"
 #~ msgstr "Configuraciones de Esquema de Fuente"
 
@@ -4660,17 +4625,35 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgid "Entity and relation supported by this source"
 #~ msgstr "Entidades y relaciones aceptadas por esta fuente"
 
+#~ msgid "New CWCache"
+#~ msgstr "Agregar Caché"
+
 #~ msgid "New CWSourceSchemaConfig"
 #~ msgstr "Nueva parte de mapeo de fuente"
 
 #~ msgid "No account? Try public access at %s"
 #~ msgstr "No esta registrado? Use el acceso público en %s"
 
+#~ msgid "This CWCache:"
+#~ msgstr "Este Caché:"
+
 #~ msgid "This CWSourceSchemaConfig:"
 #~ msgstr "Esta parte de mapeo de fuente:"
 
 #~ msgid "You can't change this relation"
 #~ msgstr "Usted no puede modificar esta relación"
+
+#~ msgid ""
+#~ "a simple cache entity characterized by a name and a validity date. The "
+#~ "target application is responsible for updating timestamp when necessary "
+#~ "to invalidate the cache (typically in hooks). Also, checkout the "
+#~ "AppObject.get_cache() method."
+#~ msgstr ""
+#~ "un caché simple caracterizado por un nombre y una fecha de validez. Es\n"
+#~ "el código de la instancia quién es responsable de actualizar la fecha de\n"
+#~ "validez mientras el caché debe ser invalidado (en general en un hook).\n"
+#~ "Para recuperar un caché, hace falta utilizar el método\n"
+#~ "get_cache(cachename)."
 
 #~ msgid "allowed options depends on the source type"
 #~ msgstr "las opciones permitidas dependen del tipo de fuente"
@@ -4765,6 +4748,13 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ "la relación %(rtype)s del tipo de entidad %(etype)s debe ser aceptada "
 #~ "('inlined')"
 
+#~ msgctxt "CWCache"
+#~ msgid "name"
+#~ msgstr "Nombre"
+
+#~ msgid "name of the cache"
+#~ msgstr "Nombre del Caché"
+
 #~ msgid "no edited fields specified for entity %s"
 #~ msgstr "Ningún campo editable especificado para la entidad %s"
 
@@ -4815,6 +4805,13 @@ msgstr "probablamente debería  suprimir esta propriedad"
 
 #~ msgid "timeline"
 #~ msgstr "Escala de Tiempo"
+
+#~ msgid "timestamp"
+#~ msgstr "Fecha"
+
+#~ msgctxt "CWCache"
+#~ msgid "timestamp"
+#~ msgstr "Válido desde"
 
 #~ msgid "unknown option(s): %s"
 #~ msgstr "opcion(es) desconocida(s): %s"

@@ -29,7 +29,6 @@ Entity types used to manage workflows
 
 Other entity types
 ~~~~~~~~~~~~~~~~~~
-* _`CWCache`, cache entities used to improve performances
 * _`CWProperty`, used to configure the instance
 
 * _`EmailAddress`, email address, used by the system to send notifications

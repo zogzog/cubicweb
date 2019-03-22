@@ -259,12 +259,6 @@ msgstr "Attribut"
 msgid "CWAttribute_plural"
 msgstr "Attribute"
 
-msgid "CWCache"
-msgstr "Cache"
-
-msgid "CWCache_plural"
-msgstr "Caches"
-
 msgid "CWComputedRType"
 msgstr ""
 
@@ -546,9 +540,6 @@ msgstr "Neues Lesezeichen"
 msgid "New CWAttribute"
 msgstr "Neue finale Relationsdefinition"
 
-msgid "New CWCache"
-msgstr "Neuer Anwendungs-Cache"
-
 msgid "New CWComputedRType"
 msgstr ""
 
@@ -767,9 +758,6 @@ msgstr "Dieses Lesezeichen:"
 msgid "This CWAttribute:"
 msgstr "diese finale Relationsdefinition:"
 
-msgid "This CWCache:"
-msgstr "Dieser Anwendungs-Cache:"
-
 msgid "This CWComputedRType:"
 msgstr ""
 
@@ -974,13 +962,6 @@ msgstr "Eine Dezimalzahl (float) wird erwartet."
 msgid "a number (in seconds) or 20s, 10min, 24h or 4d are expected"
 msgstr ""
 
-msgid ""
-"a simple cache entity characterized by a name and a validity date. The "
-"target application is responsible for updating timestamp when necessary to "
-"invalidate the cache (typically in hooks). Also, checkout the AppObject."
-"get_cache() method."
-msgstr ""
-
 msgid "abstract base class for transitions"
 msgstr "abstrakte Basisklasse für Übergänge"
 
@@ -1105,9 +1086,6 @@ msgid "add a Bookmark"
 msgstr ""
 
 msgid "add a CWAttribute"
-msgstr ""
-
-msgid "add a CWCache"
 msgstr ""
 
 msgid "add a CWComputedRType"
@@ -3199,10 +3177,6 @@ msgctxt "BaseTransition"
 msgid "name"
 msgstr "Name"
 
-msgctxt "CWCache"
-msgid "name"
-msgstr "Name"
-
 msgctxt "CWComputedRType"
 msgid "name"
 msgstr ""
@@ -3246,9 +3220,6 @@ msgstr "Name"
 msgctxt "WorkflowTransition"
 msgid "name"
 msgstr "Name"
-
-msgid "name of the cache"
-msgstr "Name des Caches"
 
 msgid ""
 "name of the main variables which should be used in the selection if "
@@ -4064,13 +4035,6 @@ msgstr "cette ressource est introuvable"
 msgid "thursday"
 msgstr "Donnerstag"
 
-msgid "timestamp"
-msgstr "Datum"
-
-msgctxt "CWCache"
-msgid "timestamp"
-msgstr "gültig seit"
-
 msgid "timetable"
 msgstr "Zeitplan"
 
@@ -4570,8 +4534,20 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #~ msgid "Browse by category"
 #~ msgstr "nach Kategorien navigieren"
 
+#~ msgid "CWCache"
+#~ msgstr "Cache"
+
+#~ msgid "CWCache_plural"
+#~ msgstr "Caches"
+
+#~ msgid "New CWCache"
+#~ msgstr "Neuer Anwendungs-Cache"
+
 #~ msgid "No account? Try public access at %s"
 #~ msgstr "Kein Konto? Zur öffentlichen Website: %s"
+
+#~ msgid "This CWCache:"
+#~ msgstr "Dieser Anwendungs-Cache:"
 
 #~ msgid "anonymous"
 #~ msgstr "anonym"
@@ -4596,6 +4572,13 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #~ msgid "generic plot"
 #~ msgstr "generischer Plot"
 
+#~ msgctxt "CWCache"
+#~ msgid "name"
+#~ msgstr "Name"
+
+#~ msgid "name of the cache"
+#~ msgstr "Name des Caches"
+
 #~ msgid "no edited fields specified for entity %s"
 #~ msgstr "kein Eingabefeld spezifiziert Für Entität %s"
 
@@ -4612,3 +4595,10 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 
 #~ msgid "timeline"
 #~ msgstr "Zeitleiste"
+
+#~ msgid "timestamp"
+#~ msgstr "Datum"
+
+#~ msgctxt "CWCache"
+#~ msgid "timestamp"
+#~ msgstr "gültig seit"

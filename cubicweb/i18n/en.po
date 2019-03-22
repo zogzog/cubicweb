@@ -248,12 +248,6 @@ msgstr "Attribute"
 msgid "CWAttribute_plural"
 msgstr "Attributes"
 
-msgid "CWCache"
-msgstr "CubicWeb Cache"
-
-msgid "CWCache_plural"
-msgstr "CubicWeb Caches"
-
 msgid "CWComputedRType"
 msgstr "Virtual relation"
 
@@ -524,9 +518,6 @@ msgstr "New bookmark"
 msgid "New CWAttribute"
 msgstr "New attribute"
 
-msgid "New CWCache"
-msgstr "New cache"
-
 msgid "New CWComputedRType"
 msgstr "New virtual relation"
 
@@ -744,9 +735,6 @@ msgstr "This bookmark:"
 msgid "This CWAttribute:"
 msgstr "This attribute:"
 
-msgid "This CWCache:"
-msgstr "This cache:"
-
 msgid "This CWComputedRType:"
 msgstr "This virtual relation:"
 
@@ -937,13 +925,6 @@ msgstr ""
 msgid "a number (in seconds) or 20s, 10min, 24h or 4d are expected"
 msgstr ""
 
-msgid ""
-"a simple cache entity characterized by a name and a validity date. The "
-"target application is responsible for updating timestamp when necessary to "
-"invalidate the cache (typically in hooks). Also, checkout the AppObject."
-"get_cache() method."
-msgstr ""
-
 msgid "abstract base class for transitions"
 msgstr ""
 
@@ -1068,9 +1049,6 @@ msgid "add a Bookmark"
 msgstr ""
 
 msgid "add a CWAttribute"
-msgstr ""
-
-msgid "add a CWCache"
 msgstr ""
 
 msgid "add a CWComputedRType"
@@ -3120,10 +3098,6 @@ msgctxt "BaseTransition"
 msgid "name"
 msgstr "name"
 
-msgctxt "CWCache"
-msgid "name"
-msgstr "name"
-
 msgctxt "CWComputedRType"
 msgid "name"
 msgstr "name"
@@ -3167,9 +3141,6 @@ msgstr "name"
 msgctxt "WorkflowTransition"
 msgid "name"
 msgstr "name"
-
-msgid "name of the cache"
-msgstr ""
 
 msgid ""
 "name of the main variables which should be used in the selection if "
@@ -3968,13 +3939,6 @@ msgstr ""
 msgid "thursday"
 msgstr ""
 
-msgid "timestamp"
-msgstr ""
-
-msgctxt "CWCache"
-msgid "timestamp"
-msgstr "timestamp"
-
 msgid "timetable"
 msgstr ""
 
@@ -4454,3 +4418,23 @@ msgstr ""
 
 msgid "you should probably delete that property"
 msgstr ""
+
+#~ msgid "CWCache"
+#~ msgstr "CubicWeb Cache"
+
+#~ msgid "CWCache_plural"
+#~ msgstr "CubicWeb Caches"
+
+#~ msgid "New CWCache"
+#~ msgstr "New cache"
+
+#~ msgid "This CWCache:"
+#~ msgstr "This cache:"
+
+#~ msgctxt "CWCache"
+#~ msgid "name"
+#~ msgstr "name"
+
+#~ msgctxt "CWCache"
+#~ msgid "timestamp"
+#~ msgstr "timestamp"

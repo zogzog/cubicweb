@@ -209,29 +209,6 @@ class same_as(RelationType):
     object = 'ExternalUri'
 
 
-class CWCache(EntityType):
-    """a simple cache entity characterized by a name and
-    a validity date.
-
-    The target application is responsible for updating timestamp
-    when necessary to invalidate the cache (typically in hooks).
-
-    Also, checkout the AppObject.get_cache() method.
-    """
-    # XXX only handle by hooks, shouldn't be readable/editable at all through
-    # the ui and so no permissions should be granted, no?
-    __permissions__ = {
-        'read':   ('managers', 'users', 'guests'),
-        'add':    ('managers',),
-        'update': ('managers', 'users',), # XXX
-        'delete': ('managers',),
-        }
-
-    name = String(required=True, unique=True, maxsize=128,
-                  description=_('name of the cache'))
-    timestamp = TZDatetime(default='NOW')
-
-
 class CWSource(EntityType):
     __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
