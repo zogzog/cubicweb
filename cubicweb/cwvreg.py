@@ -21,7 +21,6 @@ Cubicweb registries
 
 import sys
 from os.path import join, dirname, realpath
-from warnings import warn
 from datetime import datetime, date, time, timedelta
 from functools import reduce
 
@@ -295,21 +294,6 @@ class CtxComponentsRegistry(CWRegistry):
         return thisctxcomps
 
 
-class BwCompatCWRegistry(object):
-    def __init__(self, vreg, oldreg, redirecttoreg):
-        self.vreg = vreg
-        self.oldreg = oldreg
-        self.redirecto = redirecttoreg
-
-    def __getattr__(self, attr):
-        warn('[3.10] you should now use the %s registry instead of the %s registry'
-             % (self.redirecto, self.oldreg), DeprecationWarning, stacklevel=2)
-        return getattr(self.vreg[self.redirecto], attr)
-
-    def clear(self): pass
-    def initialization_completed(self): pass
-
-
 class CWRegistryStore(RegistryStore):
     """Central registry for the cubicweb instance, extending the generic
     RegistryStore with some cubicweb specific stuff.
@@ -366,8 +350,6 @@ class CWRegistryStore(RegistryStore):
             sys.path.remove(CW_SOFTWARE_ROOT)
         self.schema = None
         self.initialized = False
-        self['boxes'] = BwCompatCWRegistry(self, 'boxes', 'ctxcomponents')
-        self['contentnavigation'] = BwCompatCWRegistry(self, 'contentnavigation', 'ctxcomponents')
 
     def setdefault(self, regid):
         try:
