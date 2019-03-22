@@ -202,7 +202,9 @@ msgid "Attributes permissions:"
 msgstr "Permissions des attributs"
 
 msgid "Authentication failed. Please check your credentials."
-msgstr "Échec de l'authentification. Veuillez vérifier vos identifiant et mot de passe."
+msgstr ""
+"Échec de l'authentification. Veuillez vérifier vos identifiant et mot de "
+"passe."
 
 # schema pot file, generated on 2009-09-16 16:46:55
 #
@@ -640,7 +642,9 @@ msgid "Password_plural"
 msgstr "Mots de passe"
 
 msgid "Persistent session. Used by cubicweb.pyramid to store the session data."
-msgstr "Session persistante. Utilisée par cubicweb.pyramid pour stocker les données de session."
+msgstr ""
+"Session persistante. Utilisée par cubicweb.pyramid pour stocker les données "
+"de session."
 
 msgid "Please note that this is only a shallow copy"
 msgstr "Attention, cela n'effectue qu'une copie de surface"
@@ -2711,9 +2715,6 @@ msgstr "texte indexé"
 msgid "gc"
 msgstr "fuite mémoire"
 
-msgid "generic plot"
-msgstr "tracé de courbes standard"
-
 msgid "generic relation to link one entity to another"
 msgstr "relation générique pour lier une entité à une autre"
 
@@ -3362,9 +3363,6 @@ msgstr "rien à afficher"
 msgid "no related entity"
 msgstr "pas d'entité liée"
 
-msgid "no repository sessions found"
-msgstr "aucune session trouvée"
-
 msgid "no selected entities"
 msgstr "pas d'entité sélectionnée"
 
@@ -3416,9 +3414,6 @@ msgstr "seules les requêtes de sélections sont autorisées"
 
 msgid "open all"
 msgstr "tout ouvrir"
-
-msgid "opened sessions"
-msgstr "sessions ouvertes"
 
 msgid "opened web sessions"
 msgstr "sessions web ouvertes"
@@ -3833,6 +3828,9 @@ msgstr "informations serveur"
 msgid "severity"
 msgstr "sévérité"
 
+msgid "should css be compiled and store in uicache"
+msgstr ""
+
 msgid ""
 "should html fields being edited using fckeditor (a HTML WYSIWYG editor).  "
 "You should also select text/html as default text format to actually get "
@@ -3905,6 +3903,9 @@ msgstr "parent de"
 #, python-format
 msgid "specifying %s is mandatory"
 msgstr "spécifier %s est obligatoire"
+
+msgid "specifying an URL is mandatory"
+msgstr ""
 
 msgid ""
 "start timestamp of the currently in synchronization, or NULL when no "
@@ -4096,9 +4097,6 @@ msgstr "l'Uri de l'objet"
 
 msgid "the prefered email"
 msgstr "l'adresse électronique principale"
-
-msgid "the system source has its configuration stored on the file-system"
-msgstr "la source système a sa configuration stockée sur le système de fichier"
 
 msgid "there is no next page"
 msgstr "Il n'y a pas de page suivante"
@@ -4628,3 +4626,16 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
+
+#~ msgid "generic plot"
+#~ msgstr "tracé de courbes standard"
+
+#~ msgid "no repository sessions found"
+#~ msgstr "aucune session trouvée"
+
+#~ msgid "opened sessions"
+#~ msgstr "sessions ouvertes"
+
+#~ msgid "the system source has its configuration stored on the file-system"
+#~ msgstr ""
+#~ "la source système a sa configuration stockée sur le système de fichier"

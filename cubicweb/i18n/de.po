@@ -2663,9 +2663,6 @@ msgstr "indizierter Text"
 msgid "gc"
 msgstr ""
 
-msgid "generic plot"
-msgstr "generischer Plot"
-
 msgid "generic relation to link one entity to another"
 msgstr "generische Relation zur Verbindung einer Entität mit einer anderen"
 
@@ -3317,9 +3314,6 @@ msgstr ""
 msgid "no related entity"
 msgstr "keine verknüpfte Entität"
 
-msgid "no repository sessions found"
-msgstr "keine Datenbank-Sitzung gefunden"
-
 msgid "no selected entities"
 msgstr "keine Entitäten ausgewählt"
 
@@ -3371,9 +3365,6 @@ msgstr "Nur Auswahl-Anfragen sind erlaubt."
 
 msgid "open all"
 msgstr "alle öffnen"
-
-msgid "opened sessions"
-msgstr "offene Sitzungen"
 
 msgid "opened web sessions"
 msgstr "offene Web-Sitzungen"
@@ -3782,6 +3773,9 @@ msgstr "Server-Informationen"
 msgid "severity"
 msgstr ""
 
+msgid "should css be compiled and store in uicache"
+msgstr ""
+
 msgid ""
 "should html fields being edited using fckeditor (a HTML WYSIWYG editor).  "
 "You should also select text/html as default text format to actually get "
@@ -3853,6 +3847,9 @@ msgstr "Vorgänger von"
 
 #, python-format
 msgid "specifying %s is mandatory"
+msgstr ""
+
+msgid "specifying an URL is mandatory"
 msgstr ""
 
 msgid ""
@@ -4044,9 +4041,6 @@ msgstr "der URI des Objekts"
 
 msgid "the prefered email"
 msgstr "primäre E-Mail-Adresse"
-
-msgid "the system source has its configuration stored on the file-system"
-msgstr ""
 
 msgid "there is no next page"
 msgstr ""
@@ -4599,8 +4593,17 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #~ "Fehler beim Zugriff auf Quelle %s, möglicherweise sind die Daten "
 #~ "unvollständig."
 
+#~ msgid "generic plot"
+#~ msgstr "generischer Plot"
+
 #~ msgid "no edited fields specified for entity %s"
 #~ msgstr "kein Eingabefeld spezifiziert Für Entität %s"
+
+#~ msgid "no repository sessions found"
+#~ msgstr "keine Datenbank-Sitzung gefunden"
+
+#~ msgid "opened sessions"
+#~ msgstr "offene Sitzungen"
 
 #~ msgid "the value \"%s\" is already used, use another one"
 #~ msgstr ""

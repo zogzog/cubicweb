@@ -2712,9 +2712,6 @@ msgstr "Texto indexado"
 msgid "gc"
 msgstr "fuga de memoria"
 
-msgid "generic plot"
-msgstr "Gráfica Genérica"
-
 msgid "generic relation to link one entity to another"
 msgstr "Relación genérica para ligar entidades"
 
@@ -3363,9 +3360,6 @@ msgstr "no arrojó elementos para mostrar"
 msgid "no related entity"
 msgstr "No posee entidad asociada"
 
-msgid "no repository sessions found"
-msgstr "Ninguna sesión encontrada"
-
 msgid "no selected entities"
 msgstr "No hay entidades seleccionadas"
 
@@ -3417,9 +3411,6 @@ msgstr "Solo están permitidas consultas de lectura"
 
 msgid "open all"
 msgstr "Abrir todos"
-
-msgid "opened sessions"
-msgstr "Sesiones abiertas"
 
 msgid "opened web sessions"
 msgstr "Sesiones Web abiertas"
@@ -3831,6 +3822,9 @@ msgstr "Información del servidor"
 msgid "severity"
 msgstr "severidad"
 
+msgid "should css be compiled and store in uicache"
+msgstr ""
+
 msgid ""
 "should html fields being edited using fckeditor (a HTML WYSIWYG editor).  "
 "You should also select text/html as default text format to actually get "
@@ -3903,6 +3897,9 @@ msgstr "Especializado por"
 #, python-format
 msgid "specifying %s is mandatory"
 msgstr "especificar %s es obligatorio"
+
+msgid "specifying an URL is mandatory"
+msgstr ""
 
 msgid ""
 "start timestamp of the currently in synchronization, or NULL when no "
@@ -4095,10 +4092,6 @@ msgstr "El URI del Objeto"
 
 msgid "the prefered email"
 msgstr "Dirección principal de email"
-
-msgid "the system source has its configuration stored on the file-system"
-msgstr ""
-"el sistema fuente tiene su configuración almacenada en el sistema de archivos"
 
 msgid "there is no next page"
 msgstr "no existe página siguiente"
@@ -4764,6 +4757,9 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ "Un error ha ocurrido al interrogar  %s, es posible que los \n"
 #~ "datos visibles se encuentren incompletos"
 
+#~ msgid "generic plot"
+#~ msgstr "Gráfica Genérica"
+
 #~ msgid "inlined relation %(rtype)s of %(etype)s should be supported"
 #~ msgstr ""
 #~ "la relación %(rtype)s del tipo de entidad %(etype)s debe ser aceptada "
@@ -4771,6 +4767,12 @@ msgstr "probablamente debería  suprimir esta propriedad"
 
 #~ msgid "no edited fields specified for entity %s"
 #~ msgstr "Ningún campo editable especificado para la entidad %s"
+
+#~ msgid "no repository sessions found"
+#~ msgstr "Ninguna sesión encontrada"
+
+#~ msgid "opened sessions"
+#~ msgstr "Sesiones abiertas"
 
 #~ msgctxt "CWSourceSchemaConfig"
 #~ msgid "options"
@@ -4796,6 +4798,11 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgstr ""
 #~ "la relación %s es aceptada pero ninguna de sus definiciones corresponden "
 #~ "a los tipos de entidades aceptadas"
+
+#~ msgid "the system source has its configuration stored on the file-system"
+#~ msgstr ""
+#~ "el sistema fuente tiene su configuración almacenada en el sistema de "
+#~ "archivos"
 
 #~ msgid "the value \"%s\" is already used, use another one"
 #~ msgstr "El valor \"%s\" ya esta en uso, favor de utilizar otro"

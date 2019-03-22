@@ -618,7 +618,8 @@ msgid "Password_plural"
 msgstr "Passwords"
 
 msgid "Persistent session. Used by cubicweb.pyramid to store the session data."
-msgstr "Persistent session. Used by cubicweb.pyramid to store the session data."
+msgstr ""
+"Persistent session. Used by cubicweb.pyramid to store the session data."
 
 msgid "Please note that this is only a shallow copy"
 msgstr ""
@@ -2612,9 +2613,6 @@ msgstr "fulltext indexed"
 msgid "gc"
 msgstr "memory leak"
 
-msgid "generic plot"
-msgstr ""
-
 msgid "generic relation to link one entity to another"
 msgstr ""
 
@@ -3235,9 +3233,6 @@ msgstr ""
 msgid "no related entity"
 msgstr ""
 
-msgid "no repository sessions found"
-msgstr ""
-
 msgid "no selected entities"
 msgstr ""
 
@@ -3288,9 +3283,6 @@ msgid "only select queries are authorized"
 msgstr ""
 
 msgid "open all"
-msgstr ""
-
-msgid "opened sessions"
 msgstr ""
 
 msgid "opened web sessions"
@@ -3696,6 +3688,9 @@ msgstr ""
 msgid "severity"
 msgstr ""
 
+msgid "should css be compiled and store in uicache"
+msgstr ""
+
 msgid ""
 "should html fields being edited using fckeditor (a HTML WYSIWYG editor).  "
 "You should also select text/html as default text format to actually get "
@@ -3760,6 +3755,9 @@ msgstr "specialized by"
 
 #, python-format
 msgid "specifying %s is mandatory"
+msgstr ""
+
+msgid "specifying an URL is mandatory"
 msgstr ""
 
 msgid ""
@@ -3946,9 +3944,6 @@ msgid "the URI of the object"
 msgstr ""
 
 msgid "the prefered email"
-msgstr ""
-
-msgid "the system source has its configuration stored on the file-system"
 msgstr ""
 
 msgid "there is no next page"
