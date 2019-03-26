@@ -127,7 +127,7 @@ class ETypeRegistry(CWRegistry):
     def register(self, obj, **kwargs):
         obj = related_appobject(obj)
         oid = kwargs.get('oid') or obj.__regid__
-        if oid != 'Any' and not oid in self.schema:
+        if oid != 'Any' and oid not in self.schema:
             self.error('don\'t register %s, %s type not defined in the '
                        'schema', obj, oid)
             return
@@ -252,7 +252,7 @@ class ActionsRegistry(CWRegistry):
         if rset is None:
             actions = self.poss_visible_objects(req, rset=rset, **kwargs)
         else:
-            actions = rset.possible_actions(**kwargs) # cached implementation
+            actions = rset.possible_actions(**kwargs)  # cached implementation
         result = {}
         for action in actions:
             result.setdefault(action.category, []).append(action)
@@ -361,12 +361,14 @@ class CWRegistryStore(RegistryStore):
     def items(self):
         return [item for item in super(CWRegistryStore, self).items()
                 if not item[0] in ('propertydefs', 'propertyvalues')]
+
     def iteritems(self):
         return (item for item in super(CWRegistryStore, self).items()
                 if not item[0] in ('propertydefs', 'propertyvalues'))
 
     def values(self):
         return [value for key, value in self.items()]
+
     def itervalues(self):
         return (value for key, value in self.items())
 
@@ -461,7 +463,7 @@ class CWRegistryStore(RegistryStore):
             # bad class reference pb after reloading
             cfg = self.config
             for cube in cfg.expand_cubes(cubes, with_recommends=True):
-                if not cube in cubes:
+                if cube not in cubes:
                     cube_modnames = cfg.appobjects_cube_modnames(cube)
                     self._cleanup_sys_modules(cube_modnames)
         self.register_modnames(modnames)
@@ -537,7 +539,7 @@ class CWRegistryStore(RegistryStore):
                                registry.objid(obj), ' or '.join(regids), regname)
                     self.unregister(obj)
         super(CWRegistryStore, self).initialization_completed()
-        if 'uicfg' in self: # 'uicfg' is not loaded in a pure repository mode
+        if 'uicfg' in self:  # 'uicfg' is not loaded in a pure repository mode
             for rtags in self['uicfg'].values():
                 for rtag in rtags:
                     # don't check rtags if we don't want to cleanup_unused_appobjects
@@ -616,8 +618,8 @@ class CWRegistryStore(RegistryStore):
         vocab = pdef['vocabulary']
         if vocab is not None:
             if callable(vocab):
-                vocab = vocab(None) # XXX need a req object
-            if not value in vocab:
+                vocab = vocab(None)  # XXX need a req object
+            if value not in vocab:
                 raise ValueError(_('unauthorized value'))
         return value
 
@@ -640,11 +642,11 @@ class CWRegistryStore(RegistryStore):
 # XXX unify with yams.constraints.BASE_CONVERTERS?
 YAMS_TO_PY = BASE_CONVERTERS.copy()
 YAMS_TO_PY.update({
-    'Bytes':      Binary,
-    'Date':       date,
-    'Datetime':   datetime,
+    'Bytes': Binary,
+    'Date': date,
+    'Datetime': datetime,
     'TZDatetime': datetime,
-    'Time':       time,
-    'TZTime':     time,
-    'Interval':   timedelta,
-    })
+    'Time': time,
+    'TZTime': time,
+    'Interval': timedelta,
+})
