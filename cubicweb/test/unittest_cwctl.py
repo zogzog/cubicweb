@@ -20,8 +20,7 @@ import os
 from os.path import join
 from io import StringIO
 import unittest
-
-from mock import patch
+from unittest.mock import patch
 
 from cubicweb.cwctl import ListCommand
 from cubicweb.devtools.testlib import CubicWebTC

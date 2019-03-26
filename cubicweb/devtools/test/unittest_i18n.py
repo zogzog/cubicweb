@@ -25,8 +25,7 @@ import os.path as osp
 import sys
 from subprocess import PIPE, Popen, STDOUT
 from unittest import TestCase, main
-
-from mock import patch
+from unittest.mock import patch
 
 from cubicweb.devtools import devctl
 from cubicweb.devtools.testlib import BaseTestCase

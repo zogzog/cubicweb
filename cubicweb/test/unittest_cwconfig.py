@@ -26,8 +26,7 @@ from os.path import dirname, join
 from pkg_resources import EntryPoint, Distribution
 from tempfile import TemporaryDirectory
 import unittest
-
-from mock import patch
+from unittest.mock import patch
 
 from logilab.common.modutils import cleanup_sys_modules
 

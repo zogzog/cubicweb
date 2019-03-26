@@ -21,8 +21,7 @@ import os
 from os import path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
-
-from mock import patch
+from unittest.mock import patch
 
 
 from cubicweb.pyramid import config

@@ -6,7 +6,6 @@ webtest
 
 ## cubicweb/test
 Pygments
-mock
 #fyzz XXX pip install fails
 
 ## cubicweb/devtools/test

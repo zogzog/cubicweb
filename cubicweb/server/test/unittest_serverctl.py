@@ -1,7 +1,6 @@
 import os.path as osp
 import shutil
-
-from mock import patch
+from unittest.mock import patch
 
 from cubicweb import ExecutionError
 from cubicweb.devtools import testlib, ApptestConfiguration
