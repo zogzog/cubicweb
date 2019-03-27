@@ -8,10 +8,6 @@ The 'pyramid' command
 The 'pyramid' command is a replacement for the 'start' command of :ref:`cubicweb-ctl`.
 It provides the same options and a few other ones.
 
-.. note::
-
-    The 'pyramid' command is provided by the ``pyramid`` cube.
-
 Options
 -------
 
