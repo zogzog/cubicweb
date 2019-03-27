@@ -10,8 +10,8 @@ Step 1: creating a virtual environment
 
 Fisrt I need a python virtual environment with cubicweb::
 
-  virtualenv python-2.7.5_cubicweb
-  . /python-2.7.5_cubicweb/bin/activate
+  python3 -m venv venv
+  . venv/bin/activate
   pip install cubicweb[pyramid]
 
 
