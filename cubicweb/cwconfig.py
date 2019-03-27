@@ -663,8 +663,6 @@ this option is set to yes",
     @classmethod
     def cls_adjust_sys_path(cls):
         """update python path if necessary"""
-        from cubicweb import _CubesImporter
-        _CubesImporter.install()
         import cubes
         cubes.__path__ = cls.cubes_search_path()
 

@@ -20,12 +20,10 @@ relations between entitites.
 """
 
 
-import imp
 import logging
 import os
 import pickle
 import sys
-import types
 import warnings
 import zlib
 
@@ -268,60 +266,3 @@ class ProgrammingError(Exception):
     not be processed, a memory allocation error occurred during processing,
     etc.
     """
-
-
-# Import hook for "legacy" cubes ##############################################
-
-class _CubesLoader(object):
-
-    def __init__(self, *modinfo):
-        self.modinfo = modinfo
-
-    def load_module(self, fullname):
-        try:
-            # If there is an existing module object named 'fullname' in
-            # sys.modules , the loader must use that existing module.
-            # Otherwise, the reload() builtin will not work correctly.
-            return sys.modules[fullname]
-        except KeyError:
-            pass
-        if fullname == 'cubes':
-            mod = sys.modules[fullname] = types.ModuleType(
-                fullname, doc='CubicWeb cubes')
-        else:
-            modname, file, pathname, description = self.modinfo
-            try:
-                mod = sys.modules[fullname] = imp.load_module(
-                    modname, file, pathname, description)
-            finally:
-                # https://docs.python.org/2/library/imp.html#imp.load_module
-                # Important: the caller is responsible for closing the file
-                # argument, if it was not None, even when an exception is
-                # raised. This is best done using a try ... finally statement
-                if file is not None:
-                    file.close()
-        return mod
-
-
-class _CubesImporter(object):
-    """Module finder handling redirection of import of "cubes.<name>"
-    to "cubicweb_<name>".
-    """
-
-    @classmethod
-    def install(cls):
-        if not any(isinstance(x, cls) for x in sys.meta_path):
-            self = cls()
-            sys.meta_path.append(self)
-
-    def find_module(self, fullname, path=None):
-        if fullname == 'cubes':
-            return _CubesLoader()
-        elif fullname.startswith('cubes.') and fullname.count('.') == 1:
-            modname = 'cubicweb_' + fullname.split('.', 1)[1]
-            try:
-                modinfo = imp.find_module(modname)
-            except ImportError:
-                return None
-            else:
-                return _CubesLoader(modname, *modinfo)
