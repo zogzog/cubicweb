@@ -116,10 +116,9 @@ LDAP schema mapping options:
 Other notes
 -----------
 
-* Cubicweb is able to start if ldap cannot be reached, even on
-  cubicweb-ctl start ... If some source ldap server cannot be used
-  while an instance is running, the corresponding users won't be
-  authenticated but their status will not change (e.g. they will not
+* Cubicweb is able to start if ldap cannot be reached... If some source ldap
+  server cannot be used while an instance is running, the corresponding users
+  won't be authenticated but their status will not change (e.g. they will not
   be deactivated)
 
 * The user-base-dn is a key that helps cubicweb map CWUsers to LDAP

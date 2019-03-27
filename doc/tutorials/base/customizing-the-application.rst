@@ -136,7 +136,7 @@ One easy way, as we've no really valuable data in the instance would be to trash
   cubicweb-ctl stop myblog # or Ctrl-C in the terminal running the server in debug mode
   cubicweb-ctl delete myblog
   cubicweb-ctl create myblog myblog
-  cubicweb-ctl start -D myblog
+  cubicweb-ctl pyramid -D myblog
 
 Another way is to add our cube to the instance using the cubicweb-ctl shell
 facility. It's a python shell connected to the instance with some special
@@ -151,7 +151,7 @@ in the `add_cube` command: ::
   type "exit" or Ctrl-D to quit the shell and resume operation
   >>> add_cube('myblog')
   >>>
-  $ cubicweb-ctl start -D myblog
+  $ cubicweb-ctl pyramid -D myblog
 
 The `add_cube` command is enough since it automatically updates our
 application to the cube's schema. There are plenty of other migration
@@ -225,7 +225,7 @@ we'll have to use dedicated `cubicweb-ctl` commands:
   cubicweb-ctl i18ncube myblog # build/update cube's message catalogs
   # then add translation into .po file into the cube's i18n directory
   cubicweb-ctl i18ninstance myblog # recompile instance's message catalogs
-  cubicweb-ctl restart -D myblog # instance has to be restarted to consider new catalogs
+  # instance has to be restarted to consider new catalogs
 
 You'll then be able to redefine each of them according to your needs and
 preferences. So let's see how to do such thing.
