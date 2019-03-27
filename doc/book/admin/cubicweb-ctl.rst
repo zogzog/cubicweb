@@ -65,21 +65,19 @@ Command to create/initialize an instance database
 * ``db-init``, initializes the system database of an instance
   (schema, groups, users, workflows...)
 
-Commands to control instances
------------------------------
+Run an instance
+---------------
 
-* ``start``, starts one or more or all instances
+To start an instance during development, use ::
 
-of special interest::
+   cubicweb-ctl pyramid [-D] [-l <log-level>] <instance-id>
 
-  start -D
+without ``-D``, the instance will be start in the background, as a daemon.
 
-will start in debug mode (under windows, starting without -D will not
-work; you need instead to setup your instance as a service).
+See :ref:`cubicweb-ctl_pyramid` for more details.
 
-* ``stop``, stops one or more or all instances
-* ``restart``, restarts one or more or all instances
-* ``status``, returns the status of the instance(s)
+In production, it is recommended to run CubicWeb through a WSGI server like
+uWSGI or Gunicorn. See :mod:`cubicweb.pyramid` more details.
 
 Commands to maintain instances
 ------------------------------
