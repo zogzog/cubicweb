@@ -20,9 +20,9 @@ Step 2: creating a new cube for my web site
 
 One note about my development environment: I wanted to use the packaged
 version of CubicWeb and cubes while keeping my cube in the current
-directory, let's say `~src/cubes`::
+directory, let's say `~/src/cubes`::
 
-  cd ~src/cubes
+  cd ~/src/cubes
   CW_MODE=user
 
 I can now create the cube which will hold custom code for this web
