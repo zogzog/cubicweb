@@ -21,9 +21,14 @@ Getting started
 
 Execute::
 
- apt-get install cubicweb cubicweb-dev cubicweb-blog
+ python3 -m venv venv
+ source venv/bin/activate
+ pip install 'cubicweb[pyramid]' cubicweb-blog
  cubicweb-ctl create blog myblog
- cubicweb-ctl start -D myblog
+ # read how to create your ~/etc/cubicweb.d/myblog/pyramid.ini file here:
+ # https://cubicweb.readthedocs.io/en/latest/book/pyramid/settings/#pyramid-settings-file
+ # then start your instance:
+ cubicweb-ctl pyramid -D myblog
  sensible-browser http://localhost:8080/
 
 Details at https://cubicweb.readthedocs.io/en/3.26/tutorials/base/blog-in-five-minutes
