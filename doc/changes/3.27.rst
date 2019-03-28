@@ -22,6 +22,9 @@ Backwards incompatible changes
 
 * Twisted web server support has been removed.
 
+* Support for legacy cubes (in the 'cubes' python namespace) has been dropped.
+  Use of environment variables CW_CUBES_PATH and CUBES_DIR is removed.
+
 Deprecated code drops
 ---------------------
 
