@@ -137,12 +137,12 @@ attribute and relation. Here is the code to add to :file:`schema.py`:
 	    'delete': ('managers', 'owners'),
 	    }
 
-    from cubes.folder.schema import Folder
-    from cubes.file.schema import File
-    from cubes.comment.schema import Comment
-    from cubes.person.schema import Person
-    from cubes.zone.schema import Zone
-    from cubes.tag.schema import Tag
+    from cubicweb_folder.schema import Folder
+    from cubicweb_file.schema import File
+    from cubicweb_comment.schema import Comment
+    from cubicweb_person.schema import Person
+    from cubicweb_zone.schema import Zone
+    from cubicweb_tag.schema import Tag
 
     Folder.__permissions__ = VISIBILITY_PERMISSIONS
     File.__permissions__ = VISIBILITY_PERMISSIONS

@@ -113,7 +113,7 @@ You have the possibility to redefine whatever pleases you, as follow:
 
 .. sourcecode:: python
 
-    from cubes.OTHER_CUBE import entities
+    from cubicweb_OTHER_CUBE import entities
 
     class EntityExample(entities.EntityExample):
 

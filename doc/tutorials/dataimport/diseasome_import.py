@@ -27,7 +27,7 @@ from logilab.common.decorators import timed
 
 # CubicWeb imports
 import cubicweb.dataimport as cwdi
-from cubes.dataio import dataimport as mcwdi
+from cubicweb_dataio import dataimport as mcwdi
 
 # Diseasome parser import
 import diseasome_parser as parser

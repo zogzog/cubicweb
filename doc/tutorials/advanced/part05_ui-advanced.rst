@@ -196,8 +196,8 @@ user interface tweaks in our :file:`views.py` file:
 
   from cubicweb.predicates import none_rset
   from cubicweb.web.views import bookmark
-  from cubes.zone import views as zone
-  from cubes.tag import views as tag
+  from cubicweb_zone import views as zone
+  from cubicweb_tag import views as tag
 
 
   # change bookmarks box selector so it's only displayed on startup views

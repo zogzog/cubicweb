@@ -354,7 +354,7 @@ Before using the store, one has to import the ``dataio`` cube's
 ``dataimport`` module, then initialize the store by giving it the
 ``session`` parameter::
 
-    from cubes.dataio import dataimport as mcwdi
+    from cubicweb_dataio import dataimport as mcwdi
     ...
 
     store = mcwdi.MassiveObjectStore(session)
@@ -441,7 +441,7 @@ We define an import function, ``diseasome_import``, which does basically four th
         store = cwdi.SQLGenObjectStore(session)
    
    where ``cwdi`` is the imported ``cubicweb.dataimport`` or 
-   ``cubes.dataio.dataimport``.
+   ``cubicweb_dataio.dataimport``.
 
 #. calls the diseasome parser, that is, the ``entities_from_rdf`` function in the 
    ``diseasome_parser`` module and iterates on its result, in a line such as::

@@ -35,7 +35,7 @@ discover available forms (or application objects in general).
  {'base': [<class 'cubicweb.web.views.forms.FieldsForm'>,
            <class 'cubicweb.web.views.forms.EntityFieldsForm'>],
   'changestate': [<class 'cubicweb.web.views.workflow.ChangeStateForm'>,
-                  <class 'cubes.tracker.views.forms.VersionChangeStateForm'>],
+                  <class 'cubicweb_tracker.views.forms.VersionChangeStateForm'>],
   'composite': [<class 'cubicweb.web.views.forms.CompositeForm'>,
                 <class 'cubicweb.web.views.forms.CompositeEntityForm'>],
   'deleteconf': [<class 'cubicweb.web.views.editforms.DeleteConfForm'>],

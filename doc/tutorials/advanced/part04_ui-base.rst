@@ -174,7 +174,7 @@ it's more logical stuff than view stuff:
 
 .. sourcecode:: python
 
-    from cubes.folder import entities as folder
+    from cubicweb_folder import entities as folder
 
 
     class FolderITreeAdapter(folder.FolderITreeAdapter):
