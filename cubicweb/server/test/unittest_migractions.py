@@ -60,8 +60,6 @@ def tearDownModule(*args):
 
 class MigrationConfig(cubicweb.devtools.TestServerConfiguration):
     default_sources = cubicweb.devtools.DEFAULT_PSQL_SOURCES
-    CUBES_PATH = cubicweb.devtools.TestServerConfiguration.CUBES_PATH + [
-        osp.join(HERE, 'data-migractions', 'cubes')]
 
 
 class MigrationTC(CubicWebTC):
@@ -94,10 +92,6 @@ class MigrationTC(CubicWebTC):
         with temp_app(self.config, appid, apphome) as config:
             global migrschema
             migrschema = config.load_schema()
-
-    def setUp(self):
-        self.configcls.cls_adjust_sys_path()
-        super(MigrationTC, self).setUp()
 
     def tearDown(self):
         super(MigrationTC, self).tearDown()
@@ -703,8 +697,8 @@ class MigrationCommandsTC(MigrationTC):
                                  ['Bookmark', 'EmailThread', 'Folder', 'Note'])
                 self.assertEqual(sorted(schema['see_also'].objects()),
                                  ['Bookmark', 'EmailThread', 'Folder', 'Note'])
-                from cubes.fakeemail.__pkginfo__ import version as email_version
-                from cubes.file.__pkginfo__ import version as file_version
+                from cubicweb_fakeemail.__pkginfo__ import version as email_version
+                from cubicweb_file.__pkginfo__ import version as file_version
                 self.assertEqual(
                     cnx.execute('Any V WHERE X value V, X pkey "system.version.fakeemail"')[0][0],
                     email_version)
