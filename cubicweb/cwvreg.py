@@ -507,12 +507,6 @@ class CWRegistryStore(RegistryStore):
         if depends_on is not None:
             self._needs_appobject[obj] = depends_on
 
-    def register_objects(self, path):
-        """overriden to give cubicweb's extrapath (eg cubes package's __path__)
-        """
-        super(CWRegistryStore, self).register_objects(
-            path, self.config.extrapath)
-
     def initialization_completed(self):
         """cw specific code once vreg initialization is completed:
 

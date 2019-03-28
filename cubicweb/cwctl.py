@@ -25,7 +25,7 @@ from __future__ import print_function
 # completion). So import locally in command helpers.
 import sys
 from warnings import filterwarnings
-from os import listdir, system, pathsep
+from os import listdir, system
 from os.path import exists, join, isdir
 
 try:
@@ -230,15 +230,14 @@ class ListCommand(Command):
         if mode in ('all', 'cubes'):
             cfgpb = ConfigurationProblem(cwcfg)
             try:
-                cubesdir = pathsep.join(cwcfg.cubes_search_path())
                 cube_names = available_cube_names(cwcfg)
                 namesize = max(len(x) for x in cube_names)
             except ConfigurationError as ex:
                 print('No cubes available:', ex)
             except ValueError:
-                print('No cubes available in %s' % cubesdir)
+                print('No cubes available')
             else:
-                print('Available cubes (%s):' % cubesdir)
+                print('Available cubes:')
                 for cube in cube_names:
                     try:
                         tinfo = cwcfg.cube_pkginfo(cube)

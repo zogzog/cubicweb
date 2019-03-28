@@ -43,8 +43,6 @@ from cubicweb import schema, cwconfig
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.web.webconfig import WebConfigurationBase
 
-cwconfig.CubicWebConfiguration.cls_adjust_sys_path()
-
 # db auto-population configuration #############################################
 
 SYSTEM_ENTITIES = (schema.SCHEMA_TYPES
