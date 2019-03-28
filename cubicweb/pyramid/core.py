@@ -398,12 +398,7 @@ def includeme(config):
 
     cwcfg = config.registry['cubicweb.config']
     for cube in cwcfg.cubes():
-        try:
-            pkgname = 'cubicweb_{}'.format(cube)
-            mod = __import__(pkgname)
-        except ImportError:
-            pkgname = 'cubes.{}'.format(cube)
-            mod = __import__(pkgname)
-            mod = getattr(mod, cube)
+        pkgname = 'cubicweb_{}'.format(cube)
+        mod = __import__(pkgname)
         if hasattr(mod, 'includeme'):
             config.include(pkgname)
