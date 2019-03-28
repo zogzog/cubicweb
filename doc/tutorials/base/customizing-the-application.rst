@@ -26,20 +26,8 @@ cube::
 
   cubicweb-ctl newcube myblog
 
-This will create in the cubes directory (:file:`/path/to/grshell/cubes` for source
-installation, :file:`/usr/share/cubicweb/cubes` for Debian packages installation)
-a directory named :file:`blog` reflecting the structure described in
-:ref:`cubelayout`.
-
-For packages installation, you can still create new cubes in your home directory
-using the following configuration. Let's say you want to develop your new cubes
-in `~src/cubes`, then set the following environment variables: ::
-
-  CW_CUBES_PATH=~/src/cubes
-
-and then create your new cube using: ::
-
-  cubicweb-ctl newcube --directory=~/src/cubes myblog
+This will create a a directory named :file:`cubicweb-myblog` reflecting the
+structure described in :ref:`cubelayout`.
 
 .. Note::
 
@@ -58,7 +46,7 @@ file:
 
 .. sourcecode:: python
 
-   __depends__ =  {'cubicweb': '>= 3.10.7',
+   __depends__ =  {'cubicweb': '>= 3.24.0',
                    'cubicweb-blog': None}
 
 where the ``None`` means we do not depends on a particular version of the cube.
