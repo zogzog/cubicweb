@@ -61,23 +61,21 @@ def create_filepath(filepath):
 
 
 @contextlib.contextmanager
-def temp_config(appid, instance_dir, cubes_dir, cubes):
+def temp_config(appid, instance_dir, cubes):
     """context manager that create a config object with specified appid,
-    instance_dir, cubes_dir and cubes"""
+    instance_dir and cubes"""
     cls = CubicWebConfiguration
-    old = (cls._INSTANCES_DIR, cls.CUBES_DIR, cls.CUBES_PATH,
+    old = (cls._INSTANCES_DIR,
            sys.path[:], sys.meta_path[:])
     old_modules = set(sys.modules)
     try:
-        cls._INSTANCES_DIR, cls.CUBES_DIR, cls.CUBES_PATH = (
-            instance_dir, cubes_dir, [])
+        cls._INSTANCES_DIR = instance_dir
         config = cls(appid)
         config._cubes = cubes
         config.adjust_sys_path()
         yield config
     finally:
-        (cls._INSTANCES_DIR, cls.CUBES_DIR, cls.CUBES_PATH,
-         sys.path[:], sys.meta_path[:]) = old
+        (cls._INSTANCES_DIR, sys.path[:], sys.meta_path[:]) = old
         for module in set(sys.modules) - old_modules:
             del sys.modules[module]
 
@@ -112,7 +110,6 @@ class CubicWebConfigurationTC(BaseTestCase):
         self.config._cubes = ('email', 'file')
 
     def tearDown(self):
-        ApptestConfiguration.CUBES_PATH = []
         cleanup_sys_modules([self.datapath()])
 
     def test_migration_scripts_dir(self):
@@ -189,7 +186,6 @@ class CubicWebConfigurationTC(BaseTestCase):
         self.config.load_cwctl_plugins()
         mock_iter_entry_points.assert_called_once_with(
             group='cubicweb.cubes', name=None)
-        self.assertNotIn('cubes.mycube.ccplugin', sys.modules, sorted(sys.modules))
         self.assertIn('cubicweb_mycube.ccplugin', sys.modules, sorted(sys.modules))
 
     def test_config_value_from_environment_str(self):
@@ -303,9 +299,6 @@ class ModnamesTC(unittest.TestCase):
             join(libdir, 'cubicweb_foo', 'schema', 'b.py'),
             # subpackages should not be loaded
             join(libdir, 'cubicweb_foo', 'schema', 'c', '__init__.py'),
-            join(libdir, 'cubes', '__init__.py'),
-            join(libdir, 'cubes', 'bar', '__init__.py'),
-            join(libdir, 'cubes', 'bar', 'schema.py'),
             join(libdir, '_instance_dir', 'data1', 'schema.py'),
             join(libdir, '_instance_dir', 'data2', 'noschema.py'),
         ):
@@ -315,24 +308,20 @@ class ModnamesTC(unittest.TestCase):
             ('cubicweb', 'cubicweb.schemas.base'),
             ('cubicweb', 'cubicweb.schemas.workflow'),
             ('cubicweb', 'cubicweb.schemas.Bookmark'),
-            ('bar', 'cubes.bar.schema'),
             ('foo', 'cubicweb_foo.schema'),
             ('foo', 'cubicweb_foo.schema.a'),
             ('foo', 'cubicweb_foo.schema.b'),
         ]
         # app has schema file
-        instance_dir, cubes_dir = (
-            join(libdir, '_instance_dir'), join(libdir, 'cubes'))
-        with temp_config('data1', instance_dir, cubes_dir,
-                         ('foo', 'bar')) as config:
+        instance_dir = join(libdir, '_instance_dir')
+        with temp_config('data1', instance_dir, ('foo',)) as config:
             self.assertEqual(pkgutil.find_loader('schema').get_filename(),
                              join(libdir, '_instance_dir',
                                   'data1', 'schema.py'))
             self.assertEqual(config.schema_modnames(),
                              expected + [('data', 'schema')])
         # app doesn't have schema file
-        with temp_config('data2', instance_dir, cubes_dir,
-                         ('foo', 'bar')) as config:
+        with temp_config('data2', instance_dir, ('foo',)) as config:
             self.assertEqual(pkgutil.find_loader('schema').get_filename(),
                              join(libdir, 'schema.py'))
             self.assertEqual(config.schema_modnames(), expected)
@@ -349,15 +338,11 @@ class ModnamesTC(unittest.TestCase):
             join(libdir, 'cubicweb_foo', 'entities', 'b', 'a.py'),
             join(libdir, 'cubicweb_foo', 'entities', 'b', 'c', '__init__.py'),
             join(libdir, 'cubicweb_foo', 'hooks.py'),
-            join(libdir, 'cubes', '__init__.py'),
-            join(libdir, 'cubes', 'bar', '__init__.py'),
-            join(libdir, 'cubes', 'bar', 'hooks.py'),
             join(libdir, '_instance_dir', 'data1', 'entities.py'),
             join(libdir, '_instance_dir', 'data2', 'hooks.py'),
         ):
             create_filepath(filepath)
-        instance_dir, cubes_dir = (
-            join(libdir, '_instance_dir'), join(libdir, 'cubes'))
+        instance_dir = join(libdir, '_instance_dir')
         expected = [
             'cubicweb.entities',
             'cubicweb.entities.adapters',
@@ -366,7 +351,6 @@ class ModnamesTC(unittest.TestCase):
             'cubicweb.entities.schemaobjs',
             'cubicweb.entities.sources',
             'cubicweb.entities.wfobjs',
-            'cubes.bar.hooks',
             'cubicweb_foo.entities',
             'cubicweb_foo.entities.a',
             'cubicweb_foo.entities.b',
@@ -375,14 +359,12 @@ class ModnamesTC(unittest.TestCase):
             'cubicweb_foo.hooks',
         ]
         # data1 has entities
-        with temp_config('data1', instance_dir, cubes_dir,
-                         ('foo', 'bar')) as config:
+        with temp_config('data1', instance_dir, ('foo',)) as config:
             config.cube_appobject_path = set(['entities', 'hooks'])
             self.assertEqual(config.appobjects_modnames(),
                              expected + ['entities'])
         # data2 has hooks
-        with temp_config('data2', instance_dir, cubes_dir,
-                         ('foo', 'bar')) as config:
+        with temp_config('data2', instance_dir, ('foo',)) as config:
             config.cube_appobject_path = set(['entities', 'hooks'])
             self.assertEqual(config.appobjects_modnames(),
                              expected + ['hooks'])
