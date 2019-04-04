@@ -55,7 +55,7 @@ Opérateurs
 
   * `LIKE` / `~=` permits use of the special character `%` in a string to tell
     the string must begin or end with a prefix or suffix (as SQL LIKE operator) ::
-    
+
       Any X WHERE X name ~= 'Th%'
       Any X WHERE X name LIKE '%lt'
 
@@ -69,7 +69,7 @@ Grammaire des requêtes de recherche
 
   [DISTINCT] <entity type> V1(, V2)*
   [GROUPBY V1(, V2)*]  [ORDERBY <orderterms>]
-  [WHERE <restriction>] 
+  [WHERE <restriction>]
   [LIMIT <value>] [OFFSET <value>]
 
 :entity type:
@@ -95,28 +95,28 @@ here. Available entity types are :
 :Person:
   ::
 
-	name      (String, required) 
-	birthday (Date)
+    name      (String, required)
+    birthday (Date)
 
 
 :Company:
   ::
 
-	name   (String)
+    name   (String)
 
 
 :Note:
   ::
 
-	diem (Date)
-	type (String)
+    diem (Date)
+    type (String)
 
 
 And relations between those entities: ::
 
-	Person  works_for    Company
-	Person  evaluated_by Note
-	Company evaluated_by Note
+    Person  works_for    Company
+    Person  evaluated_by Note
+    Company evaluated_by Note
 
 
 Meta-data
@@ -139,16 +139,16 @@ A user's entity has the following schema:
 :CWUser:
   ::
 
-	login  	  (String) not null
-	password  (Password)
-	firstname (String)
-	surname   (String)
+    login        (String) not null
+    password  (Password)
+    firstname (String)
+    surname   (String)
 
 
 Basis queries
 -------------
 0. *Every persons* ::
-   
+
       Person X
 
    or ::
@@ -205,22 +205,22 @@ Basis queries
 
 
 7. *Every persons order by birthday from the youngest to the oldest* ::
-   
+
       Person X ORDERBY D DESC WHERE X birthday D
 
    Notice you've to define a variable using the birthday relation to use it in the
-   sort term. 
+   sort term.
 
 
 8. *Number of persons working for each known company* ::
-   
+
       Any S, COUNT(X) GROUPBY S WHERE X works_for S
 
    Notice you've that since you're writing a grouped query on S, X have to be
    either grouped as well or used in an aggregat function (as in this example).
 
 
-   
+
 Advanced
 --------
 0. *Person with no name specified (i.e NULL)* ::

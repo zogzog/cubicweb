@@ -108,7 +108,7 @@ existing one, so the new cube schema is actually already in there).
 If some of the added cubes are already used by an instance, they'll simply be
 silently skipped.
 
-To remove a cube use `drop_cube(cube, removedeps=False)`. 
+To remove a cube use `drop_cube(cube, removedeps=False)`.
 
 Schema migration
 ----------------
@@ -212,7 +212,7 @@ scripts:
 
 The `config` variable is an object which can be used to access the
 configuration values, for reading and updating, with a dictionary-like
-syntax. 
+syntax.
 
 Example 1: migration script changing the variable 'sender-addr' in
 all-in-one.conf. The script also checks that in that the instance is
@@ -225,7 +225,7 @@ value in that case.
  fixed_addr = 'cubicweb@logilab.fr'
  configured_addr = config.get('sender-addr')
  # check that the address has not been hand fixed by a sysadmin
- if configured_addr == wrong_addr: 
+ if configured_addr == wrong_addr:
      config['sender-addr'] = fixed-addr
      config.save()
 

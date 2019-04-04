@@ -49,7 +49,7 @@ a [foot note]_
 Boxes
 =====
 
-- warning box: 
+- warning box:
     .. warning::
 
        Warning content

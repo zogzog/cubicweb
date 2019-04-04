@@ -61,7 +61,7 @@ Opérateurs
   * L'opérateur `LIKE` / `~=` permet d'utiliser le caractère `%` dans une chaine
     de caractère pour indiquer que la chaîne doit commencer ou terminer par un
     préfix/suffixe ::
-    
+
       Any X WHERE X nom ~= 'Th%'
       Any X WHERE X nom LIKE '%lt'
 
@@ -75,14 +75,14 @@ Grammaire des requêtes de recherche
 
   [DISTINCT] <type d'entité> V1(, V2)*
   [GROUPBY V1(, V2)*]  [ORDERBY <orderterms>]
-  [WHERE <restriction>] 
+  [WHERE <restriction>]
   [LIMIT <value>] [OFFSET <value>]
 
 :type d'entité:
-  Type de la ou des variables séléctionnées. 
+  Type de la ou des variables séléctionnées.
   Le type spécial `Any`, revient à ne pas spécifier de type.
 :restriction:
-  liste des relations à parcourir sous la forme 
+  liste des relations à parcourir sous la forme
     `V1 relation V2|<valeur constante>`
 :orderterms:
   Définition de l'ordre de sélection : variable ou n° de colonne suivie de la
@@ -102,28 +102,28 @@ le suivant. Les différentes entités disponibles sont :
 :Personne:
   ::
 
-	nom    (String, obligatoire) 
-	datenaiss (Date)
+    nom    (String, obligatoire)
+    datenaiss (Date)
 
 
 :Societe:
   ::
 
-	nom   (String)
+    nom   (String)
 
 
 :Note:
   ::
 
-	diem (Date)
-	type (String)
+    diem (Date)
+    type (String)
 
 
 Et les relations entre elles : ::
 
-	Person  travaille_pour Societe
-	Person  evaluee_par    Note
-	Societe evaluee_par    Note
+    Person  travaille_pour Societe
+    Person  evaluee_par    Note
+    Societe evaluee_par    Note
 
 
 Méta-données
@@ -136,27 +136,27 @@ Tous les types d'entités ont les métadonnées suivantes :
 
 * `created_by (CWUser)`, relation vers l'utilisateur ayant créé l'entité
 
-* `owned_by (CWUser)`, relation vers le où les utilisateurs considérés comme 
+* `owned_by (CWUser)`, relation vers le où les utilisateurs considérés comme
   propriétaire de l'entité, par défaut le créateur de l'entité
 
 * `is (Eetype)`, relation spéciale permettant de spécifier le
-  type d'une variable. 
+  type d'une variable.
 
 Enfin, le schéma standard d'un utilisateur est le suivant :
 
 :CWUser:
   ::
 
-	login  	  (String, obligatoire)
-	password  (Password)
-	firstname (String)
-	surname   (String)
+    login        (String, obligatoire)
+    password  (Password)
+    firstname (String)
+    surname   (String)
 
 
 L'essentiel
 -----------
 0. *Toutes les personnes* ::
-   
+
       Personne X
 
    ou ::
@@ -214,15 +214,15 @@ L'essentiel
 
 
 7. *Toutes les personnes triés par date de naissance dans l'ordre antechronologique* ::
-   
+
       Personne X ORDERBY D DESC WHERE X datenaiss D
 
    On note qu'il faut définir une variable et la séléctionner pour s'en
-   servir pour le tri. 
+   servir pour le tri.
 
 
 8. *Nombre de personne travaillant pour chaque société* ::
-   
+
       Any S, COUNT(X) GROUPBY S WHERE X travaille_pour S
 
    On note qu'il faut définir une variable pour s'en servir pour le
@@ -230,7 +230,7 @@ L'essentiel
    (mais les variables groupées ne doivent pas forcément être sélectionnées).
 
 
-   
+
 Exemples avancés
 ----------------
 0. *Toutes les personnes dont le champ nom n'est pas spécifié (i.e NULL)* ::

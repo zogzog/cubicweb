@@ -17,4 +17,4 @@ A *template* is responsible for:
 2. identifying the view to use to render data if it is not specified
 3. composing the HTML page to return
 
-You will find out more about templates in :ref:`templates`. 
+You will find out more about templates in :ref:`templates`.

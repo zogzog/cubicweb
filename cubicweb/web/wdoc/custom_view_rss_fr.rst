@@ -2,7 +2,7 @@
 
 .. role:: raw-html(raw)
    :format: html
- 
+
 Flux RSS
 --------
 

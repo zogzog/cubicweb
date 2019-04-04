@@ -98,7 +98,7 @@ The Pyramid CubicWeb specific configuration entries are:
 
     (True) Add a :class:`cubicweb.pyramid.auth.UpdateLoginTimeAuthenticationPolicy`
     policy, that update the CWUser.login_time attribute when a user login.
-    
+
 .. confval:: cubicweb.auth.authtkt (bool)
 
     (True) Enables the 2 cookie-base auth policies, which activate/deactivate

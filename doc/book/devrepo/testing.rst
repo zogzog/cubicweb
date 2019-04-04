@@ -347,7 +347,7 @@ The format is:
 It is also possible to add a ``schema.py`` file in
 ``mycube/test/data``, which will be used by the testing framework,
 therefore making new entity types and relations available to the
-tests. 
+tests.
 
 Literate programming
 --------------------

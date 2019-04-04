@@ -103,10 +103,10 @@ How to change the instance logo ?
 ---------------------------------
 
 The logo is managed by css. You must provide a custom css that will contain
-the code below: 
+the code below:
 
 ::
-   
+
      #logo {
         background-image: url("logo.jpg");
      }
@@ -171,7 +171,7 @@ I get `NoSelectableObject` exceptions, how do I debug selectors ?
 -----------------------------------------------------------------
 
 You just need to put the appropriate context manager around view/component
-selection. One standard place for components is in cubicweb/vregistry.py: 
+selection. One standard place for components is in cubicweb/vregistry.py:
 
 .. sourcecode:: python
 

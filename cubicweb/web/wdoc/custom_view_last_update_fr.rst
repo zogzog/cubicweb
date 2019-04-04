@@ -1,5 +1,5 @@
 .. -*- coding: utf-8 -*-
- 
+
 Dernières modifications
 -----------------------
 

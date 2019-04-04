@@ -10,7 +10,7 @@
    .. autoclass:: cubicweb.predicates.appobject_selectable
    .. autoclass:: cubicweb.predicates.adaptable
    .. autoclass:: cubicweb.predicates.configuration_values
-   
+
    .. autoclass:: cubicweb.predicates.none_rset
    .. autoclass:: cubicweb.predicates.any_rset
    .. autoclass:: cubicweb.predicates.nonempty_rset
@@ -22,7 +22,7 @@
    .. autoclass:: cubicweb.predicates.sorted_rset
    .. autoclass:: cubicweb.predicates.one_etype_rset
    .. autoclass:: cubicweb.predicates.multi_etypes_rset
-   
+
    .. autoclass:: cubicweb.predicates.non_final_entity
    .. autoclass:: cubicweb.predicates.is_instance
    .. autoclass:: cubicweb.predicates.score_entity
@@ -36,9 +36,9 @@
    .. autoclass:: cubicweb.predicates.has_mimetype
    .. autoclass:: cubicweb.predicates.is_in_state
    .. autofunction:: cubicweb.predicates.on_fire_transition
-   
+
    .. autoclass:: cubicweb.predicates.match_user_groups
-   
+
    .. autoclass:: cubicweb.predicates.no_cnx
    .. autoclass:: cubicweb.predicates.anonymous_user
    .. autoclass:: cubicweb.predicates.authenticated_user
@@ -52,6 +52,6 @@
    .. autoclass:: cubicweb.predicates.specified_etype_implements
    .. autoclass:: cubicweb.predicates.attribute_edited
    .. autoclass:: cubicweb.predicates.match_transition
-   
+
    .. autoclass:: cubicweb.predicates.match_exception
    .. autoclass:: cubicweb.predicates.debug_mode

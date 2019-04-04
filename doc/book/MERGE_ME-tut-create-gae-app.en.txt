@@ -5,7 +5,7 @@
 Tutoriel : créer votre première application web pour Google AppEngine
 =====================================================================
 
-Ce tutoriel va vous guider pas à pas a construire une apllication web 
+Ce tutoriel va vous guider pas à pas a construire une apllication web
 de gestion de Blog afin de vous faire découvrir les fonctionnalités de
 *CubicWeb*.
 
@@ -17,10 +17,10 @@ Créez une nouvelle application
 
 Nous choisissons dans ce tutoriel de développer un blog comme un exemple
 d'application web et nous allons expliciter toutes les étapes nécessaires
-à sa réalisation.  
+à sa réalisation.
 
 ::
-  
+
   cubicweb-ctl newgapp blogdemo
 
 `newgapp` est la commande permettant de créer une instance *CubicWeb* pour
@@ -55,15 +55,15 @@ contenant la définition des entités suivantes : ``Blog`` and ``BlogEntry``.
       entry_of = SubjectRelation('Blog', cardinality='?*')
 
 
-Un ``Blog`` a un titre et une description. Le titre est une chaîne 
+Un ``Blog`` a un titre et une description. Le titre est une chaîne
 de caractères requise par la classe parente EntityType and ne doit
-pas excéder 50 caractères. La description est une chaîne de 
+pas excéder 50 caractères. La description est une chaîne de
 caractères sans contraintes.
 
 Une ``BlogEntry`` a un titre, une date de publication et du texte
-étant son contenu. Le titre est une chaîne de caractères qui ne 
+étant son contenu. Le titre est une chaîne de caractères qui ne
 doit pas excéder 100 caractères. La date de publication est de type Date et a
-pour valeur par défaut TODAY, ce qui signifie que lorsqu'une 
+pour valeur par défaut TODAY, ce qui signifie que lorsqu'une
 ``BlogEntry`` sera créée, sa date de publication sera la date
 courante a moins de modifier ce champ. Le texte est une chaîne de
 caractères qui sera indexée en plein texte et sans contraintes.
@@ -72,18 +72,18 @@ Une ``BlogEntry`` a aussi une relation nommée ``entry_of`` qui la
 relie à un ``Blog``. La cardinalité ``?*`` signifie que BlogEntry
 peut faire partie de zero a un Blog (``?`` signifie `zero ou un`) et
 qu'un Blog peut avoir une infinité de BlogEntry (``*`` signifie
-`n'importe quel nombre incluant zero`). 
+`n'importe quel nombre incluant zero`).
 Par soucis de complétude, nous rappellerons que ``+`` signifie
 `un ou plus`.
 
 Lancez l'application
 --------------------
 
-Définir ce simple schéma est suffisant pour commencer. Assurez-vous 
+Définir ce simple schéma est suffisant pour commencer. Assurez-vous
 que vous avez suivi les étapes décrites dans la section installation
 (en particulier visitez http://localhost:8080/_load en tant qu'administrateur
 afin d'initialiser le datastore), puis lancez votre application avec la commande ::
-   
+
    python dev_appserver.py BlogDemo
 
 puis dirigez vous vers http://localhost:8080/ (ou si c'est plus facile
@@ -93,7 +93,7 @@ vous pouvez utiliser la démo en ligne http://lax.appspot.com/).
 .. image:: images/lax-book.00-login.en.png
    :alt: login screen
 
-Après vous être authentifié, vous arrivez sur la page d'accueil de votre 
+Après vous être authentifié, vous arrivez sur la page d'accueil de votre
 application. Cette page liste les types d'entités accessibles dans votre
 application, en l'occurrence : Blog et Articles. Si vous lisez ``blog_plural``
 et ``blogentry_plural`` cela signifie que l'internationalisation (i18n)
@@ -130,7 +130,7 @@ puis validez le formulaire d'édition en cliquant sur le bouton
    :alt: from to create blog
 
 En cliquant sur le logo situé dans le coin gauche de la fenêtre,
-vous allez être redirigé vers la page d'accueil. Ensuite, si vous allez 
+vous allez être redirigé vers la page d'accueil. Ensuite, si vous allez
 sur le lien Blog, vous devriez voir la liste des entités Blog, en particulier
 celui que vous venez juste de créer ``Tech-Blog``.
 
@@ -160,7 +160,7 @@ Revenons sur la page d'accueil et cliquons sur `[+]` à droite du lien
 un peut de texte avant de ``Valider``. Vous venez d'ajouter un article
 sans avoir précisé à quel Blog il appartenait. Dans la colonne de gauche
 se trouve une boite intitulé ``actions``, cliquez sur le menu ``modifier``.
-Vous êtes de retour sur le formulaire d'édition de l'article que vous 
+Vous êtes de retour sur le formulaire d'édition de l'article que vous
 venez de créer, à ceci près que ce formulaire a maintenant une nouvelle
 section intitulée ``ajouter relation``. Choisissez ``entry_of`` dans ce menu,
 cela va faire apparaitre une deuxième menu déroulant dans lequel vous
@@ -173,7 +173,7 @@ Vous auriez pu aussi, au moment où vous avez crée votre article, sélectionner
    :alt: editing a blog entry to add a relation to a blog
 
 Validez vos modifications en cliquant sur ``Valider``. L'entité article
-qui est listée contient maintenant un lien vers le Blog auquel il 
+qui est listée contient maintenant un lien vers le Blog auquel il
 appartient, ``MyLife``.
 
 .. image:: images/lax-book.07-detail-one-blogentry.en.png
@@ -206,7 +206,7 @@ What we learned
 ~~~~~~~~~~~~~~~
 
 Creating a simple schema was enough to set up a new application that
-can store blogs and blog entries. 
+can store blogs and blog entries.
 
 What is next ?
 ~~~~~~~~~~~~~~

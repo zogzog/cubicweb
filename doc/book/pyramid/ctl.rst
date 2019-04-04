@@ -24,7 +24,7 @@ Options
     Also force the following pyramid options:
 
     .. code-block:: ini
-    
+
         pyramid.debug_authorization = yes
         pyramid.debug_notfound = yes
         pyramid.debug_routematch = yes

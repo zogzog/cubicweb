@@ -72,7 +72,7 @@ Fondements du framework CubicWeb
   La classe `appobject`
   La base de registres
   Chargement dynamique des classes
-  
+
 Manipulation des données stockées
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 :durée: 0.4j

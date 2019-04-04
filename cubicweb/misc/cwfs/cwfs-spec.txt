@@ -19,8 +19,8 @@ Description du modèle;
   ref
 
   document
-  annee 
-  mois 
+  annee
+  mois
   jour
   type {RAP,CLI,OFR,FCT}
   fichier
@@ -42,9 +42,9 @@ affaire  | ref    | concerne  |
          | EDFR02 | EDF R&D   |
 
 document | annee | mois | jour | type | concerne | fichier                                     |
-         | 2004  | 09   | 06   | PRE  | CTIA01   | depodoc/2004/09/CTIA01-040906-PRE-1-01.pdf  |  
-         | 2005  | 02   | 01   | CLI  | EDFR01   | depodoc/2005/02/EDFR01-050201-CLI-1-01.pdf  |  
-         | 2005  | 03   | 22   | OFR  | EDFR01   | depodoc/2005/02/EDFR01-050322-OFR-1-01.pdf  |  
+         | 2004  | 09   | 06   | PRE  | CTIA01   | depodoc/2004/09/CTIA01-040906-PRE-1-01.pdf  |
+         | 2005  | 02   | 01   | CLI  | EDFR01   | depodoc/2005/02/EDFR01-050201-CLI-1-01.pdf  |
+         | 2005  | 03   | 22   | OFR  | EDFR01   | depodoc/2005/02/EDFR01-050322-OFR-1-01.pdf  |
 
 
 Exemples de chemins/recherches
@@ -62,7 +62,7 @@ Test::
   $ ls /document
   annee/	mois/		jour/		type/
   affaire/	concerne/	CTIA01-040906-PRE-1-01.pdf
-  EDFR01-050201-CLI-1-01.pdf	EDFR01-050322-OFR-1-01.pdf	
+  EDFR01-050201-CLI-1-01.pdf	EDFR01-050322-OFR-1-01.pdf
 
   $ ls /document/annee/
   2004/		2005/
@@ -82,7 +82,7 @@ Test::
 Question: est-ce que fichier/ ne va pas nous manquer ?
 
 
-Cherche documents relatifs à CTIA01; 
+Cherche documents relatifs à CTIA01;
 ::
   /affaire/ref/CTIA01/document/
 
@@ -99,7 +99,7 @@ Test::
 
   $ ls /affaire/ref/CTIA01/
   societe/	concerne/	document/	concerne_par/
-  
+
   $ ls /affaire/ref/CTIA01/document/
   annee/	mois/		jour/		type/
   CTIA01-040906-PRE-1-01.pdf
@@ -125,7 +125,7 @@ Test::
 
   $ ls /societe/nom/CETIAD/affaire/
   ref/		societe/	concerne/	document/
-  concerne_par/	CTIA01		
+  concerne_par/	CTIA01
 
   $ ls /societe/nom/CETIAD/affaire/document/
   annee/	mois/		jour/		type/
@@ -139,7 +139,7 @@ En particulier, pour la recherche ci-dessus on ne peut pas écrire;
 La logique est que si on est dans un répertoire document, il faut
 qu'il contienne des documents.
 
-Cherche documents de 2002 qui concernent des affaires 
+Cherche documents de 2002 qui concernent des affaires
 qui concernent CETIAD;
 ::
   /societe/CETIAD/affaire/document/annee/2002/

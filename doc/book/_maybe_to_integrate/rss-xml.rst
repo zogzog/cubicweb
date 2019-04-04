@@ -16,7 +16,7 @@ before validating your changes.
 
 Enter the same query in the search box and you will see the same list,
 plus a box titled "possible views" in the left column. Click on
-"entityview", then "RSS". 
+"entityview", then "RSS".
 
 You just applied the "RSS" view to the RQL selection you requested.
 
@@ -24,7 +24,7 @@ That's it, you have a RSS channel for your blog.
 
 Try again with::
 
-    Any X ORDERBY D WHERE X is BlogEntry, X creation_date D, 
+    Any X ORDERBY D WHERE X is BlogEntry, X creation_date D,
     X entry_of B, B title "MyLife"
 
 Another RSS channel, but a bit more focused.
@@ -32,7 +32,7 @@ Another RSS channel, but a bit more focused.
 A last one for the road::
 
     Any C ORDERBY D WHERE C is Comment, C creation_date D LIMIT 15
-    
+
 displayed with the RSS view, that's a channel for the last fifteen
 comments posted.
 

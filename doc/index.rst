@@ -67,7 +67,7 @@ A.k.a. "The Book"
    :maxdepth: 2
 
    tutorials/index
-   
+
 .. toctree::
    :maxdepth: 3
 

@@ -1,4 +1,4 @@
-Latest changes 
+Latest changes
 --------------
 
 * table of `all latest changes`_

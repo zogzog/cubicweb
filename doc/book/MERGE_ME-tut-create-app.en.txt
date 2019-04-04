@@ -6,7 +6,7 @@ Tutoriel : créer votre première application web pour Google AppEngine
 
 [TRANSLATE ME TO FRENCH]
 
-This tutorial will guide you step by step to build a blog application 
+This tutorial will guide you step by step to build a blog application
 and discover the unique features of `LAX`. It assumes that you followed
 the :ref:`installation` guidelines and that both the `AppEngine SDK` and the
 `LAX` framework are setup on your computer.
@@ -28,7 +28,7 @@ Defining a schema
 With `LAX`, the schema/datamodel is the core of the application. This is where
 you will define the type of content you have to hanlde in your application.
 
-Let us start with something simple and improve on it iteratively. 
+Let us start with something simple and improve on it iteratively.
 
 In schema.py, we define two entities: ``Blog`` and ``BlogEntry``.
 
@@ -46,7 +46,7 @@ In schema.py, we define two entities: ``Blog`` and ``BlogEntry``.
       entry_of = SubjectRelation('Blog', cardinality='?*')
 
 A Blog has a title and a description. The title is a string that is
-required by the class EntityType and must be less than 50 characters. 
+required by the class EntityType and must be less than 50 characters.
 The description is a string that is not constrained.
 
 A BlogEntry has a title, a publish_date and a text. The title is a
@@ -145,10 +145,10 @@ saying to what blog it belongs. There is a box on the left entitled
 to edit the blog entry you just created, except that the form now has
 another section with a combobox titled ``add relation``. Chose
 ``entry_of`` in this menu and a second combobox appears where you pick
-``MyLife``. 
+``MyLife``.
 
 You could also have, at the time you started to fill the form for a
-new entity BlogEntry, hit ``Apply`` instead of ``Validate`` and the 
+new entity BlogEntry, hit ``Apply`` instead of ``Validate`` and the
 combobox titled ``add relation`` would have showed up.
 
 .. image:: images/lax-book.06-add-relation-entryof.en.png
@@ -184,12 +184,12 @@ Navigation
 This menu provides you a way to adjust some navigation options depending on
 your needs, such as the number of entities to display by page of results.
 Follows the detailled list of available options:
-  
+
 * navigation.combobox-limit: maximum number of entities to display in related
   combo box (sample format: 23)
-* navigation.page-size: maximum number of objects displayed by page of results 
+* navigation.page-size: maximum number of objects displayed by page of results
   (sample format: 23)
-* navigation.related-limit: maximum number of related entities to display in 
+* navigation.related-limit: maximum number of related entities to display in
   the primary view (sample format: 23)
 * navigation.short-line-size: maximum number of characters in short description
   (sample format: 23)
@@ -217,17 +217,17 @@ Follows the detailled list of available options:
 Actions
 ~~~~~~~
 This menu provides a way to configure the context in which you expect the actions
-to be displayed to the user and if you want the action to be visible or not. 
-You must have notice that when you view a list of entities, an action box is 
-available on the left column which display some actions as well as a drop-down 
-menu for more actions. 
+to be displayed to the user and if you want the action to be visible or not.
+You must have notice that when you view a list of entities, an action box is
+available on the left column which display some actions as well as a drop-down
+menu for more actions.
 
 The context available are:
 
 * mainactions : actions listed in the left box
 * moreactions : actions listed in the `more` menu of the left box
 * addrelated : add actions listed in the left box
-* useractions : actions listed in the first section of drop-down menu 
+* useractions : actions listed in the first section of drop-down menu
   accessible from the right corner user login link
 * siteactions : actions listed in the second section of drop-down menu
   accessible from the right corner user login link
@@ -235,15 +235,15 @@ The context available are:
 
 Boxes
 ~~~~~
-The application has already a pre-defined set of boxes you can use right away. 
+The application has already a pre-defined set of boxes you can use right away.
 This configuration section allows you to place those boxes where you want in the
-application interface to customize it. 
+application interface to customize it.
 
 The available boxes are:
 
 * actions box : box listing the applicable actions on the displayed data
 
-* boxes_blog_archives_box : box listing the blog archives 
+* boxes_blog_archives_box : box listing the blog archives
 
 * possible views box : box listing the possible views for the displayed data
 
@@ -251,7 +251,7 @@ The available boxes are:
 
 * search box : search box
 
-* startup views box : box listing the configuration options available for 
+* startup views box : box listing the configuration options available for
   the application site, such as `Preferences` and `Site Configuration`
 
 Components
@@ -268,26 +268,26 @@ Set-up a workflow
 Before starting, make sure you refresh your mind by reading [link to
 definition_workflow chapter].
 
-We want to create a workflow to control the quality of the BlogEntry 
+We want to create a workflow to control the quality of the BlogEntry
 submitted on your application. When a BlogEntry is created by a user
 its state should be `submitted`. To be visible to all, it needs to
 be in the state `published`. To move from `submitted` to `published`
 we need a transition that we can name `approve_blogentry`.
 
-We do not want every user to be allowed to change the state of a 
-BlogEntry. We need to define a group of user, `moderators`, and 
+We do not want every user to be allowed to change the state of a
+BlogEntry. We need to define a group of user, `moderators`, and
 this group will have appropriate permissions to approve BlogEntry
 to be published and visible to all.
 
 There are two ways to create a workflow, form the user interface,
 and also by defining it in ``migration/postcreate.py``. This script
-is executed each time a new ``./bin/laxctl db-init`` is done. 
+is executed each time a new ``./bin/laxctl db-init`` is done.
 If you create the states and transitions through the user interface
 this means that next time you will need to initialize the database
-you will have to re-create all the entities. 
+you will have to re-create all the entities.
 We strongly recommand you create the workflow in ``migration\postcreate.py``
 and we will now show you how.
-The user interface would only be a reference for you to view the states 
+The user interface would only be a reference for you to view the states
 and transitions but is not the appropriate interface to define your
 application workflow.
 
@@ -320,7 +320,7 @@ We will only discuss the method we use to create a wrokflow here.
 
 To define our workflow for BlogDemo, please add the following lines
 to ``migration/postcreate.py``::
-  
+
   _ = unicode
 
   moderators      = add_entity('CWGroup', name=u"moderators")
@@ -335,15 +335,15 @@ to ``migration/postcreate.py``::
 ``add_entity`` is used here to define the new group of users that we
 need to define the transitions, `moderators`.
 If this group required by the transition is not defined before the
-transition is created, it will not create the relation `transition 
+transition is created, it will not create the relation `transition
 require the group moderator`.
 
 ``add_state`` expects as the first argument the name of the state you are
-willing to create, then the entity type on which the state can be applied, 
+willing to create, then the entity type on which the state can be applied,
 and an optionnal argument to set if the state is the initial state
 of the entity type or not.
 
-``add_transition`` expects as the first argument the name of the 
+``add_transition`` expects as the first argument the name of the
 transition, then the entity type on which we can apply the transition,
 then the list of possible initial states from which the transition
 can be applied, the target state of the transition, and the permissions
@@ -374,7 +374,7 @@ What we learned
 ~~~~~~~~~~~~~~~
 
 Creating a simple schema was enough to set up a new application that
-can store blogs and blog entries. 
+can store blogs and blog entries.
 
 What is next ?
 ~~~~~~~~~~~~~~
