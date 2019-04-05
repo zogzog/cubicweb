@@ -18,8 +18,6 @@
 """Configuration for CubicWeb instances on top of a Pyramid application"""
 
 from os import path
-import hashlib
-import time
 import random
 import string
 
