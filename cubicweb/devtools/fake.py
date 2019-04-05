@@ -20,8 +20,6 @@
 
 from contextlib import contextmanager
 
-from six import string_types
-
 from logilab.database import get_db_helper
 
 from cubicweb.req import RequestSessionBase
@@ -98,7 +96,7 @@ class FakeRequest(ConnectionCubicWebRequestBase):
 
     def set_request_header(self, header, value, raw=False):
         """set an incoming HTTP header (for test purpose only)"""
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             value = [value]
         if raw:
             # adding encoded header is important, else page content

@@ -23,8 +23,6 @@ import re
 import datetime
 import io
 
-from six.moves import range
-
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools.fill import ValueGenerator, make_tel

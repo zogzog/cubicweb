@@ -19,11 +19,9 @@
 publisher to get a full CubicWeb web application
 """
 
+from urllib.parse import quote as urlquote
 
 from cubicweb import _
-
-from six.moves.urllib.parse import quote as urlquote
-
 from cubicweb.web._exceptions import *
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import eid_param

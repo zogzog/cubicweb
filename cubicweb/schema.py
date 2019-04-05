@@ -17,16 +17,11 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """classes to define schemas for CubicWeb"""
 
-from __future__ import print_function
-
 from functools import wraps
 import re
 from os.path import join
 from hashlib import md5
 from logging import getLogger
-
-from six import PY2, text_type, string_types, add_metaclass
-from six.moves import range
 
 from logilab.common.decorators import cached, clear_cache, monkeypatch, cachedproperty
 from logilab.common.logging_ext import set_log_methods
@@ -145,8 +140,6 @@ def normalize_expression(rqlstring):
     added/removed for instance)
     """
     union = parse(u'Any 1 WHERE %s' % rqlstring).as_string()
-    if PY2 and isinstance(union, str):
-        union = union.decode('utf-8')
     return union.split(' WHERE ', 1)[1]
 
 
@@ -218,7 +211,7 @@ class RQLExpression(object):
         """
         self.eid = eid  # eid of the entity representing this rql expression
         assert mainvars, 'bad mainvars %s' % mainvars
-        if isinstance(mainvars, string_types):
+        if isinstance(mainvars, str):
             mainvars = set(splitstrip(mainvars))
         elif not isinstance(mainvars, set):
             mainvars = set(mainvars)
@@ -579,9 +572,9 @@ def display_name(req, key, form='', context=None):
         key = key + '_' + form
     # ensure unicode
     if context is not None:
-        return text_type(req.pgettext(context, key))
+        return req.pgettext(context, key)
     else:
-        return text_type(req._(key))
+        return req._(key)
 
 
 def _override_method(cls, method_name=None, pass_original=False):
@@ -627,7 +620,7 @@ def get_groups(self, action):
     """
     assert action in self.ACTIONS, action
     try:
-        return frozenset(g for g in self.permissions[action] if isinstance(g, string_types))
+        return frozenset(g for g in self.permissions[action] if isinstance(g, str))
     except KeyError:
         return ()
 
@@ -646,7 +639,7 @@ def get_rqlexprs(self, action):
     """
     assert action in self.ACTIONS, action
     try:
-        return tuple(g for g in self.permissions[action] if not isinstance(g, string_types))
+        return tuple(g for g in self.permissions[action] if not isinstance(g, str))
     except KeyError:
         return ()
 
@@ -1333,8 +1326,7 @@ class workflowable_definition(ybo.metadefinition):
         return cls
 
 
-@add_metaclass(workflowable_definition)
-class WorkflowableEntityType(ybo.EntityType):
+class WorkflowableEntityType(ybo.EntityType, metaclass=workflowable_definition):
     """Use this base class instead of :class:`EntityType` to have workflow
     relations (i.e. `in_state`, `wf_info_for` and `custom_workflow`) on your
     entity type.

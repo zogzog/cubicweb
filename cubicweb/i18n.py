@@ -16,16 +16,10 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some i18n/gettext utilities."""
-from __future__ import print_function
-
-
-
 import re
 import os
 from os.path import join, basename, splitext, exists
 from glob import glob
-
-from six import PY2
 
 from cubicweb.toolsutils import create_dir
 
@@ -42,11 +36,7 @@ def extract_from_tal(files, output_file):
 
 def add_msg(w, msgid, msgctx=None):
     """write an empty pot msgid definition"""
-    if PY2 and isinstance(msgid, unicode):
-        msgid = msgid.encode('utf-8')
     if msgctx:
-        if PY2 and isinstance(msgctx, unicode):
-            msgctx = msgctx.encode('utf-8')
         w('msgctxt "%s"\n' % msgctx)
     msgid = msgid.replace('"', r'\"').splitlines()
     if len(msgid) > 1:

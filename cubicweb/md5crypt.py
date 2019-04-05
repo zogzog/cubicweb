@@ -43,9 +43,6 @@ ITOA64 = b"./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 from hashlib import md5 # pylint: disable=E0611
 
-from six import text_type, indexbytes
-from six.moves import range
-
 
 def to64 (v, n):
     ret = bytearray()
@@ -56,9 +53,9 @@ def to64 (v, n):
     return ret
 
 def crypt(pw, salt):
-    if isinstance(pw, text_type):
+    if isinstance(pw, str):
         pw = pw.encode('utf-8')
-    if isinstance(salt, text_type):
+    if isinstance(salt, str):
         salt = salt.encode('ascii')
     # Take care of the magic string if present
     if salt.startswith(MAGIC):
@@ -102,20 +99,20 @@ def crypt(pw, salt):
         final = md5(ctx1).digest()
     # Final xform
     passwd = b''
-    passwd += to64((indexbytes(final, 0) << 16)
-                   |(indexbytes(final, 6) << 8)
-                   |(indexbytes(final, 12)),4)
-    passwd += to64((indexbytes(final, 1) << 16)
-                   |(indexbytes(final, 7) << 8)
-                   |(indexbytes(final, 13)), 4)
-    passwd += to64((indexbytes(final, 2) << 16)
-                   |(indexbytes(final, 8) << 8)
-                   |(indexbytes(final, 14)), 4)
-    passwd += to64((indexbytes(final, 3) << 16)
-                   |(indexbytes(final, 9) << 8)
-                   |(indexbytes(final, 15)), 4)
-    passwd += to64((indexbytes(final, 4) << 16)
-                   |(indexbytes(final, 10) << 8)
-                   |(indexbytes(final, 5)), 4)
-    passwd += to64((indexbytes(final, 11)), 2)
+    passwd += to64((final[0] << 16)
+                   |(final[6] << 8)
+                   |(final[12]),4)
+    passwd += to64((final[1] << 16)
+                   |(final[7] << 8)
+                   |(final[13]), 4)
+    passwd += to64((final[2] << 16)
+                   |(final[8] << 8)
+                   |(final[14]), 4)
+    passwd += to64((final[3] << 16)
+                   |(final[9] << 8)
+                   |(final[15]), 4)
+    passwd += to64((final[4] << 16)
+                   |(final[10] << 8)
+                   |(final[5]), 4)
+    passwd += to64((final[11]), 2)
     return passwd

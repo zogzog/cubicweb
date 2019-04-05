@@ -21,8 +21,6 @@ from cubicweb import _
 
 from time import strftime, localtime
 
-from six import text_type
-
 from logilab.mtconverter import xml_escape
 
 from cubicweb.predicates import none_rset, match_user_groups
@@ -98,7 +96,7 @@ class ProcessInformationView(StartupView):
             if k.endswith('_cache_size'):
                 stats[k] = '%s / %s' % (stats[k]['size'], stats[k]['maxsize'])
         def format_stat(sname, sval):
-            return '%s %s' % (xml_escape(text_type(sval)),
+            return '%s %s' % (xml_escape(str(sval)),
                               sname.endswith('percent') and '%' or '')
         pyvalue = [(sname, format_stat(sname, sval))
                     for sname, sval in sorted(stats.items())]

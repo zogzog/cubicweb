@@ -24,8 +24,6 @@ if you want something better...
 from random import randint, choice
 from io import BytesIO
 
-from six.moves import range
-
 from PIL import Image, ImageFont, ImageDraw, ImageFilter
 
 

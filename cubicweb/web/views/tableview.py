@@ -66,9 +66,6 @@ from cubicweb import _
 from copy import copy
 from types import MethodType
 
-from six import string_types, add_metaclass, create_bound_method
-from six.moves import range
-
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
 from logilab.common.deprecation import class_deprecated
@@ -286,7 +283,7 @@ class TableLayout(component.Component):
         attrs = renderer.attributes.copy()
         if renderer.sortable:
             sortvalue = renderer.sortvalue(rownum)
-            if isinstance(sortvalue, string_types):
+            if isinstance(sortvalue, str):
                 sortvalue = sortvalue[:self.sortvalue_limit]
             if sortvalue is not None:
                 attrs[u'cubicweb:sortvalue'] = js_dumps(sortvalue)
@@ -717,7 +714,7 @@ class EntityTableColRenderer(AbstractColumnRenderer):
             for aname, member in[('renderfunc', renderfunc),
                                  ('sortfunc', sortfunc)]:
                 if isinstance(member, MethodType):
-                    member = create_bound_method(member.__func__, acopy)
+                    member = MethodType(member.__func__, acopy)
                 setattr(acopy, aname, member)
             return acopy
         finally:
@@ -912,8 +909,7 @@ class EmptyCellView(AnyRsetView):
 ################################################################################
 
 
-@add_metaclass(class_deprecated)
-class TableView(AnyRsetView):
+class TableView(AnyRsetView, metaclass=class_deprecated):
     """The table view accepts any non-empty rset. It uses introspection on the
     result set to compute column names and the proper way to display the cells.
 
@@ -1178,8 +1174,7 @@ class EditableTableView(TableView):
     title = _('editable-table')
 
 
-@add_metaclass(class_deprecated)
-class CellView(EntityView):
+class CellView(EntityView, metaclass=class_deprecated):
     __deprecation_warning__ = '[3.14] %(cls)s is deprecated'
     __regid__ = 'cell'
     __select__ = nonempty_rset()

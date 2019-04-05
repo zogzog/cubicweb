@@ -21,8 +21,6 @@
 
 from itertools import chain, repeat
 
-from six.moves import zip
-
 from cubicweb import AuthenticationError
 from cubicweb.web import DirectResponse
 from cubicweb.web.application import CubicWebPublisher

@@ -20,8 +20,6 @@
 from io import BytesIO, StringIO
 from unittest import TextTestRunner
 
-from six import PY2
-
 from logilab.common.testlib import TestSuite, TestCase, unittest_main
 from logilab.common.registry import yes
 
@@ -52,7 +50,7 @@ class FakeFormTC(TestCase):
 class WebTestTC(TestCase):
 
     def setUp(self):
-        output = BytesIO() if PY2 else StringIO()
+        output = StringIO()
         self.runner = TextTestRunner(stream=output)
 
     def test_error_raised(self):

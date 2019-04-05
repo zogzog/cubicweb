@@ -23,12 +23,10 @@ import base64
 from hashlib import sha1  # pylint: disable=E0611
 from calendar import timegm
 from datetime import date, datetime
+import http.client
 from io import BytesIO
-
-from six import PY2, text_type, string_types
-from six.moves import http_client
-from six.moves.urllib.parse import urlsplit, quote as urlquote
-from six.moves.http_cookies import SimpleCookie
+from urllib.parse import urlsplit, quote as urlquote
+from http.cookies import SimpleCookie
 
 from rql.utils import rqlvar_maker
 
@@ -208,12 +206,8 @@ class _CubicWebRequestBase(RequestSessionBase):
         encoding = self.encoding
         for param, val in params.items():
             if isinstance(val, (tuple, list)):
-                if PY2:
-                    val = [unicode(x, encoding) for x in val]
                 if len(val) == 1:
                     val = val[0]
-            elif PY2 and isinstance(val, str):
-                val = unicode(val, encoding)
             if param in self.no_script_form_params and val:
                 val = self.no_script_form_param(param, val)
             if param == '_cwmsgid':
@@ -274,7 +268,7 @@ class _CubicWebRequestBase(RequestSessionBase):
                 return None
 
     def set_message(self, msg):
-        assert isinstance(msg, text_type)
+        assert isinstance(msg, str)
         self.reset_message()
         self._msg = msg
 
@@ -287,7 +281,7 @@ class _CubicWebRequestBase(RequestSessionBase):
 
     def set_redirect_message(self, msg):
         # TODO - this should probably be merged with append_to_redirect_message
-        assert isinstance(msg, text_type)
+        assert isinstance(msg, str)
         msgid = self.redirect_message_id()
         self.session.data[msgid] = msg
         return msgid
@@ -374,7 +368,7 @@ class _CubicWebRequestBase(RequestSessionBase):
             eids = form['eid']
         except KeyError:
             raise NothingToEdit(self._('no selected entities'))
-        if isinstance(eids, string_types):
+        if isinstance(eids, str):
             eids = (eids,)
         for peid in eids:
             if withtype:
@@ -523,7 +517,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         :param localfile: if True, the default data dir prefix is added to the
                           JS filename
         """
-        if isinstance(jsfiles, string_types):
+        if isinstance(jsfiles, str):
             jsfiles = (jsfiles,)
         for jsfile in jsfiles:
             if localfile:
@@ -543,7 +537,7 @@ class _CubicWebRequestBase(RequestSessionBase):
                        the css inclusion. cf:
                        http://msdn.microsoft.com/en-us/library/ms537512(VS.85).aspx
         """
-        if isinstance(cssfiles, string_types):
+        if isinstance(cssfiles, str):
             cssfiles = (cssfiles,)
         if ieonly:
             if self.ie_browser():
@@ -613,7 +607,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         lang_prefix = ''
         if self.lang is not None and self.vreg.config.get('language-mode') == 'url-prefix':
             lang_prefix = '%s/' % self.lang
-        return lang_prefix + path
+        return lang_prefix + str(path)
 
     def url(self, includeparams=True):
         """return currently accessed url"""
@@ -666,9 +660,9 @@ class _CubicWebRequestBase(RequestSessionBase):
             # overwrite headers_out to forge a brand new not-modified response
             self.headers_out = self._forge_cached_headers()
             if self.http_method() in ('HEAD', 'GET'):
-                self.status_out = http_client.NOT_MODIFIED
+                self.status_out = http.client.NOT_MODIFIED
             else:
-                self.status_out = http_client.PRECONDITION_FAILED
+                self.status_out = http.client.PRECONDITION_FAILED
             # XXX replace by True once validate_cache bw compat method is dropped
             return self.status_out
         # XXX replace by False once validate_cache bw compat method is dropped

@@ -22,9 +22,6 @@ from itertools import chain
 import logging
 from uuid import uuid4
 
-from six import text_type
-from six.moves import range
-
 from cubicweb.dataimport import stores, pgstore
 from cubicweb.server.schema2sql import eschema_sql_def
 
@@ -70,7 +67,7 @@ class MassiveObjectStore(stores.RQLObjectStore):
         """
         super(MassiveObjectStore, self).__init__(cnx)
 
-        self.uuid = text_type(uuid4()).replace('-', '')
+        self.uuid = str(uuid4()).replace('-', '')
         self.slave_mode = slave_mode
         if metagen is None:
             metagen = stores.MetadataGenerator(cnx)

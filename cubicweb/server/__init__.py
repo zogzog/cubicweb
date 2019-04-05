@@ -20,12 +20,7 @@
 
 The server module contains functions to initialize a new repository.
 """
-from __future__ import print_function
-
 from contextlib import contextmanager
-
-from six import text_type, string_types
-from six.moves import filter
 
 from logilab.common.modutils import LazyObject
 from logilab.common.textutils import splitstrip
@@ -133,7 +128,7 @@ def set_debug(debugmode):
     if not debugmode:
         DEBUG = 0
         return
-    if isinstance(debugmode, string_types):
+    if isinstance(debugmode, str):
         for mode in splitstrip(debugmode, sep='|'):
             DEBUG |= globals()[mode]
     else:
@@ -192,7 +187,7 @@ def create_user(session, login, pwd, *groups):
     user = session.create_entity('CWUser', login=login, upassword=pwd)
     for group in groups:
         session.execute('SET U in_group G WHERE U eid %(u)s, G name %(group)s',
-                        {'u': user.eid, 'group': text_type(group)})
+                        {'u': user.eid, 'group': group})
     return user
 
 
@@ -270,17 +265,17 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
         # insert base groups and default admin
         print('-> inserting default user and default groups.')
         try:
-            login = text_type(sourcescfg['admin']['login'])
+            login = sourcescfg['admin']['login']
             pwd = sourcescfg['admin']['password']
         except KeyError:
             if interactive:
                 msg = 'enter login and password of the initial manager account'
                 login, pwd = manager_userpasswd(msg=msg, confirm=True)
             else:
-                login, pwd = text_type(source['db-user']), source['db-password']
+                login, pwd = source['db-user'], source['db-password']
         # sort for eid predicatability as expected in some server tests
         for group in sorted(BASE_GROUPS):
-            cnx.create_entity('CWGroup', name=text_type(group))
+            cnx.create_entity('CWGroup', name=group)
         admin = create_user(cnx, login, pwd, u'managers')
         cnx.execute('SET X owned_by U WHERE X is IN (CWGroup,CWSource), U eid %(u)s',
                     {'u': admin.eid})

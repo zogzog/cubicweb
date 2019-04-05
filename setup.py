@@ -63,7 +63,6 @@ setup(
     package_data=package_data,
     include_package_data=True,
     install_requires=[
-        'six >= 1.4.0',
         'logilab-common >= 1.4.0',
         'logilab-mtconverter >= 0.8.0',
         'rql >= 0.34.0',
@@ -73,7 +72,6 @@ setup(
         'passlib',
         'pytz',
         'Markdown',
-        'unittest2 >= 0.7.0',
         'filelock',
     ],
     entry_points={

@@ -17,9 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Base class for entity objects manipulated in clients"""
 
-from six import text_type, string_types, integer_types
-from six.moves import range
-
 from logilab.common.decorators import cached
 from logilab.common.registry import yes
 from logilab.mtconverter import TransformData, xml_escape
@@ -55,7 +52,6 @@ def can_use_rest_path(value):
     """return True if value can be used at the end of a Rest URL path"""
     if value is None:
         return False
-    value = text_type(value)
     # the check for ?, /, & are to prevent problems when running
     # behind Apache mod_proxy
     if value == u'' or u'?' in value or u'/' in value or u'&' in value:
@@ -265,7 +261,7 @@ class Entity(AppObject):
             select = Select()
             mainvar = select.get_variable(mainvar)
             select.add_selected(mainvar)
-        elif isinstance(mainvar, string_types):
+        elif isinstance(mainvar, str):
             assert mainvar in select.defined_vars
             mainvar = select.get_variable(mainvar)
         # eases string -> syntax tree test transition: please remove once stable
@@ -506,12 +502,12 @@ class Entity(AppObject):
         return NotImplemented
 
     def __eq__(self, other):
-        if isinstance(self.eid, integer_types):
+        if isinstance(self.eid, int):
             return self.eid == other.eid
         return self is other
 
     def __hash__(self):
-        if isinstance(self.eid, integer_types):
+        if isinstance(self.eid, int):
             return self.eid
         return super(Entity, self).__hash__()
 
@@ -639,7 +635,7 @@ class Entity(AppObject):
         if path is None:
             # fallback url: <base-url>/<eid> url is used as cw entities uri,
             # prefer it to <base-url>/<etype>/eid/<eid>
-            return text_type(value)
+            return str(value)
         return u'%s/%s' % (path, self._cw.url_quote(value))
 
     def cw_attr_metadata(self, attr, metadata):
@@ -657,7 +653,7 @@ class Entity(AppObject):
         attr = str(attr)
         if value is _marker:
             value = getattr(self, attr)
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             value = value.strip()
         if value is None or value == '': # don't use "not", 0 is an acceptable value
             return u''

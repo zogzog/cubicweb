@@ -23,8 +23,6 @@
 rename A010-joe.en.txt to A030-joe.en.txt
 accept [y/N]?
 """
-from __future__ import print_function
-
 
 def ren(a,b):
     names = glob.glob('%s*'%a)

@@ -19,8 +19,6 @@
 
 This module contains functions to initialize a new repository.
 """
-from __future__ import print_function
-
 from contextlib import contextmanager
 from pprint import pprint
 

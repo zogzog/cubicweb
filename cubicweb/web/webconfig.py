@@ -25,8 +25,6 @@ import hmac
 from uuid import uuid4
 from os.path import dirname, join, exists, split, isdir
 
-from six import text_type
-
 from logilab.common.decorators import cached, cachedproperty
 from logilab.common.configuration import Method, merge_options
 
@@ -134,8 +132,6 @@ class BaseWebConfiguration(CubicWebConfiguration):
         try:
             user = self['anonymous-user'] or None
             passwd = self['anonymous-password']
-            if user:
-                user = text_type(user)
         except KeyError:
             user, passwd = None, None
         except UnicodeDecodeError:
@@ -301,7 +297,7 @@ have the python imaging library installed to use captcha)',
     def sign_text(self, text):
         """sign some text for later checking"""
         # hmac.new expect bytes
-        if isinstance(text, text_type):
+        if isinstance(text, str):
             text = text.encode('utf-8')
         # replace \r\n so we do not depend on whether a browser "reencode"
         # original message using \r\n or not

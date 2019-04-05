@@ -22,13 +22,7 @@ import datetime
 import decimal
 import doctest
 import re
-try:
-    from unittest2 import TestCase
-except ImportError:  # Python3
-    from unittest import TestCase
-
-from six import PY2
-from six.moves import range
+from unittest import TestCase
 
 from cubicweb import Binary, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
@@ -419,9 +413,6 @@ def UnauthorizedTC(TestCase):
     def test_str(self):
         self._test(str)
 
-    if PY2:
-        def test_unicode(self):
-            self._test(unicode)
 
 
 def load_tests(loader, tests, ignore):

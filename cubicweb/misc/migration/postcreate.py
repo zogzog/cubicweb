@@ -16,19 +16,15 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb post creation script, set user's workflow"""
-from __future__ import print_function
-
-from six import text_type
-
 from cubicweb import _
 
 
 # insert versions
 create_entity('CWProperty', pkey=u'system.version.cubicweb',
-              value=text_type(config.cubicweb_version()))
+              value=str(config.cubicweb_version()))
 for cube in config.cubes():
     create_entity('CWProperty', pkey=u'system.version.%s' % cube.lower(),
-                  value=text_type(config.cube_version(cube)))
+                  value=str(config.cube_version(cube)))
 
 # some entities have been added before schema entities, add their missing 'is' and
 # 'is_instance_of' relations
@@ -56,7 +52,7 @@ if hasattr(config, 'anonymous_user'):
         print('Hopefully this is not a production instance...')
     elif anonlogin:
         from cubicweb.server import create_user
-        create_user(session, text_type(anonlogin), anonpwd, u'guests')
+        create_user(session, anonlogin, anonpwd, u'guests')
 
 # need this since we already have at least one user in the database (the default admin)
 for user in rql('Any X WHERE X is CWUser').entities():

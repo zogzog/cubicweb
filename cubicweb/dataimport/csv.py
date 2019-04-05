@@ -16,18 +16,14 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Functions to help importing CSV data"""
-from __future__ import absolute_import, print_function
-
 import codecs
 import csv as csvmod
-
-from six import PY2, PY3, string_types
 
 from logilab.common import shellutils
 
 
 def count_lines(stream_or_filename):
-    if isinstance(stream_or_filename, string_types):
+    if isinstance(stream_or_filename, str):
         f = open(stream_or_filename)
     else:
         f = stream_or_filename
@@ -42,7 +38,7 @@ def count_lines(stream_or_filename):
 def ucsvreader_pb(stream_or_path, encoding='utf-8', delimiter=',', quotechar='"',
                   skipfirst=False, withpb=True, skip_empty=True):
     """same as :func:`ucsvreader` but a progress bar is displayed as we iter on rows"""
-    if isinstance(stream_or_path, string_types):
+    if isinstance(stream_or_path, str):
         stream = open(stream_or_path, 'rb')
     else:
         stream = stream_or_path
@@ -68,19 +64,14 @@ def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
     separators) will be skipped. This is useful for Excel exports which may be
     full of such lines.
     """
-    if PY3:
-        stream = codecs.getreader(encoding)(stream)
+    stream = codecs.getreader(encoding)(stream)
     it = iter(csvmod.reader(stream, delimiter=delimiter, quotechar=quotechar))
     if not ignore_errors:
         if skipfirst:
             next(it)
         for row in it:
-            if PY2:
-                decoded = [item.decode(encoding) for item in row]
-            else:
-                decoded = row
-            if not skip_empty or any(decoded):
-                yield decoded
+            if not skip_empty or any(row):
+                yield row
     else:
         if skipfirst:
             try:
@@ -97,9 +88,5 @@ def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
             # Error in CSV, ignore line and continue
             except csvmod.Error:
                 continue
-            if PY2:
-                decoded = [item.decode(encoding) for item in row]
-            else:
-                decoded = row
-            if not skip_empty or any(decoded):
-                yield decoded
+            if not skip_empty or any(row):
+                yield row

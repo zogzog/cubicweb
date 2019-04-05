@@ -17,10 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """abstract controller classe for CubicWeb web client"""
 
-
-
-from six import PY2
-
 from logilab.mtconverter import xml_escape
 from logilab.common.registry import yes
 
@@ -88,8 +84,6 @@ class Controller(AppObject):
         rql = req.form.get('rql')
         if rql:
             req.ensure_ro_rql(rql)
-            if PY2 and not isinstance(rql, unicode):
-                rql = unicode(rql, req.encoding)
             pp = req.vreg['components'].select_or_none('magicsearch', req)
             if pp is not None:
                 return pp.process_query(rql)

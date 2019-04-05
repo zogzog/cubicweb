@@ -22,8 +22,6 @@ from collections import defaultdict
 
 from datetime import datetime
 
-from six import text_type
-
 from logilab.common.graph import ordered_nodes
 
 from rql.utils import rqlvar_maker
@@ -201,7 +199,7 @@ class EditController(basecontrollers.ViewController):
             if '__linkto' in req.form and 'eid' in req.form:
                 self.execute_linkto()
             elif '__delete' not in req.form:
-                raise ValidationError(None, {None: text_type(ex)})
+                raise ValidationError(None, {None: str(ex)})
         # all pending inlined relations to newly created entities have been
         # treated now (pop to ensure there are no attempt to add new ones)
         pending_inlined = req.data.pop('pending_inlined')
@@ -234,7 +232,7 @@ class EditController(basecontrollers.ViewController):
                 autoform.delete_relations(self._cw, todelete)
         self._cw.remove_pending_operations()
         if self.errors:
-            errors = dict((f.name, text_type(ex)) for f, ex in self.errors)
+            errors = dict((f.name, str(ex)) for f, ex in self.errors)
             raise ValidationError(valerror_eid(form.get('__maineid')), errors)
 
     def _insert_entity(self, etype, eid, rqlquery):
@@ -285,7 +283,7 @@ class EditController(basecontrollers.ViewController):
             rqlquery.set_inlined(field.name, form_.edited_entity.eid)
         if not rqlquery.canceled:
             if self.errors:
-                errors = dict((f.role_name(), text_type(ex)) for f, ex in self.errors)
+                errors = dict((f.role_name(), str(ex)) for f, ex in self.errors)
                 raise ValidationError(valerror_eid(entity.eid), errors)
             if eid is None:  # creation or copy
                 entity.eid = eid = self._insert_entity(etype, formparams['eid'], rqlquery)

@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """some utilities for cubicweb command line tools"""
-from __future__ import print_function
-
 
 # XXX move most of this in logilab.common (shellutils ?)
 
@@ -38,8 +36,6 @@ try:
 except ImportError:
     def symlink(*args):
         raise NotImplementedError
-
-from six import add_metaclass
 
 from logilab.common.clcommands import Command as BaseCommand
 from logilab.common.shellutils import ASK
@@ -239,8 +235,7 @@ class metacmdhandler(type):
         return cls
 
 
-@add_metaclass(metacmdhandler)
-class CommandHandler(object):
+class CommandHandler(object, metaclass=metacmdhandler):
     """configuration specific helper for cubicweb-ctl commands"""
 
     def __init__(self, config):

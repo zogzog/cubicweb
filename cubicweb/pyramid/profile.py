@@ -21,7 +21,6 @@
 """ Tools for profiling.
 
 See :ref:`profiling`."""
-from __future__ import print_function
 
 import cProfile
 import itertools

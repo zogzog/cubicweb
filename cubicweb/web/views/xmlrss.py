@@ -22,8 +22,6 @@ from cubicweb import _
 from base64 import b64encode
 from time import timezone
 
-from six.moves import range
-
 from logilab.mtconverter import xml_escape
 
 from cubicweb.predicates import (is_instance, non_final_entity, one_line_rset,

@@ -28,8 +28,7 @@ the code has been taken (or adapted) from Djanco source code :
 import tempfile
 
 from io import BytesIO
-
-from six.moves.urllib.parse import parse_qs
+from urllib.parse import parse_qs
 
 from cubicweb.multipart import (
     copy_file, parse_form_data, parse_options_header)

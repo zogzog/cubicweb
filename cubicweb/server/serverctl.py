@@ -16,17 +16,13 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb-ctl commands and command handlers specific to the repository"""
-from __future__ import print_function
-
 # *ctl module should limit the number of import to be imported as quickly as
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.
+import sched
 import sys
 import os
 from contextlib import contextmanager
-
-from six import string_types
-from six.moves import input
 
 from logilab.common.configuration import Configuration, merge_options
 from logilab.common.shellutils import ASK, generate_password
@@ -1006,12 +1002,11 @@ class RepositorySchedulerCommand(Command):
     def run(self, args):
         from cubicweb.cwctl import init_cmdline_log_threshold
         from cubicweb.server.repository import Repository
-        from cubicweb.server.utils import scheduler
         config = ServerConfiguration.config_for(args[0])
         # Log to stdout, since the this command runs in the foreground.
         config.global_set_option('log-file', None)
         init_cmdline_log_threshold(config, self['loglevel'])
-        repo = Repository(config, scheduler())
+        repo = Repository(config, sched.scheduler())
         repo.bootstrap()
         try:
             repo.run_scheduler()
@@ -1095,8 +1090,7 @@ def permissionshandler(relation, perms):
     for p in ('read', 'add', 'update', 'delete'):
         rule = perms.get(p)
         if rule:
-            perms[p] = tuple(str(x) if isinstance(x, string_types) else x
-                             for x in rule)
+            perms[p] = tuple(rule)
     return perms, perms in defaultrelperms or perms in defaulteperms
 
 

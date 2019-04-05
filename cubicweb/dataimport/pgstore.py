@@ -17,17 +17,13 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Postgres specific store"""
 
-from __future__ import print_function
-
 import warnings
 import os.path as osp
 from io import StringIO
 from time import asctime
 from datetime import date, datetime, time
 from collections import defaultdict
-
-from six import string_types, integer_types, text_type, add_metaclass
-from six.moves import cPickle as pickle, range
+import pickle
 
 from cubicweb.utils import make_uid
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -108,7 +104,7 @@ def _copyfrom_buffer_convert_None(value, **opts):
 
 def _copyfrom_buffer_convert_number(value, **opts):
     '''Convert a number into its string representation'''
-    return text_type(value)
+    return str(value)
 
 def _copyfrom_buffer_convert_string(value, **opts):
     '''Convert string value.
@@ -140,8 +136,8 @@ def _copyfrom_buffer_convert_time(value, **opts):
 # (types, converter) list.
 _COPYFROM_BUFFER_CONVERTERS = [
     (type(None), _copyfrom_buffer_convert_None),
-    (integer_types + (float,), _copyfrom_buffer_convert_number),
-    (string_types, _copyfrom_buffer_convert_string),
+    ((int, float), _copyfrom_buffer_convert_number),
+    (str, _copyfrom_buffer_convert_string),
     (datetime, _copyfrom_buffer_convert_datetime),
     (date, _copyfrom_buffer_convert_date),
     (time, _copyfrom_buffer_convert_time),
@@ -185,7 +181,7 @@ def _create_copyfrom_buffer(data, columns=None, **convert_opts):
             for types, converter in _COPYFROM_BUFFER_CONVERTERS:
                 if isinstance(value, types):
                     value = converter(value, **convert_opts)
-                    assert isinstance(value, text_type)
+                    assert isinstance(value, str)
                     break
             else:
                 raise ValueError("Unsupported value type %s" % type(value))

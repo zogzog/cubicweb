@@ -20,14 +20,9 @@
 
 import datetime as DT
 
-from six import PY3
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.dataimport import pgstore
-
-
-if PY3:
-    long = int
 
 
 class CreateCopyFromBufferTC(TestCase):
@@ -41,7 +36,7 @@ class CreateCopyFromBufferTC(TestCase):
     def test_convert_number(self):
         cnvt = pgstore._copyfrom_buffer_convert_number
         self.assertEqual(u'42', cnvt(42))
-        self.assertEqual(u'42', cnvt(long(42)))
+        self.assertEqual(u'42', cnvt(int(42)))
         self.assertEqual(u'42.42', cnvt(42.42))
 
     def test_convert_string(self):
@@ -68,9 +63,9 @@ class CreateCopyFromBufferTC(TestCase):
 
     # test buffer
     def test_create_copyfrom_buffer_tuple(self):
-        data = ((42, long(42), 42.42, u'éléphant', DT.date(666, 1, 13), DT.time(6, 6, 6),
+        data = ((42, int(42), 42.42, u'éléphant', DT.date(666, 1, 13), DT.time(6, 6, 6),
                  DT.datetime(666, 6, 13, 6, 6, 6)),
-                (6, long(6), 6.6, u'babar', DT.date(2014, 1, 14), DT.time(4, 2, 1),
+                (6, int(6), 6.6, u'babar', DT.date(2014, 1, 14), DT.time(4, 2, 1),
                  DT.datetime(2014, 1, 1, 0, 0, 0)))
         results = pgstore._create_copyfrom_buffer(data)
         # all columns

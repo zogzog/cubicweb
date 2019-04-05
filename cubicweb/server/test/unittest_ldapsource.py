@@ -20,8 +20,6 @@
 Those tests expect to have slapd, python-ldap3 and ldapscripts packages installed.
 """
 
-from __future__ import print_function
-
 import os
 import sys
 import shutil
@@ -30,9 +28,6 @@ import subprocess
 import tempfile
 import unittest
 from os.path import join
-
-from six import string_types
-from six.moves import range
 
 from cubicweb import AuthenticationError, ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
@@ -180,7 +175,7 @@ class LDAPFeedTestBase(CubicWebTC):
         """
         modcmd = ['dn: %s' % dn, 'changetype: add']
         for key, values in mods.items():
-            if isinstance(values, string_types):
+            if isinstance(values, str):
                 values = [values]
             for value in values:
                 modcmd.append('%s: %s' % (key, value))
@@ -200,7 +195,7 @@ class LDAPFeedTestBase(CubicWebTC):
         modcmd = ['dn: %s' % dn, 'changetype: modify']
         for (kind, key), values in mods.items():
             modcmd.append('%s: %s' % (kind, key))
-            if isinstance(values, string_types):
+            if isinstance(values, str):
                 values = [values]
             for value in values:
                 modcmd.append('%s: %s' % (key, value))

@@ -24,11 +24,10 @@ from io import BytesIO
 from os.path import exists
 from datetime import datetime, timedelta
 from functools import partial
-
-from six.moves.urllib.parse import urlparse
-from six.moves.urllib.request import Request, build_opener, HTTPCookieProcessor
-from six.moves.urllib.error import HTTPError
-from six.moves.http_cookiejar import CookieJar
+from http.cookiejar import CookieJar
+from urllib.parse import urlparse
+from urllib.request import Request, build_opener, HTTPCookieProcessor
+from urllib.error import HTTPError
 
 from pytz import utc
 from lxml import etree

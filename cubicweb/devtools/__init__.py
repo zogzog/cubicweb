@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Test tools for cubicweb"""
 
-from __future__ import print_function
-
 import os
 import sys
 import errno
@@ -31,10 +29,9 @@ import getpass
 from hashlib import sha1  # pylint: disable=E0611
 from os.path import abspath, join, exists, split, isdir, dirname
 from functools import partial
+import pickle
 
 import filelock
-from six import text_type
-from six.moves import cPickle as pickle
 
 from logilab.common.decorators import cached, clear_cache
 
@@ -93,7 +90,7 @@ DEFAULT_SOURCES = {
 DEFAULT_PSQL_SOURCES = DEFAULT_SOURCES.copy()
 DEFAULT_PSQL_SOURCES['system'] = DEFAULT_SOURCES['system'].copy()
 DEFAULT_PSQL_SOURCES['system']['db-driver'] = 'postgres'
-DEFAULT_PSQL_SOURCES['system']['db-user'] = text_type(getpass.getuser())
+DEFAULT_PSQL_SOURCES['system']['db-user'] = getpass.getuser()
 DEFAULT_PSQL_SOURCES['system']['db-password'] = None
 # insert a dumb value as db-host to avoid unexpected connection to local server
 DEFAULT_PSQL_SOURCES['system']['db-host'] = 'REPLACEME'
@@ -395,7 +392,7 @@ class TestDataBaseHandler(object):
         from cubicweb.repoapi import connect
         repo = self.get_repo()
         sources = self.config.read_sources_file()
-        login = text_type(sources['admin']['login'])
+        login = sources['admin']['login']
         password = sources['admin']['password'] or 'xxx'
         cnx = connect(repo, login, password=password)
         return cnx

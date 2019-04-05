@@ -1,5 +1,3 @@
-from six import text_type
-
 from cubicweb.pyramid.test import PyramidCWTest
 from cubicweb.pyramid import tools
 
@@ -11,10 +9,10 @@ def set_language(request):
         cnx.execute('DELETE CWProperty X WHERE X for_user U, U eid %(u)s',
                     {'u': cnx.user.eid})
     else:
-        cnx.user.set_property(u'ui.language', text_type(lang))
+        cnx.user.set_property(u'ui.language', lang)
     cnx.commit()
 
-    request.response.text = text_type(cnx.user.properties.get('ui.language', ''))
+    request.response.text = cnx.user.properties.get('ui.language', '')
     return request.response
 
 
@@ -29,7 +27,7 @@ def add_remove_group(request):
                     {'u': cnx.user.eid})
     cnx.commit()
 
-    request.response.text = text_type(','.join(sorted(cnx.user.groups)))
+    request.response.text = ','.join(sorted(cnx.user.groups))
     return request.response
 
 

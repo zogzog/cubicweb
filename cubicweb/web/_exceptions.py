@@ -18,9 +18,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """exceptions used in the core of the CubicWeb web application"""
 
-
-
-from six.moves import http_client
+import http.client as http_client
 
 from cubicweb._exceptions import *
 from cubicweb.utils import json_dumps

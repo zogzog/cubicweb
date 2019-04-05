@@ -20,8 +20,6 @@
 
 from cubicweb import _
 
-from six.moves import range
-
 from yams import xy
 from rql import TypeResolverException
 

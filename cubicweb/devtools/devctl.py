@@ -18,8 +18,6 @@
 """additional cubicweb-ctl commands and command handlers for cubicweb and
 cubicweb's cubes development
 """
-from __future__ import print_function
-
 # *ctl module should limit the number of import to be imported as quickly as
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.
@@ -32,8 +30,6 @@ from os import getcwd, mkdir, chdir, path as osp
 import pkg_resources
 
 from pytz import UTC
-
-from six.moves import input
 
 from logilab.common import STD_BLACKLIST
 from logilab.common.modutils import clean_sys_modules
@@ -717,7 +713,6 @@ layout, and a full featured cube with "full" layout.',
             longdesc = input(
                 'Enter a long description (leave empty to reuse the short one): ')
         dependencies = {
-            'six': '>= 1.4.0',
             'cubicweb': '>= %s' % cubicwebversion,
         }
         if verbose:

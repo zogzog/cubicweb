@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """utilities for instances migration"""
-from __future__ import print_function
 
 import sys
 import os
@@ -24,8 +23,6 @@ import logging
 import tempfile
 from os.path import exists, join, basename, splitext
 from itertools import chain
-
-from six import string_types
 
 from logilab.common import IGNORED_EXTENSIONS
 from logilab.common.decorators import cached
@@ -405,7 +402,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         """modify the list of used cubes in the in-memory config
         returns newly inserted cubes, including dependencies
         """
-        if isinstance(cubes, string_types):
+        if isinstance(cubes, str):
             cubes = (cubes,)
         origcubes = self.config.cubes()
         newcubes = [p for p in self.config.expand_cubes(cubes)

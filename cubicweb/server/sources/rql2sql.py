@@ -49,9 +49,6 @@ and Informix.
 
 import threading
 
-from six import PY2, text_type
-from six.moves import range
-
 from logilab.database import FunctionDescr, SQL_FUNCTIONS_REGISTRY
 
 from rql import BadRQLQuery, CoercionError
@@ -1517,8 +1514,6 @@ class SQLGenerator(object):
             return self.keyword_map[value]()
         if constant.type == 'Substitute':
             _id = value
-            if PY2 and isinstance(_id, text_type):
-                _id = _id.encode()
         else:
             _id = str(id(constant)).replace('-', '', 1)
             self._query_attrs[_id] = value

@@ -37,16 +37,12 @@ __author__ = 'Marcel Hellkamp'
 __version__ = '0.1'
 __license__ = 'MIT'
 
+from io import BytesIO
 from tempfile import TemporaryFile
+from urllib.parse import parse_qs
 from wsgiref.headers import Headers
 import re, sys
-try:
-    from io import BytesIO
-except ImportError: # pragma: no cover (fallback for Python 2.5)
-    from StringIO import StringIO as BytesIO
 
-from six import PY3, text_type
-from six.moves.urllib.parse import parse_qs
 
 ##############################################################################
 ################################ Helper & Misc ################################
@@ -88,7 +84,7 @@ class MultiDict(DictMixin):
                 yield key, value
 
 def tob(data, enc='utf8'): # Convert strings to bytes (py2 and py3)
-    return data.encode(enc) if isinstance(data, text_type) else data
+    return data.encode(enc) if isinstance(data, str) else data
 
 def copy_file(stream, target, maxread=-1, buffer_size=2*16):
     ''' Read from :stream and write to :target until :maxread or EOF. '''
@@ -400,15 +396,11 @@ def parse_form_data(environ, charset='utf8', strict=False, **kw):
             data = stream.read(mem_limit)
             if stream.read(1): # These is more that does not fit mem_limit
                 raise MultipartError("Request too big. Increase MAXMEM.")
-            if PY3:
-                data = data.decode('ascii')
+            data = data.decode('ascii')
             data = parse_qs(data, keep_blank_values=True)
             for key, values in data.items():
                 for value in values:
-                    if PY3:
-                        forms[key] = value
-                    else:
-                        forms[key.decode(charset)] = value.decode(charset)
+                    forms[key] = value
         else:
             raise MultipartError("Unsupported content type.")
     except MultipartError:

@@ -19,8 +19,7 @@
 object to handle publication.
 """
 
-from six import text_type
-from six.moves import http_client
+import http.client
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
                       AuthenticationError, UndoTransactionException,
@@ -44,7 +43,7 @@ class LoginController(Controller):
             raise AuthenticationError()
         else:
             # Cookie authentication
-            self._cw.status_out = http_client.FORBIDDEN
+            self._cw.status_out = http.client.FORBIDDEN
             return self.appli.need_login_content(self._cw)
 
 class LoginControllerForAuthed(Controller):
@@ -187,7 +186,7 @@ def _validate_form(req, vreg):
     except Exception as ex:
         req.cnx.rollback()
         req.exception('unexpected error while validating form')
-        return (False, text_type(ex), ctrl._edited_entity)
+        return (False, str(ex), ctrl._edited_entity)
     return (False, '???', None)
 
 

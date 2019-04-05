@@ -38,9 +38,7 @@ import sys
 from itertools import chain
 from logging import getLogger
 from os.path import join
-
-from six import text_type
-from six.moves.urllib.parse import urlsplit
+from urllib.parse import urlsplit
 
 from docutils import statemachine, nodes, utils, io
 from docutils.core import Publisher
@@ -403,7 +401,7 @@ def rest_publish(context, data):
       the data formatted as HTML or the original data if an error occurred
     """
     req = context._cw
-    if isinstance(data, text_type):
+    if isinstance(data, str):
         encoding = 'utf-8'
         # remove unprintable characters unauthorized in xml
         data = data.translate(ESC_UCAR_TABLE)
@@ -448,8 +446,8 @@ def rest_publish(context, data):
         return res
     except BaseException:
         LOGGER.exception('error while publishing ReST text')
-        if not isinstance(data, text_type):
-            data = text_type(data, encoding, 'replace')
+        if not isinstance(data, str):
+            data = data.encode(encoding, 'replace')
         return xml_escape(req._('error while publishing ReST text')
                            + '\n\n' + data)
 

@@ -17,10 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """The `ResultSet` class which is returned as result of an rql query"""
 
-
-from six import PY3, text_type
-from six.moves import range
-
 from logilab.common.decorators import cached, clear_cache, copy_cache
 from rql import nodes, stmts
 
@@ -366,13 +362,7 @@ class ResultSet(object):
         """return the result set's origin rql as a string, with arguments
         substitued
         """
-        encoding = self.req.encoding
-        rqlstr = self.syntax_tree().as_string(kwargs=self.args)
-        if PY3:
-            return rqlstr
-        if isinstance(rqlstr, text_type):
-            return rqlstr
-        return text_type(rqlstr, encoding)
+        return self.syntax_tree().as_string(kwargs=self.args)
 
     # client helper methods ###################################################
 

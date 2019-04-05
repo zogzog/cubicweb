@@ -62,8 +62,6 @@ from datetime import datetime
 from copy import copy
 from itertools import count
 
-from six import add_metaclass
-
 import pytz
 
 from logilab.common.decorators import cached
@@ -362,8 +360,7 @@ class _MetaGeneratorBWCompatWrapper(object):
         return self._mdgen.source
 
 
-@add_metaclass(class_deprecated)
-class MetaGenerator(object):
+class MetaGenerator(object, metaclass=class_deprecated):
     """Class responsible for generating standard metadata for imported entities. You may want to
     derive it to add application specific's metadata.
 

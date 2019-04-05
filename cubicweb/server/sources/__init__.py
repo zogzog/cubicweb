@@ -17,12 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb server sources support"""
 
-from __future__ import print_function
-
 from time import time
 from logging import getLogger
-
-from six import text_type
 
 from logilab.common import configuration
 from logilab.common.textutils import unormalize
@@ -97,7 +93,7 @@ class AbstractSource(object):
         self.uri = source_config.pop('uri')
         # unormalize to avoid non-ascii characters in logger's name, this will cause decoding error
         # on logging
-        set_log_methods(self, getLogger('cubicweb.sources.' + unormalize(text_type(self.uri))))
+        set_log_methods(self, getLogger('cubicweb.sources.' + unormalize(self.uri)))
         source_config.pop('type')
         self.config = self._check_config_dict(
             eid, source_config, raise_on_error=False)
@@ -155,7 +151,7 @@ class AbstractSource(object):
                 except Exception as ex:
                     if not raise_on_error:
                         continue
-                    msg = text_type(ex)
+                    msg = str(ex)
                     raise ValidationError(eid, {role_name('config', 'subject'): msg})
             processed[optname] = value
         # cw < 3.10 bw compat

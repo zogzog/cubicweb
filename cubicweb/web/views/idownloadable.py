@@ -22,8 +22,6 @@ Specific views for entities adapting to IDownloadable
 
 from cubicweb import _
 
-from six.moves import range
-
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, xml_escape
 
 from cubicweb import tags

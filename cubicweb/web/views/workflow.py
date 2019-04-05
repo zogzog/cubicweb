@@ -24,8 +24,6 @@
 
 from cubicweb import _
 
-from six import text_type
-
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
@@ -309,7 +307,7 @@ def _wf_items_for_relation(req, wfeid, wfrelation, field):
     wf = req.entity_from_eid(wfeid)
     rschema = req.vreg.schema[field.name]
     param = 'toeid' if field.role == 'subject' else 'fromeid'
-    return sorted((e.view('combobox'), text_type(e.eid))
+    return sorted((e.view('combobox'), str(e.eid))
                   for e in getattr(wf, 'reverse_%s' % wfrelation)
                   if rschema.has_perm(req, 'add', **{param: e.eid}))
 

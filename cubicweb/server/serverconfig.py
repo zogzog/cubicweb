@@ -16,14 +16,10 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """server.serverconfig definition"""
-from __future__ import print_function
 
-
-
+from io import StringIO
 import sys
 from os.path import join, exists
-
-from six.moves import StringIO
 
 import logilab.common.configuration as lgconfig
 from logilab.common.decorators import cached

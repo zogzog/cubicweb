@@ -17,9 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """abstract form classes for CubicWeb web client"""
 
-
-from six import add_metaclass
-
 from logilab.common.decorators import iclassmethod
 
 from cubicweb.appobject import AppObject
@@ -73,8 +70,7 @@ class FieldNotFound(Exception):
     found
     """
 
-@add_metaclass(metafieldsform)
-class Form(AppObject):
+class Form(AppObject, metaclass=metafieldsform):
     __registry__ = 'forms'
 
     parent_form = None

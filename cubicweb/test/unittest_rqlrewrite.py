@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from six import string_types
-
 from logilab.common.testlib import mock_object
 from logilab.common.decorators import monkeypatch
 from yams import BadSchemaDefinition
@@ -88,7 +86,7 @@ def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
                 snippet_varmap[snippet].update(varmap)
                 continue
             snippet_varmap[snippet] = varmap
-            if isinstance(snippet, string_types):
+            if isinstance(snippet, str):
                 snippet = mock_object(snippet_rqlst=parse(u'Any X WHERE ' + snippet).children[0],
                                       expression=u'Any X WHERE ' + snippet)
             rqlexprs.append(snippet)

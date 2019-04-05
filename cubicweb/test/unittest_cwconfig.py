@@ -18,22 +18,21 @@
 """cubicweb.cwconfig unit tests"""
 
 import contextlib
-import compileall
 import functools
 import sys
 import os
 import pkgutil
 from os.path import dirname, join
 from pkg_resources import EntryPoint, Distribution
+from tempfile import TemporaryDirectory
 import unittest
 
 from mock import patch
-from six import PY3
 
 from logilab.common.modutils import cleanup_sys_modules
 
 from cubicweb.devtools import ApptestConfiguration
-from cubicweb.devtools.testlib import BaseTestCase, TemporaryDirectory
+from cubicweb.devtools.testlib import BaseTestCase
 from cubicweb.cwconfig import (
     CubicWebConfiguration, _expand_modname)
 
@@ -268,13 +267,6 @@ class ModnamesTC(unittest.TestCase):
             join(tempdir, 'b', 'c.py'),
             join(tempdir, 'b', 'd', '__init__.py'),
         ):
-            if not PY3:
-                # ensure pyc file exists.
-                # Doesn't required for PY3 since it create __pycache__
-                # directory and will not import if source file doesn't
-                # exists.
-                compileall.compile_file(source, force=True)
-                self.assertTrue(os.path.exists(source + 'c'))
             # remove source file
             os.remove(source)
         self.assertEqual(list(_expand_modname('lib.c')), [])

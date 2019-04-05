@@ -18,12 +18,7 @@
 """Helper classes to execute RQL queries on a set of sources, performing
 security checking and data aggregation.
 """
-from __future__ import print_function
-
 from itertools import repeat
-
-from six import text_type, string_types, integer_types
-from six.moves import range, zip
 
 from rql import RQLSyntaxError, CoercionError
 from rql.stmts import Union
@@ -442,13 +437,13 @@ class InsertPlan(ExecutionPlan):
         relations = {}
         for subj, rtype, obj in self.relation_defs():
             # if a string is given into args instead of an int, we get it here
-            if isinstance(subj, string_types):
+            if isinstance(subj, str):
                 subj = int(subj)
-            elif not isinstance(subj, integer_types):
+            elif not isinstance(subj, int):
                 subj = subj.entity.eid
-            if isinstance(obj, string_types):
+            if isinstance(obj, str):
                 obj = int(obj)
-            elif not isinstance(obj, integer_types):
+            elif not isinstance(obj, int):
                 obj = obj.entity.eid
             if repo.schema.rschema(rtype).inlined:
                 if subj not in edited_entities:
@@ -623,7 +618,7 @@ class RQLCache(object):
         def parse(rql, annotate=False, parse=rqlhelper.parse):
             """Return a freshly parsed syntax tree for the given RQL."""
             try:
-                return parse(text_type(rql), annotate=annotate)
+                return parse(rql, annotate=annotate)
             except UnicodeError:
                 raise RQLSyntaxError(rql)
         self._parse = parse

@@ -18,7 +18,6 @@
 """cubicweb-ctl commands and command handlers common to twisted/modpython
 web configuration
 """
-from __future__ import print_function
 
 import os
 import os.path as osp

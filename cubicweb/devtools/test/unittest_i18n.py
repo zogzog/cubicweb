@@ -19,14 +19,13 @@
 """unit tests for i18n messages generator"""
 
 from contextlib import contextmanager
-from io import StringIO, BytesIO
+from io import StringIO
 import os
 import os.path as osp
 import sys
 from subprocess import PIPE, Popen, STDOUT
 from unittest import TestCase, main
 
-from six import PY2
 from mock import patch
 
 from cubicweb.devtools import devctl
@@ -91,7 +90,7 @@ class CustomMessageExtractor(devctl.I18nCubeMessageExtractor):
 
 @contextmanager
 def capture_stdout():
-    stream = BytesIO() if PY2 else StringIO()
+    stream = StringIO()
     sys.stdout = stream
     yield stream
     stream.seek(0)

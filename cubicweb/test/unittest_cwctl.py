@@ -18,10 +18,8 @@
 import sys
 import os
 from os.path import join
-from io import StringIO, BytesIO
+from io import StringIO
 import unittest
-
-from six import PY2
 
 from mock import patch
 
@@ -38,7 +36,7 @@ class CubicWebCtlTC(unittest.TestCase):
     tearDownClass = unittest_cwconfig.CubicWebConfigurationTC.tearDownClass
 
     def setUp(self):
-        self.stream = BytesIO() if PY2 else StringIO()
+        self.stream = StringIO()
         sys.stdout = self.stream
 
     def tearDown(self):

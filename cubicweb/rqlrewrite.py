@@ -21,8 +21,6 @@ tree.
 This is used for instance for read security checking in the repository.
 """
 
-from six import text_type, string_types
-
 from rql import nodes as n, stmts, TypeResolverException
 from rql.utils import common_parent
 
@@ -640,7 +638,7 @@ class RQLRewriter(object):
             while argname in self.kwargs:
                 argname = subselect.allocate_varname()
             subselect.add_constant_restriction(subselect.get_variable(self.u_varname),
-                                               'eid', text_type(argname), 'Substitute')
+                                               'eid', argname, 'Substitute')
             self.kwargs[argname] = self.session.user.eid
         add_types_restriction(self.schema, subselect, subselect,
                               solutions=self.solutions)
@@ -795,7 +793,7 @@ class RQLRewriter(object):
                 # insert "U eid %(u)s"
                 stmt.add_constant_restriction(
                     stmt.get_variable(self.u_varname),
-                    'eid', text_type(argname), 'Substitute')
+                    'eid', argname, 'Substitute')
                 self.kwargs[argname] = self.session.user.eid
             return self.u_varname
         key = (self.current_expr, self.varmap, vname)
@@ -917,7 +915,7 @@ class RQLRewriter(object):
                 return n.Constant(vi['const'], 'Int')
             return n.VariableRef(stmt.get_variable(selectvar))
         vname_or_term = self._get_varname_or_term(node.name)
-        if isinstance(vname_or_term, string_types):
+        if isinstance(vname_or_term, str):
             return n.VariableRef(stmt.get_variable(vname_or_term))
         # shared term
         return vname_or_term.copy(stmt)

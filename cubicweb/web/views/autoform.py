@@ -118,8 +118,6 @@ checking for dark-corner case where it can't be verified properly.
 .. Controlling the generic relation fields
 """
 
-from six.moves import range
-
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.registry import NoSelectableObject

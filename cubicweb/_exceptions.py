@@ -21,8 +21,6 @@
 
 from warnings import warn
 
-from six import PY2, text_type
-
 from logilab.common.decorators import cachedproperty
 
 from yams import ValidationError
@@ -32,21 +30,15 @@ from yams import ValidationError
 class CubicWebException(Exception):
     """base class for cubicweb server exception"""
     msg = ""
-    def __unicode__(self):
+
+    def __str__(self):
         if self.msg:
             if self.args:
                 return self.msg % tuple(self.args)
             else:
                 return self.msg
         else:
-            return u' '.join(text_type(arg) for arg in self.args)
-
-    def __str__(self):
-        res = self.__unicode__()
-        if PY2:
-            res = res.encode('utf-8')
-        return res
-
+            return u' '.join(str(arg) for arg in self.args)
 
 class ConfigurationError(CubicWebException):
     """a misconfiguration error"""
@@ -98,7 +90,7 @@ class UniqueTogetherError(RepositoryError):
     def rtypes(self):
         if 'rtypes' in self.kwargs:
             return self.kwargs['rtypes']
-        cstrname = text_type(self.kwargs['cstrname'])
+        cstrname = str(self.kwargs['cstrname'])
         cstr = self.session.find('CWUniqueTogetherConstraint', name=cstrname).one()
         return sorted(rtype.name for rtype in cstr.relations)
 
@@ -119,7 +111,7 @@ class Unauthorized(SecurityError):
     msg1 = u'You are not allowed to perform %s operation on %s'
     var = None
 
-    def __unicode__(self):
+    def __str__(self):
         try:
             if self.args and len(self.args) == 2:
                 return self.msg1 % self.args
@@ -127,7 +119,7 @@ class Unauthorized(SecurityError):
                 return u' '.join(self.args)
             return self.msg
         except Exception as ex:
-            return text_type(ex)
+            return str(ex)
 
 class Forbidden(SecurityError):
     """raised when a user tries to perform a forbidden action

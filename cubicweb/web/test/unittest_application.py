@@ -18,10 +18,8 @@
 """unit tests for cubicweb.web.application"""
 
 import base64
-
-from six import text_type
-from six.moves import http_client
-from six.moves.http_cookies import SimpleCookie
+import http.client
+from http.cookies import SimpleCookie
 
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache
@@ -167,7 +165,7 @@ class ApplicationTC(CubicWebTC):
     def test_publish_validation_error(self):
         with self.admin_access.web_request() as req:
             user = req.user
-            eid = text_type(user.eid)
+            eid = str(user.eid)
             req.form = {
                 'eid': eid,
                 '__type:' + eid: 'CWUser',
@@ -248,8 +246,8 @@ class ApplicationTC(CubicWebTC):
         self.config.global_set_option('language-mode', 'http-negotiation')
         orig_translations = self.config.translations.copy()
         self.config.translations = {
-            'fr': (text_type, lambda x, y: text_type(y)),
-            'en': (text_type, lambda x, y: text_type(y))}
+            'fr': (str, lambda x, y: str(y)),
+            'en': (str, lambda x, y: str(y))}
         try:
             headers = {'Accept-Language': 'fr'}
             with self.admin_access.web_request(headers=headers) as req:
@@ -336,8 +334,8 @@ class ApplicationTC(CubicWebTC):
         parent_eid = parent_eid or '__cubicweb_internal_field__'
         with self.admin_access.web_request() as req:
             req.form = {
-                'eid': text_type(dir_eid),
-                '__maineid': text_type(dir_eid),
+                'eid': str(dir_eid),
+                '__maineid': str(dir_eid),
                 '__type:%s' % dir_eid: etype,
                 'parent-%s:%s' % (role, dir_eid): parent_eid,
             }
@@ -353,8 +351,8 @@ class ApplicationTC(CubicWebTC):
         version_eid = version_eid or '__cubicweb_internal_field__'
         with self.admin_access.web_request() as req:
             req.form = {
-                'eid': text_type(ticket_eid),
-                '__maineid': text_type(ticket_eid),
+                'eid': str(ticket_eid),
+                '__maineid': str(ticket_eid),
                 '__type:%s' % ticket_eid: 'Ticket',
                 'in_version-subject:%s' % ticket_eid: version_eid,
             }
@@ -395,8 +393,8 @@ class ApplicationTC(CubicWebTC):
 
         with self.admin_access.web_request() as req:
             req.form = {
-                'eid': (text_type(topd.eid), u'B'),
-                '__maineid': text_type(topd.eid),
+                'eid': (str(topd.eid), u'B'),
+                '__maineid': str(topd.eid),
                 '__type:%s' % topd.eid: 'Directory',
                 '__type:B': 'Directory',
                 'parent-object:%s' % topd.eid: u'B',
@@ -569,8 +567,8 @@ class ApplicationTC(CubicWebTC):
             cnx.commit()
 
         with self.admin_access.web_request() as req:
-            dir_eid = text_type(mydir.eid)
-            perm_eid = text_type(perm.eid)
+            dir_eid = str(mydir.eid)
+            perm_eid = str(perm.eid)
             req.form = {
                 'eid': [dir_eid, perm_eid],
                 '__maineid': dir_eid,
@@ -596,7 +594,7 @@ class ApplicationTC(CubicWebTC):
                 with self.admin_access.web_request(vid='test.ajax.error', url='') as req:
                     req.ajax_request = True
                     app.handle_request(req)
-        self.assertEqual(http_client.INTERNAL_SERVER_ERROR,
+        self.assertEqual(http.client.INTERNAL_SERVER_ERROR,
                          req.status_out)
 
     def _test_cleaned(self, kwargs, injected, cleaned):

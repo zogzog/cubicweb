@@ -21,8 +21,6 @@ from __future__ import division  # XXX why?
 
 from datetime import datetime
 
-from six import PY2, string_types
-
 import ldap3
 
 from logilab.common.configuration import merge_options
@@ -341,15 +339,13 @@ You can set multiple groups by separating them by a comma.',
             elif self.user_attrs.get(key) == 'modification_date':
                 itemdict[key] = datetime.strptime(value[0], '%Y%m%d%H%M%SZ')
             else:
-                if PY2 and value and isinstance(value[0], str):
-                    value = [unicode(val, 'utf-8', 'replace') for val in value]
                 if len(value) == 1:
                     itemdict[key] = value = value[0]
                 else:
                     itemdict[key] = value
         # we expect memberUid to be a list of user ids, make sure of it
         member = self.group_rev_attrs['member']
-        if isinstance(itemdict.get(member), string_types):
+        if isinstance(itemdict.get(member), str):
             itemdict[member] = [itemdict[member]]
         return itemdict
 

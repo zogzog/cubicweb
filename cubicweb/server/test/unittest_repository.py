@@ -22,8 +22,6 @@ import time
 import logging
 import unittest
 
-from six.moves import range
-
 from yams.constraints import UniqueConstraint
 from yams import register_base_type, unregister_base_type
 

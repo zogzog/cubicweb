@@ -50,8 +50,6 @@ from cubicweb import _
 
 from datetime import datetime
 
-from six import text_type
-
 from rql.nodes import VariableRef, Constant
 
 from logilab.mtconverter import xml_escape
@@ -193,10 +191,10 @@ class SortedNavigation(NavigationComponent):
                 return entity.printable_value(attrname, format='text/plain')
         elif col is None: # smart links disabled.
             def index_display(row):
-                return text_type(row)
+                return str(row)
         elif self._cw.vreg.schema.eschema(rset.description[0][col]).final:
             def index_display(row):
-                return text_type(rset[row][col])
+                return str(rset[row][col])
         else:
             def index_display(row):
                 return rset.get_entity(row, col).view('text')

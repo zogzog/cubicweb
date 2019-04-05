@@ -41,8 +41,6 @@ OPTIONS:
 Copyright (c) 2003-2011 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
-from __future__ import print_function
-
 import os
 import sys
 import threading

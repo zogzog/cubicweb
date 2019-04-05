@@ -39,8 +39,6 @@ Three primitives are defined:
 
 import logging
 
-from six import string_types
-
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.registry import RegistrableInstance, yes
 
@@ -182,7 +180,7 @@ class RelationTags(RegistrableRtags):
         return tag
 
     def _tag_etype_attr(self, etype, attr, desttype='*', *args, **kwargs):
-        if isinstance(attr, string_types):
+        if isinstance(attr, str):
             attr, role = attr, 'subject'
         else:
             attr, role = attr

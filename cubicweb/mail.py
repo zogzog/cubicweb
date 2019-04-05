@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Common utilies to format / send emails."""
 
-
-
 from base64 import b64encode, b64decode
 from time import time
 from email.mime.multipart import MIMEMultipart
@@ -28,21 +26,13 @@ from email.header import Header
 from email.utils import formatdate
 from socket import gethostname
 
-from six import PY2, PY3, text_type
-
 
 def header(ustring):
-    if PY3:
-        return Header(ustring, 'utf-8')
-    return Header(ustring.encode('UTF-8'), 'UTF-8')
+    return Header(ustring, 'utf-8')
 
-def addrheader(uaddr, uname=None):
+def addrheader(addr, uname=None):
     # even if an email address should be ascii, encode it using utf8 since
     # automatic tests may generate non ascii email address
-    if PY2:
-        addr = uaddr.encode('UTF-8')
-    else:
-        addr = uaddr
     if uname:
         val = '%s <%s>' % (header(uname).encode(), addr)
     else:
@@ -86,7 +76,7 @@ def format_mail(uinfo, to_addrs, content, subject="",
     to_addrs and cc_addrs are expected to be a list of email address without
     name
     """
-    assert isinstance(content, text_type), repr(content)
+    assert isinstance(content, str), repr(content)
     msg = MIMEText(content.encode('UTF-8'), 'plain', 'UTF-8')
     # safety: keep only the first newline
     try:
@@ -97,13 +87,13 @@ def format_mail(uinfo, to_addrs, content, subject="",
     if uinfo.get('email'):
         email = uinfo['email']
     elif config and config['sender-addr']:
-        email = text_type(config['sender-addr'])
+        email = config['sender-addr']
     else:
         email = u''
     if uinfo.get('name'):
         name = uinfo['name']
     elif config and config['sender-name']:
-        name = text_type(config['sender-name'])
+        name = config['sender-name']
     else:
         name = u''
     msg['From'] = addrheader(email, name)

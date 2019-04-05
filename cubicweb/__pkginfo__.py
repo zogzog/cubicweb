@@ -34,7 +34,7 @@ license = 'LGPL'
 classifiers = [
     'Environment :: Web Environment',
     'Framework :: CubicWeb',
-    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
     'Programming Language :: JavaScript',
 ]
 

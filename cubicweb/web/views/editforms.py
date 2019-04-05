@@ -23,8 +23,6 @@ or a list of entities of the same type
 
 from copy import copy
 
-from six.moves import range
-
 from logilab.common.registry import yes
 
 from cubicweb import _

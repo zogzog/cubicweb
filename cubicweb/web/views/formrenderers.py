@@ -37,8 +37,6 @@ from cubicweb import _
 
 from warnings import warn
 
-from six import text_type
-
 from logilab.mtconverter import xml_escape
 from logilab.common.registry import yes
 
@@ -121,7 +119,7 @@ class FormRenderer(AppObject):
             data.insert(0, errormsg)
         # NOTE: we call unicode because `tag` objects may be found within data
         #       e.g. from the cwtags library
-        w(''.join(text_type(x) for x in data))
+        w(''.join(str(x) for x in data))
 
     def render_content(self, w, form, values):
         if self.display_progress_div:

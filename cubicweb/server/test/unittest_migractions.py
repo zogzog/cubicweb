@@ -22,6 +22,7 @@ import os.path as osp
 import sys
 from datetime import date
 from contextlib import contextmanager
+from tempfile import TemporaryDirectory
 
 from logilab.common import tempattr
 
@@ -30,7 +31,7 @@ from yams.constraints import UniqueConstraint
 from cubicweb import (ConfigurationError, ValidationError,
                       ExecutionError, Binary)
 from cubicweb.devtools import startpgcluster, stoppgcluster
-from cubicweb.devtools.testlib import CubicWebTC, TemporaryDirectory
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.schema import constraint_name_for
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import ServerMigrationHelper

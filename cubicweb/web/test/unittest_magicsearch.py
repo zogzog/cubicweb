@@ -21,8 +21,6 @@
 import sys
 from contextlib import contextmanager
 
-from six.moves import range
-
 from logilab.common.testlib import TestCase, unittest_main
 
 from rql import BadRQLQuery, RQLSyntaxError

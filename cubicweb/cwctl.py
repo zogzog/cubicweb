@@ -18,8 +18,6 @@
 """the cubicweb-ctl tool, based on logilab.common.clcommands to
 provide a pluggable commands system.
 """
-from __future__ import print_function
-
 # *ctl module should limit the number of import to be imported as quickly as
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.

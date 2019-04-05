@@ -20,9 +20,6 @@
 
 from cubicweb import _
 
-from six import PY2
-from six.moves import range
-
 from cubicweb.schema import display_name
 from cubicweb.predicates import any_rset, empty_rset
 from cubicweb.uilib import UnicodeCSVWriter
@@ -32,7 +29,7 @@ class CSVMixIn(object):
     """mixin class for CSV views"""
     templatable = False
     content_type = "text/comma-separated-values"
-    binary = PY2 # python csv module is unicode aware in py3k
+    binary = False
     csv_params = {'dialect': 'excel',
                   'quotechar': '"',
                   'delimiter': ';',

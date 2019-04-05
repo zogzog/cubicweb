@@ -22,8 +22,6 @@ Note:
   syncschema.py hooks are mostly tested in server/test/unittest_migrations.py
 """
 
-from six import text_type
-
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -35,13 +33,13 @@ class CWPropertyHooksTC(CubicWebTC):
             with self.assertRaises(ValidationError) as cm:
                 req.execute('INSERT CWProperty X: X pkey "bla.bla", '
                             'X value "hop", X for_user U')
-            cm.exception.translate(text_type)
+            cm.exception.translate(str)
             self.assertEqual(cm.exception.errors,
                              {'pkey-subject': 'unknown property key bla.bla'})
 
             with self.assertRaises(ValidationError) as cm:
                 req.execute('INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
-            cm.exception.translate(text_type)
+            cm.exception.translate(str)
             self.assertEqual(cm.exception.errors,
                              {'pkey-subject': 'unknown property key bla.bla'})
 

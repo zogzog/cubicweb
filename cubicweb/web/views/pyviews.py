@@ -18,10 +18,6 @@
 """Basic views for python values (eg without any result set)
 """
 
-
-from six import text_type
-from six.moves import range
-
 from cubicweb.view import View
 from cubicweb.predicates import match_kwargs
 from cubicweb.web.views import tableview
@@ -41,7 +37,7 @@ class PyValTableColRenderer(tableview.AbstractColumnRenderer):
             w(self.empty_cell_content)
 
     def render_cell(self, w, rownum):
-        w(text_type(self.data[rownum][self.colid]))
+        w(str(self.data[rownum][self.colid]))
 
 
 class PyValTableView(tableview.TableMixIn, View):

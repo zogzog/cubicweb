@@ -20,8 +20,6 @@
 
 from cubicweb import _
 
-from six.moves import range
-
 from logilab.mtconverter import xml_escape
 
 from cubicweb.predicates import is_instance

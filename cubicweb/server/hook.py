@@ -245,7 +245,6 @@ Hooks and operations classes
 .. autoclass:: cubicweb.server.hook.LateOperation
 .. autoclass:: cubicweb.server.hook.DataOperationMixIn
 """
-from __future__ import print_function
 
 from logging import getLogger
 from itertools import chain

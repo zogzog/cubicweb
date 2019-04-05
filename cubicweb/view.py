@@ -24,8 +24,6 @@ from io import BytesIO
 from warnings import warn
 from functools import partial
 
-from six.moves import range
-
 from logilab.common.registry import yes
 from logilab.mtconverter import xml_escape
 

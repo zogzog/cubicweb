@@ -21,8 +21,6 @@ CWSourceHostConfig).
 
 import logging
 
-from six.moves import range
-
 from logilab.common.decorators import cachedproperty
 
 from cubicweb import _

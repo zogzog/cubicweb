@@ -19,11 +19,11 @@
 
 import os
 from os import path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from mock import patch
 
-from cubicweb.devtools.testlib import TemporaryDirectory
 
 from cubicweb.pyramid import config
 

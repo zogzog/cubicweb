@@ -18,15 +18,12 @@
 """this module contains base classes and utilities for integration with running
 http server
 """
-from __future__ import print_function
 
+import http.client
 import random
 import threading
 import socket
-
-from six.moves import range, http_client
-from six.moves.urllib.parse import urlparse
-
+from urllib.parse import urlparse
 
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -83,7 +80,7 @@ class _CubicWebServerTC(CubicWebTC):
             passwd = user
         response = self.web_get("login?__login=%s&__password=%s" %
                                 (user, passwd))
-        assert response.status == http_client.SEE_OTHER, response.status
+        assert response.status == http.client.SEE_OTHER, response.status
         self._ident_cookie = response.getheader('Set-Cookie')
         assert self._ident_cookie
         return True
@@ -95,7 +92,7 @@ class _CubicWebServerTC(CubicWebTC):
         self._ident_cookie = None
 
     def web_request(self, path='', method='GET', body=None, headers=None):
-        """Return an http_client.HTTPResponse object for the specified path
+        """Return an http.client.HTTPResponse object for the specified path
 
         Use available credential if available.
         """
@@ -131,7 +128,7 @@ class CubicWebServerTC(_CubicWebServerTC):
     def start_server(self):
         from cubicweb.wsgi.handler import CubicWebWSGIApplication
         from wsgiref import simple_server
-        from six.moves import queue
+        import queue
 
         config = self.config
         port = config['port'] or 8080
@@ -164,7 +161,7 @@ class CubicWebServerTC(_CubicWebServerTC):
             self.fail(start_flag.get())
         parseurl = urlparse(self.config['base-url'])
         assert parseurl.port == self.config['port'], (self.config['base-url'], self.config['port'])
-        self._web_test_cnx = http_client.HTTPConnection(parseurl.hostname,
+        self._web_test_cnx = http.client.HTTPConnection(parseurl.hostname,
                                                         parseurl.port)
         self._ident_cookie = None
 

@@ -25,20 +25,12 @@ import datetime
 import random
 import re
 import json
-
-from six import PY3
-
 from operator import itemgetter
-if PY3:
-    from inspect import getfullargspec as getargspec
-else:
-    from inspect import getargspec
+from inspect import getfullargspec as getargspec
 from itertools import repeat
 from uuid import uuid4
 from threading import Lock
 from logging import getLogger
-
-from six import text_type
 
 from logilab.mtconverter import xml_escape
 from logilab.common.date import ustrftime
@@ -106,7 +98,7 @@ class wrap_on_write(object):
     """
     def __init__(self, w, tag, closetag=None):
         self.written = False
-        self.tag = text_type(tag)
+        self.tag = tag
         self.closetag = closetag
         self.w = w
 
@@ -122,7 +114,7 @@ class wrap_on_write(object):
     def __exit__(self, exctype, value, traceback):
         if self.written is True:
             if self.closetag:
-                self.w(text_type(self.closetag))
+                self.w(self.closetag)
             else:
                 self.w(self.tag.replace('<', '</', 1))
 
@@ -204,8 +196,6 @@ class UStringIO(list):
     __nonzero__ = __bool__
 
     def write(self, value):
-        assert isinstance(value, text_type), u"unicode required not %s : %s"\
-                                     % (type(value).__name__, repr(value))
         if self.tracewrites:
             from traceback import format_stack
             stack = format_stack(None)[:-1]

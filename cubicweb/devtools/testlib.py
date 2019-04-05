@@ -17,20 +17,15 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Base classes and utilities for cubicweb tests"""
 
-from __future__ import print_function
-
 import sys
 import re
-import warnings
 from os.path import dirname, join, abspath
 from math import log
 from contextlib import contextmanager
 from inspect import isgeneratorfunction
 from itertools import chain
-
-from six import binary_type, text_type, string_types, reraise
-from six.moves import range
-from six.moves.urllib.parse import urlparse, parse_qs, unquote as urlunquote
+from unittest import TestCase
+from urllib.parse import urlparse, parse_qs, unquote as urlunquote
 
 import yams.schema
 
@@ -52,22 +47,6 @@ from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import fake, htmlparser, DEFAULT_EMPTY_DB_ID
 from cubicweb.devtools.fill import insert_entity_queries, make_relations_queries
 from cubicweb.web.views.authentication import Session
-
-if sys.version_info[:2] < (3, 4):
-    from unittest2 import TestCase
-    if not hasattr(TestCase, 'subTest'):
-        raise ImportError('no subTest support in available unittest2')
-    try:
-        from backports.tempfile import TemporaryDirectory  # noqa
-    except ImportError:
-        # backports.tempfile not available
-        TemporaryDirectory = None
-else:
-    from unittest import TestCase
-    from tempfile import TemporaryDirectory  # noqa
-
-# in python 2.7, DeprecationWarning are not shown anymore by default
-warnings.filterwarnings('default', category=DeprecationWarning)
 
 
 # provide a data directory for the test class ##################################
@@ -326,7 +305,6 @@ class CubicWebTC(BaseTestCase):
         """provide a new RepoAccess object for a given user
 
         The access is automatically closed at the end of the test."""
-        login = text_type(login)
         access = RepoAccess(self.repo, login, self.requestcls)
         self._open_access.add(access)
         return access
@@ -347,7 +325,7 @@ class CubicWebTC(BaseTestCase):
         db_handler.restore_database(self.test_db_id)
         self.repo = db_handler.get_repo(startup=True)
         # get an admin session (without actual login)
-        login = text_type(db_handler.config.default_admin_config['login'])
+        login = db_handler.config.default_admin_config['login']
         self.admin_access = self.new_access(login)
 
     # config management ########################################################
@@ -365,7 +343,7 @@ class CubicWebTC(BaseTestCase):
         been properly bootstrapped.
         """
         admincfg = config.default_admin_config
-        cls.admlogin = text_type(admincfg['login'])
+        cls.admlogin = admincfg['login']
         cls.admpassword = admincfg['password']
         # uncomment the line below if you want rql queries to be logged
         # config.global_set_option('query-log-file',
@@ -458,15 +436,13 @@ class CubicWebTC(BaseTestCase):
         """create and return a new user entity"""
         if password is None:
             password = login
-        if login is not None:
-            login = text_type(login)
         user = req.create_entity('CWUser', login=login,
                                  upassword=password, **kwargs)
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
                     % ','.join(repr(str(g)) for g in groups),
                     {'x': user.eid})
         if email is not None:
-            req.create_entity('EmailAddress', address=text_type(email),
+            req.create_entity('EmailAddress', address=email,
                               reverse_primary_email=user)
         user.cw_clear_relation_cache('in_group', 'subject')
         if commit:
@@ -524,7 +500,7 @@ class CubicWebTC(BaseTestCase):
         """
         torestore = []
         for erschema, etypeperms in chain(perm_overrides, perm_kwoverrides.items()):
-            if isinstance(erschema, string_types):
+            if isinstance(erschema, str):
                 erschema = self.schema[erschema]
             for action, actionperms in etypeperms.items():
                 origperms = erschema.permissions[action]
@@ -730,7 +706,7 @@ class CubicWebTC(BaseTestCase):
         req.form will be setup using the url's query string
         """
         with self.admin_access.web_request(url=url) as req:
-            if isinstance(url, text_type):
+            if isinstance(url, str):
                 url = url.encode(req.encoding)  # req.setup_params() expects encoded strings
             querystring = urlparse(url)[-2]
             params = parse_qs(querystring)
@@ -911,7 +887,7 @@ class CubicWebTC(BaseTestCase):
                 msg = '[%s in %s] %s' % (klass, view.__regid__, exc)
             except Exception:
                 msg = '[%s in %s] undisplayable exception' % (klass, view.__regid__)
-            reraise(AssertionError, AssertionError(msg), sys.exc_info()[-1])
+            raise AssertionError(msg).with_traceback(sys.exc_info()[-1])
         return self._check_html(output, view, template)
 
     def get_validator(self, view=None, content_type=None, output=None):
@@ -944,7 +920,7 @@ class CubicWebTC(BaseTestCase):
     def _check_html(self, output, view, template='main-template'):
         """raises an exception if the HTML is invalid"""
         output = output.strip()
-        if isinstance(output, text_type):
+        if isinstance(output, str):
             # XXX
             output = output.encode('utf-8')
         validator = self.get_validator(view, output=output)
@@ -977,8 +953,8 @@ class CubicWebTC(BaseTestCase):
                 position = getattr(exc, "position", (0,))[0]
                 if position:
                     # define filter
-                    if isinstance(content, binary_type):
-                        content = text_type(content, sys.getdefaultencoding(), 'replace')
+                    if isinstance(content, bytes):
+                        content = str(content, sys.getdefaultencoding(), 'replace')
                     content = validator.preprocess_data(content)
                     content = content.splitlines()
                     width = int(log(len(content), 10)) + 1

@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.sources.rql2sql"""
-from __future__ import print_function
 
 import sys
 import unittest

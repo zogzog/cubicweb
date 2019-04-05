@@ -98,8 +98,6 @@ argument given to :meth:`render` will be `None`.
 from functools import reduce
 from datetime import date
 
-from six import text_type, string_types
-
 from logilab.mtconverter import xml_escape
 from logilab.common.date import todatetime
 
@@ -272,7 +270,7 @@ class FieldWidget(object):
         """
         posted = form._cw.form
         val = posted.get(field.input_name(form, self.suffix))
-        if isinstance(val, string_types):
+        if isinstance(val, str):
             val = val.strip()
         return val
 
@@ -463,7 +461,7 @@ class Select(FieldWidget):
             options.append(u'</optgroup>')
         if 'size' not in attrs:
             if self._multiple:
-                size = text_type(min(self.default_size, len(vocab) or 1))
+                size = str(min(self.default_size, len(vocab) or 1))
             else:
                 size = u'1'
             attrs['size'] = size
@@ -727,7 +725,7 @@ class JQueryDatePicker(FieldWidget):
         else:
             value = self.value
         attrs = self.attributes(form, field)
-        attrs.setdefault('size', text_type(self.default_size))
+        attrs.setdefault('size', str(self.default_size))
         return tags.input(name=field.input_name(form, self.suffix),
                           value=value, type='text', **attrs)
 
@@ -801,7 +799,7 @@ class JQueryDateTimePicker(FieldWidget):
         try:
             date = todatetime(req.parse_datetime(datestr, 'Date'))
         except ValueError as exc:
-            raise ProcessFormError(text_type(exc))
+            raise ProcessFormError(str(exc))
         timestr = req.form.get(field.input_name(form, 'time'))
         if timestr:
             timestr = timestr.strip()
@@ -810,7 +808,7 @@ class JQueryDateTimePicker(FieldWidget):
         try:
             time = req.parse_datetime(timestr, 'Time')
         except ValueError as exc:
-            raise ProcessFormError(text_type(exc))
+            raise ProcessFormError(str(exc))
         return date.replace(hour=time.hour, minute=time.minute, second=time.second)
 
 
@@ -1014,12 +1012,12 @@ class EditableURLWidget(FieldWidget):
         req = form._cw
         values = {}
         path = req.form.get(field.input_name(form, 'path'))
-        if isinstance(path, string_types):
+        if isinstance(path, str):
             path = path.strip()
         if path is None:
             path = u''
         fqs = req.form.get(field.input_name(form, 'fqs'))
-        if isinstance(fqs, string_types):
+        if isinstance(fqs, str):
             fqs = fqs.strip() or None
             if fqs:
                 for i, line in enumerate(fqs.split('\n')):

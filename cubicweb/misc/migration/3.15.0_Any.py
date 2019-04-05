@@ -16,7 +16,7 @@ def update_config(source, **config):
             sconfig.set_option(opt, val)
         except OptionError:
             continue
-    cfgstr = text_type(generate_source_config(sconfig), source._cw.encoding)
+    cfgstr = str(generate_source_config(sconfig), source._cw.encoding)
     source.cw_set(config=cfgstr)
 
 

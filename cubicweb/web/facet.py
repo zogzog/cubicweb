@@ -56,8 +56,6 @@ from functools import reduce
 from copy import deepcopy
 from datetime import datetime, timedelta
 
-from six import text_type, string_types
-
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import has_path
 from logilab.common.decorators import cached, cachedproperty
@@ -645,7 +643,7 @@ class RelationFacet(VocabularyFacet):
                 insert_attr_select_relation(
                     select, self.filtered_variable, self.rtype, self.role,
                     self.target_attr, select_target_entity=False)
-            values = [text_type(x) for x, in self.rqlexec(select.as_string())]
+            values = [str(x) for x, in self.rqlexec(select.as_string())]
         except Exception:
             self.exception('while computing values for %s', self)
             return []
@@ -696,7 +694,7 @@ class RelationFacet(VocabularyFacet):
         if self.i18nable:
             tr = self._cw._
         else:
-            tr = text_type
+            tr = str
         if self.rql_sort:
             values = [(tr(label), eid) for eid, label in rset]
         else:
@@ -720,7 +718,7 @@ class RelationFacet(VocabularyFacet):
         # XXX handle rel is None case in RQLPathFacet?
         if self.restr_attr != 'eid':
             self.select.set_distinct(True)
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             # only one value selected
             if value:
                 self.select.add_constant_restriction(
@@ -884,7 +882,7 @@ class RelationAttributeFacet(RelationFacet):
         if self.i18nable:
             tr = self._cw._
         else:
-            tr = text_type
+            tr = str
         if self.rql_sort:
             return [(tr(value), value) for value, in rset]
         values = [(tr(value), value) for value, in rset]
@@ -1037,7 +1035,7 @@ class RQLPathFacet(RelationFacet):
         assert self.path and isinstance(self.path, (list, tuple)), \
             'path should be a list of 3-uples, not %s' % self.path
         for part in self.path:
-            if isinstance(part, string_types):
+            if isinstance(part, str):
                 part = part.split()
             assert len(part) == 3, \
                    'path should be a list of 3-uples, not %s' % part
@@ -1090,7 +1088,7 @@ class RQLPathFacet(RelationFacet):
             cleanup_select(select, self.filtered_variable)
             varmap, restrvar = self.add_path_to_select(skiplabel=True)
             select.append_selected(nodes.VariableRef(restrvar))
-            values = [text_type(x) for x, in self.rqlexec(select.as_string())]
+            values = [str(x) for x, in self.rqlexec(select.as_string())]
         except Exception:
             self.exception('while computing values for %s', self)
             return []
@@ -1113,7 +1111,7 @@ class RQLPathFacet(RelationFacet):
         varmap = {'X': self.filtered_variable}
         actual_filter_variable = None
         for part in self.path:
-            if isinstance(part, string_types):
+            if isinstance(part, str):
                 part = part.split()
             subject, rtype, object = part
             if skiplabel and object == self.label_variable:
@@ -1217,7 +1215,7 @@ class RangeFacet(AttributeFacet):
         rset = self._range_rset()
         if rset:
             minv, maxv = rset[0]
-            return [(text_type(minv), minv), (text_type(maxv), maxv)]
+            return [(str(minv), minv), (str(maxv), maxv)]
         return []
 
     def possible_values(self):
@@ -1236,7 +1234,7 @@ class RangeFacet(AttributeFacet):
 
     def formatvalue(self, value):
         """format `value` before in order to insert it in the RQL query"""
-        return text_type(value)
+        return str(value)
 
     def infvalue(self, min=False):
         if min:
@@ -1337,7 +1335,7 @@ class AbstractRangeRQLPathFacet(RQLPathFacet):
         # *list* (see rqlexec implementation)
         if rset:
             minv, maxv = rset[0]
-            return [(text_type(minv), minv), (text_type(maxv), maxv)]
+            return [(str(minv), minv), (str(maxv), maxv)]
         return []
 
 
@@ -1356,7 +1354,7 @@ class AbstractRangeRQLPathFacet(RQLPathFacet):
             skiplabel=True, skipattrfilter=True)
         restrel = None
         for part in self.path:
-            if isinstance(part, string_types):
+            if isinstance(part, str):
                 part = part.split()
             subject, rtype, object = part
             if object == self.filter_variable:
@@ -1480,7 +1478,7 @@ class BitFieldFacet(AttributeFacet):
                        if not val or val & mask])
 
     def possible_values(self):
-        return [text_type(val) for label, val in self.vocabulary()]
+        return [str(val) for label, val in self.vocabulary()]
 
 
 ## html widets ################################################################
@@ -1559,7 +1557,7 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
         if selected:
             cssclass += ' facetValueSelected'
         w(u'<div class="%s" cubicweb:value="%s">\n'
-          % (cssclass, xml_escape(text_type(value))))
+          % (cssclass, xml_escape(str(value))))
         # If it is overflowed one must add padding to compensate for the vertical
         # scrollbar; given current css values, 4 blanks work perfectly ...
         padding = u'&#160;' * self.scrollbar_padding_factor if overflow else u''
@@ -1718,7 +1716,7 @@ class CheckBoxFacetWidget(htmlwidgets.HTMLWidget):
             imgsrc = self._cw.data_url(self.unselected_img)
             imgalt = self._cw._('not selected')
         w(u'<div class="%s" cubicweb:value="%s">\n'
-          % (cssclass, xml_escape(text_type(self.value))))
+          % (cssclass, xml_escape(str(self.value))))
         w(u'<div>')
         w(u'<img src="%s" alt="%s" cubicweb:unselimg="true" />&#160;' % (imgsrc, imgalt))
         w(u'<label class="facetTitle" cubicweb:facetName="%s">%s</label>'

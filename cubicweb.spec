@@ -21,7 +21,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch:      noarch
 
 Requires:       %{python}
-Requires:       %{python}-six >= 1.4.0
 Requires:       %{python}-logilab-common >= 1.4.0
 Requires:       %{python}-logilab-mtconverter >= 0.8.0
 Requires:       %{python}-rql >= 0.34.0
@@ -29,7 +28,6 @@ Requires:       %{python}-yams >= 0.45.0
 Requires:       %{python}-logilab-database >= 1.15.0
 Requires:       %{python}-passlib
 Requires:       %{python}-lxml
-Requires:       %{python}-unittest2 >= 0.7.0
 Requires:       %{python}-markdown
 Requires:       pytz
 # the schema view uses `dot'; at least on el5, png output requires graphviz-gd

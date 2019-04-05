@@ -17,8 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from six import text_type
-
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.session import Connection
@@ -254,7 +252,7 @@ class UndoableTransactionTC(CubicWebTC):
                 "%s doesn't exist anymore." % g.eid])
             with self.assertRaises(ValidationError) as cm:
                 cnx.commit()
-            cm.exception.translate(text_type)
+            cm.exception.translate(str)
             self.assertEqual(cm.exception.entity, self.totoeid)
             self.assertEqual(cm.exception.errors,
                               {'in_group-subject': u'at least one relation in_group is '
@@ -458,9 +456,9 @@ class UndoableTransactionTC(CubicWebTC):
 class UndoExceptionInUnicode(CubicWebTC):
 
     # problem occurs in string manipulation for python < 2.6
-    def test___unicode__method(self):
+    def test___str__method(self):
         u = _UndoException(u"voilà")
-        self.assertIsInstance(text_type(u), text_type)
+        self.assertIsInstance(str(u), str)
 
 
 if __name__ == '__main__':

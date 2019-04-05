@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """entity classes user and group entities"""
 
-from six import string_types, text_type
-
 from logilab.common.decorators import cached
 
 from cubicweb import Unauthorized
@@ -110,13 +108,12 @@ class CWUser(AnyEntity):
         return self._cw.vreg.property_value(key)
 
     def set_property(self, pkey, value):
-        value = text_type(value)
         try:
             prop = self._cw.execute(
                 'CWProperty X WHERE X pkey %(k)s, X for_user U, U eid %(u)s',
                 {'k': pkey, 'u': self.eid}).get_entity(0, 0)
         except Exception:
-            kwargs = dict(pkey=text_type(pkey), value=value)
+            kwargs = dict(pkey=pkey, value=value)
             if self.is_in_group('managers'):
                 kwargs['for_user'] = self
             self._cw.create_entity('CWProperty', **kwargs)
@@ -129,7 +126,7 @@ class CWUser(AnyEntity):
         :type groups: str or iterable(str)
         :param groups: a group name or an iterable on group names
         """
-        if isinstance(groups, string_types):
+        if isinstance(groups, str):
             groups = frozenset((groups,))
         elif isinstance(groups, (tuple, list)):
             groups = frozenset(groups)

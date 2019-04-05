@@ -27,9 +27,9 @@ WSGI corresponding PEP: http://www.python.org/dev/peps/pep-0333/
 
 
 from email import message, message_from_string
+from http.cookies import SimpleCookie
 from pprint import pformat as _pformat
 
-from six.moves.http_cookies import SimpleCookie
 
 def pformat(obj):
     """pretty prints `obj` if possible"""

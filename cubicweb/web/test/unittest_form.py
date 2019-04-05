@@ -19,8 +19,6 @@
 import time
 from datetime import datetime
 
-from six import text_type
-
 import pytz
 
 from lxml import html
@@ -80,19 +78,19 @@ class EntityFieldsFormTC(CubicWebTC):
             t = req.create_entity('Tag', name=u'x')
             form1 = self.vreg['forms'].select('edition', req, entity=t)
             choices = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
-            self.assertIn(text_type(b.eid), choices)
+            self.assertIn(str(b.eid), choices)
             form2 = self.vreg['forms'].select('edition', req, entity=b)
             choices = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
-            self.assertIn(text_type(t.eid), choices)
+            self.assertIn(str(t.eid), choices)
 
             b.cw_clear_all_caches()
             t.cw_clear_all_caches()
             req.cnx.execute('SET X tags Y WHERE X is Tag, Y is BlogEntry')
 
             choices = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
-            self.assertIn(text_type(b.eid), choices)
+            self.assertIn(str(b.eid), choices)
             choices = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
-            self.assertIn(text_type(t.eid), choices)
+            self.assertIn(str(t.eid), choices)
 
     def test_form_field_choices_new_entity(self):
         with self.admin_access.web_request() as req:

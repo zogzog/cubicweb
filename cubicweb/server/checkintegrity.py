@@ -20,7 +20,6 @@
 * integrity of a CubicWeb repository. Hum actually only the system database is
   checked.
 """
-from __future__ import print_function
 
 import sys
 from datetime import datetime

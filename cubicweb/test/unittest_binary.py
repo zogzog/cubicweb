@@ -20,8 +20,6 @@ from unittest import TestCase
 import os.path as osp
 import pickle
 
-from six import PY2
-
 from logilab.common.shellutils import tempdir
 
 from cubicweb import Binary
@@ -32,10 +30,7 @@ class BinaryTC(TestCase):
         Binary()
         Binary(b'toto')
         Binary(bytearray(b'toto'))
-        if PY2:
-            Binary(buffer('toto'))  # noqa: F821
-        else:
-            Binary(memoryview(b'toto'))
+        Binary(memoryview(b'toto'))
         with self.assertRaises((AssertionError, TypeError)):
             # TypeError is raised by BytesIO if python runs with -O
             Binary(u'toto')
@@ -44,10 +39,7 @@ class BinaryTC(TestCase):
         b = Binary()
         b.write(b'toto')
         b.write(bytearray(b'toto'))
-        if PY2:
-            b.write(buffer('toto'))  # noqa: F821
-        else:
-            b.write(memoryview(b'toto'))
+        b.write(memoryview(b'toto'))
         with self.assertRaises((AssertionError, TypeError)):
             # TypeError is raised by BytesIO if python runs with -O
             b.write(u'toto')

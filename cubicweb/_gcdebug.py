@@ -15,11 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import print_function
-
 import gc, types, weakref
-
-from six import PY2
 
 from cubicweb.schema import CubicWebRelationSchema, CubicWebEntitySchema
 try:
@@ -37,9 +33,6 @@ IGNORE_CLASSES = (
     types.ModuleType, types.FunctionType, types.MethodType,
     types.MemberDescriptorType, types.GetSetDescriptorType,
     )
-if PY2:
-    # weakref.WeakKeyDictionary fails isinstance check on Python 3.5.
-    IGNORE_CLASSES += (weakref.WeakKeyDictionary, )
 
 if _NeedAuthAccessMock is not None:
     IGNORE_CLASSES = IGNORE_CLASSES + (_NeedAuthAccessMock,)

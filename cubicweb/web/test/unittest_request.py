@@ -4,8 +4,6 @@
 import unittest
 from functools import partial
 
-from six import text_type
-
 from cubicweb.devtools.fake import FakeConfig, FakeCWRegistryStore
 
 from cubicweb.web.request import (CubicWebRequestBase, _parse_accept_header,
@@ -84,7 +82,7 @@ class WebRequestTC(unittest.TestCase):
         vreg = FakeCWRegistryStore(FakeConfig(), initlog=False)
         vreg.config['base-url'] = 'http://testing.fr/cubicweb/'
         vreg.config['language-mode'] = 'url-prefix'
-        vreg.config.translations['fr'] = text_type, text_type
+        vreg.config.translations['fr'] = str, str
         req = CubicWebRequestBase(vreg)
         # Override from_controller to avoid getting into relative_path method,
         # which is not implemented in CubicWebRequestBase.

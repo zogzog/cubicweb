@@ -24,8 +24,6 @@ from cubicweb import _
 
 from warnings import warn
 
-from six import PY3, add_metaclass, text_type
-
 from logilab.common.deprecation import class_deprecated, class_renamed, deprecated
 from logilab.mtconverter import xml_escape
 
@@ -239,11 +237,8 @@ class Link(object):
         self.label = label
         self.attrs = attrs
 
-    def __unicode__(self):
+    def __str__(self):
         return tags.a(self.label, href=self.href, **self.attrs)
-
-    if PY3:
-        __str__ = __unicode__
 
     def render(self, w):
         w(tags.a(self.label, href=self.href, **self.attrs))
@@ -455,7 +450,7 @@ class EntityCtxComponent(CtxComponent):
 
     @property
     def domid(self):
-        return domid(self.__regid__) + text_type(self.entity.eid)
+        return domid(self.__regid__) + str(self.entity.eid)
 
     def lazy_view_holder(self, w, entity, oid, registry='views'):
         """add a holder and return a URL that may be used to replace this
@@ -528,7 +523,7 @@ class EditRelationMixIn(ReloadableMixIn):
                                                     args['subject'],
                                                     args['object'])
         return u'[<a href="javascript: %s" class="action">%s</a>] %s' % (
-            xml_escape(text_type(jscall)), label, etarget.view('incontext'))
+            xml_escape(str(jscall)), label, etarget.view('incontext'))
 
     def related_boxitems(self, entity):
         return [self.box_item(entity, etarget, 'delete_relation', u'-')
@@ -545,7 +540,7 @@ class EditRelationMixIn(ReloadableMixIn):
         """returns the list of unrelated entities, using the entity's
         appropriate vocabulary function
         """
-        skip = set(text_type(e.eid) for e in entity.related(self.rtype, role(self),
+        skip = set(str(e.eid) for e in entity.related(self.rtype, role(self),
                                                           entities=True))
         skip.add(None)
         skip.add(INTERNAL_FIELD_VALUE)
@@ -663,7 +658,7 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
                 if maydel:
                     if not js_css_added:
                         js_css_added = self.add_js_css()
-                    jscall = text_type(js.ajaxBoxRemoveLinkedEntity(
+                    jscall = str(js.ajaxBoxRemoveLinkedEntity(
                         self.__regid__, entity.eid, rentity.eid,
                         self.fname_remove,
                         self.removed_msg and _(self.removed_msg)))
@@ -678,7 +673,7 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
         if mayadd:
             multiple = self.rdef.role_cardinality(self.role) in '*+'
             w(u'<table><tr><td>')
-            jscall = text_type(js.ajaxBoxShowSelector(
+            jscall = str(js.ajaxBoxShowSelector(
                 self.__regid__, entity.eid, self.fname_vocabulary,
                 self.fname_validate, self.added_msg and _(self.added_msg),
                 _(stdmsgs.BUTTON_OK[0]), _(stdmsgs.BUTTON_CANCEL[0]),
@@ -707,8 +702,7 @@ class RelatedObjectsCtxComponent(EntityCtxComponent):
 
 # old contextual components, deprecated ########################################
 
-@add_metaclass(class_deprecated)
-class EntityVComponent(Component):
+class EntityVComponent(Component, metaclass=class_deprecated):
     """abstract base class for additinal components displayed in content
     headers and footer according to:
 

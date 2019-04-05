@@ -26,8 +26,6 @@ import tempfile
 import os, os.path as osp
 import codecs
 
-from six import text_type
-
 from logilab.common.graph import GraphGenerator, DotBackend
 from logilab.common.ureports import Section, Table
 from logilab.common.registry import yes
@@ -281,7 +279,7 @@ class CWETypeAttributeDefaultValCell(baseviews.FinalView):
     def cell_call(self, row, col):
         defaultval = self.cw_rset.rows[row][col]
         if defaultval is not None:
-            self.w(text_type(self.cw_rset.rows[row][col].unzpickle()))
+            self.w(str(self.cw_rset.rows[row][col].unzpickle()))
 
 class CWETypeRelationCardinalityCell(baseviews.FinalView):
     __regid__ = 'etype-rel-cardinality-cell'
@@ -489,7 +487,7 @@ class RDEFConstraintsCell(EntityView):
         entity = self.cw_rset.get_entity(row, col)
         rschema = self._cw.vreg.schema.rschema(entity.rtype.name)
         rdef = rschema.rdefs[(entity.stype.name, entity.otype.name)]
-        constraints = [xml_escape(text_type(c)) for c in getattr(rdef, 'constraints')]
+        constraints = [xml_escape(str(c)) for c in getattr(rdef, 'constraints')]
         self.w(u'<br/>'.join(constraints))
 
 class CWAttributeOptionsCell(EntityView):

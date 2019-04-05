@@ -25,6 +25,8 @@ Backwards incompatible changes
 * Support for legacy cubes (in the 'cubes' python namespace) has been dropped.
   Use of environment variables CW_CUBES_PATH and CUBES_DIR is removed.
 
+* Python 2 support has been dropped.
+
 Deprecated code drops
 ---------------------
 

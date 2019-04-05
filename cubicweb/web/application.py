@@ -19,13 +19,11 @@
 
 
 import contextlib
+import http.client as http_client
 import json
 import sys
 from time import clock, time
 from contextlib import contextmanager
-
-from six import text_type, binary_type
-from six.moves import http_client
 
 from rql import BadRQLQuery
 
@@ -316,7 +314,7 @@ class CubicWebPublisher(object):
             # XXX ensure we don't actually serve content
             if not content:
                 content = self.need_login_content(req)
-        assert isinstance(content, binary_type)
+        assert isinstance(content, bytes)
         return content
 
     def core_handle(self, req):
@@ -481,7 +479,7 @@ class CubicWebPublisher(object):
         if req.status_out < 400:
             # don't overwrite it if it's already set
             req.status_out = status
-        json_dumper = getattr(ex, 'dumps', lambda: json.dumps({'reason': text_type(ex)}))
+        json_dumper = getattr(ex, 'dumps', lambda: json.dumps({'reason': str(ex)}))
         return json_dumper().encode('utf-8')
 
     # special case handling

@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Tests for cubicweb.server.utils module."""
 
+import sched
+
 from cubicweb.devtools import testlib
 from cubicweb.server import utils
 
@@ -40,7 +42,7 @@ class UtilsTC(testlib.BaseTestCase):
         self.assertEqual(utils.crypt_password('yyy', ''), '')
 
     def test_schedule_periodic_task(self):
-        scheduler = utils.scheduler()
+        scheduler = sched.scheduler()
         this = []
 
         def fill_this(x):

@@ -26,9 +26,6 @@ The following data actions are supported for now:
 * add an entity
 * execute raw RQL queries
 """
-from __future__ import print_function
-
-
 
 import sys
 import os
@@ -40,8 +37,6 @@ from datetime import datetime
 from glob import glob
 from copy import copy
 from contextlib import contextmanager
-
-from six import PY2, text_type
 
 from logilab.common.decorators import cached, clear_cache
 
@@ -153,7 +148,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     def cube_upgraded(self, cube, version):
         self.cmd_set_property('system.version.%s' % cube.lower(),
-                              text_type(version))
+                              str(version))
         self.commit()
 
     def shutdown(self):
@@ -1005,7 +1000,7 @@ class ServerMigrationHelper(MigrationHelper):
         # elif simply renaming an entity type
         else:
             self.rqlexec('SET ET name %(newname)s WHERE ET is CWEType, ET name %(on)s',
-                         {'newname': text_type(newname), 'on': oldname},
+                         {'newname': newname, 'on': oldname},
                          ask_confirm=False)
         if commit:
             self.commit()
@@ -1217,8 +1212,6 @@ class ServerMigrationHelper(MigrationHelper):
         values = []
         for k, v in kwargs.items():
             values.append('X %s %%(%s)s' % (k, k))
-            if PY2 and isinstance(v, str):
-                kwargs[k] = unicode(v)
         rql = 'SET %s WHERE %s' % (','.join(values), ','.join(restriction))
         self.rqlexec(rql, kwargs, ask_confirm=self.verbosity >= 2)
         if commit:
@@ -1250,7 +1243,7 @@ class ServerMigrationHelper(MigrationHelper):
                 self.rqlexec('SET C value %%(v)s WHERE X from_entity S, X relation_type R,'
                              'X constrained_by C, C cstrtype CT, CT name "SizeConstraint",'
                              'S name "%s", R name "%s"' % (etype, rtype),
-                             {'v': text_type(SizeConstraint(size).serialize())},
+                             {'v': SizeConstraint(size).serialize()},
                              ask_confirm=self.verbosity >= 2)
             else:
                 self.rqlexec('DELETE X constrained_by C WHERE X from_entity S, X relation_type R,'
@@ -1287,7 +1280,7 @@ class ServerMigrationHelper(MigrationHelper):
 
          :rtype: `Workflow`
         """
-        wf = self.cmd_create_entity('Workflow', name=text_type(name),
+        wf = self.cmd_create_entity('Workflow', name=name,
                                     **kwargs)
         if not isinstance(wfof, (list, tuple)):
             wfof = (wfof,)
@@ -1297,19 +1290,18 @@ class ServerMigrationHelper(MigrationHelper):
 
         for etype in wfof:
             eschema = self.repo.schema[etype]
-            etype = text_type(etype)
             if ensure_workflowable:
                 assert 'in_state' in eschema.subjrels, _missing_wf_rel(etype)
                 assert 'custom_workflow' in eschema.subjrels, _missing_wf_rel(etype)
                 assert 'wf_info_for' in eschema.objrels, _missing_wf_rel(etype)
             rset = self.rqlexec(
                 'SET X workflow_of ET WHERE X eid %(x)s, ET name %(et)s',
-                {'x': wf.eid, 'et': text_type(etype)}, ask_confirm=False)
+                {'x': wf.eid, 'et': etype}, ask_confirm=False)
             assert rset, 'unexistant entity type %s' % etype
             if default:
                 self.rqlexec(
                     'SET ET default_workflow X WHERE X eid %(x)s, ET name %(et)s',
-                    {'x': wf.eid, 'et': text_type(etype)}, ask_confirm=False)
+                    {'x': wf.eid, 'et': etype}, ask_confirm=False)
         if commit:
             self.commit()
         return wf
@@ -1340,13 +1332,13 @@ class ServerMigrationHelper(MigrationHelper):
         To set a user specific property value, use appropriate method on CWUser
         instance.
         """
-        value = text_type(value)
+        value = str(value)
         try:
             prop = self.rqlexec(
                 'CWProperty X WHERE X pkey %(k)s, NOT X for_user U',
-                {'k': text_type(pkey)}, ask_confirm=False).get_entity(0, 0)
+                {'k': str(pkey)}, ask_confirm=False).get_entity(0, 0)
         except Exception:
-            self.cmd_create_entity('CWProperty', pkey=text_type(pkey), value=value)
+            self.cmd_create_entity('CWProperty', pkey=str(pkey), value=value)
         else:
             prop.cw_set(value=value)
 

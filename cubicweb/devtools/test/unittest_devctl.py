@@ -21,9 +21,8 @@ import os
 import os.path as osp
 import sys
 from subprocess import Popen, PIPE, STDOUT
+from tempfile import TemporaryDirectory
 from unittest import TestCase
-
-from cubicweb.devtools.testlib import TemporaryDirectory
 
 
 def newcube(directory, name):

@@ -68,8 +68,6 @@ from datetime import datetime, timedelta
 
 import pytz
 
-from six import PY2, text_type, string_types
-
 from logilab.mtconverter import xml_escape
 from logilab.common import nullobject
 from logilab.common.date import ustrftime
@@ -236,14 +234,8 @@ class Field(object):
             l.append('@%#x' % id(self))
         return u'%s>' % ' '.join(l)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.as_string(False)
-
-    if PY2:
-        def __str__(self):
-            return self.as_string(False).encode('UTF8')
-    else:
-        __str__ = __unicode__
 
     def __repr__(self):
         return self.as_string(True)
@@ -290,7 +282,7 @@ class Field(object):
             return u''
         if value is True:
             return u'1'
-        return text_type(value)
+        return str(value)
 
     def get_widget(self, form):
         """return the widget instance associated to this field"""
@@ -825,7 +817,7 @@ class EditableFileField(FileField):
 
     def _process_form_value(self, form):
         value = form._cw.form.get(self.input_name(form))
-        if isinstance(value, text_type):
+        if isinstance(value, str):
             # file modified using a text widget
             return Binary(value.encode(self.encoding(form)))
         return super(EditableFileField, self)._process_form_value(form)
@@ -852,7 +844,7 @@ class BigIntField(Field):
             self.widget.attrs.setdefault('size', self.default_text_input_size)
 
     def _ensure_correctly_typed(self, form, value):
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             value = value.strip()
             if not value:
                 return None
@@ -934,7 +926,7 @@ class FloatField(IntField):
         return self.format_single_value(req, 1.234)
 
     def _ensure_correctly_typed(self, form, value):
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             value = value.strip()
             if not value:
                 return None
@@ -955,8 +947,7 @@ class TimeIntervalField(StringField):
 
     def format_single_value(self, req, value):
         if value:
-            value = format_time(value.days * 24 * 3600 + value.seconds)
-            return text_type(value)
+            return format_time(value.days * 24 * 3600 + value.seconds)
         return u''
 
     def example_format(self, req):
@@ -966,7 +957,7 @@ class TimeIntervalField(StringField):
         return u'20s, 10min, 24h, 4d'
 
     def _ensure_correctly_typed(self, form, value):
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             value = value.strip()
             if not value:
                 return None
@@ -996,14 +987,14 @@ class DateField(StringField):
         return self.format_single_value(req, datetime.now())
 
     def _ensure_correctly_typed(self, form, value):
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             value = value.strip()
             if not value:
                 return None
             try:
                 value = form._cw.parse_datetime(value, self.etype)
             except ValueError as ex:
-                raise ProcessFormError(text_type(ex))
+                raise ProcessFormError(str(ex))
         return value
 
 
@@ -1107,7 +1098,7 @@ class RelationField(Field):
         linkedto = form.linked_to.get((self.name, self.role))
         if linkedto:
             buildent = form._cw.entity_from_eid
-            return [(buildent(eid).view('combobox'), text_type(eid))
+            return [(buildent(eid).view('combobox'), str(eid))
                     for eid in linkedto]
         return []
 
@@ -1119,7 +1110,7 @@ class RelationField(Field):
         # vocabulary doesn't include current values, add them
         if form.edited_entity.has_eid():
             rset = form.edited_entity.related(self.name, self.role)
-            vocab += [(e.view('combobox'), text_type(e.eid))
+            vocab += [(e.view('combobox'), str(e.eid))
                       for e in rset.entities()]
         return vocab
 
@@ -1153,11 +1144,11 @@ class RelationField(Field):
             if entity.eid in done:
                 continue
             done.add(entity.eid)
-            res.append((entity.view('combobox'), text_type(entity.eid)))
+            res.append((entity.view('combobox'), str(entity.eid)))
         return res
 
     def format_single_value(self, req, value):
-        return text_type(value)
+        return str(value)
 
     def process_form_value(self, form):
         """process posted form and return correctly typed value"""

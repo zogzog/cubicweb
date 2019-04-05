@@ -20,8 +20,6 @@
 
 """Pyramid resource definitions for CubicWeb."""
 
-from six import text_type
-
 from rql import TypeResolverException
 
 from pyramid.decorator import reify
@@ -62,7 +60,7 @@ class EntityResource(object):
                 # conflicting eid/type
                 raise HTTPNotFound()
         else:
-            rset = req.execute(st.as_string(), {'x': text_type(self.value)})
+            rset = req.execute(st.as_string(), {'x': self.value})
         return rset
 
 

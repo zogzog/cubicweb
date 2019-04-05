@@ -24,8 +24,6 @@ Note:
 
 from datetime import datetime
 
-from six import text_type
-
 from pytz import utc
 
 from cubicweb import ValidationError
@@ -211,7 +209,7 @@ class SchemaHooksTC(CubicWebTC):
             with self.assertRaises(ValidationError) as cm:
                 cnx.execute('INSERT CWUser X: X login "admin", X upassword "admin"')
             ex = cm.exception
-            ex.translate(text_type)
+            ex.translate(str)
             self.assertIsInstance(ex.entity, int)
             self.assertEqual(ex.errors,
                              {'': u'some relations violate a unicity constraint',

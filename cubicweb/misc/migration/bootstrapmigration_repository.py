@@ -19,11 +19,6 @@
 
 it should only include low level schema changes
 """
-
-from __future__ import print_function
-
-from six import text_type
-
 from cubicweb import ConfigurationError
 from cubicweb.server.session import hooks_control
 from cubicweb.server import schemaserial as ss
@@ -120,7 +115,6 @@ if applcubicwebversion < (3, 18, 0) and cubicwebversion >= (3, 18, 0):
                 default = yams.DATE_FACTORY_MAP[atype](default)
         else:
             assert atype == 'String', atype
-            default = text_type(default)
         return Binary.zpickle(default)
 
     dbh = repo.system_source.dbhelper

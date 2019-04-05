@@ -27,8 +27,6 @@ import sys
 import warnings
 import zlib
 
-from six import PY2, binary_type, text_type
-
 from logilab.common.logging_ext import set_log_methods
 from yams.constraints import BASE_CONVERTERS, BASE_CHECKERS
 from yams.schema import role_name as rname
@@ -40,11 +38,7 @@ from logilab.common.registry import ObjectNotFound, NoSelectableObject, Registry
 from yams import ValidationError
 from cubicweb._exceptions import *  # noqa
 
-if PY2:
-    # http://bugs.python.org/issue10211
-    from StringIO import StringIO as BytesIO
-else:
-    from io import BytesIO
+from io import BytesIO
 
 # ignore the pygments UserWarnings
 warnings.filterwarnings('ignore', category=UserWarning,
@@ -63,12 +57,12 @@ CW_SOFTWARE_ROOT = __path__[0]  # noqa
 
 # '_' is available to mark internationalized string but should not be used to
 # do the actual translation
-_ = text_type
+_ = str
 
 
 class Binary(BytesIO):
     """class to hold binary data. Use BytesIO to prevent use of unicode data"""
-    _allowed_types = (binary_type, bytearray, buffer if PY2 else memoryview)  # noqa: F405
+    _allowed_types = (bytes, bytearray, memoryview)
 
     def __init__(self, buf=b''):
         assert isinstance(buf, self._allowed_types), \
@@ -144,7 +138,7 @@ class Binary(BytesIO):
 
 
 def check_password(eschema, value):
-    return isinstance(value, (binary_type, Binary))
+    return isinstance(value, (bytes, Binary))
 
 
 BASE_CHECKERS['Password'] = check_password
@@ -153,7 +147,7 @@ BASE_CHECKERS['Password'] = check_password
 def str_or_binary(value):
     if isinstance(value, Binary):
         return value
-    return binary_type(value)
+    return bytes(value)
 
 
 BASE_CONVERTERS['Password'] = str_or_binary

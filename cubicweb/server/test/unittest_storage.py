@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.sources.storages"""
 
-from six import PY2
-
 from logilab.common.testlib import unittest_main, tag, Tags
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -79,7 +77,7 @@ class StorageTC(CubicWebTC):
     def fspath(self, cnx, entity):
         fspath = cnx.execute('Any fspath(D) WHERE F eid %(f)s, F data D',
                              {'f': entity.eid})[0][0].getvalue()
-        return fspath if PY2 else fspath.decode('utf-8')
+        return fspath.decode('utf-8')
 
     def test_bfss_wrong_fspath_usage(self):
         with self.admin_access.repo_cnx() as cnx:

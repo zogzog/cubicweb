@@ -19,8 +19,6 @@
 
 import threading
 
-from six import text_type
-
 from cubicweb.server import Service
 from cubicweb.predicates import match_user_groups, match_kwargs
 
@@ -111,7 +109,7 @@ class RegisterUserService(Service):
 
     def call(self, login, password, email=None, groups=None, **cwuserkwargs):
         cnx = self._cw
-        if isinstance(password, text_type):
+        if isinstance(password, str):
             # password should *always* be utf8 encoded
             password = password.encode('UTF8')
         cwuserkwargs['login'] = login

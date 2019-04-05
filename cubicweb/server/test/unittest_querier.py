@@ -25,8 +25,6 @@ import unittest
 
 import pytz
 
-from six import PY2, integer_types, binary_type, text_type
-
 from rql import BadRQLQuery
 from rql.utils import register_function, FunctionDescr
 
@@ -134,8 +132,8 @@ class UtilsTC(BaseQuerierTC):
 
     def assertRQLEqual(self, expected, got):
         from rql import parse
-        self.assertMultiLineEqual(text_type(parse(expected)),
-                                  text_type(parse(got)))
+        self.assertMultiLineEqual(str(parse(expected)),
+                                  str(parse(got)))
 
     def test_preprocess_security(self):
         with self.user_groups_session('users') as cnx:
@@ -265,9 +263,6 @@ class UtilsTC(BaseQuerierTC):
         self.assertEqual(rset.description[0][0], 'Datetime')
         rset = self.qexecute('Any %(x)s', {'x': 1})
         self.assertEqual(rset.description[0][0], 'Int')
-        if PY2:
-            rset = self.qexecute('Any %(x)s', {'x': long(1)})
-            self.assertEqual(rset.description[0][0], 'Int')
         rset = self.qexecute('Any %(x)s', {'x': True})
         self.assertEqual(rset.description[0][0], 'Boolean')
         rset = self.qexecute('Any %(x)s', {'x': 1.0})
@@ -327,7 +322,7 @@ class QuerierTC(BaseQuerierTC):
     def test_typed_eid(self):
         # should return an empty result set
         rset = self.qexecute('Any X WHERE X eid %(x)s', {'x': '1'})
-        self.assertIsInstance(rset[0][0], integer_types)
+        self.assertIsInstance(rset[0][0], int)
 
     def test_bytes_storage(self):
         feid = self.qexecute('INSERT File X: X data_name "foo.pdf", '
@@ -903,14 +898,14 @@ class QuerierTC(BaseQuerierTC):
         rset = self.qexecute('Any X, "toto" ORDERBY X WHERE X is CWGroup')
         self.assertEqual(rset.rows,
                          [list(x) for x in zip((2,3,4,5), ('toto','toto','toto','toto',))])
-        self.assertIsInstance(rset[0][1], text_type)
+        self.assertIsInstance(rset[0][1], str)
         self.assertEqual(rset.description,
                          list(zip(('CWGroup', 'CWGroup', 'CWGroup', 'CWGroup'),
                                   ('String', 'String', 'String', 'String',))))
         rset = self.qexecute('Any X, %(value)s ORDERBY X WHERE X is CWGroup', {'value': 'toto'})
         self.assertEqual(rset.rows,
                          list(map(list, zip((2,3,4,5), ('toto','toto','toto','toto',)))))
-        self.assertIsInstance(rset[0][1], text_type)
+        self.assertIsInstance(rset[0][1], str)
         self.assertEqual(rset.description,
                          list(zip(('CWGroup', 'CWGroup', 'CWGroup', 'CWGroup'),
                                   ('String', 'String', 'String', 'String',))))
@@ -1073,10 +1068,10 @@ Any P1,B,E WHERE P1 identity P2 WITH
     def test_insert_4ter(self):
         peid = self.qexecute("INSERT Personne X: X nom 'bidule'")[0][0]
         seid = self.qexecute("INSERT Societe Y: Y nom 'toto', X travaille Y WHERE X eid %(x)s",
-                             {'x': text_type(peid)})[0][0]
+                             {'x': str(peid)})[0][0]
         self.assertEqual(len(self.qexecute('Any X, Y WHERE X travaille Y')), 1)
         self.qexecute("INSERT Personne X: X nom 'chouette', X travaille Y WHERE Y eid %(x)s",
-                      {'x': text_type(seid)})
+                      {'x': str(seid)})
         self.assertEqual(len(self.qexecute('Any X, Y WHERE X travaille Y')), 2)
 
     def test_insert_5(self):
@@ -1282,7 +1277,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         rset = self.qexecute("INSERT Personne X, Societe Y: X nom 'bidule', Y nom 'toto'")
         eid1, eid2 = rset[0][0], rset[0][1]
         self.qexecute("SET X travaille Y WHERE X eid %(x)s, Y eid %(y)s",
-                      {'x': text_type(eid1), 'y': text_type(eid2)})
+                      {'x': str(eid1), 'y': str(eid2)})
         rset = self.qexecute('Any X, Y WHERE X travaille Y')
         self.assertEqual(len(rset.rows), 1)
 
@@ -1332,7 +1327,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         eid1, eid2 = rset[0][0], rset[0][1]
         rset = self.qexecute("SET X travaille Y WHERE X eid %(x)s, Y eid %(y)s, "
                             "NOT EXISTS(Z ecrit_par X)",
-                            {'x': text_type(eid1), 'y': text_type(eid2)})
+                            {'x': str(eid1), 'y': str(eid2)})
         self.assertEqual(tuplify(rset.rows), [(eid1, eid2)])
 
     def test_update_query_error(self):
@@ -1379,7 +1374,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
             cursor = cnx.cnxset.cu
             cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                            % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
-            passwd = binary_type(cursor.fetchone()[0])
+            passwd = bytes(cursor.fetchone()[0])
             self.assertEqual(passwd, crypt_password('toto', passwd))
         rset = self.qexecute("Any X WHERE X is CWUser, X login 'bob', X upassword %(pwd)s",
                             {'pwd': Binary(passwd)})
@@ -1396,7 +1391,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
             cursor = cnx.cnxset.cu
             cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                            % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
-            passwd = binary_type(cursor.fetchone()[0])
+            passwd = bytes(cursor.fetchone()[0])
             self.assertEqual(passwd, crypt_password('tutu', passwd))
             rset = cnx.execute("Any X WHERE X is CWUser, X login 'bob', X upassword %(pwd)s",
                                {'pwd': Binary(passwd)})

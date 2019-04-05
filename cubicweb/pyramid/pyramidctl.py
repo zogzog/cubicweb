@@ -25,8 +25,6 @@ The reloading strategy is heavily inspired by (and partially copied from)
 the pyramid script 'pserve'.
 """
 
-from __future__ import print_function
-
 import atexit
 import errno
 import os

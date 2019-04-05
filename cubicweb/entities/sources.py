@@ -21,8 +21,6 @@ import re
 from socket import gethostname
 import logging
 
-from six import text_type
-
 from logilab.common.textutils import text_to_dict
 from logilab.common.configuration import OptionError
 from logilab.mtconverter import xml_escape

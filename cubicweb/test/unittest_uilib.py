@@ -23,11 +23,7 @@
 
 import doctest
 import pkg_resources
-
-try:
-    from unittest import skipIf
-except ImportError:
-    from unittest2 import skipIf
+from unittest import skipIf
 
 from logilab.common.testlib import TestCase, unittest_main
 

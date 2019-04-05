@@ -166,8 +166,6 @@ Here are all environment variables that may be used to configure *CubicWeb*:
    Directory where pid files will be written
 """
 
-from __future__ import print_function
-
 import importlib
 import logging
 import logging.config
@@ -181,8 +179,6 @@ import stat
 import sys
 from threading import Lock
 from warnings import filterwarnings
-
-from six import text_type
 
 from logilab.common.decorators import cached
 from logilab.common.logging_ext import set_log_methods, init_log
@@ -641,7 +637,7 @@ this option is set to yes",
         self.adjust_sys_path()
         self.load_defaults()
         # will be properly initialized later by _gettext_init
-        self.translations = {'en': (text_type, lambda ctx, msgid: text_type(msgid) )}
+        self.translations = {'en': (str, lambda ctx, msgid: str(msgid) )}
         self._site_loaded = set()
         # don't register ReStructured Text directives by simple import, avoid pb
         # with eg sphinx.
@@ -990,7 +986,7 @@ the repository',
         # set to true while creating an instance
         self.creating = creating
         super(CubicWebConfiguration, self).__init__(debugmode)
-        fake_gettext = (text_type, lambda ctx, msgid: text_type(msgid))
+        fake_gettext = (str, lambda ctx, msgid: str(msgid))
         for lang in self.available_languages():
             self.translations[lang] = fake_gettext
         self._cubes = None

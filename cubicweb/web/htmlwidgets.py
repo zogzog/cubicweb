@@ -24,9 +24,6 @@ serialization time
 import random
 from math import floor
 
-from six import add_metaclass
-from six.moves import range
-
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated
 
@@ -118,8 +115,7 @@ class BoxWidget(HTMLWidget): # XXX Deprecated
         self.w(u'</div>')
 
 
-@add_metaclass(class_deprecated)
-class SideBoxWidget(BoxWidget):
+class SideBoxWidget(BoxWidget, metaclass=class_deprecated):
     """default CubicWeb's sidebox widget"""
     __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
 
@@ -210,8 +206,7 @@ class PopupBoxMenu(BoxMenu):
         self.w(u'</ul></div></div>')
 
 
-@add_metaclass(class_deprecated)
-class BoxField(HTMLWidget):
+class BoxField(HTMLWidget, metaclass=class_deprecated):
     """couples label / value meant to be displayed in a box"""
     __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
     def __init__(self, label, value):
@@ -224,8 +219,7 @@ class BoxField(HTMLWidget):
                % (self.label, self.value))
 
 
-@add_metaclass(class_deprecated)
-class BoxSeparator(HTMLWidget):
+class BoxSeparator(HTMLWidget, metaclass=class_deprecated):
     """a menu separator"""
     __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
 
@@ -233,8 +227,7 @@ class BoxSeparator(HTMLWidget):
         self.w(u'</ul><hr class="boxSeparator"/><ul>')
 
 
-@add_metaclass(class_deprecated)
-class BoxLink(HTMLWidget):
+class BoxLink(HTMLWidget, metaclass=class_deprecated):
     """a link in a box"""
     __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
     def __init__(self, href, label, _class='', title='', ident='', escape=False):
@@ -256,8 +249,7 @@ class BoxLink(HTMLWidget):
             self.w(u'<li class="%s">%s</li>\n' % (self._class, link))
 
 
-@add_metaclass(class_deprecated)
-class BoxHtml(HTMLWidget):
+class BoxHtml(HTMLWidget, metaclass=class_deprecated):
     """a form in a box"""
     __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
     def __init__(self, rawhtml):

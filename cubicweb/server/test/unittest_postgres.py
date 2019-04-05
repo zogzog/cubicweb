@@ -19,8 +19,6 @@
 from datetime import datetime
 from threading import Thread
 
-from six.moves import range
-
 import logilab.database as lgdb
 from cubicweb import ValidationError
 from cubicweb.devtools import PostgresApptestConfiguration, startpgcluster, stoppgcluster

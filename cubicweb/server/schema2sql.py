@@ -19,9 +19,6 @@
 
 from hashlib import md5
 
-from six import string_types, text_type
-from six.moves import range
-
 from yams.constraints import (SizeConstraint, UniqueConstraint, Attribute,
                               NOW, TODAY)
 from logilab import database
@@ -88,9 +85,9 @@ def unique_index_name(eschema, attrs):
     given attributes of the entity schema (actually, the later may be a schema or a string).
     """
     # keep giving eschema instead of table name for bw compat
-    table = text_type(eschema)
+    table = str(eschema)
     # unique_index_name is used as name of CWUniqueConstraint, hence it should be unicode
-    return text_type(build_index_name(table, attrs, 'unique_'))
+    return build_index_name(table, attrs, 'unique_')
 
 
 def iter_unique_index_names(eschema):
@@ -204,7 +201,7 @@ def check_constraint(rdef, constraint, dbhelper, prefix=''):
         return cstrname, ' AND '.join(condition)
     elif constraint.type() == 'StaticVocabularyConstraint':
         sample = next(iter(constraint.vocabulary()))
-        if not isinstance(sample, string_types):
+        if not isinstance(sample, str):
             values = ', '.join(str(word) for word in constraint.vocabulary())
         else:
             # XXX better quoting?

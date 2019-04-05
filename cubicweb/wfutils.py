@@ -45,8 +45,6 @@ These functions work with a declarative workflow definition:
 
 import collections
 
-from six import text_type
-
 from cubicweb import NoResultError
 
 
@@ -91,7 +89,6 @@ def setup_workflow(cnx, name, wfdef, cleanup=True):
                     by calling :func:`cleanupworkflow`.
     :return: The created/updated workflow entity
     """
-    name = text_type(name)
     try:
         wf = cnx.find('Workflow', name=name).one()
     except NoResultError:

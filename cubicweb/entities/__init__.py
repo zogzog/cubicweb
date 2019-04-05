@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """base application's entities class implementation: `AnyEntity`"""
 
-from six import text_type, string_types
-
 from logilab.common.decorators import classproperty
 
 from cubicweb import Unauthorized
@@ -34,7 +32,7 @@ class AnyEntity(Entity):
     @classproperty
     def cw_etype(cls):
         """entity type as a unicode string"""
-        return text_type(cls.__regid__)
+        return cls.__regid__
 
     @classmethod
     def cw_create_url(cls, req, **kwargs):
@@ -111,8 +109,8 @@ class AnyEntity(Entity):
         if rtype is None:
             return self.dc_title().lower()
         value = self.cw_attr_value(rtype)
-        # do not restrict to `unicode` because Bytes will return a `str` value
-        if isinstance(value, string_types):
+        # do not restrict to `str` because Bytes will return a `str` value
+        if isinstance(value, str):
             return self.printable_value(rtype, format='text/plain').lower()
         return value
 

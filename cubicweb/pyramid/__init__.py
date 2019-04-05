@@ -21,10 +21,10 @@
 """Pyramid interface to CubicWeb"""
 
 import atexit
+from configparser import SafeConfigParser
 import os
 import warnings
 
-from six.moves.configparser import SafeConfigParser
 import wsgicors
 
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg

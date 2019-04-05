@@ -20,9 +20,7 @@
 
 from warnings import warn
 from datetime import datetime
-
-from six.moves import range
-from six.moves.urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
 
 from logilab.mtconverter import xml_escape
 

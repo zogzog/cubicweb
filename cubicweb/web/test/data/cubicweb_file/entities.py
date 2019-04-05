@@ -1,4 +1,3 @@
-from six import text_type
 from logilab.mtconverter import guess_mimetype_and_encoding
 from cubicweb.entities import AnyEntity, fetch_config
 
@@ -42,9 +41,9 @@ class File(AnyEntity):
                 format=format, encoding=encoding,
                 fallbackencoding=self._cw.encoding)
             if format:
-                self.cw_edited['data_format'] = text_type(format)
+                self.cw_edited['data_format'] = str(format)
             if encoding:
-                self.cw_edited['data_encoding'] = text_type(encoding)
+                self.cw_edited['data_encoding'] = str(encoding)
 
 
 class UnResizeable(Exception):

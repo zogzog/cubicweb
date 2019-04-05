@@ -17,9 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """This modules defines func / methods for creating test repositories"""
-from __future__ import print_function
-
-
 
 import logging
 from random import randint, choice
@@ -27,9 +24,6 @@ from copy import deepcopy
 from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 import inspect
-
-from six import text_type, add_metaclass
-from six.moves import range
 
 from logilab.common import attrdict
 from logilab.mtconverter import xml_escape
@@ -234,7 +228,7 @@ title
         """
         for cst in self.eschema.rdef(attrname).constraints:
             if isinstance(cst, StaticVocabularyConstraint):
-                return text_type(choice(cst.vocabulary()))
+                return choice(cst.vocabulary())
         return None
 
     # XXX nothing to do here
@@ -270,8 +264,7 @@ class autoextend(type):
         return type.__new__(mcs, name, bases, classdict)
 
 
-@add_metaclass(autoextend)
-class ValueGenerator(_ValueGenerator):
+class ValueGenerator(_ValueGenerator, metaclass=autoextend):
     pass
 
 
@@ -359,7 +352,7 @@ def make_entity(etype, schema, vreg, index=0, choice_func=_default_choice_func,
                 fmt = vreg.property_value('ui.float-format')
                 value = fmt % value
             else:
-                value = text_type(value)
+                value = value
     return entity
 
 

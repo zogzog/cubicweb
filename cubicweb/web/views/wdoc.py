@@ -26,8 +26,6 @@ from itertools import chain
 from os.path import join
 from xml.etree.ElementTree import parse
 
-from six import text_type
-
 from logilab.common.registry import yes
 
 from cubicweb.predicates import match_form_params
@@ -91,9 +89,9 @@ def title_for_lang(node, lang):
     for title in node.findall('title'):
         title_lang = title.attrib['{http://www.w3.org/XML/1998/namespace}lang']
         if title_lang == lang:
-            return text_type(title.text)
+            return title.text
         if title_lang == 'en':
-            fallback_title = text_type(title.text)
+            fallback_title = title.text
     return fallback_title
 
 

@@ -20,8 +20,6 @@
 unlike ldapuser source, this source is copy based and will import ldap content
 (beside passwords for authentication) into the system source.
 """
-from six.moves import map, filter
-
 from logilab.common.decorators import cached, cachedproperty
 from logilab.common.shellutils import generate_password
 

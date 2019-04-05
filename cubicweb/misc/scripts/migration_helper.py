@@ -19,9 +19,6 @@
 """Helper functions for migrations that aren't reliable enough or too dangerous
 to be available in the standard migration environment
 """
-from __future__ import print_function
-
-
 
 def drop_entity_types_fast(*etypes, **kwargs):
     """drop an entity type bypassing all hooks

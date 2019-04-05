@@ -21,8 +21,6 @@
 
 from cubicweb import _
 
-from six.moves import range
-
 from logilab.mtconverter import TransformError, xml_escape
 
 from cubicweb.view import StartupView, EntityView

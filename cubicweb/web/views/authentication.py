@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """user authentication component"""
 
-from six import text_type
-
 from logilab.common.deprecation import class_renamed
 from logilab.common.textutils import unormalize
 
@@ -114,8 +112,8 @@ class Session(object):
         self.sessionid = make_uid(unormalize(user.login))
         self.data = {}
 
-    def __unicode__(self):
-        return '<session %s (0x%x)>' % (text_type(self.user.login), id(self))
+    def __str__(self):
+        return '<session %s (0x%x)>' % (self.user.login, id(self))
 
     @property
     def anonymous_session(self):

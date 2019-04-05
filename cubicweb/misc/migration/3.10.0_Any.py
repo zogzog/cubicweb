@@ -1,5 +1,3 @@
-from six import text_type
-
 add_entity_type('CWSource')
 add_relation_definition('CWSource', 'cw_source', 'CWSource')
 add_entity_type('CWSourceHostConfig')
@@ -18,7 +16,7 @@ for uri, cfg in config.read_sources_file().items():
         continue
     config = u'\n'.join('%s=%s' % (key, value) for key, value in cfg.items()
                         if key != 'adapter' and value is not None)
-    create_entity('CWSource', name=text_type(uri), type=text_type(cfg['adapter']),
+    create_entity('CWSource', name=uri, type=cfg['adapter'],
                   config=config)
 commit()
 

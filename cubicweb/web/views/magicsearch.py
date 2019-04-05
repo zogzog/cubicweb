@@ -23,8 +23,6 @@
 import re
 from logging import getLogger
 
-from six import text_type
-
 from yams.interfaces import IVocabularyConstraint
 
 from rql import RQLSyntaxError, BadRQLQuery, parse
@@ -388,7 +386,7 @@ class MagicSearchComponent(Component):
         self.processors = sorted(processors, key=lambda x: x.priority)
 
     def process_query(self, uquery):
-        assert isinstance(uquery, text_type)
+        assert isinstance(uquery, str)
         try:
             procname, query = uquery.split(':', 1)
             proc = self.by_name[procname.strip().lower()]

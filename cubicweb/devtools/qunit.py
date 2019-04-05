@@ -15,15 +15,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import absolute_import, print_function
-
 import os, os.path as osp
 import errno
 import shutil
-from tempfile import mkdtemp
+from queue import Queue, Empty
+from tempfile import mkdtemp, TemporaryDirectory
 from subprocess import Popen, PIPE, STDOUT
-
-from six.moves.queue import Queue, Empty
 
 # imported by default to simplify further import statements
 from logilab.common.testlib import Tags
@@ -34,7 +31,6 @@ from cubicweb.view import View
 from cubicweb.web.controller import Controller
 from cubicweb.web.views.staticcontrollers import StaticFileController, STATIC_CONTROLLERS
 from cubicweb.devtools import webtest as cwwebtest
-from cubicweb.devtools.testlib import TemporaryDirectory
 
 
 class FirefoxHelper(object):

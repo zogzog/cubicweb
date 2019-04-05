@@ -28,8 +28,6 @@ Additional boxes (disabled by default):
 
 from cubicweb import _
 
-from six import text_type, add_metaclass
-
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
@@ -212,7 +210,7 @@ class RsetBox(component.CtxComponent):
 
     @property
     def domid(self):
-        return super(RsetBox, self).domid + text_type(abs(id(self))) + text_type(abs(id(self.cw_rset)))
+        return super(RsetBox, self).domid + str(abs(id(self))) + str(abs(id(self.cw_rset)))
 
     def render_title(self, w):
         w(self.cw_extra_kwargs['title'])

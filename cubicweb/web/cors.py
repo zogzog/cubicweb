@@ -29,7 +29,7 @@ See also:
 
 """
 
-from six.moves.urllib.parse import urlsplit
+from urllib.parse import urlsplit
 
 from cubicweb.web import LOGGER
 info = LOGGER.info

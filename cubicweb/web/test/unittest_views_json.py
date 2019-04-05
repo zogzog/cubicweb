@@ -16,7 +16,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-from six import binary_type
 
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -50,7 +49,7 @@ class JsonViewsTC(CubicWebTC):
                              'rql': u'Any GN,COUNT(X) GROUPBY GN ORDERBY GN '
                              'WHERE X in_group G, G name GN'})
             data = self.ctrl_publish(req, ctrl='jsonp')
-            self.assertIsInstance(data, binary_type)
+            self.assertIsInstance(data, bytes)
             self.assertEqual(req.headers_out.getRawHeaders('content-type'),
                              ['application/javascript'])
             # because jsonp anonymizes data, only 'guests' group should be found

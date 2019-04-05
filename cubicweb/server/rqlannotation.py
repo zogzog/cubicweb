@@ -19,8 +19,6 @@
 code generation.
 """
 
-from __future__ import print_function
-
 from rql import BadRQLQuery
 from rql.nodes import Relation, VariableRef, Constant, Variable, Or
 from rql.utils import common_parent

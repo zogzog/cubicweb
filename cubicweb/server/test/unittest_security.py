@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """functional tests for server'security"""
 
-from six.moves import range
-
 from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC

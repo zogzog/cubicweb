@@ -23,8 +23,6 @@ from os import unlink, path as osp
 from contextlib import contextmanager
 import tempfile
 
-from six import PY2, PY3, text_type, binary_type
-
 from logilab.common import nullobject
 
 from yams.schema import role_name
@@ -113,15 +111,8 @@ _marker = nullobject()
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
     def __init__(self, defaultdir, fsencoding=_marker, wmode=0o444):
-        if PY3:
-            if not isinstance(defaultdir, text_type):
-                raise TypeError('defaultdir must be a unicode object in python 3')
-            if fsencoding is not _marker:
-                raise ValueError('fsencoding is no longer supported in python 3')
-        else:
-            self.fsencoding = fsencoding or 'utf-8'
-            if isinstance(defaultdir, text_type):
-                defaultdir = defaultdir.encode(fsencoding)
+        if fsencoding is not _marker:
+            raise ValueError('fsencoding is no longer supported in python 3')
         self.default_directory = defaultdir
         # extra umask to use when creating file
         # 0444 as in "only allow read bit in permission"
@@ -160,7 +151,7 @@ class BytesFileSystemStorage(Storage):
             if binary is not None:
                 fd, fpath = self.new_fs_path(entity, attr)
                 # bytes storage used to store file's path
-                binary_obj = Binary(fpath if PY2 else fpath.encode('utf-8'))
+                binary_obj = Binary(fpath.encode('utf-8'))
                 entity.cw_edited.edited_attribute(attr, binary_obj)
                 self._writecontent(fd, binary)
                 AddFileOp.get_instance(entity._cw).add_data(fpath)
@@ -204,7 +195,7 @@ class BytesFileSystemStorage(Storage):
                 entity.cw_edited.edited_attribute(attr, None)
             else:
                 # register the new location for the file.
-                binary_obj = Binary(fpath if PY2 else fpath.encode('utf-8'))
+                binary_obj = Binary(fpath.encode('utf-8'))
                 entity.cw_edited.edited_attribute(attr, binary_obj)
         if oldpath is not None and oldpath != fpath:
             # Mark the old file as useless so the file will be removed at
@@ -224,19 +215,17 @@ class BytesFileSystemStorage(Storage):
         # available. Keeping the extension is useful for example in the case of
         # PIL processing that use filename extension to detect content-type, as
         # well as providing more understandable file names on the fs.
-        if PY2:
-            attr = attr.encode('ascii')
         basename = [str(entity.eid), attr]
         name = entity.cw_attr_metadata(attr, 'name')
         if name is not None:
-            basename.append(name.encode(self.fsencoding) if PY2 else name)
+            basename.append(name)
         fd, fspath = uniquify_path(self.default_directory,
                                '_'.join(basename))
         if fspath is None:
             msg = entity._cw._('failed to uniquify path (%s, %s)') % (
                 self.default_directory, '_'.join(basename))
             raise ValidationError(entity.eid, {role_name(attr, 'subject'): msg})
-        assert isinstance(fspath, str)  # bytes on py2, unicode on py3
+        assert isinstance(fspath, str)
         return fd, fspath
 
     def current_fs_path(self, entity, attr):
@@ -251,11 +240,8 @@ class BytesFileSystemStorage(Storage):
         if rawvalue is None: # no previous value
             return None
         fspath = sysource._process_value(rawvalue, cu.description[0],
-                                         binarywrap=binary_type)
-        if PY3:
-            fspath = fspath.decode('utf-8')
-        assert isinstance(fspath, str)  # bytes on py2, unicode on py3
-        return fspath
+                                         binarywrap=bytes)
+        return fspath.decode('utf-8')
 
     def migrate_entity(self, entity, attribute):
         """migrate an entity attribute to the storage"""
@@ -274,7 +260,7 @@ class BytesFileSystemStorage(Storage):
 class AddFileOp(hook.DataOperationMixIn, hook.Operation):
     def rollback_event(self):
         for filepath in self.get_data():
-            assert isinstance(filepath, str)  # bytes on py2, unicode on py3
+            assert isinstance(filepath, str)
             try:
                 unlink(filepath)
             except Exception as ex:
@@ -283,7 +269,7 @@ class AddFileOp(hook.DataOperationMixIn, hook.Operation):
 class DeleteFileOp(hook.DataOperationMixIn, hook.Operation):
     def postcommit_event(self):
         for filepath in self.get_data():
-            assert isinstance(filepath, str)  # bytes on py2, unicode on py3
+            assert isinstance(filepath, str)
             try:
                 unlink(filepath)
             except Exception as ex:

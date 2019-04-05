@@ -28,8 +28,6 @@ import csv
 import re
 from io import StringIO
 
-from six import PY2, PY3, text_type, binary_type, string_types, integer_types
-
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
 
@@ -64,7 +62,7 @@ def print_string(value, req, props, displaytime=True):
     return value
 
 def print_int(value, req, props, displaytime=True):
-    return text_type(value)
+    return str(value)
 
 def print_date(value, req, props, displaytime=True):
     return ustrftime(value, req.property_value('ui.date-format'))
@@ -94,7 +92,7 @@ _('%d minutes')
 _('%d seconds')
 
 def print_timedelta(value, req, props, displaytime=True):
-    if isinstance(value, integer_types):
+    if isinstance(value, int):
         # `date - date`, unlike `datetime - datetime` gives an int
         # (number of days), not a timedelta
         # XXX should rql be fixed to return Int instead of Interval in
@@ -124,7 +122,7 @@ def print_boolean(value, req, props, displaytime=True):
     return req._('no')
 
 def print_float(value, req, props, displaytime=True):
-    return text_type(req.property_value('ui.float-format') % value) # XXX cast needed ?
+    return str(req.property_value('ui.float-format') % value) # XXX cast needed ?
 
 PRINTERS = {
     'Bytes': print_bytes,
@@ -332,11 +330,10 @@ class _JSId(object):
     def __init__(self, id, parent=None):
         self.id = id
         self.parent = parent
-    def __unicode__(self):
+    def __str__(self):
         if self.parent:
             return u'%s.%s' % (self.parent, self.id)
-        return text_type(self.id)
-    __str__ = __unicode__ if PY3 else lambda self: self.__unicode__().encode('utf-8')
+        return str(self.id)
     def __getattr__(self, attr):
         return _JSId(attr, self)
     def __call__(self, *args):
@@ -347,14 +344,13 @@ class _JSCallArgs(_JSId):
         assert isinstance(args, tuple)
         self.args = args
         self.parent = parent
-    def __unicode__(self):
+    def __str__(self):
         args = []
         for arg in self.args:
             args.append(js_dumps(arg))
         if self.parent:
             return u'%s(%s)' % (self.parent, ','.join(args))
         return ','.join(args)
-    __str__ = __unicode__ if PY3 else lambda self: self.__unicode__().encode('utf-8')
 
 class _JS(object):
     def __getattr__(self, attr):
@@ -387,7 +383,7 @@ HTML4_EMPTY_TAGS = frozenset(('base', 'meta', 'link', 'hr', 'br', 'param',
                               'img', 'area', 'input', 'col'))
 
 def sgml_attributes(attrs):
-    return u' '.join(u'%s="%s"' % (attr, xml_escape(text_type(value)))
+    return u' '.join(u'%s="%s"' % (attr, xml_escape(str(value)))
                      for attr, value in sorted(attrs.items())
                      if value is not None)
 
@@ -405,7 +401,7 @@ def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
         value += u' ' + sgml_attributes(attrs)
     if content:
         if escapecontent:
-            content = xml_escape(text_type(content))
+            content = xml_escape(str(content))
         value += u'>%s</%s>' % (content, tag)
     else:
         if tag in HTML4_EMPTY_TAGS:
@@ -434,7 +430,7 @@ def ureport_as_html(layout):
     stream = StringIO() #UStringIO() don't want unicode assertion
     formater.format(layout, stream)
     res = stream.getvalue()
-    if isinstance(res, binary_type):
+    if isinstance(res, bytes):
         res = res.decode('UTF8')
     return res
 
@@ -443,16 +439,7 @@ def ureport_as_html(layout):
 import traceback
 
 def exc_message(ex, encoding):
-    if PY3:
-        excmsg = str(ex)
-    else:
-        try:
-            excmsg = unicode(ex)
-        except Exception:
-            try:
-                excmsg = unicode(str(ex), encoding, 'replace')
-            except Exception:
-                excmsg = unicode(repr(ex), encoding, 'replace')
+    excmsg = str(ex)
     exctype = ex.__class__.__name__
     return u'%s: %s' % (exctype, excmsg)
 
@@ -464,8 +451,6 @@ def rest_traceback(info, exception):
         res.append(u'\tFile %s, line %s, function %s' % tuple(stackentry[:3]))
         if stackentry[3]:
             data = xml_escape(stackentry[3])
-            if PY2:
-                data = data.decode('utf-8', 'replace')
             res.append(u'\t  %s' % data)
     res.append(u'\n')
     try:
@@ -501,8 +486,6 @@ def html_traceback(info, exception, title='',
             xml_escape(stackentry[0]), stackentry[1], xml_escape(stackentry[2])))
         if stackentry[3]:
             string = xml_escape(stackentry[3])
-            if PY2:
-                string = string.decode('utf-8', 'replace')
             strings.append(u'&#160;&#160;%s<br/>\n' % (string))
         # add locals info for each entry
         try:
@@ -545,16 +528,8 @@ class UnicodeCSVWriter:
         self.wfunc(data)
 
     def writerow(self, row):
-        if PY3:
-            self.writer.writerow(row)
-            return
-        csvrow = []
-        for elt in row:
-            if isinstance(elt, text_type):
-                csvrow.append(elt.encode(self.encoding))
-            else:
-                csvrow.append(str(elt))
-        self.writer.writerow(csvrow)
+        self.writer.writerow(row)
+        return
 
     def writerows(self, rows):
         for row in rows:
@@ -570,7 +545,7 @@ class limitsize(object):
     def __call__(self, function):
         def newfunc(*args, **kwargs):
             ret = function(*args, **kwargs)
-            if isinstance(ret, string_types):
+            if isinstance(ret, str):
                 return ret[:self.maxsize]
             return ret
         return newfunc
@@ -579,6 +554,6 @@ class limitsize(object):
 def htmlescape(function):
     def newfunc(*args, **kwargs):
         ret = function(*args, **kwargs)
-        assert isinstance(ret, string_types)
+        assert isinstance(ret, str)
         return xml_escape(ret)
     return newfunc

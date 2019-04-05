@@ -19,8 +19,7 @@
 
 
 from base64 import b64encode, b64decode
-
-from six.moves import cPickle as pickle
+import pickle
 
 from Crypto.Cipher import Blowfish
 
@@ -38,7 +37,7 @@ def encrypt(data, seed):
     string = pickle.dumps(data)
     string = string + '*' * (8 - len(string) % 8)
     string = b64encode(_cypherer(seed).encrypt(string))
-    return unicode(string)
+    return str(string)
 
 
 def decrypt(string, seed):

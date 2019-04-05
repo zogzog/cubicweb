@@ -1,4 +1,4 @@
-from six.moves import http_client
+import http.client
 
 from logilab.common.testlib import Tags
 from cubicweb.devtools.webtest import CubicWebTestTC
@@ -21,19 +21,19 @@ class CWTIdentTC(CubicWebTestTC):
 
     def test_reponse_denied(self):
         res = self.webapp.get('/', expect_errors=True)
-        self.assertEqual(http_client.FORBIDDEN, res.status_int)
+        self.assertEqual(http.client.FORBIDDEN, res.status_int)
 
     def test_login(self):
         res = self.webapp.get('/', expect_errors=True)
-        self.assertEqual(http_client.FORBIDDEN, res.status_int)
+        self.assertEqual(http.client.FORBIDDEN, res.status_int)
 
         self.login(self.admlogin, self.admpassword)
         res = self.webapp.get('/')
-        self.assertEqual(http_client.OK, res.status_int)
+        self.assertEqual(http.client.OK, res.status_int)
 
         self.logout()
         res = self.webapp.get('/', expect_errors=True)
-        self.assertEqual(http_client.FORBIDDEN, res.status_int)
+        self.assertEqual(http.client.FORBIDDEN, res.status_int)
 
 
 if __name__ == '__main__':

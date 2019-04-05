@@ -45,8 +45,6 @@ be clearer to read than a bunch of sequential function calls.
 """
 
 
-from six import add_metaclass
-
 from logilab.common.deprecation import deprecated
 from cubicweb.web.views import uicfg
 
@@ -94,8 +92,7 @@ class meta_formconfig(type):
         super(meta_formconfig, cls).__init__(name, bases, classdict)
 
 
-@add_metaclass(meta_formconfig)
-class FormConfig:
+class FormConfig(metaclass=meta_formconfig):
     """helper base class to define uicfg rules on a given entity type.
 
     In all descriptions below, attributes list can either be a list of

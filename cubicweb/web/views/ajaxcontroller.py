@@ -61,12 +61,8 @@ implement the ``__call__`` method:
 
 """
 
-
-
+import http.client as http_client
 from functools import partial
-
-from six import PY2, text_type
-from six.moves import http_client
 
 from logilab.common.date import strptime
 from logilab.common.registry import yes
@@ -151,7 +147,7 @@ class AjaxController(Controller):
         if result is None:
             return b''
         # get unicode on @htmlize methods, encoded string on @jsonize methods
-        elif isinstance(result, text_type):
+        elif isinstance(result, str):
             return result.encode(self._cw.encoding)
         return result
 

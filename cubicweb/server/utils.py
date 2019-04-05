@@ -16,18 +16,11 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some utilities for the CubicWeb server."""
-from __future__ import print_function
-
 
 from functools import wraps
-import sched
-import sys
 import logging
 from threading import Thread
 from getpass import getpass
-
-from six import PY2, text_type
-from six.moves import input
 
 from passlib.utils import handlers as uh, to_hash_str
 from passlib.context import CryptContext
@@ -92,8 +85,6 @@ def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
             print(msg)
         while not user:
             user = input('login: ')
-        if PY2:
-            user = text_type(user, sys.stdin.encoding)
     passwd = getpass('%s: ' % passwdmsg)
     if confirm:
         while True:
@@ -104,22 +95,6 @@ def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
             passwd = getpass('password: ')
     # XXX decode password using stdin encoding then encode it using appl'encoding
     return user, passwd
-
-
-if PY2:
-    import time  # noqa
-
-    class scheduler(sched.scheduler):
-        """Python2 version of sched.scheduler that matches Python3 API."""
-
-        def __init__(self, **kwargs):
-            kwargs.setdefault('timefunc', time.time)
-            kwargs.setdefault('delayfunc', time.sleep)
-            # sched.scheduler is an old-style class.
-            sched.scheduler.__init__(self, **kwargs)
-
-else:
-    scheduler = sched.scheduler
 
 
 def schedule_periodic_task(scheduler, interval, func, *args):

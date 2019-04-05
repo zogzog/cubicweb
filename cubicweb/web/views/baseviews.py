@@ -77,8 +77,6 @@ views use those text views as a basis.
 
 from cubicweb import _
 
-from six.moves import range
-
 from logilab.mtconverter import TransformError, xml_escape
 from logilab.common.registry import yes
 

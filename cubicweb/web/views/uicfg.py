@@ -56,8 +56,6 @@ Actions box configuration
 
 from itertools import repeat
 
-from six import string_types
-
 from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool, RelationTagsSet,
                             RelationTagsDict, NoTargetRelationTagsDict,
@@ -692,7 +690,7 @@ class ActionBoxUicfg(RelationTagsBool):
                 self.tag_relation((sschema, rschema, oschema, role), True)
 
     def _tag_etype_attr(self, etype, attr, desttype='*', *args, **kwargs):
-        if isinstance(attr, string_types):
+        if isinstance(attr, str):
             attr, role = attr, 'subject'
         else:
             attr, role = attr

@@ -26,13 +26,10 @@ repository mainly:
 * handles session management
 """
 
-from __future__ import print_function
-
 from itertools import chain
 from contextlib import contextmanager
 from logging import getLogger
-
-from six.moves import range, queue
+import queue
 
 from logilab.common.decorators import cached, clear_cache
 
