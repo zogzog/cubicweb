@@ -94,6 +94,11 @@ class ResultSet(object):
         """Return possible actions on this result set. Should always be called with the same
         arguments so it may be computed only once.
         """
+        if not kwargs:
+            raise ValueError("ResultSet.possible_actions is expecting to receive "
+                             "keywords arguments to be able to compute access to "
+                             "the cache only once but you provided none.")
+
         key = tuple(sorted(kwargs.items()))
         if self._actions_cache is None:
             actions = self.req.vreg['actions'].poss_visible_objects(
@@ -101,9 +106,12 @@ class ResultSet(object):
             self._actions_cache = (key, actions)
             return actions
         else:
-            assert key == self._actions_cache[0], \
-                'unexpected new arguments for possible actions (%s vs %s)' % (
-                    key, self._actions_cache[0])
+            if key != self._actions_cache[0]:
+                raise ValueError("ResultSet.possible_actions expects to always "
+                                 "receive the same arguments to compute the "
+                                 "cache once, but you've call it with the "
+                                 "arguments: '%s' that aren't the same as the "
+                                 "previously used combinaison '%s'" % (key, self._actions_cache[0]))
             return self._actions_cache[1]
 
     def __len__(self):

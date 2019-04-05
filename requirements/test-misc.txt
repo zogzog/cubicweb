@@ -13,7 +13,7 @@ mock
 flake8
 
 ## cubicweb/hooks/test
-psycopg2
+psycopg2-binary
 
 ## cubicweb/pyramid/test
 pyramid >= 1.5.0
