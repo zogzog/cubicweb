@@ -695,7 +695,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         self.debug('transaction has been rolled back')
                 except Exception:
                     pass
-            if ex.__class__.__name__ == 'IntegrityError':
+            if any(cls.__name__ for cls in ex.__class__.__mro__
+                   if cls.__name__ == 'IntegrityError'):
                 # need string comparison because of various backends
                 for arg in ex.args:
                     # postgres, sqlserver
