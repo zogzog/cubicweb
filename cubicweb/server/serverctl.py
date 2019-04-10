@@ -602,7 +602,7 @@ class ResetAdminPasswordCommand(Command):
          {'short': 'p', 'type': 'string', 'metavar': '<new-password>',
           'default': None,
           'help': 'Use this password instead of prompt for one.\n'
-                  '/!\ THIS IS AN INSECURE PRACTICE /!\ \n'
+                  '/!\\ THIS IS AN INSECURE PRACTICE /!\\ \n'
                   'the password will appear in shell history'}
          ),
     )
