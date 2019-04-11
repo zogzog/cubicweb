@@ -36,6 +36,15 @@ Details at https://cubicweb.readthedocs.io/en/3.26/tutorials/base/blog-in-five-m
 You can also look at the latest builds on Logilab's jenkins:
 https://jenkins.logilab.org/
 
+Test
+----
+
+Simply run the `tox` command in the root folder of this repository:
+
+    tox
+
+How to install tox: https://tox.readthedocs.io/en/latest/install.html
+
 Documentation
 -------------
 
