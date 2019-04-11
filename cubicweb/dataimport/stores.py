@@ -188,7 +188,7 @@ class NoHookRQLObjectStore(RQLObjectStore):
         self._system_source.add_info(cnx, entity, entity_source)
         self._system_source.add_entity(cnx, entity)
         kwargs = dict()
-        if inspect.getargspec(self._add_relation).keywords:
+        if inspect.getfullargspec(self._add_relation).varkw:
             kwargs['subjtype'] = entity.cw_etype
         for rtype, targeteids in rels.items():
             # targeteids may be a single eid or a list of eids

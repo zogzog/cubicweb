@@ -258,7 +258,7 @@ class autoextend(type):
         for attrname, attrvalue in classdict.items():
             if callable(attrvalue):
                 if attrname.startswith('generate_') and \
-                       len(inspect.getargspec(attrvalue).args) < 2:
+                       len(inspect.getfullargspec(attrvalue).args) < 2:
                     raise TypeError('generate_xxx must accept at least 1 argument')
                 setattr(_ValueGenerator, attrname, attrvalue)
         return type.__new__(mcs, name, bases, classdict)
