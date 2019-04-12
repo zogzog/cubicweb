@@ -224,8 +224,8 @@ class RQLExpression(object):
             raise RQLSyntaxError(expression)
         for mainvar in mainvars:
             if len(self.snippet_rqlst.defined_vars[mainvar].references()) < 2:
-                _LOGGER.warn('You did not use the %s variable in your RQL '
-                             'expression %s', mainvar, self)
+                _LOGGER.warning('You did not use the %s variable in your RQL '
+                                'expression %s', mainvar, self)
         # graph of links between variables, used by rql rewriter
         self.vargraph = vargraph(self.snippet_rqlst)
         # useful for some instrumentation, e.g. localperms permcheck command
