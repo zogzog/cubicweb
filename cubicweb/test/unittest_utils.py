@@ -167,7 +167,7 @@ class TestQueryCache(TestCase):
                           'permanentcount': 5})
         keys = sorted(c)
         for x in range(10):
-            self.assertEquals(x, keys[x])
+            self.assertEqual(x, keys[x])
 
     def test_items(self):
         """
@@ -188,8 +188,8 @@ class TestQueryCache(TestCase):
                           'permanentcount': 5})
         content = sorted(c.items())
         for x in range(10):
-            self.assertEquals(x, content[x][0])
-            self.assertEquals(x, content[x][1])
+            self.assertEqual(x, content[x][0])
+            self.assertEqual(x, content[x][1])
 
 
 class UStringIOTC(TestCase):
