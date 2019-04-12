@@ -51,7 +51,7 @@ class ErrorViewTC(CubicWebTC):
                     req.data['ex'] = e
                     html = self.view('error', req=req)
                     self.assertTrue(re.search(b'^<input name="__signature" type="hidden" '
-                                              b'value="[0-9a-f]{32}" />$',
+                                              b'value="[0-9a-f]{128}" />$',
                                               html.source, re.M))
 
 

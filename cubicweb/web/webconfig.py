@@ -302,7 +302,8 @@ have the python imaging library installed to use captcha)',
         # replace \r\n so we do not depend on whether a browser "reencode"
         # original message using \r\n or not
         return hmac.new(self._instance_salt,
-                        text.strip().replace(b'\r\n', b'\n')).hexdigest()
+                        text.strip().replace(b'\r\n', b'\n'),
+                        digestmod="sha3_512").hexdigest()
 
     def check_text_sign(self, text, signature):
         """check the text signature is equal to the given signature"""
