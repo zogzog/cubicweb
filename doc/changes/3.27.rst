@@ -16,11 +16,16 @@ New features
 Backwards incompatible changes
 ------------------------------
 
-* ``cubicweb-ctl`` commands "start", "stop", "restart", "reload" and "status"
-  have been removed because they relied on the Twisted web server backend that
-  is no longer maintained nor working with Python 3.
+* Standardization on the way to launch a cubicweb instance, from now on the
+  only way to do that will be the used the ``pyramid`` command. Therefore:
 
-* Twisted web server support has been removed.
+   * ``cubicweb-ctl`` commands "start", "stop", "restart", "reload" and "status"
+     have been removed because they relied on the Twisted web server backend that
+     is no longer maintained nor working with Python 3.
+
+   * Twisted web server support has been removed.
+
+   * ``cubicweb-ctl wsgi`` has also been removed.
 
 * Support for legacy cubes (in the 'cubes' python namespace) has been dropped.
   Use of environment variables CW_CUBES_PATH and CUBES_DIR is removed.
