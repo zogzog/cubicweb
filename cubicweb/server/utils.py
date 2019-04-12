@@ -51,9 +51,7 @@ class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
 
 _CRYPTO_CTX = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt', 'ldap_salted_sha1'],
                            deprecated=['cubicwebmd5crypt', 'des_crypt'])
-# for bw compat with passlib < 1.7
-if not hasattr(_CRYPTO_CTX, 'hash'):
-    _CRYPTO_CTX.hash = _CRYPTO_CTX.encrypt
+
 verify_and_update = _CRYPTO_CTX.verify_and_update
 
 

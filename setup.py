@@ -69,7 +69,7 @@ setup(
         'yams >= 0.45.0',
         'lxml',
         'logilab-database >= 1.15.0',
-        'passlib',
+        'passlib >= 1.7',
         'pytz',
         'Markdown',
         'filelock',
