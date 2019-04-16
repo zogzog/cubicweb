@@ -479,10 +479,7 @@ class CubicWebTC(BaseTestCase):
                               reverse_primary_email=user)
         user.cw_clear_relation_cache('in_group', 'subject')
         if commit:
-            try:
-                req.commit()  # req is a session
-            except AttributeError:
-                req.cnx.commit()
+            getattr(req, 'cnx', req).commit()
         return user
 
     # other utilities #########################################################
