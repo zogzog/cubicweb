@@ -1,5 +1,5 @@
 [tox]
-envlist = py27,py3,flake8
+envlist = py27,py3,flake8,check-manifest
 
 [testenv]
 deps =
@@ -13,6 +13,13 @@ skip_install = true
 deps =
   flake8
 commands = flake8
+
+[testenv:check-manifest]
+skip_install = true
+deps =
+  check-manifest
+commands =
+  {envpython} -m check_manifest {toxinidir}
 
 [flake8]
 exclude = cubicweb_%(cubename)s/migration/*,test/data/*,.tox/*
