@@ -71,7 +71,7 @@ Translations in cubicweb-tal template can also be done with TAL tags
 `i18n:content` and `i18n:replace`.
 
 If you need to mark other messages as translatable,
-you can create a file named `i18n/static-messages.pot`.
+you can create a file named `i18n/static-messages.pot`, see for example :ref:`translate-application-cube`.
 
 You could put there messages not found in the python sources or
 overrides some messages that are in cubes used in the dependencies.
@@ -283,6 +283,8 @@ req, form, context) methods/function calls will use them.
 It is also possible to explicitly use a context with `_cw.pgettext(context,
 msgid)`.
 
+
+.. _translate-application-cube:
 
 Specialize translation for an application cube
 ``````````````````````````````````````````````
