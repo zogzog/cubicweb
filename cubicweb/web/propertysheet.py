@@ -47,7 +47,7 @@ class PropertySheet(dict):
         self.reset()
         context['sheet'] = self
         context['lazystr'] = self.lazystr
-        self._percent_rgx = re.compile('%(?!\()')
+        self._percent_rgx = re.compile(r'%(?!\()')
 
     def lazystr(self, str):
         return lazystr(str, self)

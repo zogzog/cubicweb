@@ -439,7 +439,7 @@ class match_rtype(ExpectedValuePredicate):
     named parameters `frometypes` and `toetypes` can be used to restrict
     target subject and/or object entity types of the relation.
 
-    :param \*expected: possible relation types
+    :param *expected: possible relation types
     :param frometypes: candidate entity types as subject of relation
     :param toetypes: candidate entity types as object of relation
     """

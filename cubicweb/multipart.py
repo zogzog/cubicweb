@@ -101,10 +101,10 @@ def copy_file(stream, target, maxread=-1, buffer_size=2*16):
 ##############################################################################
 
 _special = re.escape('()<>@,;:\\"/[]?={} \t')
-_re_special = re.compile('[%s]' % _special)
+_re_special = re.compile(r'[%s]' % _special)
 _qstr = '"(?:\\\\.|[^"])*"' # Quoted string
 _value = '(?:[^%s]+|%s)' % (_special, _qstr) # Save or quoted string
-_option = '(?:;|^)\s*([^%s]+)\s*=\s*(%s)' % (_special, _value)
+_option = r'(?:;|^)\s*([^%s]+)\s*=\s*(%s)' % (_special, _value)
 _re_option = re.compile(_option) # key=value part of an Content-Type like header
 
 def header_quote(val):

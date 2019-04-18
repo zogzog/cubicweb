@@ -786,7 +786,7 @@ class ExamineLogCommand(Command):
                     continue
                 try:
                     rql, time = line.split('--')
-                    rql = re.sub("(\'\w+': \d*)", '', rql)
+                    rql = re.sub(r"(\'\w+': \d*)", '', rql)
                     if '{' in rql:
                         rql = rql[:rql.index('{')]
                     req = requests.setdefault(rql, [])

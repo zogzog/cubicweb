@@ -87,7 +87,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         # robust against potentially malformed input.
         form = pformat(self.form)
         meta = pformat(self.environ)
-        return '<CubicWebWsgiRequest\FORM:%s,\nMETA:%s>' % \
+        return '<CubicWebWsgiRequest\nFORM:%s,\nMETA:%s>' % \
             (form, meta)
 
     ## cubicweb request interface ################################################

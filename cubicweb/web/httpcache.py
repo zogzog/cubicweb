@@ -121,7 +121,7 @@ def last_modified(self):
     """return the date/time where this view should be considered as
     modified. Take care of possible related objects modifications.
 
-    /!\ must return GMT time /!\
+    /!\\ must return GMT time /!\\
     """
     # XXX check view module's file modification time in dev mod ?
     ctime = datetime.utcnow()

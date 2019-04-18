@@ -96,7 +96,7 @@ def translate_rql_tree(rqlst, translations, schema):
 
 def resolve_ambiguities(var_types, ambiguous_nodes, schema):
     """Tries to resolve remaining ambiguities for translation
-    /!\ An ambiguity is when two different string can be localized with
+    /!\\ An ambiguity is when two different string can be localized with
         the same string
     A simple example:
       - 'name' in a company context will be localized as 'nom' in French
