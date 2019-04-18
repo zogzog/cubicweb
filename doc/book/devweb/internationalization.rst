@@ -58,7 +58,7 @@ In the other hand the request's method `self._cw._` is also meant to
 retrieve the proper translation of translation strings in the
 requested language.
 
-Finally you can also use the `__` attribute of request object to get a
+Finally you can also use the `__` (two underscores) attribute of request object to get a
 translation for a string *which should not itself added to the catalog*,
 usually in case where the actual msgid is created by string interpolation ::
 
@@ -70,11 +70,11 @@ messages catalogs.
 Translations in cubicweb-tal template can also be done with TAL tags
 `i18n:content` and `i18n:replace`.
 
-If you need to add messages on top of those that can be found in the source,
+If you need to mark other messages as translatable,
 you can create a file named `i18n/static-messages.pot`.
 
 You could put there messages not found in the python sources or
-overrides for some messages of used cubes.
+overrides some messages that are in cubes used in the dependencies.
 
 Generated string
 ````````````````
