@@ -70,6 +70,12 @@ class _RenderAndSendNotificationOp(hook.DataOperationMixIn, hook.Operation):
                 # to prevent them all.
                 self.exception('Notification failed')
 
+                if self.cnx.vreg.config.mode == "test":
+                    # reraise in testing context because we actually want to
+                    # have those exceptions here and that self.exception is
+                    # filtered in test context
+                    raise
+
 
 class NotificationHook(hook.Hook):
     __abstract__ = True

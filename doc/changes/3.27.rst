@@ -27,6 +27,10 @@ Backwards incompatible changes
 
 * Python 2 support has been dropped.
 
+* Exceptions in notification hooks aren't catched-all anymore during tests so
+  one can expect tests that seem to pass (but were actually silently failing)
+  to fail now.
+
 Deprecated code drops
 ---------------------
 
