@@ -21,7 +21,7 @@
 """Pyramid interface to CubicWeb"""
 
 import atexit
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 import os
 import warnings
 
@@ -72,7 +72,7 @@ def settings_from_cwconfig(cwconfig):
 
     for fname in settings_filenames:
         if os.path.exists(fname):
-            cp = SafeConfigParser()
+            cp = ConfigParser()
             cp.read(fname)
             settings.update(cp.items('main'))
             break
