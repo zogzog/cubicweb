@@ -388,7 +388,8 @@ class PyramidStartHandler(InstanceCommand):
             'anymore; use the standalone "scheduler" command if needed'
         )
         try:
-            waitress.serve(app, host=host, port=port, url_scheme=url_scheme)
+            waitress.serve(app, host=host, port=port, url_scheme=url_scheme,
+                           clear_untrusted_proxy_headers=True)
         finally:
             repo.shutdown()
         if self._needreload:
