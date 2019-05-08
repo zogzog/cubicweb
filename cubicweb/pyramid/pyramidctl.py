@@ -39,8 +39,10 @@ from cubicweb import ExecutionError
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
 from cubicweb.pyramid import wsgi_application_from_cwconfig
+from cubicweb.pyramid.config import get_random_secret_key
 from cubicweb.server import serverctl, set_debug
 from cubicweb.web.webctl import WebCreateHandler
+from cubicweb.toolsutils import fill_templated_file
 
 import waitress
 
@@ -48,6 +50,18 @@ MAXFD = 1024
 
 DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE')
 LOG_LEVELS = ('debug', 'info', 'warning', 'error')
+
+
+def _generate_pyramid_ini_file(pyramid_ini_path):
+    """Write a 'development.ini' file into apphome."""
+    template_fpath = os.path.join(os.path.dirname(__file__), 'pyramid.ini.tmpl')
+    target_fpath = os.path.join(pyramid_ini_path)
+    context = {
+        'secret_1': get_random_secret_key(),
+        'secret_2': get_random_secret_key(),
+        'secret_3': get_random_secret_key(),
+    }
+    fill_templated_file(template_fpath, target_fpath, context)
 
 
 class PyramidCreateHandler(serverctl.RepositoryCreateHandler,
@@ -72,7 +86,7 @@ class AllInOneCreateHandler(serverctl.RepositoryCreateHandler,
         """bootstrap this configuration"""
         serverctl.RepositoryCreateHandler.bootstrap(self, cubes, automatic, inputlevel)
         WebCreateHandler.bootstrap(self, cubes, automatic, inputlevel)
-        # TODO: write pyramid.ini file
+        _generate_pyramid_ini_file(os.path.join(self.config.apphome, "pyramid.ini"))
 
 
 class PyramidStartHandler(InstanceCommand):
@@ -331,6 +345,10 @@ class PyramidStartHandler(InstanceCommand):
         cwconfig = cwcfg.config_for(appid, debugmode=debugmode)
         filelist_path = os.path.join(cwconfig.apphome,
                                      '.pyramid-reload-files.list')
+
+        pyramid_ini_path = os.path.join(cwconfig.apphome, "pyramid.ini")
+        if not os.path.exists(pyramid_ini_path):
+            _generate_pyramid_ini_file(pyramid_ini_path)
 
         if autoreload and not os.environ.get(self._reloader_environ_key):
             return self.restart_with_reloader(filelist_path)

@@ -261,23 +261,6 @@ def includeme(config):
 
     See also :ref:`defaults_module`
     """
-    settings = config.registry.settings
-    try:
-        secret = settings['cubicweb.session.secret']
-    except KeyError:
-        secret = 'notsosecret'
-        if config.registry['cubicweb.config'].mode != 'test':
-            warnings.warn('''
-
-                !! WARNING !! !! WARNING !!
-
-                The session cookies are signed with a static secret key.
-                To put your own secret key, edit your pyramid.ini file
-                and set the 'cubicweb.session.secret' key.
-
-                YOU SHOULD STOP THIS INSTANCE unless your really know what you
-                are doing !!
-
-            ''')
+    secret = config.registry.settings['cubicweb.session.secret']
     session_factory = CWSessionFactory(secret)
     config.set_session_factory(session_factory)
