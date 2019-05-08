@@ -89,7 +89,7 @@ import logging
 from contextlib import contextmanager
 
 from pyramid.compat import pickle
-from pyramid.session import SignedCookieSessionFactory
+from pyramid.session import SignedCookieSessionFactory, JSONSerializer, PickleSerializer
 
 from cubicweb import (
     Binary,
@@ -127,6 +127,24 @@ def unsafe_cnx_context_manager(request):
     else:
         with cnx.security_enabled(read=False, write=False):
             yield cnx
+
+
+class JSONSerializerWithPickleFallback(object):
+    def __init__(self):
+        self.json = JSONSerializer()
+        self.pickle = PickleSerializer()
+
+    def dumps(self, value):
+        # maybe catch serialization errors here and keep using pickle
+        # while finding spots in your app that are not storing
+        # JSON-serializable objects, falling back to pickle
+        return self.json.dumps(value)
+
+    def loads(self, value):
+        try:
+            return self.json.loads(value)
+        except ValueError:
+            return self.pickle.loads(value)
 
 
 def CWSessionFactory(
@@ -177,7 +195,7 @@ def CWSessionFactory(
         reissue_time=reissue_time,
         hashalg=hashalg,
         salt=salt,
-        serializer=serializer)
+        serializer=serializer if serializer else JSONSerializerWithPickleFallback())
 
     class CWSession(SignedCookieSession):
         def __init__(self, request):
