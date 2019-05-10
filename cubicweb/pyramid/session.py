@@ -84,7 +84,6 @@ For the record, regarding session handling:
    redis) when using redis as backend.
 """
 
-import warnings
 import logging
 from contextlib import contextmanager
 

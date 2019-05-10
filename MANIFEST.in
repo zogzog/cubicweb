@@ -73,6 +73,7 @@ recursive-include cubicweb/web/test/data/static/jstests *.js *.html *.json
 recursive-include cubicweb/wsgi/test *.py
 
 include cubicweb/pyramid/development.ini.tmpl
+include cubicweb/pyramid/pyramid.ini.tmpl
 
 include cubicweb/web/data/jquery-treeview/*.md
 
