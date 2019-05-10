@@ -15,7 +15,10 @@ class PyramidCWTest(CubicWebTestTC):
     def setUp(self):
         # Skip CubicWebTestTC setUp
         super(CubicWebTestTC, self).setUp()
-        settings = {'cubicweb.bwcompat': False}
+        settings = {
+            'cubicweb.bwcompat': False,
+            'cubicweb.session.secret': 'test',
+        }
         settings.update(self.settings)
         config = Configurator(settings=settings)
         config.registry['cubicweb.repository'] = self.repo
