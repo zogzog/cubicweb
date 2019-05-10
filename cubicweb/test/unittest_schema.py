@@ -457,6 +457,20 @@ class RQLExpressionTC(TestCase):
         self.assertNotEqual(ERQLExpression('X is CWUser', 'X', 0),
                             ERQLExpression('X is CWGroup', 'X', 0))
 
+    def test_has_update_permission(self):
+        expr = ERQLExpression('P use_email X, U has_update_permission P')
+        rql, found, keyarg = expr.transform_has_permission()
+        self.assertEqual(rql, 'Any X,P WHERE P use_email X, X eid %(x)s')
+        self.assertEqual(found, [(u'update', 1)])
+        self.assertEqual(keyarg, None)
+
+    def test_expression(self):
+        expr = ERQLExpression('U use_email X')
+        rql, found, keyarg = expr.transform_has_permission()
+        self.assertEqual(rql, 'Any X WHERE EXISTS(U use_email X, X eid %(x)s, U eid %(u)s)')
+        self.assertEqual(found, None)
+        self.assertEqual(keyarg, None)
+
 
 class GuessRrqlExprMainVarsTC(TestCase):
     def test_exists(self):
@@ -573,33 +587,6 @@ class CompositeSchemaTC(CubicWebTC):
                 self.assertEqual(self.composites[etype],
                                  sorted([(r.rtype.type, r.subject.type, r.object.type, role)
                                          for r, role in schema[etype].composite_rdef_roles]))
-
-
-class CWShemaTC(CubicWebTC):
-
-    def test_transform_has_permission_match(self):
-        with self.admin_access.repo_cnx() as cnx:
-            eschema = cnx.vreg.schema['EmailAddress']
-            rql_exprs = eschema.get_rqlexprs('update')
-            self.assertEqual(len(rql_exprs), 1)
-            self.assertEqual(rql_exprs[0].expression,
-                             'P use_email X, U has_update_permission P')
-            rql, found, keyarg = rql_exprs[0].transform_has_permission()
-            self.assertEqual(rql, 'Any X,P WHERE P use_email X, X eid %(x)s')
-            self.assertEqual(found, [(u'update', 1)])
-            self.assertEqual(keyarg, None)
-
-    def test_transform_has_permission_no_match(self):
-        with self.admin_access.repo_cnx() as cnx:
-            eschema = cnx.vreg.schema['EmailAddress']
-            rql_exprs = eschema.get_rqlexprs('read')
-            self.assertEqual(len(rql_exprs), 1)
-            self.assertEqual(rql_exprs[0].expression,
-                             'U use_email X')
-            rql, found, keyarg = rql_exprs[0].transform_has_permission()
-            self.assertEqual(rql, 'Any X WHERE EXISTS(U use_email X, X eid %(x)s, U eid %(u)s)')
-            self.assertEqual(found, None)
-            self.assertEqual(keyarg, None)
 
 
 if __name__ == '__main__':
