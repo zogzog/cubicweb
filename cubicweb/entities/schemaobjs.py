@@ -141,6 +141,10 @@ class CWConstraint(AnyEntity):
     __regid__ = 'CWConstraint'
     fetch_attrs, cw_fetch_order = fetch_config(['value'])
 
+    def __repr__(self):
+        return '<Entity %s %s of type %s %s at %s>' % (
+            self.e_schema, self.eid, self.type, list(self.cw_attr_cache), id(self))
+
     def dc_title(self):
         return '%s(%s)' % (self.cstrtype[0].name, self.value or u'')
 
