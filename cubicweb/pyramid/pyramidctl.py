@@ -55,13 +55,12 @@ LOG_LEVELS = ('debug', 'info', 'warning', 'error')
 def _generate_pyramid_ini_file(pyramid_ini_path):
     """Write a 'development.ini' file into apphome."""
     template_fpath = os.path.join(os.path.dirname(__file__), 'pyramid.ini.tmpl')
-    target_fpath = os.path.join(pyramid_ini_path)
     context = {
         'secret_1': get_random_secret_key(),
         'secret_2': get_random_secret_key(),
         'secret_3': get_random_secret_key(),
     }
-    fill_templated_file(template_fpath, target_fpath, context)
+    fill_templated_file(template_fpath, pyramid_ini_path, context)
 
 
 class PyramidCreateHandler(serverctl.RepositoryCreateHandler,
