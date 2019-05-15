@@ -1,5 +1,4 @@
 from cubicweb.pyramid.test import PyramidCWTest
-from cubicweb.pyramid import tools
 
 
 def set_language(request):

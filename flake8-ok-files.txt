@@ -151,6 +151,7 @@ cubicweb/pyramid/test/__init__.py
 cubicweb/pyramid/test/test_bw_request.py
 cubicweb/pyramid/test/test_config.py
 cubicweb/pyramid/test/test_core.py
+cubicweb/pyramid/test/test_hooks.py
 cubicweb/pyramid/test/test_login.py
 cubicweb/pyramid/test/test_rest_api.py
 cubicweb/pyramid/test/test_tools.py
