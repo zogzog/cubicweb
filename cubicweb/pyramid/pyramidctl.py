@@ -53,7 +53,7 @@ LOG_LEVELS = ('debug', 'info', 'warning', 'error')
 
 
 def _generate_pyramid_ini_file(pyramid_ini_path):
-    """Write a 'development.ini' file into apphome."""
+    """Write a 'pyramid.ini' file into apphome."""
     template_fpath = os.path.join(os.path.dirname(__file__), 'pyramid.ini.tmpl')
     context = {
         'secret_1': get_random_secret_key(),
