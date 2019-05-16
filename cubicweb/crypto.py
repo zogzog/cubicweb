@@ -26,6 +26,8 @@ from Crypto.Cipher import Blowfish
 
 
 _CYPHERERS = {}
+
+
 def _cypherer(seed):
     try:
         return _CYPHERERS[seed]
