@@ -18,13 +18,13 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """XXX rename, split, reorganize this"""
 
+from logilab.common.registry import NoSelectableObject
 from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import Binary, UnknownProperty
 from cubicweb.predicates import (is_instance,
                                  specified_etype_implements, rql_condition)
-from cubicweb.web import NoSelectableObject
 from cubicweb.web.action import Action
 
 from cubicweb.web.views import (primary, baseviews, tableview,

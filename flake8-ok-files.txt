@@ -1,5 +1,6 @@
 cubicweb/__init__.py
 cubicweb/__main__.py
+cubicweb/_exceptions.py
 cubicweb/cwctl.py
 cubicweb/cwvreg.py
 cubicweb/dataimport/csv.py

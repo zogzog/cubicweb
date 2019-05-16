@@ -19,6 +19,7 @@
 
 
 from logilab.common.decorators import cachedproperty
+from logilab.common.registry import RegistryException
 
 from yams import ValidationError  # noqa: F401
 
@@ -148,10 +149,6 @@ class EidNotInSource(SourceException):
 
 # registry exceptions #########################################################
 
-# pre 3.15 bw compat
-from logilab.common.registry import RegistryException, ObjectNotFound, NoSelectableObject
-
-
 class UnknownProperty(RegistryException):
     """property found in database but unknown in registry"""
 
@@ -216,4 +213,4 @@ class ExecutionError(Exception):
 
 
 # pylint: disable=W0611
-from logilab.common.clcommands import BadCommandUsage
+from logilab.common.clcommands import BadCommandUsage  # noqa: E402, F401
