@@ -26,6 +26,7 @@ from cubicweb.utils import json_dumps
 
 class DirectResponse(Exception):
     """Used to supply a twitted HTTP Response directly"""
+
     def __init__(self, response):
         self.response = response
 
@@ -44,12 +45,14 @@ class PublishException(CubicWebException):
 
 class LogOut(PublishException):
     """raised to ask for deauthentication of a logged in user"""
+
     def __init__(self, url=None):
         super(LogOut, self).__init__()
         self.url = url
 
 class Redirect(PublishException):
     """raised to redirect the http request"""
+
     def __init__(self, location, status=http_client.SEE_OTHER):
         super(Redirect, self).__init__(status=status)
         self.location = location
@@ -83,6 +86,7 @@ class NothingToEdit(RequestError):
 class ProcessFormError(RequestError):
     """raised when posted data can't be processed by the corresponding field
     """
+
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('status', http_client.BAD_REQUEST)
         super(ProcessFormError, self).__init__(*args, **kwargs)
@@ -98,6 +102,7 @@ class NotFound(RequestError):
 class RemoteCallFailed(RequestError):
     """raised when a json remote call fails
     """
+
     def __init__(self, reason='', status=http_client.INTERNAL_SERVER_ERROR):
         super(RemoteCallFailed, self).__init__(reason, status=status)
         self.reason = reason

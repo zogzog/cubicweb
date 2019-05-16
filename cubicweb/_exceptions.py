@@ -79,6 +79,7 @@ class UnknownEid(RepositoryError):
 
 class UniqueTogetherError(RepositoryError):
     """raised when a unique_together constraint caused an IntegrityError"""
+
     def __init__(self, session, **kwargs):
         self.session = session
         assert 'rtypes' in kwargs or 'cstrname' in kwargs
