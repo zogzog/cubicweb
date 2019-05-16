@@ -107,9 +107,14 @@ class UniqueTogetherError(RepositoryError):
 
 
 class ViolatedConstraint(RepositoryError):
-    def __init__(self, cnx, cstrname):
+    def __init__(self, cnx, cstrname, query):
         self.cnx = cnx
         self.cstrname = cstrname
+        message = (
+            "constraint '%s' is being violated by the query '%s'. "
+            "You can run the inverted constraint on the database to list the problematic rows."
+        ) % (cstrname, query)
+        super(ViolatedConstraint, self).__init__(message)
 
 
 # security exceptions #########################################################

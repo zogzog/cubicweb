@@ -716,14 +716,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     mo = re.search(r'\bcstr[a-f0-9]{32}\b', arg)
                     if mo is not None:
                         # postgresql
-                        raise ViolatedConstraint(cnx, cstrname=mo.group(0))
+                        raise ViolatedConstraint(cnx, cstrname=mo.group(0),
+                                                 query=query)
                     if arg.startswith('CHECK constraint failed:'):
                         # sqlite3 (new)
-                        raise ViolatedConstraint(cnx, cstrname=arg.split(':', 1)[1].strip())
+                        raise ViolatedConstraint(cnx, cstrname=arg.split(':', 1)[1].strip(),
+                                                 query=query)
                     mo = re.match('^constraint (cstr.*) failed$', arg)
                     if mo is not None:
                         # sqlite3 (old)
-                        raise ViolatedConstraint(cnx, cstrname=mo.group(1))
+                        raise ViolatedConstraint(cnx, cstrname=mo.group(1),
+                                                 query=query)
             raise
         return cursor
 
