@@ -27,6 +27,7 @@ from yams import ValidationError
 
 # abstract exceptions #########################################################
 
+
 class CubicWebException(Exception):
     """base class for cubicweb server exception"""
     msg = ""
@@ -40,42 +41,53 @@ class CubicWebException(Exception):
         else:
             return u' '.join(str(arg) for arg in self.args)
 
+
 class ConfigurationError(CubicWebException):
     """a misconfiguration error"""
+
 
 class InternalError(CubicWebException):
     """base class for exceptions which should not occur"""
 
+
 class SecurityError(CubicWebException):
     """base class for cubicweb server security exceptions"""
+
 
 class RepositoryError(CubicWebException):
     """base class for repository exceptions"""
 
+
 class SourceException(CubicWebException):
     """base class for source exceptions"""
+
 
 class CubicWebRuntimeError(CubicWebException):
     """base class for runtime exceptions"""
 
 # repository exceptions #######################################################
 
+
 class ConnectionError(RepositoryError):
     """raised when a bad connection id is given or when an attempt to establish
     a connection failed
     """
+
 
 class AuthenticationError(ConnectionError):
     """raised when an attempt to establish a connection failed due to wrong
     connection information (login / password or other authentication token)
     """
 
+
 class BadConnectionId(ConnectionError):
     """raised when a bad connection id is given"""
+
 
 class UnknownEid(RepositoryError):
     """the eid is not defined in the system tables"""
     msg = 'No entity with eid %s in the repository'
+
 
 class UniqueTogetherError(RepositoryError):
     """raised when a unique_together constraint caused an IntegrityError"""
@@ -122,11 +134,13 @@ class Unauthorized(SecurityError):
         except Exception as ex:
             return str(ex)
 
+
 class Forbidden(SecurityError):
     """raised when a user tries to perform a forbidden action
     """
 
 # source exceptions ###########################################################
+
 
 class EidNotInSource(SourceException):
     """trying to access an object with a particular eid from a particular
@@ -140,27 +154,33 @@ class EidNotInSource(SourceException):
 # pre 3.15 bw compat
 from logilab.common.registry import RegistryException, ObjectNotFound, NoSelectableObject
 
+
 class UnknownProperty(RegistryException):
     """property found in database but unknown in registry"""
 
 # query exception #############################################################
 
+
 class QueryError(CubicWebRuntimeError):
     """a query try to do something it shouldn't"""
+
 
 class NotAnEntity(CubicWebRuntimeError):
     """raised when get_entity is called for a column which doesn't contain
     a non final entity
     """
 
+
 class MultipleResultsError(CubicWebRuntimeError):
     """raised when ResultSet.one() is called on a resultset with multiple rows
     of multiple columns.
     """
 
+
 class NoResultError(CubicWebRuntimeError):
     """raised when no result is found but at least one is expected.
     """
+
 
 class UndoTransactionException(QueryError):
     """Raised when undoing a transaction could not be performed completely.
@@ -192,6 +212,7 @@ class UndoTransactionException(QueryError):
         self.errors = errors
 
 # tools exceptions ############################################################
+
 
 class ExecutionError(Exception):
     """server execution control error (already started, not running...)"""
