@@ -8,6 +8,7 @@ webtest
 
 ## cubicweb/test
 Pygments
+pycrypto
 mock
 #fyzz XXX pip install fails
 cubicweb-file == 1.18.0
