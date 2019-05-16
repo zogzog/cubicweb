@@ -20,7 +20,7 @@
 
 from logilab.common.decorators import cachedproperty
 
-from yams import ValidationError
+from yams import ValidationError  # noqa: F401
 
 # abstract exceptions #########################################################
 
