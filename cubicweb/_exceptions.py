@@ -18,7 +18,6 @@
 """Exceptions shared by different cubicweb packages."""
 
 
-
 from warnings import warn
 
 from logilab.common.decorators import cachedproperty
