@@ -256,6 +256,33 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
                               source.authenticate, cnx, 'syt', 'toto')
             self.assertTrue(source.authenticate(cnx, 'syt', 'syt'))
 
+    def test_ldapfeed_insert_collision(self):
+        """
+        when a user computed login from ldapfeed collides with a CWUser
+        login the user MUST not be inserted, and message MUST be present
+        at error level regarding the collision for troubleshooting purpose.
+        We also check that in case the CWUser is skipped, the entity EmailAddress
+        is not modified.
+        If EmailAddress are not modified, CWGroup are not.
+        """
+        with self.admin_access.cnx() as cnx:
+            user = cnx.find('CWUser', login=u'syt').one()
+            user.cw_set(cw_source=cnx.find('CWSource', name=u'system').one())
+            with cnx.security_enabled(write=False):
+                user.cw_set(cwuri=u'http://testing.fr/cubicweb/{}'.format(user.eid))
+                for mail in user.use_email:
+                    mail.cw_set(address=mail.address[:-3] + u".net")
+            cnx.commit()
+            with self.assertLogs('cubicweb.appobject', level='ERROR') as cm:
+                self.pull(cnx)
+                self.assertEqual(
+                    cm.output,
+                    ['ERROR:cubicweb.appobject:not synchronizing user syt.'
+                     ' User already exist in source system']
+                )
+            for mail in user.use_email:
+                self.assertTrue(mail.address.endswith(".net"))
+
     def test_base(self):
         with self.admin_access.repo_cnx() as cnx:
             # check a known one

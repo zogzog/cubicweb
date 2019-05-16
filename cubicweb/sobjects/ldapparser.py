@@ -156,9 +156,26 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
 
     def extentities_generator(self):
         self.debug('processing ldapfeed source %s %s', self.source, self.searchgroupfilterstr)
+        # get existing users *not* managed by this source
+        non_managed_users = dict(self._cw.execute(
+            'Any L, SN WHERE'
+            ' U is CWUser, U login L,'
+            ' U cw_source S, S name SN,'
+            ' NOT S eid %(eid)s',
+            {'eid': self.source.eid}, build_descr=False))
         # generate users and email addresses
         for userdict in self.user_source_entities_by_extid.values():
             attrs = self.ldap2cwattrs(userdict, 'CWUser')
+            login = attrs['login'][0]
+            try:
+                source = non_managed_users[login]
+            except KeyError:
+                pass
+            else:
+                self.error(
+                    'not synchronizing user %s. User already exist in source %s',
+                    login, source)
+                continue
             pwd = attrs.get('upassword')
             if not pwd:
                 # generate a dumb password if not fetched from ldap (see
