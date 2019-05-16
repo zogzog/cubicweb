@@ -216,5 +216,6 @@ class UndoTransactionException(QueryError):
 class ExecutionError(Exception):
     """server execution control error (already started, not running...)"""
 
+
 # pylint: disable=W0611
 from logilab.common.clcommands import BadCommandUsage
