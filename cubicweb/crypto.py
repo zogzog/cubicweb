@@ -26,6 +26,8 @@ from Crypto.Cipher import Blowfish
 
 _CYPHERERS = {}
 def _cypherer(seed):
+    if isinstance(seed, str):
+        seed = seed.encode('utf-8')
     try:
         return _CYPHERERS[seed]
     except KeyError:
