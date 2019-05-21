@@ -24,7 +24,7 @@ from unittest.mock import patch, MagicMock
 
 from logilab.common.clcommands import CommandLine
 
-from cubicweb import cwctl
+from cubicweb import cwctl, server
 from cubicweb.cwctl import ListCommand, InstanceCommand
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.migractions import ServerMigrationHelper
@@ -112,9 +112,9 @@ class InstanceCommandTest(unittest.TestCase):
         self.fake_config.global_set_option = MagicMock()
 
         # pretend that this instance exists
-        patcher = patch.object(cwcfg, 'config_for', return_value=self.fake_config)
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        config_patcher = patch.object(cwcfg, 'config_for', return_value=self.fake_config)
+        config_patcher.start()
+        self.addCleanup(config_patcher.stop)
 
     @patch.object(_TestCommand, 'test_instance', return_value=0)
     def test_getting_called(self, test_instance):
@@ -180,6 +180,20 @@ class InstanceCommandTest(unittest.TestCase):
 
             self.fake_config.global_set_option.assert_called_with('log-threshold',
                                                                   log_level.upper())
+
+    @patch.object(server, "DEBUG", 0)
+    def test_set_dblevel(self):
+        DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE')
+
+        total_value = 0
+
+        for dbg_flag in DBG_FLAGS:
+            with self.assertRaises(SystemExit) as cm:
+                self.CWCTL.run(["test", "some_instance", "--dbglevel", dbg_flag])
+            self.assertEqual(cm.exception.code, 0)
+
+            total_value += getattr(server, "DBG_%s" % dbg_flag)
+            self.assertEqual(total_value, server.DEBUG)
 
 
 if __name__ == '__main__':

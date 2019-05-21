@@ -42,10 +42,12 @@ from logilab.common.decorators import clear_cache
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CONFIGURATIONS
+from cubicweb.server import set_debug
 from cubicweb.toolsutils import Command, rm, create_dir, underline_title
 from cubicweb.__pkginfo__ import version as cw_version
 
 LOG_LEVELS = ('debug', 'info', 'warning', 'error')
+DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE')
 
 # don't check duplicated commands, it occurs when reloading site_cubicweb
 CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
@@ -136,6 +138,13 @@ class InstanceCommand(Command):
                   % (', '.join(LOG_LEVELS)),
           }
          ),
+        ('dbglevel',
+         {'type': 'multiple_choice', 'metavar': '<debug level>',
+          'default': None,
+          'choices': DBG_FLAGS,
+          'help': ('Set the server debugging flags; you may choose several '
+                   'values in %s; imply "debug" loglevel if loglevel is not set' % (DBG_FLAGS,)),
+          }),
     )
     actionverb = None
 
@@ -157,9 +166,16 @@ class InstanceCommand(Command):
         # certain situations if it's not explicitly set by the user and we want
         # to detect that (the "None" case)
         if self['loglevel'] is None:
-            init_cmdline_log_threshold(self.cwconfig, 'error')
+            # if no loglevel is set but dbglevel is here we want to set level to debug
+            if self['dbglevel']:
+                init_cmdline_log_threshold(self.cwconfig, 'debug')
+            else:
+                init_cmdline_log_threshold(self.cwconfig, 'error')
         else:
             init_cmdline_log_threshold(self.cwconfig, self['loglevel'])
+
+        if self['dbglevel']:
+            set_debug('|'.join('DBG_' + x.upper() for x in self['dbglevel']))
 
         try:
             status = cmdmeth(appid) or 0

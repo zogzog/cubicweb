@@ -20,8 +20,8 @@ New features
 * add a --pdb flag to all cubicweb-ctl command to launch (i)pdb if an exception
   occurs during a command execution.
 
-* the --loglevel flag is available for all cubicweb-ctl instance commands (and
-  not only the ``pyramid`` one)
+* the --loglevel and --dbglevel flags are available for all cubicweb-ctl
+  instance commands (and not only the ``pyramid`` one)
 
 Backwards incompatible changes
 ------------------------------

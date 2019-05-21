@@ -37,15 +37,13 @@ from logilab.common.configuration import merge_options
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
 from cubicweb.pyramid import wsgi_application_from_cwconfig
 from cubicweb.pyramid.config import get_random_secret_key
-from cubicweb.server import serverctl, set_debug
+from cubicweb.server import serverctl
 from cubicweb.web.webctl import WebCreateHandler
 from cubicweb.toolsutils import fill_templated_file
 
 import waitress
 
 MAXFD = 1024
-
-DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE')
 
 
 def _generate_pyramid_ini_file(pyramid_ini_path):
@@ -107,13 +105,6 @@ class PyramidStartHandler(InstanceCommand):
         ('reload-interval',
          {'type': 'int', 'default': 1,
           'help': 'Interval, in seconds, between file modifications checks'}),
-        ('dbglevel',
-         {'type': 'multiple_choice', 'metavar': '<dbg level>',
-          'default': None,
-          'choices': DBG_FLAGS,
-          'help': ('Set the server debugging flags; you may choose several '
-                   'values in %s; imply "debug" loglevel' % (DBG_FLAGS,)),
-          }),
         ('profile',
          {'action': 'store_true',
           'default': False,
@@ -260,12 +251,9 @@ class PyramidStartHandler(InstanceCommand):
                 self['reload-interval'], extra_files,
                 filelist_path=filelist_path)
 
-        if self['dbglevel']:
-            set_debug('|'.join('DBG_' + x.upper() for x in self['dbglevel']))
-
-        # if no loglevel is specified and --debug or --dbglevel are here, set log level at debug
-        if self['loglevel'] is None and (self['debug'] or self['dbglevel']):
-            init_cmdline_log_threshold(cwconfig, 'debug')
+        # if no loglevel is specified and --debug is here, set log level at debug
+        if self['loglevel'] is None and self['debug']:
+            init_cmdline_log_threshold(self.cwconfig, 'debug')
 
         app = wsgi_application_from_cwconfig(
             cwconfig, profile=self['profile'],
