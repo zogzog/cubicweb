@@ -46,6 +46,9 @@ Backwards incompatible changes
 * All "cubicweb-ctl" command only accept one instance argument from now one
   (instead of 0 to n)
 
+* 'pyramid' command will always run in the foreground now, by consequence the
+  option ``--no-daemon`` has been removed.
+
 * DBG_MS flag has been removed since it is not used anymore
 
 Deprecated code drops

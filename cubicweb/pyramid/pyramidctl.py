@@ -25,8 +25,6 @@ The reloading strategy is heavily inspired by (and partially copied from)
 the pyramid script 'pserve'.
 """
 
-import atexit
-import errno
 import os
 import signal
 import sys
@@ -34,7 +32,6 @@ import time
 import threading
 import subprocess
 
-from cubicweb import ExecutionError
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
 from cubicweb.pyramid import wsgi_application_from_cwconfig
@@ -97,17 +94,13 @@ class PyramidStartHandler(InstanceCommand):
     actionverb = 'started'
 
     options = (
-        ('no-daemon',
-         {'action': 'store_true',
-          'help': 'Run the server in the foreground.'}),
         ('debug-mode',
          {'action': 'store_true',
           'help': 'Activate the repository debug mode ('
-                  'logs in the console and the debug toolbar).'
-                  ' Implies --no-daemon'}),
+                  'logs in the console and the debug toolbar).'}),
         ('debug',
          {'short': 'D', 'action': 'store_true',
-          'help': 'Equals to "--debug-mode --no-daemon --reload"'}),
+          'help': 'Equals to "--debug-mode --reload"'}),
         ('reload',
          {'action': 'store_true',
           'help': 'Restart the server if any source file is changed'}),
@@ -176,92 +169,6 @@ class PyramidStartHandler(InstanceCommand):
                 "installed" % arg)
         arg = win32api.GetShortPathName(arg)
         return arg
-
-    def _remove_pid_file(self, written_pid, filename):
-        current_pid = os.getpid()
-        if written_pid != current_pid:
-            # A forked process must be exiting, not the process that
-            # wrote the PID file
-            return
-        if not os.path.exists(filename):
-            return
-        with open(filename) as f:
-            content = f.read().strip()
-        try:
-            pid_in_file = int(content)
-        except ValueError:
-            pass
-        else:
-            if pid_in_file != current_pid:
-                msg = "PID file %s contains %s, not expected PID %s"
-                self.out(msg % (filename, pid_in_file, current_pid))
-                return
-        self.info("Removing PID file %s" % filename)
-        try:
-            os.unlink(filename)
-            return
-        except OSError as e:
-            # Record, but don't give traceback
-            self.out("Cannot remove PID file: (%s)" % e)
-        # well, at least lets not leave the invalid PID around...
-        try:
-            with open(filename, 'w') as f:
-                f.write('')
-        except OSError as e:
-            self.out('Stale PID left in file: %s (%s)' % (filename, e))
-        else:
-            self.out('Stale PID removed')
-
-    def record_pid(self, pid_file):
-        pid = os.getpid()
-        self.debug('Writing PID %s to %s' % (pid, pid_file))
-        with open(pid_file, 'w') as f:
-            f.write(str(pid))
-        atexit.register(
-            self._remove_pid_file, pid, pid_file)
-
-    def daemonize(self, pid_file):
-        pid = live_pidfile(pid_file)
-        if pid:
-            raise ExecutionError(
-                "Daemon is already running (PID: %s from PID file %s)"
-                % (pid, pid_file))
-
-        self.debug('Entering daemon mode')
-        pid = os.fork()
-        if pid:
-            # The forked process also has a handle on resources, so we
-            # *don't* want proper termination of the process, we just
-            # want to exit quick (which os._exit() does)
-            os._exit(0)
-        # Make this the session leader
-        os.setsid()
-        # Fork again for good measure!
-        pid = os.fork()
-        if pid:
-            os._exit(0)
-
-        # @@: Should we set the umask and cwd now?
-
-        import resource  # Resource usage information.
-        maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
-        if (maxfd == resource.RLIM_INFINITY):
-            maxfd = MAXFD
-        # Iterate through and close all file descriptors.
-        for fd in range(0, maxfd):
-            try:
-                os.close(fd)
-            except OSError:  # ERROR, fd wasn't open to begin with (ignored)
-                pass
-
-        if (hasattr(os, "devnull")):
-            REDIRECT_TO = os.devnull
-        else:
-            REDIRECT_TO = "/dev/null"
-        os.open(REDIRECT_TO, os.O_RDWR)  # standard input (0)
-        # Duplicate standard input to standard output and standard error.
-        os.dup2(0, 1)  # standard output (1)
-        os.dup2(0, 2)  # standard error (2)
 
     def restart_with_reloader(self, filelist_path):
         self.debug('Starting subprocess with file monitor')
@@ -336,11 +243,11 @@ class PyramidStartHandler(InstanceCommand):
     def pyramid_instance(self, appid):
         self._needreload = False
 
-        debugmode = self['debug-mode'] or self['debug']
         autoreload = self['reload'] or self['debug']
-        daemonize = not (self['no-daemon'] or debugmode or autoreload)
 
-        cwconfig = cwcfg.config_for(appid, debugmode=debugmode)
+        # debugmode=True is to force to have a StreamHandler used instead of
+        # writting the logs into a file in /tmp
+        cwconfig = cwcfg.config_for(appid, debugmode=True)
         filelist_path = os.path.join(cwconfig.apphome,
                                      '.pyramid-reload-files.list')
 
@@ -360,10 +267,6 @@ class PyramidStartHandler(InstanceCommand):
             self.install_reloader(
                 self['reload-interval'], extra_files,
                 filelist_path=filelist_path)
-
-        if daemonize:
-            self.daemonize(cwconfig['pid-file'])
-            self.record_pid(cwconfig['pid-file'])
 
         if self['dbglevel']:
             self['loglevel'] = 'debug'
@@ -392,35 +295,6 @@ class PyramidStartHandler(InstanceCommand):
 
 
 CWCTL.register(PyramidStartHandler)
-
-
-def live_pidfile(pidfile):  # pragma: no cover
-    """(pidfile:str) -> int | None
-    Returns an int found in the named file, if there is one,
-    and if there is a running process with that process id.
-    Return None if no such process exists.
-    """
-    pid = read_pidfile(pidfile)
-    if pid:
-        try:
-            os.kill(int(pid), 0)
-            return pid
-        except OSError as e:
-            if e.errno == errno.EPERM:
-                return pid
-    return None
-
-
-def read_pidfile(filename):
-    if os.path.exists(filename):
-        try:
-            with open(filename) as f:
-                content = f.read()
-            return int(content.strip())
-        except (ValueError, IOError):
-            return None
-    else:
-        return None
 
 
 def _turn_sigterm_into_systemexit():
