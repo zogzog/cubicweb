@@ -196,6 +196,12 @@ class UseExtidAsCwuriTC(TestCase):
         personne.values.pop('cwuri')
         list(set_cwuri((personne,)))
         self.assertNotIn('cwuri', personne.values)
+        personne = ExtEntity('Personne', u'ééé', {})
+        mapping = {}
+        set_cwuri = use_extid_as_cwuri(mapping)
+        list(set_cwuri((personne,)))
+        self.assertIn('cwuri', personne.values)
+        self.assertEqual(personne.values['cwuri'], set([u'ééé']))
 
 
 class DropExtraValuesTC(CubicWebTC):

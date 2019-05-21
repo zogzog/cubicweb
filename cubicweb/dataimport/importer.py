@@ -30,6 +30,8 @@ Utilities:
 from collections import defaultdict
 import logging
 
+import six
+
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Binary
@@ -71,7 +73,10 @@ def use_extid_as_cwuri(extid2eid):
     def use_extid_as_cwuri_filter(extentities):
         for extentity in extentities:
             if extentity.extid not in extid2eid:
-                extentity.values.setdefault('cwuri', set([extentity.extid.decode('utf-8')]))
+                cwuri = extentity.extid
+                if isinstance(cwuri, six.binary_type):
+                    cwuri = cwuri.decode('utf-8')
+                extentity.values.setdefault('cwuri', set([cwuri]))
             yield extentity
     return use_extid_as_cwuri_filter
 
