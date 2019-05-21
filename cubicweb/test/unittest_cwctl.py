@@ -108,8 +108,11 @@ class InstanceCommandTest(unittest.TestCase):
         self.CWCTL.register(_TestCommand)
         self.CWCTL.register(_TestFailCommand)
 
+        self.fake_config = MagicMock()
+        self.fake_config.global_set_option = MagicMock()
+
         # pretend that this instance exists
-        patcher = patch.object(cwcfg, 'config_for', return_value=object())
+        patcher = patch.object(cwcfg, 'config_for', return_value=self.fake_config)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -166,6 +169,17 @@ class InstanceCommandTest(unittest.TestCase):
         self.assertEqual(cm.exception.code, 2)
 
         test_fail_instance.assert_called_once()
+
+    def test_set_loglevel(self):
+        LOG_LEVELS = ('debug', 'info', 'warning', 'error')
+
+        for log_level in LOG_LEVELS:
+            with self.assertRaises(SystemExit) as cm:
+                self.CWCTL.run(["test", "some_instance", "--loglevel", log_level])
+            self.assertEqual(cm.exception.code, 0)
+
+            self.fake_config.global_set_option.assert_called_with('log-threshold',
+                                                                  log_level.upper())
 
 
 if __name__ == '__main__':

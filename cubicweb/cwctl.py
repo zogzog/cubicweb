@@ -45,6 +45,8 @@ from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CONFIGURATIONS
 from cubicweb.toolsutils import Command, rm, create_dir, underline_title
 from cubicweb.__pkginfo__ import version as cw_version
 
+LOG_LEVELS = ('debug', 'info', 'warning', 'error')
+
 # don't check duplicated commands, it occurs when reloading site_cubicweb
 CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
                     version=cw_version, check_duplicated_command=False)
@@ -127,6 +129,13 @@ class InstanceCommand(Command):
           'help': 'launch pdb on exception',
           }
          ),
+        ("loglevel",
+         {'type': 'choice', 'default': None, 'metavar': '<log level>',
+          'choices': LOG_LEVELS, 'short': 'l',
+          'help': 'allow to specify log level for debugging (choices: %s)'
+                  % (', '.join(LOG_LEVELS)),
+          }
+         ),
     )
     actionverb = None
 
@@ -138,6 +147,19 @@ class InstanceCommand(Command):
         cmdmeth = getattr(self, '%s_instance' % self.name)
 
         traceback_ = None
+
+        # debugmode=True is to force to have a StreamHandler used instead of
+        # writting the logs into a file in /tmp
+        self.cwconfig = cwcfg.config_for(appid, debugmode=True)
+
+        # by default loglevel is 'error' but we keep the default value to None
+        # because some subcommands (e.g: pyramid) can override the loglevel in
+        # certain situations if it's not explicitly set by the user and we want
+        # to detect that (the "None" case)
+        if self['loglevel'] is None:
+            init_cmdline_log_threshold(self.cwconfig, 'error')
+        else:
+            init_cmdline_log_threshold(self.cwconfig, self['loglevel'])
 
         try:
             status = cmdmeth(appid) or 0
@@ -433,7 +455,6 @@ class DeleteInstanceCommand(Command):
     name = 'delete'
     arguments = '<instance>'
     min_args = max_args = 1
-    options = ()
 
     def run(self, args):
         """run the command with its specific arguments"""
@@ -608,7 +629,7 @@ class ListVersionsInstanceCommand(InstanceCommand):
     name = 'versions'
 
     def versions_instance(self, appid):
-        config = cwcfg.config_for(appid)
+        config = self.cwconfig
         # should not raise error if db versions don't match fs versions
         config.repairing = True
         # no need to load all appobjects and schema
@@ -640,7 +661,7 @@ class ShellCommand(Command):
     arguments = '<instance> [batch command file(s)] [-- <script arguments>]'
     min_args = 1
     max_args = None
-    options = (
+    options = merge_options((
         ('system-only',
          {'short': 'S', 'action': 'store_true',
           'help': 'only connect to the system source when the instance is '
@@ -664,7 +685,7 @@ sources for migration will be automatically selected.",
           'group': 'local'
           }),
 
-    )
+    ) + InstanceCommand.options)
 
     def _get_mih(self, appid):
         """ returns migration context handler & shutdown function """
@@ -708,10 +729,9 @@ class RecompileInstanceCatalogsCommand(InstanceCommand):
     """
     name = 'i18ninstance'
 
-    @staticmethod
-    def i18ninstance_instance(appid):
+    def i18ninstance_instance(self, appid):
         """recompile instance's messages catalogs"""
-        config = cwcfg.config_for(appid)
+        config = self.cwconfig
         config.quick_start = True  # notify this is not a regular start
         repo = config.repository()
         if config._cubes is None:
@@ -765,7 +785,7 @@ class ConfigureInstanceCommand(InstanceCommand):
 
     def configure_instance(self, appid):
         if self.config.param is not None:
-            appcfg = cwcfg.config_for(appid)
+            appcfg = self.cwconfig
             for key, value in self.config.param.items():
                 try:
                     appcfg.global_set_option(key, value)

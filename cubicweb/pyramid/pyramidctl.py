@@ -32,7 +32,8 @@ import time
 import threading
 import subprocess
 
-from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
+from logilab.common.configuration import merge_options
+
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
 from cubicweb.pyramid import wsgi_application_from_cwconfig
 from cubicweb.pyramid.config import get_random_secret_key
@@ -45,7 +46,6 @@ import waitress
 MAXFD = 1024
 
 DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE')
-LOG_LEVELS = ('debug', 'info', 'warning', 'error')
 
 
 def _generate_pyramid_ini_file(pyramid_ini_path):
@@ -93,7 +93,7 @@ class PyramidStartHandler(InstanceCommand):
     name = 'pyramid'
     actionverb = 'started'
 
-    options = (
+    options = merge_options((
         ('debug-mode',
          {'action': 'store_true',
           'help': 'Activate the repository debug mode ('
@@ -107,12 +107,6 @@ class PyramidStartHandler(InstanceCommand):
         ('reload-interval',
          {'type': 'int', 'default': 1,
           'help': 'Interval, in seconds, between file modifications checks'}),
-        ('loglevel',
-         {'short': 'l', 'type': 'choice', 'metavar': '<log level>',
-          'default': None, 'choices': LOG_LEVELS,
-          'help': 'debug if -D is set, error otherwise; '
-                  'one of %s' % (LOG_LEVELS,),
-          }),
         ('dbglevel',
          {'type': 'multiple_choice', 'metavar': '<dbg level>',
           'default': None,
@@ -140,7 +134,7 @@ class PyramidStartHandler(InstanceCommand):
           'metavar': 'key1:value1,key2:value2',
           'default': {},
           'help': 'override <key> configuration file option with <value>.'}),
-    )
+    ) + InstanceCommand.options)
 
     _reloader_environ_key = 'CW_RELOADER_SHOULD_RUN'
 
@@ -245,9 +239,7 @@ class PyramidStartHandler(InstanceCommand):
 
         autoreload = self['reload'] or self['debug']
 
-        # debugmode=True is to force to have a StreamHandler used instead of
-        # writting the logs into a file in /tmp
-        cwconfig = cwcfg.config_for(appid, debugmode=True)
+        cwconfig = self.cwconfig
         filelist_path = os.path.join(cwconfig.apphome,
                                      '.pyramid-reload-files.list')
 
@@ -269,9 +261,11 @@ class PyramidStartHandler(InstanceCommand):
                 filelist_path=filelist_path)
 
         if self['dbglevel']:
-            self['loglevel'] = 'debug'
             set_debug('|'.join('DBG_' + x.upper() for x in self['dbglevel']))
-        init_cmdline_log_threshold(cwconfig, self['loglevel'])
+
+        # if no loglevel is specified and --debug or --dbglevel are here, set log level at debug
+        if self['loglevel'] is None and (self['debug'] or self['dbglevel']):
+            init_cmdline_log_threshold(cwconfig, 'debug')
 
         app = wsgi_application_from_cwconfig(
             cwconfig, profile=self['profile'],
