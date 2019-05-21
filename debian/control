@@ -59,7 +59,7 @@ Recommends:
  python-cubicweb-pyramid (= ${source:Version}),
 # common recommends
  python-simpletal (>= 4.0),
- python-crypto,
+ python-pycryptodome,
 # web recommends (mostly)
  python-docutils (>= 0.6),
  python-vobject,
