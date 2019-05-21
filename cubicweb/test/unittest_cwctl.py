@@ -24,6 +24,7 @@ from unittest.mock import patch, MagicMock
 
 from logilab.common.clcommands import CommandLine
 
+from cubicweb import cwctl
 from cubicweb.cwctl import ListCommand, InstanceCommand
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.migractions import ServerMigrationHelper
@@ -89,23 +90,63 @@ class _TestCommand(InstanceCommand):
         pass
 
 
-class InstanceCommandTest(unittest.TestCase):
-    def test_getting_called(self):
-        CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
-                            version=cw_version, check_duplicated_command=False)
-        cwcfg.load_cwctl_plugins()
-        CWCTL.register(_TestCommand)
+class _TestFailCommand(InstanceCommand):
+    "I need some doc"
+    name = "test_fail"
 
-        _TestCommand.test_instance = MagicMock(return_value=0)
+    def test_fail_instance(self, appid):
+        raise Exception()
+
+
+class InstanceCommandTest(unittest.TestCase):
+    def setUp(self):
+        self.CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
+                                 version=cw_version, check_duplicated_command=False)
+        cwcfg.load_cwctl_plugins()
+        self.CWCTL.register(_TestCommand)
+        self.CWCTL.register(_TestFailCommand)
 
         # pretend that this instance exists
         cwcfg.config_for = MagicMock(return_value=object())
 
+    def test_getting_called(self):
+        _TestCommand.test_instance = MagicMock(return_value=0)
+
         try:
-            CWCTL.run(["test", "some_instance"])
+            self.CWCTL.run(["test", "some_instance"])
         except SystemExit as ex:  # CWCTL will finish the program after that
             self.assertEqual(ex.code, 0)
         _TestCommand.test_instance.assert_called_with("some_instance")
+
+    @patch.object(cwctl, 'get_pdb')
+    def test_pdb_not_called(self, get_pdb):
+        try:
+            self.CWCTL.run(["test", "some_instance"])
+        except SystemExit as ex:  # CWCTL will finish the program after that
+            self.assertEqual(ex.code, 0)
+
+        get_pdb.assert_not_called()
+
+    @patch.object(cwctl, 'get_pdb')
+    def test_pdb_called(self, get_pdb):
+        post_mortem = get_pdb.return_value.post_mortem
+        try:
+            self.CWCTL.run(["test_fail", "some_instance", "--pdb"])
+        except SystemExit as ex:  # CWCTL will finish the program after that
+            self.assertEqual(ex.code, 8)
+
+        get_pdb.assert_called_once()
+        post_mortem.assert_called_once()
+
+    @patch.dict(sys.modules, ipdb=MagicMock())
+    def test_ipdb_selected_and_called(self):
+        ipdb = sys.modules['ipdb']
+        try:
+            self.CWCTL.run(["test_fail", "some_instance", "--pdb"])
+        except SystemExit as ex:  # CWCTL will finish the program after that
+            self.assertEqual(ex.code, 8)
+
+        ipdb.post_mortem.assert_called_once()
 
 
 if __name__ == '__main__':

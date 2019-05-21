@@ -97,6 +97,16 @@ def available_cube_names(cwcfg):
     return [drop_prefix(cube) for cube in cwcfg.available_cubes()]
 
 
+def get_pdb():
+    try:
+        import ipdb
+    except ImportError:
+        import pdb
+        return pdb
+    else:
+        return ipdb
+
+
 class InstanceCommand(Command):
     """base class for command taking one instance id as arguments"""
     arguments = '<instance>'
@@ -109,6 +119,11 @@ class InstanceCommand(Command):
          {'short': 'f', 'action': 'store_true',
           'default': False,
           'help': 'force command without asking confirmation',
+          }
+         ),
+        ("pdb",
+         {'action': 'store_true', 'default': False,
+          'help': 'launch pdb on exception',
           }
          ),
     )
@@ -130,6 +145,7 @@ class InstanceCommand(Command):
         except Exception as ex:
             import traceback
             traceback.print_exc()
+
             sys.stderr.write('instance %s not %s: %s\n' % (
                 appid, self.actionverb, ex))
             status = 8
@@ -137,6 +153,11 @@ class InstanceCommand(Command):
         except (KeyboardInterrupt, SystemExit):
             sys.stderr.write('%s aborted\n' % self.name)
             status = 2  # specific error code
+
+        if status != 0 and self.config.pdb:
+            exception_type, exception, traceback_ = sys.exc_info()
+            pdb = get_pdb()
+            pdb.post_mortem(traceback_)
 
         sys.exit(status)
 

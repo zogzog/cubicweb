@@ -17,6 +17,9 @@ New features
   exist in the instance directory, the `pyramid.ini` file will be generated
   with the needed secrets.
 
+* add a --pdb flag to all cubicweb-ctl command to launch (i)pdb if an exception
+  occurs during a command execution.
+
 Backwards incompatible changes
 ------------------------------
 
