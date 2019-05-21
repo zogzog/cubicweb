@@ -20,17 +20,20 @@ import os
 from os.path import join
 from io import StringIO
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
-from cubicweb.cwctl import ListCommand
+from logilab.common.clcommands import CommandLine
+
+from cubicweb.cwctl import ListCommand, InstanceCommand
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.migractions import ServerMigrationHelper
+from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
+from cubicweb.__pkginfo__ import version as cw_version
 
 import unittest_cwconfig
 
 
 class CubicWebCtlTC(unittest.TestCase):
-
     setUpClass = unittest_cwconfig.CubicWebConfigurationTC.setUpClass
     tearDownClass = unittest_cwconfig.CubicWebConfigurationTC.tearDownClass
 
@@ -76,6 +79,33 @@ class CubicWebShellTC(CubicWebTC):
                 scriptname = os.path.join(self.datadir, 'scripts', script)
                 self.assertTrue(os.path.exists(scriptname))
                 mih.cmd_process_script(scriptname, None, scriptargs=args)
+
+
+class TestCommand(InstanceCommand):
+    "I need some doc"
+    name = "test"
+
+    def test_instance(self, appid):
+        pass
+
+
+class InstanceCommandTest(unittest.TestCase):
+    def test_getting_called(self):
+        CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
+                            version=cw_version, check_duplicated_command=False)
+        cwcfg.load_cwctl_plugins()
+        CWCTL.register(TestCommand)
+
+        TestCommand.test_instance = MagicMock(return_value=0)
+
+        # pretend that this instance exists
+        cwcfg.config_for = MagicMock(return_value=object())
+
+        try:
+            CWCTL.run(["test", "some_instance"])
+        except SystemExit as ex:  # CWCTL will finish the program after that
+            self.assertEqual(ex.code, 0)
+        TestCommand.test_instance.assert_called_with("some_instance")
 
 
 if __name__ == '__main__':

@@ -40,6 +40,9 @@ Backwards incompatible changes
   one can expect tests that seem to pass (but were actually silently failing)
   to fail now.
 
+* All "cubicweb-ctl" command only accept one instance argument from now one
+  (instead of 0 to n)
+
 Deprecated code drops
 ---------------------
 

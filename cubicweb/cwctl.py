@@ -23,7 +23,7 @@ provide a pluggable commands system.
 # completion). So import locally in command helpers.
 import sys
 from warnings import filterwarnings
-from os import listdir, system
+from os import listdir
 from os.path import exists, join, isdir
 
 try:
@@ -98,10 +98,12 @@ def available_cube_names(cwcfg):
 
 
 class InstanceCommand(Command):
-    """base class for command taking 0 to n instance id as arguments
-    (0 meaning all registered instances)
-    """
-    arguments = '[<instance>...]'
+    """base class for command taking one instance id as arguments"""
+    arguments = '<instance>'
+
+    # enforce having one instance
+    min_args = max_args = 1
+
     options = (
         ("force",
          {'short': 'f', 'action': 'store_true',
@@ -116,33 +118,9 @@ class InstanceCommand(Command):
         """run the <command>_method on each argument (a list of instance
         identifiers)
         """
-        if not args:
-            args = list_instances(cwcfg.instances_dir())
-            try:
-                askconfirm = not self.config.force
-            except AttributeError:
-                # no force option
-                askconfirm = False
-        else:
-            askconfirm = False
-        self.run_args(args, askconfirm)
-
-    def run_args(self, args, askconfirm):
-        status = 0
-        for appid in args:
-            if askconfirm:
-                print('*' * 72)
-                if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
-                    continue
-            try:
-                status = max(status, self.run_arg(appid))
-            except (KeyboardInterrupt, SystemExit):
-                sys.stderr.write('%s aborted\n' % self.name)
-                return 2  # specific error code
-        sys.exit(status)
-
-    def run_arg(self, appid):
+        appid = args[0]
         cmdmeth = getattr(self, '%s_instance' % self.name)
+
         try:
             status = cmdmeth(appid) or 0
         except (ExecutionError, ConfigurationError) as ex:
@@ -155,30 +133,12 @@ class InstanceCommand(Command):
             sys.stderr.write('instance %s not %s: %s\n' % (
                 appid, self.actionverb, ex))
             status = 8
-        return status
 
+        except (KeyboardInterrupt, SystemExit):
+            sys.stderr.write('%s aborted\n' % self.name)
+            status = 2  # specific error code
 
-class InstanceCommandFork(InstanceCommand):
-    """Same as `InstanceCommand`, but command is forked in a new environment
-    for each argument
-    """
-
-    def run_args(self, args, askconfirm):
-        if len(args) > 1:
-            forkcmd = ' '.join(w for w in sys.argv if w not in args)
-        else:
-            forkcmd = None
-        for appid in args:
-            if askconfirm:
-                print('*' * 72)
-                if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
-                    continue
-            if forkcmd:
-                status = system('%s %s' % (forkcmd, appid))
-                if status:
-                    print('%s exited with status %s' % (forkcmd, status))
-            else:
-                self.run_arg(appid)
+        sys.exit(status)
 
 
 # base commands ###############################################################
@@ -465,16 +425,15 @@ def init_cmdline_log_threshold(config, loglevel):
         config.init_log(config['log-threshold'], force=True)
 
 
-class UpgradeInstanceCommand(InstanceCommandFork):
+class UpgradeInstanceCommand(InstanceCommand):
     """Upgrade an instance after cubicweb and/or component(s) upgrade.
 
     For repository update, you will be prompted for a login / password to use
     to connect to the system database.  For some upgrades, the given user
     should have create or alter table permissions.
 
-    <instance>...
-      identifiers of the instances to upgrade. If no instance is
-      given, upgrade them all.
+    <instance>
+      identifier of the instance to upgrade.
     """
     name = 'upgrade'
     actionverb = 'upgraded'
@@ -638,6 +597,7 @@ class ShellCommand(Command):
     name = 'shell'
     arguments = '<instance> [batch command file(s)] [-- <script arguments>]'
     min_args = 1
+    max_args = None
     options = (
         ('system-only',
          {'short': 'S', 'action': 'store_true',
@@ -701,9 +661,8 @@ sources for migration will be automatically selected.",
 class RecompileInstanceCatalogsCommand(InstanceCommand):
     """Recompile i18n catalogs for instances.
 
-    <instance>...
-      identifiers of the instances to consider. If no instance is
-      given, recompile for all registered instances.
+    <instance>
+      identifier of the instance to consider.
     """
     name = 'i18ninstance'
 
@@ -747,7 +706,7 @@ class ListCubesCommand(Command):
 class ConfigureInstanceCommand(InstanceCommand):
     """Configure instance.
 
-    <instance>...
+    <instance>
       identifier of the instance to configure.
     """
     name = 'configure'
