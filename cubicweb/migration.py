@@ -32,7 +32,7 @@ from logilab.common.configuration import REQUIRED, read_old_config
 from logilab.common.shellutils import ASK
 from logilab.common.changelog import Version
 
-from cubicweb import ConfigurationError, ExecutionError
+from cubicweb import ConfigurationError, ExecutionError, utils
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.toolsutils import show_diffs
 
@@ -228,7 +228,7 @@ class MigrationHelper(object):
             self.interactive_shell()
             return self.confirm(question, shell, abort, retry, pdb, default)
         if answer == 'pdb':
-            import pdb
+            pdb = utils.get_pdb()
             pdb.set_trace()
             return self.confirm(question, shell, abort, retry, pdb, default)
         return True
