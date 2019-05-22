@@ -565,6 +565,17 @@ def js_href(javascript_code):
     return 'javascript: ' + PERCENT_IN_URLQUOTE_RE.sub(r'%25', javascript_code)
 
 
+def get_pdb():
+    "return ipdb if its installed, otherwise pdb"
+    try:
+        import ipdb
+    except ImportError:
+        import pdb
+        return pdb
+    else:
+        return ipdb
+
+
 logger = getLogger('cubicweb.utils')
 
 class QueryCache(object):

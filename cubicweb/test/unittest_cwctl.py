@@ -24,7 +24,7 @@ from unittest.mock import patch, MagicMock
 
 from logilab.common.clcommands import CommandLine
 
-from cubicweb import cwctl, server
+from cubicweb import utils, server
 from cubicweb.cwctl import ListCommand, InstanceCommand
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.migractions import ServerMigrationHelper
@@ -123,7 +123,7 @@ class InstanceCommandTest(unittest.TestCase):
         self.assertEqual(cm.exception.code, 0)
         test_instance.assert_called_with("some_instance")
 
-    @patch.object(cwctl, 'get_pdb')
+    @patch.object(utils, 'get_pdb')
     def test_pdb_not_called(self, get_pdb):
         # CWCTL will finish the program after that
         with self.assertRaises(SystemExit) as cm:
@@ -132,7 +132,7 @@ class InstanceCommandTest(unittest.TestCase):
 
         get_pdb.assert_not_called()
 
-    @patch.object(cwctl, 'get_pdb')
+    @patch.object(utils, 'get_pdb')
     def test_pdb_called(self, get_pdb):
         post_mortem = get_pdb.return_value.post_mortem
         with self.assertRaises(SystemExit) as cm:

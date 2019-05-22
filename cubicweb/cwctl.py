@@ -40,7 +40,7 @@ from logilab.common.shellutils import ASK
 from logilab.common.configuration import merge_options
 from logilab.common.decorators import clear_cache
 
-from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
+from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage, utils
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CONFIGURATIONS
 from cubicweb.server import set_debug
 from cubicweb.toolsutils import Command, rm, create_dir, underline_title
@@ -100,16 +100,6 @@ def available_cube_names(cwcfg):
         return cube
 
     return [drop_prefix(cube) for cube in cwcfg.available_cubes()]
-
-
-def get_pdb():
-    try:
-        import ipdb
-    except ImportError:
-        import pdb
-        return pdb
-    else:
-        return ipdb
 
 
 class InstanceCommand(Command):
@@ -208,7 +198,7 @@ class InstanceCommand(Command):
                 status = ex.code
 
         if status != 0 and self.config.pdb:
-            pdb = get_pdb()
+            pdb = utils.get_pdb()
 
             if traceback_ is not None:
                 pdb.post_mortem(traceback_)
