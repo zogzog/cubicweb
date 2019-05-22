@@ -99,7 +99,7 @@ be set at commit time.
 
     from cubicweb.server.hook import Hook, DataOperationMixIn, Operation, match_rtype
 
-    def check_cycle(self, session, eid, rtype, role='subject'):
+    def check_cycle(session, eid, rtype, role='subject'):
         parents = set([eid])
         parent = session.entity_from_eid(eid)
         while parent.related(rtype, role):
