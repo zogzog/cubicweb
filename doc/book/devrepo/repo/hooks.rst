@@ -153,7 +153,7 @@ alternative method to schedule an operation from a hook, using the
 Here, we call :func:`add_data` so that we will simply accumulate eids of
 entities to check at the end in a single `CheckSubsidiaryCycleOp`
 operation. Values are stored in a set associated to the
-'subsidiary_cycle_detection' transaction data key. The set initialization and
+'check_no_subsidiary_cycle' transaction data key. The set initialization and
 operation creation are handled nicely by :func:`add_data`.
 
 A more realistic example can be found in the advanced tutorial chapter
