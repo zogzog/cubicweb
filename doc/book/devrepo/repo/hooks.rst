@@ -135,8 +135,6 @@ alternative method to schedule an operation from a hook, using the
 
 .. sourcecode:: python
 
-   from cubicweb.server.hook import set_operation
-
    class CheckSubsidiaryCycleHook(Hook):
        __regid__ = 'check_no_subsidiary_cycle'
        events = ('after_add_relation',)
@@ -152,11 +150,11 @@ alternative method to schedule an operation from a hook, using the
                check_cycle(self.session, eid, self.rtype)
 
 
-Here, we call :func:`set_operation` so that we will simply accumulate eids of
+Here, we call :func:`add_data` so that we will simply accumulate eids of
 entities to check at the end in a single `CheckSubsidiaryCycleOp`
 operation. Values are stored in a set associated to the
 'subsidiary_cycle_detection' transaction data key. The set initialization and
-operation creation are handled nicely by :func:`set_operation`.
+operation creation are handled nicely by :func:`add_data`.
 
 A more realistic example can be found in the advanced tutorial chapter
 :ref:`adv_tuto_security_propagation`.
