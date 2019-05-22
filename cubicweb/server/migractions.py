@@ -262,9 +262,10 @@ class ServerMigrationHelper(MigrationHelper):
         source = repo.system_source
         try:
             source.restore(osp.join(tmpdir, source.uri), self.confirm, drop, format)
-        except Exception as exc:
+        except Exception:
+            _, exc, traceback_ = sys.exc_info()
             print('-> error trying to restore %s [%s]' % (source.uri, exc))
-            if not self.confirm('Continue anyway?', default='n'):
+            if not self.confirm('Continue anyway?', default='n', pdb=True, traceback=traceback_):
                 raise SystemExit(1)
         finally:
             shutil.rmtree(tmpdir)
@@ -1454,8 +1455,9 @@ class ServerMigrationHelper(MigrationHelper):
             try:
                 cu = self.cnx.system_sql(sql, args)
             except Exception:
-                ex = sys.exc_info()[1]
-                if self.confirm('Error: %s\nabort?' % ex, pdb=True):
+                _, ex, traceback_ = sys.exc_info()
+                if self.confirm('Error: %s\nabort?' % ex,
+                                pdb=True, traceback=traceback_):
                     raise
                 return
             try:
@@ -1479,8 +1481,10 @@ class ServerMigrationHelper(MigrationHelper):
             if not ask_confirm or self.confirm('Execute rql: %s ?' % msg):
                 try:
                     res = execute(rql, kwargs, build_descr=build_descr)
-                except Exception as ex:
-                    if self.confirm('Error: %s\nabort?' % ex, pdb=True):
+                except Exception:
+                    _, ex, traceback_ = sys.exc_info()
+                    if self.confirm('Error: %s\nabort?' % ex,
+                                    pdb=True, traceback=traceback_):
                         raise
         return res
 
@@ -1568,8 +1572,10 @@ class ForRqlIterator:
                 raise StopIteration
         try:
             return self._h._cw.execute(rql, kwargs)
-        except Exception as ex:
-            if self._h.confirm('Error: %s\nabort?' % ex):
+        except Exception:
+            _, ex, traceback_ = sys.exc_info()
+            if self._h.confirm('Error: %s\nabort?' % ex,
+                               pdb=True, traceback=traceback_):
                 raise
             else:
                 raise StopIteration

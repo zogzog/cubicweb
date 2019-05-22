@@ -200,7 +200,7 @@ class MigrationHelper(object):
             return meth(*args, **kwargs)
 
     def confirm(self, question, # pylint: disable=E0202
-                shell=True, abort=True, retry=False, pdb=False, default='y'):
+                shell=True, abort=True, retry=False, pdb=False, default='y', traceback=None):
         """ask for confirmation and return true on positive answer
 
         if `retry` is true the r[etry] answer may return 2
@@ -226,11 +226,14 @@ class MigrationHelper(object):
             raise SystemExit(1)
         if answer == 'shell':
             self.interactive_shell()
-            return self.confirm(question, shell, abort, retry, pdb, default)
+            return self.confirm(question, shell, abort, retry, pdb, default, traceback)
         if answer == 'pdb':
             pdb = utils.get_pdb()
-            pdb.set_trace()
-            return self.confirm(question, shell, abort, retry, pdb, default)
+            if traceback:
+                pdb.post_mortem(traceback)
+            else:
+                pdb.set_trace()
+            return self.confirm(question, shell, abort, retry, pdb, default, traceback)
         return True
 
     def interactive_shell(self):
