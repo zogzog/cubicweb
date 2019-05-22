@@ -23,6 +23,7 @@ import string
 import logging
 import tempfile
 import itertools
+import traceback
 from os.path import exists, join, basename, splitext
 from itertools import chain
 
@@ -133,8 +134,14 @@ class MigrationHelper(object):
             # search self.__class__ to avoid infinite recursion
             if hasattr(self.__class__, cmd):
                 meth = getattr(self, cmd)
-                return lambda *args, **kwargs: self.interact(args, kwargs,
-                                                             meth=meth)
+                try:
+                    return lambda *args, **kwargs: self.interact(args, kwargs,
+                                                                 meth=meth)
+                except:
+                    _, ex, traceback_ = sys.exc_info()
+                    traceback.print_exc()
+                    if self.confirm('abort?', pdb=True, traceback=traceback_):
+                        raise
             raise
         raise AttributeError(name)
 
