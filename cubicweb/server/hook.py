@@ -75,7 +75,7 @@ before a rollback of a transaction).
 
 Hooks are being fired immediately on data operations, and it is sometime
 necessary to delay the actual work down to a time where we can expect all
-information to be there, or when all other hooks have run (though take case
+information to be there, or when all other hooks have run (though take care
 since operations may themselves trigger hooks). Also while the order of
 execution of hooks is data dependant (and thus hard to predict), it is possible
 to force an order on operations.
@@ -784,7 +784,7 @@ def _container_add(container, value):
 
 class DataOperationMixIn(object):
     """Mix-in class to ease applying a single operation on a set of data,
-    avoiding to create as many as operation as they are individual modification.
+    avoiding creating as many operations as there are individual modifications.
     The body of the operation must then iterate over the values that have been
     stored in a single operation instance.
 

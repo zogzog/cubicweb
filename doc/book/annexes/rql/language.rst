@@ -557,7 +557,7 @@ Available functions
 ~~~~~~~~~~~~~~~~~~~
 
 Below is the list of aggregate and transformation functions that are supported
-nativly by the framework. Notice that cubes may define additional functions.
+natively by the framework. Notice that cubes may define additional functions.
 
 .. _RQLAggregateFunctions:
 
