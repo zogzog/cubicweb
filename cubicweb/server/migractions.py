@@ -32,6 +32,7 @@ import os
 import tarfile
 import tempfile
 import shutil
+import traceback
 import os.path as osp
 from datetime import datetime
 from glob import glob
@@ -1456,8 +1457,8 @@ class ServerMigrationHelper(MigrationHelper):
                 cu = self.cnx.system_sql(sql, args)
             except Exception:
                 _, ex, traceback_ = sys.exc_info()
-                if self.confirm('Error: %s\nabort?' % ex,
-                                pdb=True, traceback=traceback_):
+                traceback.print_exc()
+                if self.confirm('abort?', pdb=True, traceback=traceback_):
                     raise
                 return
             try:
@@ -1483,8 +1484,8 @@ class ServerMigrationHelper(MigrationHelper):
                     res = execute(rql, kwargs, build_descr=build_descr)
                 except Exception:
                     _, ex, traceback_ = sys.exc_info()
-                    if self.confirm('Error: %s\nabort?' % ex,
-                                    pdb=True, traceback=traceback_):
+                    traceback.print_exc()
+                    if self.confirm('abort?', pdb=True, traceback=traceback_):
                         raise
         return res
 
@@ -1574,8 +1575,8 @@ class ForRqlIterator:
             return self._h._cw.execute(rql, kwargs)
         except Exception:
             _, ex, traceback_ = sys.exc_info()
-            if self._h.confirm('Error: %s\nabort?' % ex,
-                               pdb=True, traceback=traceback_):
+            traceback.print_exc()
+            if self._h.confirm('abort?', pdb=True, traceback=traceback_):
                 raise
             else:
                 raise StopIteration
