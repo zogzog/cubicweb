@@ -20,11 +20,6 @@ ifeq (,$(findstring nodocs, $(DEB_BUILD_OPTIONS)))
 	PYTHONPATH=. sphinx-build -N -bhtml doc/ debian/cubicweb-doc/html
 endif
 
-override_dh_auto_install:
-	dh_auto_install
-	mv debian/python-${PYBUILD_NAME}/usr/bin/cubicweb-ctl \
-		debian/cubicweb-ctl/usr/bin/cubicweb-ctl
-
 override_dh_installchangelogs:
 	dh_installchangelogs -Xdoc/changes
 
