@@ -7,6 +7,7 @@
 
 export PYBUILD_NAME=cubicweb
 export PYBUILD_DISABLE_python2=test
+export PYBUILD_DISABLE_python3=test
 
 %:
 	dh $@ --with python2,sphinxdoc --buildsystem=pybuild

@@ -10,25 +10,7 @@ Build-Depends:
  dh-systemd,
  python-all,
  python-setuptools,
- python-six (>= 1.4.0),
- python-docutils,
- python-sphinx,
- python-logilab-common (>= 1.4.0),
- python-unittest2 (>= 0.7.0),
- python-logilab-mtconverter,
- python-markdown,
- python-tz,
- python-rql (>= 0.34.0),
- python-yams (>= 0.45.0),
- python-lxml,
- python-setuptools,
- python-pyramid,
- python-pyramid-multiauth,
- python-waitress,
- python-passlib,
- python-repoze.lru,
- python-wsgicors,
- sphinx-common,
+ python-sphinx
 Standards-Version: 3.9.6
 Homepage: https://www.cubicweb.org
 X-Python-Version: >= 2.7
