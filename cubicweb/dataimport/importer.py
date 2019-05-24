@@ -71,7 +71,10 @@ def use_extid_as_cwuri(extid2eid):
     def use_extid_as_cwuri_filter(extentities):
         for extentity in extentities:
             if extentity.extid not in extid2eid:
-                extentity.values.setdefault('cwuri', set([extentity.extid.decode('utf-8')]))
+                cwuri = extentity.extid
+                if isinstance(cwuri, bytes):
+                    cwuri = cwuri.decode('utf-8')
+                extentity.values.setdefault('cwuri', set([cwuri]))
             yield extentity
     return use_extid_as_cwuri_filter
 

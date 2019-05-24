@@ -25,6 +25,8 @@ from Crypto.Cipher import Blowfish
 
 
 _CYPHERERS = {}
+
+
 def _cypherer(seed):
     if isinstance(seed, str):
         seed = seed.encode('utf-8')
@@ -37,12 +39,13 @@ def _cypherer(seed):
 
 def encrypt(data, seed):
     string = pickle.dumps(data)
-    string = string + '*' * (8 - len(string) % 8)
+    string = string + b'*' * (8 - len(string) % 8)
     string = b64encode(_cypherer(seed).encrypt(string))
-    return str(string)
+    return string.decode('utf-8')
 
 
 def decrypt(string, seed):
+    string = string.encode('utf-8')
     # pickle ignores trailing characters so we do not need to strip them off
     string = _cypherer(seed).decrypt(b64decode(string))
     return pickle.loads(string)
