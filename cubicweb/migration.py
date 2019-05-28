@@ -19,8 +19,10 @@
 
 import sys
 import os
+import string
 import logging
 import tempfile
+import itertools
 from os.path import exists, join, basename, splitext
 from itertools import chain
 
@@ -466,6 +468,14 @@ def version_strictly_lower(a, b):
 def max_version(a, b):
     return str(max(Version(a), Version(b)))
 
+
+def split_constraint(constraint):
+    oper = itertools.takewhile(lambda x: x in "<>=", constraint)
+    version = itertools.dropwhile(lambda x: x not in string.digits + ".", constraint)
+
+    return "".join(oper), "".join(version)
+
+
 class ConfigurationProblem(object):
     """Each cube has its own list of dependencies on other cubes/versions.
 
@@ -499,7 +509,7 @@ class ConfigurationProblem(object):
                 self.reverse_dependencies.setdefault(name,set())
                 if constraint:
                     try:
-                        oper, version = constraint.split()
+                        oper, version = split_constraint(constraint)
                         self.reverse_dependencies[name].add( (oper, version, cube) )
                     except Exception:
                         self.warnings.append(

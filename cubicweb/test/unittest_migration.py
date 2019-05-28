@@ -22,7 +22,11 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import devtools
 from cubicweb.cwconfig import CubicWebConfiguration
-from cubicweb.migration import filter_scripts, version_strictly_lower
+from cubicweb.migration import (
+    filter_scripts,
+    split_constraint,
+    version_strictly_lower,
+)
 
 
 class Schema(dict):
@@ -112,6 +116,17 @@ class BaseCreationTC(TestCase):
             self.assertEqual(cnx.execute('Any SN WHERE X is CWUser, X login "admin", X in_state S, S name SN').rows,
                              [['activated']])
         repo.shutdown()
+
+def test_split_constraint():
+    assert split_constraint(">=0.1.0") == (">=", "0.1.0")
+    assert split_constraint(">= 0.1.0") == (">=", "0.1.0")
+    assert split_constraint(">0.1.1") == (">", "0.1.1")
+    assert split_constraint("> 0.1.1") == (">", "0.1.1")
+    assert split_constraint("<0.2.0") == ("<", "0.2.0")
+    assert split_constraint("< 0.2.0") == ("<", "0.2.0")
+    assert split_constraint("<=42.1.0") == ("<=", "42.1.0")
+    assert split_constraint("<= 42.1.0") == ("<=", "42.1.0")
+
 
 if __name__ == '__main__':
     unittest_main()
