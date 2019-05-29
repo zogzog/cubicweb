@@ -33,7 +33,7 @@ from pyramid.exceptions import ConfigurationError
 from pyramid.settings import asbool, aslist
 
 
-def config_from_cwconfig(cwconfig, settings=None):
+def config_from_cwconfig(cwconfig, settings=None, debugtoolbar=False):
     """Return a Pyramid Configurator instance built from a CubicWeb config and
     Pyramid-specific configuration files (pyramid.ini).
 
@@ -41,14 +41,18 @@ def config_from_cwconfig(cwconfig, settings=None):
     :returns: A Pyramid config object
     """
     settings = dict(settings) if settings else {}
-    settings.update(settings_from_cwconfig(cwconfig))
+    settings.update(settings_from_cwconfig(cwconfig, debugtoolbar=debugtoolbar))
     config = Configurator(settings=settings)
     config.registry['cubicweb.config'] = cwconfig
     config.include('cubicweb.pyramid')
+
+    if debugtoolbar:
+        config.include("pyramid_debugtoolbar")
+
     return config
 
 
-def settings_from_cwconfig(cwconfig):
+def settings_from_cwconfig(cwconfig, debugtoolbar=False):
     '''
     Extract settings from pyramid.ini and pyramid-debug.ini (if in debug)
 
@@ -82,7 +86,7 @@ def settings_from_cwconfig(cwconfig):
 
 def wsgi_application_from_cwconfig(
         cwconfig,
-        profile=False, profile_output=None, profile_dump_every=None):
+        profile=False, profile_output=None, profile_dump_every=None, debugtoolbar=False):
     """ Build a WSGI application from a cubicweb configuration
 
     :param cwconfig: A CubicWeb configuration
@@ -90,10 +94,12 @@ def wsgi_application_from_cwconfig(
     :param profile_output: Profiling output filename. See :ref:`profiling`.
     :param profile_dump_every: Profiling number of requests before dumping the
                                stats. See :ref:`profiling`.
+    :param debugtoolbar: Activate pyramid debugtoolbar when True.
 
     :returns: A fully operationnal WSGI application
     """
-    config = config_from_cwconfig(cwconfig)
+    config = config_from_cwconfig(cwconfig, debugtoolbar=debugtoolbar)
+
     profile = profile or asbool(config.registry.settings.get(
         'cubicweb.profile.enable', False))
     if profile:

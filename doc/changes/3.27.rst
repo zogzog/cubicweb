@@ -47,6 +47,8 @@ New features
 * on DBG_SQL and/or DBG_RQL, if pygments is installed, syntax highlight sql/rql
   debug output
 
+* add a new '-t/--toolbar' option the pyramid command to activate the pyramid debugtoolbar
+
 Backwards incompatible changes
 ------------------------------
 

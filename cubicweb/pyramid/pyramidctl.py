@@ -99,6 +99,10 @@ class PyramidStartHandler(InstanceCommand):
         ('debug',
          {'short': 'D', 'action': 'store_true',
           'help': 'Equals to "--debug-mode --reload"'}),
+        ('toolbar',
+         {'short': 't', 'action': 'store_true',
+          'help': 'Activate the pyramid debug toolbar'
+                  '(the pypi "pyramid_debugtoolbar" package must be installed)'}),
         ('reload',
          {'action': 'store_true',
           'help': 'Restart the server if any source file is changed'}),
@@ -255,10 +259,23 @@ class PyramidStartHandler(InstanceCommand):
         if self['loglevel'] is None and self['debug']:
             init_cmdline_log_threshold(self.cwconfig, 'debug')
 
+        # if the debugtoolbar is activated, test if it's importable
+        if self['toolbar']:
+            try:
+                import pyramid_debugtoolbar  # noqa
+            except ImportError:
+                print("Error: you've tried to activate the pyramid debugtoolbar but it failed to "
+                      "import, make sure it's correctly installed by doing a "
+                      "'pip install pyramid_debugtoolbar'.\nYou can find more information on the "
+                      "official documentation: "
+                      "https://docs.pylonsproject.org/projects/pyramid_debugtoolbar/en/latest/")
+                sys.exit(1)
+
         app = wsgi_application_from_cwconfig(
             cwconfig, profile=self['profile'],
             profile_output=self['profile-output'],
-            profile_dump_every=self['profile-dump-every']
+            profile_dump_every=self['profile-dump-every'],
+            debugtoolbar=self['toolbar']
         )
 
         host = cwconfig['interface']
