@@ -42,7 +42,7 @@ class SchemaViewer(object):
             self._ = req._
         else:
             encoding = 'ascii'
-            self._ = unicode
+            self._ = str
         self.encoding = encoding
 
     # no self.req managements
@@ -239,6 +239,6 @@ class SchemaViewer(object):
 
     def to_string(self, value):
         """used to converte arbitrary values to encoded string"""
-        if isinstance(value, unicode):
+        if isinstance(value, str):
             return value.encode(self.encoding, 'replace')
         return str(value)
