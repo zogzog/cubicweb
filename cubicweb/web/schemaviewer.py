@@ -121,7 +121,6 @@ class SchemaViewer(object):
             data.append(', '.join(str(constr) for constr in constraints))
         return data
 
-
     def stereotype(self, name):
         return Span((' <<%s>>' % name,), klass='stereotype')
 
@@ -129,7 +128,7 @@ class SchemaViewer(object):
         """get a layout for an entity schema"""
         etype = eschema.type
         layout = Section(children=' ', klass='clear')
-        layout.append(Link(etype,'&#160;' , id=etype)) # anchor
+        layout.append(Link(etype, '&#160;', id=etype))  # anchor
         title = self.format_eschema(eschema)
         boxchild = [Section(children=(title,), klass='title')]
         data = []
@@ -196,7 +195,7 @@ class SchemaViewer(object):
         if rschema_objects:
             # might be empty
             properties = [p for p in RelationDefinitionSchema.rproperty_defs(rschema_objects[0])
-                          if not p in ('cardinality', 'composite', 'eid')]
+                          if p not in ('cardinality', 'composite', 'eid')]
         else:
             properties = []
         data += [_(prop) for prop in properties]
@@ -221,7 +220,7 @@ class SchemaViewer(object):
                     elif isinstance(val, dict):
                         for key, value in val.items():
                             if isinstance(value, (list, tuple)):
-                                val[key] = ', '.join(sorted( str(v) for v in value))
+                                val[key] = ', '.join(sorted(str(v) for v in value))
                         val = str(val)
 
                     elif isinstance(val, (list, tuple)):

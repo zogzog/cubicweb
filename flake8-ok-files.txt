@@ -116,6 +116,7 @@ cubicweb/toolsutils.py
 cubicweb/web/application.py
 cubicweb/web/box.py
 cubicweb/web/formwidgets.py
+cubicweb/web/schemaviewer.py
 cubicweb/web/test/data/entities.py
 cubicweb/web/test/unittest_application.py
 cubicweb/web/test/unittest_http_headers.py
