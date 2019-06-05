@@ -1,6 +1,10 @@
 cubicweb (3.26.12-2) UNRELEASED; urgency=medium
 
+  [ Denis Laxalde ]
   * Introduce a cubicweb-ctl3 binary package, conflicting with cubicweb-ctl.
+
+  [ Jérémy Bobbio ]
+  * Switch to Debian source format 3.0 (quilt).
 
  -- Denis Laxalde <denis.laxalde@logilab.fr>  Fri, 12 Jul 2019 11:54:09 +0200
 
