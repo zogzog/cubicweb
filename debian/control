@@ -8,72 +8,72 @@ Build-Depends:
  debhelper (>= 9),
  dh-python,
  dh-systemd,
- python-all,
- python-setuptools,
- python-six (>= 1.4.0),
- python-docutils,
- python-sphinx,
- python-logilab-common (>= 1.4.0),
- python-logilab-mtconverter,
- python-markdown,
- python-tz,
- python-rql (>= 0.34.0),
- python-yams (>= 0.45.0),
- python-lxml,
- python-setuptools,
- python-pyramid,
- python-pyramid-multiauth,
- python-waitress,
- python-passlib,
- python-repoze.lru,
- python-wsgicors,
- python-filelock,
+ python3-all,
+ python3-setuptools,
+ python3-six (>= 1.4.0),
+ python3-docutils,
+ python3-sphinx,
+ python3-logilab-common (>= 1.4.0),
+ python3-logilab-mtconverter,
+ python3-markdown,
+ python3-tz,
+ python3-rql (>= 0.34.0),
+ python3-yams (>= 0.45.0),
+ python3-lxml,
+ python3-setuptools,
+ python3-pyramid,
+ python3-pyramid-multiauth,
+ python3-waitress,
+ python3-passlib,
+ python3-repoze.lru,
+ python3-wsgicors,
+ python3-filelock,
  sphinx-common,
-Standards-Version: 3.9.6
+Standards-Version: 4.3.0
 Homepage: https://www.cubicweb.org
-X-Python-Version: >= 2.7
+X-Python3-Version: >= 3.4
 
 
-Package: python-cubicweb
+Package: python3-cubicweb
 Architecture: all
 Depends:
  ${misc:Depends},
- ${python:Depends},
- python-six (>= 1.4.0),
- python-logilab-mtconverter (>= 0.8.0),
- python-logilab-common (>= 1.4.0),
- python-logilab-database (>= 1.15.0),
- python-yams (>= 0.45.0),
- python-rql (>= 0.34.0),
- python-lxml,
- python-markdown,
- python-passlib,
- python-tz,
+ ${python3:Depends},
+ python3-six (>= 1.4.0),
+ python3-logilab-mtconverter (>= 0.8.0),
+ python3-logilab-common (>= 1.4.0),
+ python3-logilab-database (>= 1.15.0),
+ python3-yams (>= 0.45.0),
+ python3-rql (>= 0.34.0),
+ python3-lxml,
+ python3-markdown,
+ python3-passlib,
+ python3-tz,
  graphviz,
- python-filelock,
+ python3-filelock,
  gettext,
 Recommends:
  cubicweb-ctl (= ${source:Version}),
- python-cubicweb-postgresql-support (= ${source:Version})
+ python3-cubicweb-postgresql-support (= ${source:Version})
  | sqlite3,
- python-cubicweb-pyramid (= ${source:Version}),
+ python3-cubicweb-pyramid (= ${source:Version}),
 # common recommends
- python-simpletal (>= 4.0),
- python-pycryptodome,
+ python3-simpletal (>= 4.0),
+ python3-pycryptodome,
 # web recommends (mostly)
- python-docutils (>= 0.6),
- python-vobject,
+ python3-docutils (>= 0.6),
+ python3-vobject,
  fckeditor,
- python-fyzz,
- python-imaging,
- python-rdflib,
- python-werkzeug,
+ python3-fyzz,
+ python3-imaging,
+ python3-rdflib,
+ python3-werkzeug,
 # dev recommends
- python-pysqlite2,
+ python3-pysqlite2,
 Suggests:
- python-zmq,
- python-cwclientlib (>= 0.4.0),
- python-cubicweb-documentation (= ${source:Version}),
+ python3-zmq,
+ python3-cwclientlib (>= 0.4.0),
+ python3-cubicweb-documentation (= ${source:Version}),
  w3c-dtd-xhtml,
  xvfb,
 Replaces:
@@ -117,7 +117,7 @@ Description: the complete CubicWeb framework
  packages on the different hosts.
 
 
-Package: python-cubicweb-postgresql-support
+Package: python3-cubicweb-postgresql-support
 Architecture: all
 # postgresql-client packages for backup/restore of non local database
 Replaces: cubicweb-postgresql-support (<< 3.24.0-1~)
@@ -125,8 +125,8 @@ Breaks: cubicweb-postgresql-support (<< 3.24.0-1~)
 Provides: cubicweb-postgresql-support
 Depends:
  ${misc:Depends},
- ${python:Depends},
- python-psycopg2,
+ ${python3:Depends},
+ python3-psycopg2,
  postgresql-client
 Description: postgres support for the CubicWeb framework
  CubicWeb is a semantic web application framework.
@@ -135,17 +135,17 @@ Description: postgres support for the CubicWeb framework
  cubicweb repository.
 
 
-Package: python-cubicweb-pyramid
+Package: python3-cubicweb-pyramid
 Architecture: all
 Depends:
- python-cubicweb (= ${source:Version}),
- python-pyramid (>= 1.5.0),
- python-pyramid-multiauth,
- python-waitress (>= 0.8.9),
- python-wsgicors,
- python-repoze.lru,
+ python3-cubicweb (= ${source:Version}),
+ python3-pyramid (>= 1.5.0),
+ python3-pyramid-multiauth,
+ python3-waitress (>= 0.8.9),
+ python3-wsgicors,
+ python3-repoze.lru,
 Recommends:
- python-pyramid-debugtoolbar
+ python3-pyramid-debugtoolbar
 Conflicts:
  pyramid-cubicweb
 Replaces:
@@ -159,8 +159,8 @@ Package: cubicweb-ctl
 Architecture: all
 Depends:
  ${misc:Depends},
- ${python:Depends},
- python-cubicweb (= ${source:Version})
+ ${python3:Depends},
+ python3-cubicweb (= ${source:Version})
 Description: tool to manage the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -169,12 +169,13 @@ Description: tool to manage the CubicWeb framework
  to automatically start and stop CubicWeb applications on boot or shutdown.
 
 
-Package: python-cubicweb-documentation
+Package: python3-cubicweb-documentation
 Architecture: all
 Section: doc
 Replaces: cubicweb-documentation (<< 3.24.0-1~)
 Breaks: cubicweb-documentation (<< 3.24.0-1~)
 Provides: cubicweb-documentation
+Conflicts: python-cubicweb-documentation
 Depends:
  ${misc:Depends},
  ${sphinxdoc:Depends},
@@ -193,7 +194,7 @@ Architecture: all
 Priority: extra
 Section: oldlibs
 Depends:
- python-cubicweb, ${misc:Depends}
+ python3-cubicweb, ${misc:Depends}
 Description: transitional package
   This is a transitional package. It can safely be removed.
 
@@ -203,7 +204,7 @@ Architecture: all
 Priority: extra
 Section: oldlibs
 Depends:
- python-cubicweb, ${misc:Depends}
+ python3-cubicweb, ${misc:Depends}
 Description: transitional package
   This is a transitional package. It can safely be removed.
 
@@ -213,7 +214,7 @@ Architecture: all
 Priority: extra
 Section: oldlibs
 Depends:
- python-cubicweb-postgresql-support, ${misc:Depends}
+ python3-cubicweb-postgresql-support, ${misc:Depends}
 Description: transitional package
   This is a transitional package. It can safely be removed.
 
@@ -223,7 +224,7 @@ Architecture: all
 Priority: extra
 Section: oldlibs
 Depends:
- python-cubicweb, ${misc:Depends}
+ python3-cubicweb, ${misc:Depends}
 Description: transitional package
   This is a transitional package. It can safely be removed.
 
@@ -233,7 +234,7 @@ Architecture: all
 Priority: extra
 Section: oldlibs
 Depends:
- python-cubicweb, ${misc:Depends}
+ python3-cubicweb, ${misc:Depends}
 Description: transitional package
   This is a transitional package. It can safely be removed.
 
@@ -243,7 +244,7 @@ Architecture: all
 Priority: extra
 Section: oldlibs
 Depends:
- python-cubicweb, ${misc:Depends}
+ python3-cubicweb, ${misc:Depends}
 Description: transitional package
   This is a transitional package. It can safely be removed.
 
@@ -253,6 +254,6 @@ Architecture: all
 Priority: extra
 Section: oldlibs
 Depends:
- python-cubicweb-documentation, ${misc:Depends}
+ python3-cubicweb-documentation, ${misc:Depends}
 Description: transitional package
   This is a transitional package. It can safely be removed.

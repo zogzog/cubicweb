@@ -1,3 +1,9 @@
+cubicweb (3.27.0~dev0-1) UNRELEASED; urgency=medium
+
+  * Switch all Debian packages to Python 3.
+
+ -- Jérémy Bobbio <jeremy.bobbio@irq7.fr>  Wed, 29 May 2019 16:06:20 +0200
+
 cubicweb (3.26.11-1) unstable; urgency=medium
 
   * New upstream release.

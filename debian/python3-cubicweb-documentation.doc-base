@@ -5,5 +5,5 @@ Abstract: Some base documentation for CubicWeb users and developpers
 Section: Apps/Programming
 
 Format: HTML
-Index: /usr/share/doc/python-cubicweb-documentation/html/index.html
-Files: /usr/share/doc/python-cubicweb-documentation/html/*
+Index: /usr/share/doc/python3-cubicweb-documentation/html/index.html
+Files: /usr/share/doc/python3-cubicweb-documentation/html/*
