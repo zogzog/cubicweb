@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+set -x
+
+### Setup tests
+
+find cubicweb -type d -name 'test' | while read dir; do
+	mkdir -p "$AUTOPKGTEST_TMP"/$(dirname "$dir")
+	cp -r "$dir" "$AUTOPKGTEST_TMP/$dir"
+done
+chown -R nobody:nogroup "$AUTOPKGTEST_TMP"
+
+### Find PostgreSQL binaries
+
+POSTGRESQL_BINDIR=$(find /usr/lib/postgresql -type f -name 'initdb' -printf "%h\n" | head -n 1)
+test "$POSTGRESQL_BINDIR" || { echo "Unable to find 'initdb'" >&2; exit 1; }
+
+### Run tests
+
+for py in $(py3versions -r 2>/dev/null); do
+	cd "$AUTOPKGTEST_TMP"
+	echo "Testing with $py:"
+	su nobody --shell /bin/sh \
+		-c "env PATH='$PATH:$POSTGRESQL_BINDIR' $py -m pytest -v"
+done

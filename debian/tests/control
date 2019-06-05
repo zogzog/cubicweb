@@ -1,0 +1,9 @@
+Tests: unittest
+Depends:
+ python3-cubicweb,
+ @builddeps@,
+ python3-pytest,
+ python3-crypto, python3-psycopg2,
+ postgresql, postgresql-plpython,
+ firefox
+Restrictions: allow-stderr, isolation-container
