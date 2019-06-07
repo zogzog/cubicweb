@@ -7,6 +7,7 @@
 
 export PYBUILD_NAME=cubicweb
 export PYBUILD_DISABLE_python2=test
+export PYBUILD_DISABLE_python3=test
 
 %:
 	dh $@ --with python2,sphinxdoc --buildsystem=pybuild
@@ -18,11 +19,6 @@ override_dh_auto_build:
 ifeq (,$(findstring nodocs, $(DEB_BUILD_OPTIONS)))
 	PYTHONPATH=. sphinx-build -N -bhtml doc/ debian/cubicweb-doc/html
 endif
-
-override_dh_auto_install:
-	dh_auto_install
-	mv debian/python-${PYBUILD_NAME}/usr/bin/cubicweb-ctl \
-		debian/cubicweb-ctl/usr/bin/cubicweb-ctl
 
 override_dh_installchangelogs:
 	dh_installchangelogs -Xdoc/changes
