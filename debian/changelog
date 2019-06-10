@@ -11,6 +11,7 @@ cubicweb (3.27.0~dev0-1) UNRELEASED; urgency=medium
   * Move lintian-overrides file to debian/source directory.
   * Use “dependency package” instead of “virtual package” to describe
     python3-cubicweb-postgresql-support.
+  * Fix doc-base section.
 
  -- Jérémy Bobbio <jeremy.bobbio@irq7.fr>  Wed, 29 May 2019 16:06:20 +0200
 
