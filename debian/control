@@ -130,7 +130,7 @@ Depends:
 Description: postgres support for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
- This virtual package provides dependencies to use PostgreSQL for the
+ This dependency package provides dependencies to use PostgreSQL for the
  cubicweb repository.
 
 
