@@ -3,6 +3,7 @@ cubicweb (3.27.0~dev0-1) UNRELEASED; urgency=medium
   * Switch all Debian packages to Python 3.
   * Switch to Debian source format 3.0 (quilt).
   * Run test suite as part of autopkgtest.
+  * Remove build dependency on obsolete dh-systemd.
 
  -- Jérémy Bobbio <jeremy.bobbio@irq7.fr>  Wed, 29 May 2019 16:06:20 +0200
 
