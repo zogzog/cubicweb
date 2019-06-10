@@ -2,7 +2,7 @@ Document: cubicweb-doc
 Title: CubicWeb Documentation
 Author: Logilab
 Abstract: Some base documentation for CubicWeb users and developpers
-Section: Apps/Programming
+Section: Programming
 
 Format: HTML
 Index: /usr/share/doc/python-cubicweb-documentation/html/index.html
