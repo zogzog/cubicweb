@@ -190,7 +190,7 @@ Description: documentation for the CubicWeb framework
 
 Package: cubicweb
 Architecture: all
-Priority: extra
+Priority: optional
 Section: oldlibs
 Depends:
  python3-cubicweb, ${misc:Depends}
@@ -200,7 +200,7 @@ Description: transitional package
 
 Package: cubicweb-server
 Architecture: all
-Priority: extra
+Priority: optional
 Section: oldlibs
 Depends:
  python3-cubicweb, ${misc:Depends}
@@ -210,7 +210,7 @@ Description: transitional package
 
 Package: cubicweb-postgresql-support
 Architecture: all
-Priority: extra
+Priority: optional
 Section: oldlibs
 Depends:
  python3-cubicweb-postgresql-support, ${misc:Depends}
@@ -220,7 +220,7 @@ Description: transitional package
 
 Package: cubicweb-web
 Architecture: all
-Priority: extra
+Priority: optional
 Section: oldlibs
 Depends:
  python3-cubicweb, ${misc:Depends}
@@ -230,7 +230,7 @@ Description: transitional package
 
 Package: cubicweb-common
 Architecture: all
-Priority: extra
+Priority: optional
 Section: oldlibs
 Depends:
  python3-cubicweb, ${misc:Depends}
@@ -240,7 +240,7 @@ Description: transitional package
 
 Package: cubicweb-dev
 Architecture: all
-Priority: extra
+Priority: optional
 Section: oldlibs
 Depends:
  python3-cubicweb, ${misc:Depends}
@@ -250,7 +250,7 @@ Description: transitional package
 
 Package: cubicweb-documentation
 Architecture: all
-Priority: extra
+Priority: optional
 Section: oldlibs
 Depends:
  python3-cubicweb-documentation, ${misc:Depends}
