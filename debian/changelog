@@ -8,6 +8,7 @@ cubicweb (3.27.0~dev0-1) UNRELEASED; urgency=medium
   * Tidy substvars usage in control file.
   * Stop using an empty (and obsolete) /etc/bash_completion.d with
     cubicweb-ctl.
+  * Move lintian-overrides file to debian/source directory.
 
  -- Jérémy Bobbio <jeremy.bobbio@irq7.fr>  Wed, 29 May 2019 16:06:20 +0200
 
