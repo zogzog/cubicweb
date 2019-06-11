@@ -24,7 +24,7 @@ from logilab.common.ureports import Section, Title, Table, Link, Span, Text
 
 from yams.schema2dot import CARD_MAP
 from yams.schema import RelationDefinitionSchema
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 
 TYPE_GETTER = attrgetter('type')
 
@@ -89,7 +89,7 @@ class SchemaViewer(object):
             relations = [rschema for rschema in sorted(schema.relations(), key=TYPE_GETTER)
                          if not (rschema.final or rschema.type in skiptypes)]
             keys = [(rschema.type, rschema) for rschema in relations]
-            for key, rschema in sorted(keys, cmp=(lambda x, y: cmp(x[1], y[1]))):
+            for key, rschema in sorted(keys, key=itemgetter(1)):
                 relstr = self.visit_relationschema(rschema)
                 rsection.append(relstr)
         return layout
@@ -97,7 +97,8 @@ class SchemaViewer(object):
     def _entity_attributes_data(self, eschema):
         _ = self._
         data = [_('attribute'), _('type'), _('default'), _('constraints')]
-        attributes = sorted(eschema.attribute_definitions(), cmp=(lambda x, y: cmp(x[0].type, y[0].type)))
+        attributes = sorted(eschema.attribute_definitions(),
+                            key=lambda el: el[0].type)
         for rschema, aschema in attributes:
             rdef = eschema.rdef(rschema)
             if not self.may_read(rdef):
@@ -140,8 +141,8 @@ class SchemaViewer(object):
         first = True
 
         rel_defs = sorted(eschema.relation_definitions(),
-                          cmp=(lambda x, y: cmp((x[0].type, x[0].cardinality),
-                          (y[0].type, y[0].cardinality))))
+                          key=lambda el: (el[0].type, el[0].cardinality))
+
         for rschema, targetschemas, role in rel_defs:
             if rschema.type in skiptypes:
                 continue
