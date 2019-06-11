@@ -140,7 +140,7 @@ class SchemaViewer(object):
         first = True
 
         rel_defs = sorted(eschema.relation_definitions(),
-                          key=lambda el: (el[0].type, el[0].cardinality))
+                          key=lambda el: el[0].type)
 
         for rschema, targetschemas, role in rel_defs:
             if rschema.type in skiptypes:
