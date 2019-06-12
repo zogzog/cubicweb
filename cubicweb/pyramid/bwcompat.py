@@ -21,6 +21,7 @@
 """Backward compatibility layer for CubicWeb to run as a Pyramid application."""
 
 import sys
+import inspect
 import logging
 
 from pyramid import security
@@ -88,7 +89,12 @@ class CubicWebPyramidHandler(object):
                     try:
                         controller = vreg['controllers'].select(
                             ctrlid, req, appli=self.appli)
+                        log.info("REQUEST [%s] '%s' selected controller %s at %s:%s",
+                                 ctrlid, req.path, controller,
+                                 inspect.getsourcefile(controller.__class__),
+                                 inspect.getsourcelines(controller.__class__)[1])
                     except cubicweb.NoSelectableObject:
+                        log.warn("WARNING '%s' unauthorized request", req.path)
                         raise httpexceptions.HTTPUnauthorized(
                             req._('not authorized'))
 
