@@ -124,7 +124,7 @@ Breaks: cubicweb-postgresql-support (<< 3.24.0-1~)
 Provides: cubicweb-postgresql-support
 Depends:
  ${misc:Depends},
- ${python3:Depends},
+ python3-cubicweb (= ${source:Version}),
  python3-psycopg2,
  postgresql-client
 Description: postgres support for the CubicWeb framework
@@ -137,6 +137,7 @@ Description: postgres support for the CubicWeb framework
 Package: python3-cubicweb-pyramid
 Architecture: all
 Depends:
+ ${misc:Depends},
  python3-cubicweb (= ${source:Version}),
  python3-pyramid (>= 1.5.0),
  python3-pyramid-multiauth,
@@ -158,7 +159,6 @@ Package: cubicweb-ctl
 Architecture: all
 Depends:
  ${misc:Depends},
- ${python3:Depends},
  python3-cubicweb (= ${source:Version})
 Description: tool to manage the CubicWeb framework
  CubicWeb is a semantic web application framework.
@@ -178,6 +178,7 @@ Conflicts: python-cubicweb-documentation
 Depends:
  ${misc:Depends},
  ${sphinxdoc:Depends},
+Built-Using: ${sphinxdoc:Built-Using}
 Recommends:
  doc-base
 Description: documentation for the CubicWeb framework
