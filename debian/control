@@ -166,7 +166,7 @@ Breaks: cubicweb-postgresql-support (<< 3.24.0-1~)
 Provides: cubicweb-postgresql-support
 Depends:
  ${misc:Depends},
- ${python:Depends},
+ python-cubicweb (= ${source:Version}),
  python-psycopg2,
  postgresql-client
 Description: postgres support for the CubicWeb framework (Python 2)
@@ -182,7 +182,7 @@ Section: python
 # postgresql-client packages for backup/restore of non local database
 Depends:
  ${misc:Depends},
- ${python3:Depends},
+ python3-cubicweb (= ${source:Version}),
  python3-psycopg2,
  postgresql-client
 Description: postgres support for the CubicWeb framework (Python 3)
@@ -249,7 +249,6 @@ Package: cubicweb-ctl
 Architecture: all
 Depends:
  ${misc:Depends},
- ${python:Depends},
  python-cubicweb (= ${source:Version})
 Conflicts:
  cubicweb-ctl3,
@@ -264,7 +263,6 @@ Package: cubicweb-ctl3
 Architecture: all
 Depends:
  ${misc:Depends},
- ${python3:Depends},
  python3-cubicweb (= ${source:Version})
 Conflicts:
  cubicweb-ctl,
@@ -284,6 +282,7 @@ Provides: cubicweb-documentation
 Depends:
  ${misc:Depends},
  ${sphinxdoc:Depends},
+Built-Using: ${sphinxdoc:Built-Using}
 Recommends:
  doc-base
 Description: documentation for the CubicWeb framework

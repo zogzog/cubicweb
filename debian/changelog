@@ -6,6 +6,7 @@ cubicweb (3.26.12-2) UNRELEASED; urgency=medium
   [ Jérémy Bobbio ]
   * Switch to Debian source format 3.0 (quilt).
   * Specify priority “optional” instead of the obsolete “extra”.
+  * Tidy substvars usage in control file.
 
  -- Denis Laxalde <denis.laxalde@logilab.fr>  Fri, 12 Jul 2019 11:54:09 +0200
 
