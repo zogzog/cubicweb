@@ -38,18 +38,7 @@ Architecture: all
 Depends:
  ${misc:Depends},
  ${python3:Depends},
- python3-six (>= 1.4.0),
- python3-logilab-mtconverter (>= 0.8.0),
- python3-logilab-common (>= 1.4.0),
- python3-logilab-database (>= 1.15.0),
- python3-yams (>= 0.45.0),
- python3-rql (>= 0.34.0),
- python3-lxml,
- python3-markdown,
- python3-passlib,
- python3-tz,
  graphviz,
- python3-filelock,
  gettext,
 Recommends:
  cubicweb-ctl (= ${source:Version}),
