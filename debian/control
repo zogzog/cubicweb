@@ -44,7 +44,12 @@ Recommends:
  cubicweb-ctl (= ${source:Version}),
  python3-cubicweb-postgresql-support (= ${source:Version})
  | sqlite3,
- python3-cubicweb-pyramid (= ${source:Version}),
+# pyramid recommends
+ python3-pyramid (>= 1.5.0),
+ python3-pyramid-multiauth,
+ python3-waitress (>= 0.8.9),
+ python3-wsgicors,
+ python3-repoze.lru,
 # common recommends
  python3-simpletal (>= 4.0),
  python3-pycryptodome,
@@ -64,6 +69,7 @@ Suggests:
  python3-cubicweb-documentation (= ${source:Version}),
  w3c-dtd-xhtml,
  xvfb,
+ python3-pyramid-debugtoolbar,
 Replaces:
  cubicweb (<< 3.24.0-1~),
  cubicweb-server (<< 3.24.0-1~),
@@ -121,27 +127,6 @@ Description: postgres support for the CubicWeb framework
  .
  This dependency package provides dependencies to use PostgreSQL for the
  cubicweb repository.
-
-
-Package: python3-cubicweb-pyramid
-Architecture: all
-Depends:
- ${misc:Depends},
- python3-cubicweb (= ${source:Version}),
- python3-pyramid (>= 1.5.0),
- python3-pyramid-multiauth,
- python3-waitress (>= 0.8.9),
- python3-wsgicors,
- python3-repoze.lru,
-Recommends:
- python3-pyramid-debugtoolbar
-Conflicts:
- pyramid-cubicweb
-Replaces:
- pyramid-cubicweb
-Description: meta package to use Pyramid as HTTP server for CubicWeb
- Provides pyramid extensions to load a CubicWeb instance and serve it through
- the pyramid stack.
 
 
 Package: cubicweb-ctl
