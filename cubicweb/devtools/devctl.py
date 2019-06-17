@@ -612,6 +612,11 @@ layout, and a full featured cube with "full" layout.',
           'help': 'verbose mode: will ask all possible configuration questions',
           }
          ),
+        ("short-description",
+         {'short': 's', 'type': 'string', 'metavar': '<short description>',
+          'help': 'short description for the cube',
+         }
+         ),
         ("author",
          {'short': 'a', 'type' : 'string', 'metavar': '<author>',
           'default': 'LOGILAB S.A. (Paris, FRANCE)',
@@ -707,7 +712,7 @@ layout, and a full featured cube with "full" layout.',
         if osp.exists(cubedir):
             self.fail("%s already exists!" % cubedir)
         skeldir = osp.join(BASEDIR, 'skeleton')
-        longdesc = shortdesc = input(
+        longdesc = shortdesc = self['short-description'] or input(
             'Enter a short description for your cube: ')
         if verbose:
             longdesc = input(
