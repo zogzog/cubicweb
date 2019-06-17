@@ -7,3 +7,10 @@ Depends:
  python3-psycopg2, postgresql, postgresql-plpython,
  python3-ldap3, slapd, ldap-utils
 Restrictions: allow-stderr, isolation-container
+
+Tests: skeleton-packaging
+Depends:
+ python3-cubicweb, cubicweb-ctl,
+ python3-pyramid, python3-wsgicors,
+ devscripts, equivs, lintian, autopkgtest
+Restrictions: allow-stderr, needs-root

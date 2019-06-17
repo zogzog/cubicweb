@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -e
+set -x
+
+if [ -z "$AUTOPKGTEST_TMP" ]; then
+	echo "Not running as part as autopkgtest" >&2
+	exit 250
+fi
+
+# Switch to unprivileged user if needed
+if [ "$(id -u)" = 0 ]; then
+	apt-get install -q -y sudo
+	echo 'Defaults !fqdn' > /etc/sudoers.d/fqdn
+	echo 'nobody ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/nobody
+	chown nobody:nogroup "$AUTOPKGTEST_TMP"
+	exec su nobody -s /bin/sh -c "$0"
+fi
+
+cd "$AUTOPKGTEST_TMP"
+
+# Create a cube
+PACKAGE="cubicweb-mytest"
+cubicweb-ctl newcube -s 'Just a test cube' ${PACKAGE#cubicweb-}
+cd "$PACKAGE"
+
+UPSTREAM_VERSION=$(python3 setup.py --version)
+DEBIAN_VERSION=$(dpkg-parsechangelog -S Version)
+
+# Create source tarball
+python3 setup.py sdist
+mv "dist/${PACKAGE}-${UPSTREAM_VERSION}.tar.gz" "../${PACKAGE}_${UPSTREAM_VERSION}.orig.tar.gz"
+
+# Install build-dependencies
+mk-build-deps --install --root-cmd sudo --remove \
+	--tool 'apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends --quiet --assume-yes'
+
+# Build!
+dpkg-buildpackage
+
+# Output .buildinfo for posterity
+cat ../*.buildinfo
+
+# Output package content, again for posterity
+debc
+
+# Install the package
+sudo debi --with-depends
+
+lintian -i ../*.dsc ../*.changes
+
+# Test if Python module is usable
+python3 -c 'import cubicweb_mytest; print(dir(cubicweb_mytest))'
+
+# Run autopkgtest (uh… inception, anyone?)
+sudo autopkgtest ../*.changes -- null
