@@ -9,7 +9,6 @@ Build-Depends:
  dh-python,
  python3-all,
  python3-setuptools,
- python3-six (>= 1.4.0),
  python3-docutils,
  python3-sphinx,
  python3-logilab-common (>= 1.4.0),
