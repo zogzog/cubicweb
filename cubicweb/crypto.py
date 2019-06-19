@@ -21,7 +21,7 @@
 from base64 import b64encode, b64decode
 import pickle
 
-from Crypto.Cipher import Blowfish
+from Cryptodome.Cipher import Blowfish
 
 
 _CYPHERERS = {}

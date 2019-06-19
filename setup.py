@@ -87,7 +87,7 @@ setup(
             'Pillow',
         ],
         'crypto': [
-            'pycryptodome',
+            'pycryptodomex',
         ],
         'ext': [
             'docutils >= 0.6',
