@@ -8,7 +8,7 @@ Get a blog running in five minutes!
 For Debian or Ubuntu users, first install the following packages
 (:ref:`DebianInstallation`)::
 
-    cubicweb, cubicweb-dev, cubicweb-pyramid, cubicweb-blog
+    python3-cubicweb, cubicweb-ctl, cubicweb-blog
 
 Windows or Mac OS X users must install |cubicweb| from source (see
 :ref:`SourceInstallation` and :ref:`WindowsInstallation`).

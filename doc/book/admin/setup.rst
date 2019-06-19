@@ -62,14 +62,11 @@ and register the key to avoid warnings::
 Update your list of packages and perform the installation::
 
   apt-get update
-  apt-get install cubicweb cubicweb-dev
+  apt-get install python3-cubicweb --install-recommends
 
-  # if you want pyramid, the recommended application server
-  apt-get install pyramid-cubicweb
-
-``cubicweb`` installs the framework itself, allowing you to create new
-instances. ``cubicweb-dev`` installs the development environment
-allowing you to develop new cubes.
+``python3-cubicweb`` installs the framework itself, allowing you to create new
+instances. Installing recommended packages will install the development
+environment allowing you to develop new cubes.
 
 There is also a wide variety of :ref:`cubes <AvailableCubes>`. You can access a
 list of available cubes using ``apt-cache search cubicweb`` or at the
@@ -77,15 +74,12 @@ list of available cubes using ``apt-cache search cubicweb`` or at the
 
 .. note::
 
-  `cubicweb-dev` will install basic sqlite support. You can easily setup
+  `python3-cubicweb` will install basic sqlite support. You can easily setup
   :ref:`cubicweb with other database <DatabaseInstallation>` using the following
   virtual packages :
 
-  * `cubicweb-postgresql-support` contains the necessary dependencies for
+  * `python3-cubicweb-postgresql-support` contains the necessary dependencies for
     using :ref:`cubicweb with postgresql datatabase <PostgresqlConfiguration>`
-
-  * `cubicweb-mysql-support` contains the necessary dependencies for using
-    :ref:`cubicweb with mysql database <MySqlConfiguration>`.
 
 .. _`list of sources`: http://wiki.debian.org/SourcesList
 .. _`Logilab's gnupg key`: https://www.logilab.fr/logilab-debian-keyring.gpg

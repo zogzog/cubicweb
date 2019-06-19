@@ -16,11 +16,6 @@ to customize the blog we created to add more features to it.
 Create your own cube
 ~~~~~~~~~~~~~~~~~~~~
 
-First, notice that if you've installed |cubicweb| using Debian packages, you will
-need the additional ``cubicweb-dev`` package to get the commands necessary to
-|cubicweb| development. All `cubicweb-ctl` commands are described in details in
-:ref:`cubicweb-ctl`.
-
 Once your |cubicweb| development environment is set up, you can create a new
 cube::
 
@@ -28,6 +23,9 @@ cube::
 
 This will create a a directory named :file:`cubicweb-myblog` reflecting the
 structure described in :ref:`cubelayout`.
+
+All `cubicweb-ctl` commands are described in details in
+:ref:`cubicweb-ctl`.
 
 .. Note::
 
