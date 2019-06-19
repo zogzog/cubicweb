@@ -1,0 +1,7 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME = %(distname)s
+export PYBUILD_OPTION = --test-pytest
+
+%%:
+	dh $@ --with python3 --buildsystem=pybuild

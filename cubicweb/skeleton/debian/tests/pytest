@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+set -x
+
+### Setup tests
+
+# Uncomment if tests require database access
+#service postgresql restart || service postgresql start
+#trap 'service postgresql stop' EXIT
+
+cp -r test tox.ini "$AUTOPKGTEST_TMP"
+chown -R nobody:nogroup "$AUTOPKGTEST_TMP"
+
+### Run tests
+
+for py in $(py3versions -r 2>/dev/null); do
+	cd "$AUTOPKGTEST_TMP"
+	echo "Testing with $py:"
+	su nobody --shell /bin/sh \
+		-c "$py -m pytest -v"
+done
