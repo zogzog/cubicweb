@@ -5,7 +5,7 @@ set -x
 
 ### Setup tests
 
-find cubicweb -type d -name 'test' | while read dir; do
+find cubicweb -type d -name 'test' -a '!' -wholename 'cubicweb/skeleton/*' | while read dir; do
 	mkdir -p "$AUTOPKGTEST_TMP"/$(dirname "$dir")
 	cp -r "$dir" "$AUTOPKGTEST_TMP/$dir"
 done
