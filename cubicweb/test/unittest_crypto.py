@@ -7,7 +7,7 @@ class CryptoTC(TestCase):
 
     def test_encrypt_decrypt_roundtrip(self):
         data = {'a': u'ah', 'b': [1, 2]}
-        seed = 'ssss'
+        seed = 's' * 16
         crypted = crypto.encrypt(data, seed)
         decrypted = crypto.decrypt(crypted, seed)
         self.assertEqual(decrypted, data)
