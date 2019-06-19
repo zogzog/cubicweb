@@ -27,3 +27,28 @@ override_dh_auto_install:
 override_dh_installchangelogs:
 	dh_installchangelogs -Xdoc/changes
 
+# Should extra sections in requires.txt go to Recommends, Suggests or be
+# ignored?
+#
+# All sections must be listed so we don't forget any in cases of future
+# changes.
+
+RECOMMENDS_SECTIONS = ext crypto ical pyramid rdf
+SUGGESTS_SECTIONS = captcha zmq
+# sparql currently requires fyzz which is not compatible with Python 3
+IGNORED_SECTIONS = sparql
+
+override_dh_python3:
+	@set -e && trap 'rm -f requires-sections debian-sections' EXIT && \
+		sed -n -e 's/\[\(.*\)\]/\1/p' cubicweb.egg-info/requires.txt | sort > requires-sections && \
+		printf "%s\n" $(RECOMMENDS_SECTIONS) $(SUGGESTS_SECTIONS) $(IGNORED_SECTIONS) | sort > debian-sections && \
+		FORGOTTEN_SECTIONS=$$(comm -23 requires-sections debian-sections) && \
+		if [ "$$FORGOTTEN_SECTIONS" ]; then \
+			echo "The following sections are not listed in debian/rules:" && \
+			echo "$$FORGOTTEN_SECTIONS" && \
+			echo "Please add them in either RECOMMENDS_SECTIONS, SUGGESTS_SECTIONS or IGNORED_SECTIONS" && \
+			exit 1; \
+		fi
+	dh_python3 \
+		$(foreach section,$(RECOMMENDS_SECTIONS),--recommends-section=$(section)) \
+		$(foreach section,$(SUGGESTS_SECTIONS),--suggests-section=$(section))
