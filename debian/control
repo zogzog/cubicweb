@@ -9,10 +9,14 @@ Build-Depends:
  dh-python,
  python-all,
  python-setuptools,
- python-sphinx
+ python-sphinx,
+ python3-all,
+ python3-setuptools,
+ python3-sphinx,
 Standards-Version: 3.9.6
 Homepage: https://www.cubicweb.org
 X-Python-Version: >= 2.7
+X-Python3-Version: >= 3.4
 
 
 Package: python-cubicweb
@@ -101,6 +105,56 @@ Description: the complete CubicWeb framework
  packages on the different hosts.
 
 
+Package: python3-cubicweb
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ python3-six (>= 1.4.0),
+ python3-logilab-mtconverter (>= 0.8.0),
+ python3-logilab-common (>= 1.4.0),
+ python3-logilab-database (>= 1.15.0),
+ python3-yams (>= 0.45.0),
+ python3-rql (>= 0.34.0),
+ python3-unittest2 (>= 0.7.0),
+ python3-lxml,
+ python3-markdown,
+ python3-passlib,
+ python3-tz,
+ graphviz,
+ gettext,
+Recommends:
+ cubicweb-ctl (= ${source:Version}),
+ python3-cubicweb-postgresql-support (= ${source:Version})
+ | sqlite3,
+ python3-cubicweb-pyramid (= ${source:Version}),
+# common recommends
+ python3-simpletal (>= 4.0),
+ python3-crypto,
+# web recommends (mostly)
+ python3-docutils (>= 0.6),
+ python3-vobject,
+ fckeditor,
+ python3-fyzz,
+ python3-imaging,
+ python3-rdflib,
+ python3-werkzeug,
+# dev recommends
+ python3-pysqlite2,
+Suggests:
+ python3-zmq,
+ python3-cwclientlib (>= 0.4.0),
+ w3c-dtd-xhtml,
+ xvfb,
+Description: CubicWeb framework (Python 3)
+ CubicWeb is a semantic web application framework.
+ .
+ This package will install all the components you need to run cubicweb on a
+ single machine. You can also deploy cubicweb by running the different process
+ on different computers, in which case you need to install the corresponding
+ packages on the different hosts.
+
+
 Package: python-cubicweb-postgresql-support
 Architecture: all
 # postgresql-client packages for backup/restore of non local database
@@ -113,6 +167,21 @@ Depends:
  python-psycopg2,
  postgresql-client
 Description: postgres support for the CubicWeb framework
+ CubicWeb is a semantic web application framework.
+ .
+ This virtual package provides dependencies to use PostgreSQL for the
+ cubicweb repository.
+
+
+Package: python3-cubicweb-postgresql-support
+Architecture: all
+# postgresql-client packages for backup/restore of non local database
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ python3-psycopg2,
+ postgresql-client
+Description: postgres support for the CubicWeb framework (Python 3)
  CubicWeb is a semantic web application framework.
  .
  This virtual package provides dependencies to use PostgreSQL for the
@@ -147,6 +216,21 @@ Conflicts:
 Replaces:
  pyramid-cubicweb
 Description: meta package to use Pyramid as HTTP server for CubicWeb
+ Provides pyramid extensions to load a CubicWeb instance and serve it through
+ the pyramid stack.
+
+Package: python3-cubicweb-pyramid
+Architecture: all
+Depends:
+ python3-cubicweb (= ${source:Version}),
+ python3-pyramid (>= 1.5.0),
+ python3-pyramid-multiauth,
+ python3-waitress (>= 0.8.9),
+ python3-wsgicors,
+ python3-repoze.lru,
+Recommends:
+ python3-pyramid-debugtoolbar
+Description: meta package to use Pyramid as HTTP server for CubicWeb (Python 3)
  Provides pyramid extensions to load a CubicWeb instance and serve it through
  the pyramid stack.
 
