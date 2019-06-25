@@ -23,3 +23,8 @@ endif
 override_dh_installchangelogs:
 	dh_installchangelogs -Xdoc/changes
 
+override_dh_auto_install:
+	dh_auto_install
+	mkdir -p debian/cubicweb-ctl/usr/bin
+	mv debian/python-cubicweb/usr/bin/cubicweb-ctl debian/cubicweb-ctl/usr/bin
+	rm debian/python3-cubicweb/usr/bin/cubicweb-ctl
