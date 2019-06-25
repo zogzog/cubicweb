@@ -196,6 +196,7 @@ Package: python-cubicweb-twisted
 Architecture: all
 Section: python
 Depends:
+ ${misc:Depends},
  python-cubicweb (= ${source:Version}),
  python-twisted-web (<< 16.0.0),
 Description: meta package to use Twisted as HTTP server for CubicWeb
@@ -209,6 +210,7 @@ Package: python-cubicweb-pyramid
 Architecture: all
 Section: python
 Depends:
+ ${misc:Depends},
  python-cubicweb (= ${source:Version}),
  python-pyramid (>= 1.5.0),
  python-pyramid-multiauth,
@@ -229,6 +231,7 @@ Package: python3-cubicweb-pyramid
 Architecture: all
 Section: python
 Depends:
+ ${misc:Depends},
  python3-cubicweb (= ${source:Version}),
  python3-pyramid (>= 1.5.0),
  python3-pyramid-multiauth,
