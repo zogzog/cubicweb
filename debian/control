@@ -169,10 +169,10 @@ Depends:
  ${python:Depends},
  python-psycopg2,
  postgresql-client
-Description: postgres support for the CubicWeb framework
+Description: postgres support for the CubicWeb framework (Python 2)
  CubicWeb is a semantic web application framework.
  .
- This virtual package provides dependencies to use PostgreSQL for the
+ This is a dependency package to add support for using PostgreSQL for the
  cubicweb repository.
 
 
@@ -188,7 +188,7 @@ Depends:
 Description: postgres support for the CubicWeb framework (Python 3)
  CubicWeb is a semantic web application framework.
  .
- This virtual package provides dependencies to use PostgreSQL for the
+ This is a dependency package to add support for using PostgreSQL for the
  cubicweb repository.
 
 
