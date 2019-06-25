@@ -97,7 +97,7 @@ Provides:
 Conflicts:
  cubicweb-multisources,
  cubicweb-core,
-Description: the complete CubicWeb framework
+Description: CubicWeb framework (Python 2)
  CubicWeb is a semantic web application framework.
  .
  This metapackage will install all the components you need to run cubicweb on a
