@@ -6,7 +6,7 @@ webtest
 
 ## cubicweb/test
 Pygments
-pycryptodome
+pycryptodomex
 #fyzz XXX pip install fails
 
 ## cubicweb/devtools/test
