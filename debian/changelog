@@ -1,11 +1,11 @@
-cubicweb (3.26.11-2) UNRELEASED; urgency=medium
+cubicweb (3.26.11-2) unstable; urgency=medium
 
   * Remove build dependency on dh-systemd
   * Build python3 basic packages
   * Actually install something in cubicweb-ctl binary package
   * Fix a couple of Lintian warnings
 
- -- Denis Laxalde <denis.laxalde@logilab.fr>  Tue, 25 Jun 2019 16:38:09 +0200
+ -- Denis Laxalde <denis.laxalde@logilab.fr>  Wed, 26 Jun 2019 15:00:53 +0200
 
 cubicweb (3.26.11-1) unstable; urgency=medium
 
