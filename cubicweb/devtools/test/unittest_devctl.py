@@ -26,10 +26,11 @@ from unittest import TestCase
 
 
 def newcube(directory, name):
-    cmd = ['cubicweb-ctl', 'newcube', '--directory', directory, name]
+    cmd = ['cubicweb-ctl', 'newcube', '--directory', directory,
+           '--short-description', 'short_desc', name]
     proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-    stdout, _ = proc.communicate(b'short_desc\n')
-    return proc.returncode, stdout
+    returncode = proc.wait()
+    return returncode, proc.stdout.read()
 
 
 def to_unicode(msg):
