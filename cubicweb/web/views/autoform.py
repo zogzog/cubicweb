@@ -871,6 +871,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             schema = self._cw.vreg.schema
             for rtype, role in self.display_fields:
                 yield (schema[rtype], role)
+            return
         if self.edited_entity.has_eid() and not self.edited_entity.cw_has_perm('update'):
             return
         action = 'update' if self.edited_entity.has_eid() else 'add'
