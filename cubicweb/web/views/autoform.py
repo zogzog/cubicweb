@@ -118,6 +118,7 @@ checking for dark-corner case where it can't be verified properly.
 .. Controlling the generic relation fields
 """
 
+import six
 from six.moves import range
 
 from logilab.mtconverter import xml_escape
@@ -310,7 +311,7 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
         if form.form_previous_values:
             cdvalues = self._cw.list_form_param(eid_param(self.rtype, self.peid),
                                                 form.form_previous_values)
-            if unicode(entity.eid) not in cdvalues:
+            if six.text_type(entity.eid) not in cdvalues:
                 return False
         return True
 
