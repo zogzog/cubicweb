@@ -22,7 +22,7 @@ import contextlib
 import http.client as http_client
 import json
 import sys
-from time import clock, time
+from time import process_time, time
 from contextlib import contextmanager
 
 from rql import BadRQLQuery
@@ -205,9 +205,10 @@ class CubicWebPublisher(object):
                 orig_execute = cnx.execute
 
                 def execute(rql, kwargs=None, build_descr=True):
-                    tstart, cstart = time(), clock()
+                    tstart, cstart = time(), process_time()
                     rset = orig_execute(rql, kwargs, build_descr=build_descr)
-                    cnx.executed_queries.append((rql, kwargs, time() - tstart, clock() - cstart))
+                    cnx.executed_queries.append((rql, kwargs, time() - tstart,
+                                                 process_time() - cstart))
                     return rset
 
                 return execute
@@ -220,14 +221,14 @@ class CubicWebPublisher(object):
             return set_cnx
 
         req.set_cnx = wrap_set_cnx(req.set_cnx)
-        tstart, cstart = time(), clock()
+        tstart, cstart = time(), process_time()
         try:
             return self.main_handle_request(req)
         finally:
             cnx = req.cnx
             if cnx and cnx.executed_queries:
                 with self._logfile_lock:
-                    tend, cend = time(), clock()
+                    tend, cend = time(), process_time()
                     try:
                         result = ['\n' + '*' * 80]
                         result.append('%s -- (%.3f sec, %.3f CPU sec)' % (
@@ -335,7 +336,7 @@ class CubicWebPublisher(object):
                    req.session.sessionid, list(req.form))
         # remove user callbacks on a new request (except for json controllers
         # to avoid callbacks being unregistered before they could be called)
-        tstart = clock()
+        tstart = process_time()
         commited = False
         try:
             # standard processing of the request
@@ -404,7 +405,7 @@ class CubicWebPublisher(object):
                 except Exception:
                     pass  # ignore rollback error at this point
         self.add_undo_link_to_msg(req)
-        self.debug('query %s executed in %s sec', path, clock() - tstart)
+        self.debug('query %s executed in %s sec', path, process_time() - tstart)
         return result
 
     # Error handlers
