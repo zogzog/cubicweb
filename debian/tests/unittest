@@ -8,6 +8,7 @@ set -x
 find cubicweb -type d -name 'test' -a '!' -wholename 'cubicweb/skeleton/*' | while read dir; do
 	mkdir -p "$AUTOPKGTEST_TMP"/$(dirname "$dir")
 	cp -r "$dir" "$AUTOPKGTEST_TMP/$dir"
+	cp tox.ini "$AUTOPKGTEST_TMP"
 done
 chown -R nobody:nogroup "$AUTOPKGTEST_TMP"
 
