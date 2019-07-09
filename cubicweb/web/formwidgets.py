@@ -755,10 +755,11 @@ class JQueryDateTimePicker(FieldWidget):
     :class:`JQueryTimePicker` widgets to define a date and time picker. Will
     return the date and time as python datetime instance.
     """
-    def __init__(self, initialtime=None, timesteps=15, **kwargs):
+    def __init__(self, initialtime=None, timesteps=15, separator=u':', **kwargs):
         super(JQueryDateTimePicker, self).__init__(**kwargs)
         self.initialtime = initialtime
         self.timesteps = timesteps
+        self.separator = separator
 
     def _render(self, form, field, renderer):
         """render the widget for the given `field` of `form`.
@@ -784,7 +785,7 @@ class JQueryDateTimePicker(FieldWidget):
                 timestr = req.format_time(self.initialtime)
         datepicker = JQueryDatePicker(datestr=datestr, suffix='date')
         timepicker = JQueryTimePicker(timestr=timestr, timesteps=self.timesteps,
-                                      suffix='time')
+                                      separator=self.separator, suffix='time')
         return u'<div id="%s">%s%s</div>' % (field.dom_id(form),
                                              datepicker.render(form, field, renderer),
                                              timepicker.render(form, field, renderer))
