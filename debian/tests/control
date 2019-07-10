@@ -1,0 +1,6 @@
+Tests: skeleton-packaging
+Depends:
+ python-cubicweb, cubicweb-ctl,
+ python-pyramid, python-wsgicors,
+ devscripts, equivs, lintian, autopkgtest
+Restrictions: allow-stderr, needs-root
