@@ -1,0 +1,9 @@
+Tests: pytest
+Depends:
+ @builddeps@,
+ # Uncomment  if the tests require database access
+ #python3-cubicweb-postgresql-support
+Restrictions:
+ allow-stderr,
+ # Uncomment if the tests require database access
+ #isolation-container,

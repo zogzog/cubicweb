@@ -76,6 +76,6 @@ include cubicweb/pyramid/development.ini.tmpl
 
 include cubicweb/web/data/jquery-treeview/*.md
 
-recursive-include cubicweb/skeleton *.py *.css *.js *.po compat *.tmpl rules
+recursive-include cubicweb/skeleton *.py *.css *.js *.po compat *.tmpl format options pytest control
 
 prune cubicweb/misc/cwfs
