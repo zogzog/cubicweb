@@ -256,9 +256,8 @@ Conflicts:
 Description: tool to manage the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
- This package provides a control script to manage (create, upgrade, start,
- stop, etc) CubicWeb applications. It also include the init.d script
- to automatically start and stop CubicWeb applications on boot or shutdown.
+ This package provides a control script to manage (e.g. create, upgrade)
+ CubicWeb applications.
 
 
 Package: cubicweb-ctl3
@@ -272,9 +271,8 @@ Conflicts:
 Description: tool to manage the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
- This package provides a control script to manage (create, upgrade, start,
- stop, etc) CubicWeb applications. It also include the init.d script
- to automatically start and stop CubicWeb applications on boot or shutdown.
+ This package provides a control script to manage (e.g. create, upgrade)
+ CubicWeb applications.
 
 
 Package: python-cubicweb-documentation
