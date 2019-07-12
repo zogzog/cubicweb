@@ -27,4 +27,5 @@ override_dh_auto_install:
 	dh_auto_install
 	mkdir -p debian/cubicweb-ctl/usr/bin
 	mv debian/python-cubicweb/usr/bin/cubicweb-ctl debian/cubicweb-ctl/usr/bin
-	rm debian/python3-cubicweb/usr/bin/cubicweb-ctl
+	mkdir -p debian/cubicweb-ctl3/usr/bin
+	mv debian/python3-cubicweb/usr/bin/cubicweb-ctl debian/cubicweb-ctl3/usr/bin

@@ -1,0 +1,6 @@
+etc/init.d
+etc/cubicweb.d
+usr/bin
+var/log/cubicweb
+var/lib/cubicweb/backup
+var/lib/cubicweb/instances

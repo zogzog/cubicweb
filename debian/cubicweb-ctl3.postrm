@@ -1,0 +1,11 @@
+#!/bin/sh -e
+
+if [ "$1" = "purge" ] ; then
+        rm -rf /etc/cubicweb.d/
+        rm -rf /var/log/cubicweb/
+        rm -rf /var/lib/cubicweb/
+fi
+
+#DEBHELPER#
+ 
+exit 0

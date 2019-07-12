@@ -126,7 +126,7 @@ Depends:
  graphviz,
  gettext,
 Recommends:
- cubicweb-ctl (= ${source:Version}),
+ cubicweb-ctl3 (= ${source:Version}),
  python3-cubicweb-postgresql-support (= ${source:Version})
  | sqlite3,
  python3-cubicweb-pyramid (= ${source:Version}),
@@ -251,6 +251,24 @@ Depends:
  ${misc:Depends},
  ${python:Depends},
  python-cubicweb (= ${source:Version})
+Conflicts:
+ cubicweb-ctl3,
+Description: tool to manage the CubicWeb framework
+ CubicWeb is a semantic web application framework.
+ .
+ This package provides a control script to manage (create, upgrade, start,
+ stop, etc) CubicWeb applications. It also include the init.d script
+ to automatically start and stop CubicWeb applications on boot or shutdown.
+
+
+Package: cubicweb-ctl3
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ python3-cubicweb (= ${source:Version})
+Conflicts:
+ cubicweb-ctl,
 Description: tool to manage the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
