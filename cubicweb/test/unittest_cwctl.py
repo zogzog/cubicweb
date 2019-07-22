@@ -113,28 +113,26 @@ class InstanceCommandTest(unittest.TestCase):
 
     @patch.object(_TestCommand, 'test_instance', return_value=0)
     def test_getting_called(self, test_instance):
-        try:
+        with self.assertRaises(SystemExit) as cm:
             self.CWCTL.run(["test", "some_instance"])
-        except SystemExit as ex:  # CWCTL will finish the program after that
-            self.assertEqual(ex.code, 0)
+        self.assertEqual(cm.exception.code, 0)
         test_instance.assert_called_with("some_instance")
 
     @patch.object(cwctl, 'get_pdb')
     def test_pdb_not_called(self, get_pdb):
-        try:
+        # CWCTL will finish the program after that
+        with self.assertRaises(SystemExit) as cm:
             self.CWCTL.run(["test", "some_instance"])
-        except SystemExit as ex:  # CWCTL will finish the program after that
-            self.assertEqual(ex.code, 0)
+        self.assertEqual(cm.exception.code, 0)
 
         get_pdb.assert_not_called()
 
     @patch.object(cwctl, 'get_pdb')
     def test_pdb_called(self, get_pdb):
         post_mortem = get_pdb.return_value.post_mortem
-        try:
+        with self.assertRaises(SystemExit) as cm:
             self.CWCTL.run(["test_fail", "some_instance", "--pdb"])
-        except SystemExit as ex:  # CWCTL will finish the program after that
-            self.assertEqual(ex.code, 8)
+        self.assertEqual(cm.exception.code, 8)
 
         get_pdb.assert_called_once()
         post_mortem.assert_called_once()
@@ -142,10 +140,9 @@ class InstanceCommandTest(unittest.TestCase):
     @patch.dict(sys.modules, ipdb=MagicMock())
     def test_ipdb_selected_and_called(self):
         ipdb = sys.modules['ipdb']
-        try:
+        with self.assertRaises(SystemExit) as cm:
             self.CWCTL.run(["test_fail", "some_instance", "--pdb"])
-        except SystemExit as ex:  # CWCTL will finish the program after that
-            self.assertEqual(ex.code, 8)
+        self.assertEqual(cm.exception.code, 8)
 
         ipdb.post_mortem.assert_called_once()
 
