@@ -85,6 +85,7 @@ class CubicWebShellTC(CubicWebTC):
 class _TestCommand(InstanceCommand):
     "I need some doc"
     name = "test"
+    actionverb = 'failtested'
 
     def test_instance(self, appid):
         pass
@@ -93,6 +94,7 @@ class _TestCommand(InstanceCommand):
 class _TestFailCommand(InstanceCommand):
     "I need some doc"
     name = "test_fail"
+    actionverb = 'tested'
 
     def test_fail_instance(self, appid):
         raise Exception()
