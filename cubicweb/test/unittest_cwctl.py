@@ -107,16 +107,17 @@ class InstanceCommandTest(unittest.TestCase):
         self.CWCTL.register(_TestFailCommand)
 
         # pretend that this instance exists
-        cwcfg.config_for = MagicMock(return_value=object())
+        patcher = patch.object(cwcfg, 'config_for', return_value=object())
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-    def test_getting_called(self):
-        _TestCommand.test_instance = MagicMock(return_value=0)
-
+    @patch.object(_TestCommand, 'test_instance', return_value=0)
+    def test_getting_called(self, test_instance):
         try:
             self.CWCTL.run(["test", "some_instance"])
         except SystemExit as ex:  # CWCTL will finish the program after that
             self.assertEqual(ex.code, 0)
-        _TestCommand.test_instance.assert_called_with("some_instance")
+        test_instance.assert_called_with("some_instance")
 
     @patch.object(cwctl, 'get_pdb')
     def test_pdb_not_called(self, get_pdb):
