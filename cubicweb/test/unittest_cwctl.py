@@ -148,6 +148,22 @@ class InstanceCommandTest(unittest.TestCase):
 
         ipdb.post_mortem.assert_called_once()
 
+    @patch.object(_TestFailCommand, 'test_fail_instance', side_effect=SystemExit(42))
+    def test_respect_return_error_code(self, test_fail_instance):
+        with self.assertRaises(SystemExit) as cm:
+            self.CWCTL.run(["test_fail", "some_instance"])
+        self.assertEqual(cm.exception.code, 42)
+
+        test_fail_instance.assert_called_once()
+
+    @patch.object(_TestFailCommand, 'test_fail_instance', side_effect=KeyboardInterrupt)
+    def test_error_code_keyboardinterupt_2(self, test_fail_instance):
+        with self.assertRaises(SystemExit) as cm:
+            self.CWCTL.run(["test_fail", "some_instance"])
+        self.assertEqual(cm.exception.code, 2)
+
+        test_fail_instance.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()

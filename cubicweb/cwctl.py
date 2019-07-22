@@ -150,9 +150,12 @@ class InstanceCommand(Command):
                 appid, self.actionverb, ex))
             status = 8
 
-        except (KeyboardInterrupt, SystemExit):
+        except (KeyboardInterrupt, SystemExit) as ex:
             sys.stderr.write('%s aborted\n' % self.name)
-            status = 2  # specific error code
+            if isinstance(ex, KeyboardInterrupt):
+                status = 2  # specific error code
+            else:
+                status = ex.code
 
         if status != 0 and self.config.pdb:
             exception_type, exception, traceback_ = sys.exc_info()
