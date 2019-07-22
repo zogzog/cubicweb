@@ -81,7 +81,7 @@ class CubicWebShellTC(CubicWebTC):
                 mih.cmd_process_script(scriptname, None, scriptargs=args)
 
 
-class TestCommand(InstanceCommand):
+class _TestCommand(InstanceCommand):
     "I need some doc"
     name = "test"
 
@@ -94,9 +94,9 @@ class InstanceCommandTest(unittest.TestCase):
         CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
                             version=cw_version, check_duplicated_command=False)
         cwcfg.load_cwctl_plugins()
-        CWCTL.register(TestCommand)
+        CWCTL.register(_TestCommand)
 
-        TestCommand.test_instance = MagicMock(return_value=0)
+        _TestCommand.test_instance = MagicMock(return_value=0)
 
         # pretend that this instance exists
         cwcfg.config_for = MagicMock(return_value=object())
@@ -105,7 +105,7 @@ class InstanceCommandTest(unittest.TestCase):
             CWCTL.run(["test", "some_instance"])
         except SystemExit as ex:  # CWCTL will finish the program after that
             self.assertEqual(ex.code, 0)
-        TestCommand.test_instance.assert_called_with("some_instance")
+        _TestCommand.test_instance.assert_called_with("some_instance")
 
 
 if __name__ == '__main__':
