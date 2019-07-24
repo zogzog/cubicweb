@@ -37,6 +37,7 @@ from logilab.common.configuration import merge_options
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
 from cubicweb.pyramid import wsgi_application_from_cwconfig
 from cubicweb.pyramid.config import get_random_secret_key
+from cubicweb.view import inject_html_generating_call_on_w
 from cubicweb.server import serverctl
 from cubicweb.web.webctl import WebCreateHandler
 from cubicweb.toolsutils import fill_templated_file
@@ -270,6 +271,11 @@ class PyramidStartHandler(InstanceCommand):
                       "official documentation: "
                       "https://docs.pylonsproject.org/projects/pyramid_debugtoolbar/en/latest/")
                 sys.exit(1)
+
+        if self['debug']:
+            # this is for injecting those into generated html:
+            # > cubicweb-generated-by="module.Class" cubicweb-from-source="/path/to/file.py:42"
+            inject_html_generating_call_on_w()
 
         app = wsgi_application_from_cwconfig(
             cwconfig, profile=self['profile'],

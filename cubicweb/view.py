@@ -20,9 +20,11 @@
 
 from cubicweb import _
 
+import re
 from io import BytesIO
 from warnings import warn
 from functools import partial
+from inspect import getframeinfo, stack
 
 from logilab.common.registry import yes
 from logilab.mtconverter import xml_escape
@@ -45,6 +47,11 @@ TRANSITIONAL_DOCTYPE = TRANSITIONAL_DOCTYPE_NOEXT # bw compat
 
 STRICT_DOCTYPE_NOEXT = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n'
 STRICT_DOCTYPE = STRICT_DOCTYPE_NOEXT # bw compat
+
+
+def inject_html_generating_call_on_w():
+    View.debug_html_rendering = True
+
 
 # base view object ############################################################
 
@@ -86,17 +93,50 @@ class View(AppObject):
     add_to_breadcrumbs = True
     category = 'view'
     paginable = True
+    debug_html_rendering = False
 
     def __init__(self, req=None, rset=None, **kwargs):
         super(View, self).__init__(req, rset=rset, **kwargs)
-        self.w = None
+        self._w = None
 
     @property
     def content_type(self):
         return self._cw.html_content_type()
 
+    def w(self, text):
+        if self._w is None:
+            raise Exception('Error: call to %s.w before it has been set' % self)
+
+        if self.debug_html_rendering:
+            caller = getframeinfo(stack()[1][0])
+
+            if isinstance(text, str) and re.match(r"^ *<[a-zA-Z0-9]+( .*>|>)", text):
+                to_add = 'cubicweb-generated-by="%s.%s" cubicweb-from-source="%s:%s"' % (
+                    self.__module__, self.__class__.__name__,
+                    caller.filename, caller.lineno,
+                )
+
+                before_space, beginning_of_html = text.split("<", 1)
+
+                # when it's a tag without attribues like "<b>"
+                if re.match(r"^ *<[a-zA-Z0-9]+>", text):
+                    tag_name, rest = beginning_of_html.split(">", 1)
+                    rest = ">" + rest
+                else:
+                    tag_name, rest = beginning_of_html.split(" ", 1)
+                    rest = " " + rest
+
+                text = "%(before_space)s<%(tag_name)s %(to_add)s%(rest)s" % {
+                    "before_space": before_space,
+                    "tag_name": tag_name,
+                    "to_add": to_add,
+                    "rest": rest,
+                }
+
+        return self._w(text)
+
     def set_stream(self, w=None):
-        if self.w is not None:
+        if self._w is not None:
             return
         if w is None:
             if self.binary:
@@ -106,7 +146,7 @@ class View(AppObject):
             w = stream.write
         else:
             stream = None
-        self.w = w
+        self._w = w
         return stream
 
     # main view interface #####################################################
@@ -238,7 +278,7 @@ class View(AppObject):
     def wview(self, __vid, rset=None, __fallback_vid=None, **kwargs):
         """shortcut to self.view method automatically passing self.w as argument
         """
-        self._cw.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
+        self._cw.view(__vid, rset, __fallback_vid, w=self._w, **kwargs)
 
     def whead(self, data):
         self._cw.html_headers.write(data)
@@ -466,7 +506,7 @@ class MainTemplate(View):
     doctype = '<!DOCTYPE html>'
 
     def set_stream(self, w=None):
-        if self.w is not None:
+        if self._w is not None:
             return
         if w is None:
             if self.binary:
@@ -476,7 +516,7 @@ class MainTemplate(View):
             w = stream.write
         else:
             stream = None
-        self.w = w
+        self._w = w
         return stream
 
     def write_doctype(self, xmldecl=True):
