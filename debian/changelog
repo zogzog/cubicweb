@@ -1,4 +1,4 @@
-cubicweb (3.27.0~dev0-1) UNRELEASED; urgency=medium
+cubicweb (3.27.0~a0-1) unstable; urgency=medium
 
   [ Jérémy Bobbio ]
   * Switch all Debian packages to Python 3.
@@ -18,8 +18,9 @@ cubicweb (3.27.0~dev0-1) UNRELEASED; urgency=medium
 
   [ Denis Laxalde ]
   * Let cubicweb-ctl replace cubicweb-ctl3
+  * New upstream pre-release.
 
- -- Jérémy Bobbio <jeremy.bobbio@irq7.fr>  Wed, 29 May 2019 16:06:20 +0200
+ -- Denis Laxalde <denis.laxalde@logilab.fr>  Wed, 24 Jul 2019 16:08:43 +0200
 
 cubicweb (3.26.13-1) unstable; urgency=medium
 
