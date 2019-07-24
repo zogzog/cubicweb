@@ -1,0 +1,185 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: cubicweb 3.16.5\n"
+"PO-Revision-Date: 2008-03-28 18:14+0100\n"
+"Last-Translator: Logilab Team <contact@logilab.fr>\n"
+"Language-Team: fr <contact@logilab.fr>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: cubicweb-devtools\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# schema pot file, generated on 2013-07-12 16:18:12
+#
+# singular and plural forms for each entity type
+# subject and object forms for each relation type
+# (no object form for final or symmetric relation types)
+msgid "Forum"
+msgstr ""
+
+msgid "Forum_plural"
+msgstr ""
+
+msgid "This Forum"
+msgstr ""
+
+msgid "This Forum:"
+msgstr ""
+
+msgid "New Forum"
+msgstr ""
+
+msgctxt "inlined:Forum.in_forum.object"
+msgid "add a ForumThread"
+msgstr ""
+
+msgctxt "inlined:Forum.in_forum.object"
+msgid "ForumThread"
+msgstr ""
+
+msgid "add ForumThread in_forum Forum object"
+msgstr ""
+
+msgid "add a Forum"
+msgstr ""
+
+msgid "add a ForumThread"
+msgstr ""
+
+msgid "creating ForumThread (ForumThread in_forum Forum %(linkto)s)"
+msgstr ""
+
+msgid "ForumThread"
+msgstr ""
+
+msgid "ForumThread_plural"
+msgstr ""
+
+msgid "This ForumThread"
+msgstr ""
+
+msgid "This ForumThread:"
+msgstr ""
+
+msgid "New ForumThread"
+msgstr ""
+
+msgid "content"
+msgstr ""
+
+msgctxt "ForumThread"
+msgid "content"
+msgstr ""
+
+msgid "content_format"
+msgstr ""
+
+msgctxt "ForumThread"
+msgid "content_format"
+msgstr ""
+
+msgctxt "Forum"
+msgid "description"
+msgstr ""
+
+msgctxt "Forum"
+msgid "description_format"
+msgstr ""
+
+msgid "ignore-me"
+msgstr ""
+
+msgid "in_forum"
+msgstr ""
+
+msgctxt "ForumThread"
+msgid "in_forum"
+msgstr ""
+
+msgctxt "Forum"
+msgid "in_forum_object"
+msgstr ""
+
+msgid "in_forum_object"
+msgstr ""
+
+msgid "interested_in"
+msgstr ""
+
+msgctxt "CWUser"
+msgid "interested_in"
+msgstr ""
+
+msgctxt "ForumThread"
+msgid "interested_in_object"
+msgstr ""
+
+msgctxt "Forum"
+msgid "interested_in_object"
+msgstr ""
+
+msgid "interested_in_object"
+msgstr ""
+
+msgid "nosy_list"
+msgstr ""
+
+msgctxt "ForumThread"
+msgid "nosy_list"
+msgstr ""
+
+msgctxt "Forum"
+msgid "nosy_list"
+msgstr ""
+
+msgctxt "CWUser"
+msgid "nosy_list_object"
+msgstr ""
+
+msgid "nosy_list_object"
+msgstr ""
+
+msgctxt "ForumThread"
+msgid "title"
+msgstr ""
+
+msgid "topic"
+msgstr ""
+
+msgctxt "Forum"
+msgid "topic"
+msgstr ""
+
+msgid "Topic"
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Number of threads"
+msgstr ""
+
+msgid "Last activity"
+msgstr ""
+
+msgid ""
+"a long\n"
+"tranlated line\n"
+"hop."
+msgstr ""
+
+msgid "Subject"
+msgstr ""
+
+msgid "Created"
+msgstr ""
+
+msgid "Answers"
+msgstr ""
+
+msgid "Last answered"
+msgstr ""
+
+msgid "This forum does not have any thread yet."
+msgstr ""
