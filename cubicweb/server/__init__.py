@@ -63,8 +63,6 @@ DBG_RQL = 1
 DBG_SQL = 2
 #: repository events
 DBG_REPO = 4
-#: multi-sources
-DBG_MS = 8
 #: hooks
 DBG_HOOKS = 16
 #: operations
@@ -74,7 +72,7 @@ DBG_SEC = 64
 #: more verbosity
 DBG_MORE = 128
 #: all level enabled
-DBG_ALL = DBG_RQL + DBG_SQL + DBG_REPO + DBG_MS + DBG_HOOKS + DBG_OPS + DBG_SEC + DBG_MORE
+DBG_ALL = DBG_RQL + DBG_SQL + DBG_REPO + DBG_HOOKS + DBG_OPS + DBG_SEC + DBG_MORE
 
 _SECURITY_ITEMS = []
 _SECURITY_CAPS = ['read', 'add', 'update', 'delete', 'transition']

@@ -14,7 +14,6 @@ Server debugging flags. They may be combined using binary operators.
 .. autodata:: cubicweb.server.DBG_RQL
 .. autodata:: cubicweb.server.DBG_SQL
 .. autodata:: cubicweb.server.DBG_REPO
-.. autodata:: cubicweb.server.DBG_MS
 .. autodata:: cubicweb.server.DBG_HOOKS
 .. autodata:: cubicweb.server.DBG_OPS
 .. autodata:: cubicweb.server.DBG_MORE

@@ -46,6 +46,8 @@ Backwards incompatible changes
 * All "cubicweb-ctl" command only accept one instance argument from now one
   (instead of 0 to n)
 
+* DBG_MS flag has been removed since it is not used anymore
+
 Deprecated code drops
 ---------------------
 
