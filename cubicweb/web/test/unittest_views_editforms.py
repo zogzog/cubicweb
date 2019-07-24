@@ -181,6 +181,37 @@ class AutomaticEntityFormTC(CubicWebTC):
                              [rschema.type
                               for rschema, _ in mform.editable_attributes()])
 
+    def test_editable_attributes(self):
+        with self.admin_access.web_request() as req:
+            entity = self.vreg['etypes'].etype_class('Personne')(req)
+            form = self.vreg['forms'].select('edition', req, entity=entity)
+            expected = [
+                ('nom', 'subject'),
+                ('prenom', 'subject'),
+                ('sexe', 'subject'),
+                ('promo', 'subject'),
+                ('titre', 'subject'),
+                ('ass', 'subject'),
+                ('web', 'subject'),
+                ('tel', 'subject'),
+                ('fax', 'subject'),
+                ('datenaiss', 'subject'),
+                ('tzdatenaiss', 'subject'),
+                ('test', 'subject'),
+                ('description', 'subject'),
+                ('salary', 'subject'),
+            ]
+            self.assertEqual(
+                [(rschema.type, role) for rschema, role in form.editable_attributes()],
+                expected)
+
+            # now with display_fields attribute set
+            form.display_fields = [('nom', 'subject')]
+            expected = [('nom', 'subject')]
+            self.assertEqual(
+                [(rschema.type, role) for rschema, role in form.editable_attributes()],
+                expected)
+
     def test_inlined_relations(self):
         with self.admin_access.web_request() as req:
             with self.temporary_permissions(EmailAddress={'add': ()}):

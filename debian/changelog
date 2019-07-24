@@ -1,5 +1,6 @@
 cubicweb (3.27.0~dev0-1) UNRELEASED; urgency=medium
 
+  [ Jérémy Bobbio ]
   * Switch all Debian packages to Python 3.
   * Switch to Debian source format 3.0 (quilt).
   * Run test suite as part of autopkgtest.
@@ -15,7 +16,41 @@ cubicweb (3.27.0~dev0-1) UNRELEASED; urgency=medium
   * Fix spelling mistake in doc-base abstract.
   * Remove transitional packages.
 
+  [ Denis Laxalde ]
+  * Let cubicweb-ctl replace cubicweb-ctl3
+
  -- Jérémy Bobbio <jeremy.bobbio@irq7.fr>  Wed, 29 May 2019 16:06:20 +0200
+
+cubicweb (3.26.13-1) unstable; urgency=medium
+
+  [ Denis Laxalde ]
+  * Introduce a cubicweb-ctl3 binary package, conflicting with cubicweb-ctl.
+  * New upstream release.
+
+  [ Jérémy Bobbio ]
+  * Switch to Debian source format 3.0 (quilt).
+  * Specify priority “optional” instead of the obsolete “extra”.
+  * Tidy substvars usage in control file.
+  * Move lintian-overrides file to debian/source directory.
+  * Fix doc-base section.
+  * Fix spelling mistake in doc-base abstract.
+
+ -- Denis Laxalde <denis.laxalde@logilab.fr>  Wed, 24 Jul 2019 12:21:55 +0200
+
+cubicweb (3.26.12-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Denis Laxalde <denis.laxalde@logilab.fr>  Tue, 02 Jul 2019 11:32:39 +0200
+
+cubicweb (3.26.11-2) unstable; urgency=medium
+
+  * Remove build dependency on dh-systemd
+  * Build python3 basic packages
+  * Actually install something in cubicweb-ctl binary package
+  * Fix a couple of Lintian warnings
+
+ -- Denis Laxalde <denis.laxalde@logilab.fr>  Wed, 26 Jun 2019 15:00:53 +0200
 
 cubicweb (3.26.11-1) unstable; urgency=medium
 

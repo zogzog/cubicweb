@@ -80,3 +80,6 @@ include cubicweb/web/data/jquery-treeview/*.md
 recursive-include cubicweb/skeleton *.py *.css *.js *.po compat *.tmpl format options pytest control
 
 prune cubicweb/misc/cwfs
+
+prune debian
+prune cubicweb.spec

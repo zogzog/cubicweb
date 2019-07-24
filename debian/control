@@ -35,6 +35,7 @@ X-Python3-Version: >= 3.4
 
 Package: python3-cubicweb
 Architecture: all
+Section: python
 Depends:
  ${misc:Depends},
  ${python3:Depends},
@@ -85,7 +86,7 @@ Provides:
 Conflicts:
  cubicweb-multisources,
  cubicweb-core,
-Description: the complete CubicWeb framework
+Description: CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
  This metapackage will install all the components you need to run cubicweb on a
@@ -96,6 +97,7 @@ Description: the complete CubicWeb framework
 
 Package: python3-cubicweb-postgresql-support
 Architecture: all
+Section: python
 # postgresql-client packages for backup/restore of non local database
 Replaces: cubicweb-postgresql-support (<< 3.24.0-1~)
 Breaks: cubicweb-postgresql-support (<< 3.24.0-1~)
@@ -117,12 +119,15 @@ Architecture: all
 Depends:
  ${misc:Depends},
  python3-cubicweb (= ${source:Version})
+Conflicts:
+ cubicweb-ctl3,
+Replaces:
+ cubicweb-ctl3 (<< 3.27.0),
 Description: tool to manage the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
- This package provides a control script to manage (create, upgrade, start,
- stop, etc) CubicWeb applications. It also include the init.d script
- to automatically start and stop CubicWeb applications on boot or shutdown.
+ This package provides a control script to manage (e.g. create, upgrade)
+ CubicWeb applications.
 
 
 Package: python3-cubicweb-documentation

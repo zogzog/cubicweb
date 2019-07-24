@@ -126,6 +126,7 @@ cubicweb/web/test/unittest_views_basetemplates.py
 cubicweb/web/test/unittest_views_cwsources.py
 cubicweb/web/test/unittest_views_json.py
 cubicweb/web/views/authentication.py
+cubicweb/web/views/autoform.py
 cubicweb/web/views/cwuser.py
 cubicweb/web/views/editcontroller.py
 cubicweb/web/views/json.py

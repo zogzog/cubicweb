@@ -308,7 +308,7 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
         if form.form_previous_values:
             cdvalues = self._cw.list_form_param(eid_param(self.rtype, self.peid),
                                                 form.form_previous_values)
-            if unicode(entity.eid) not in cdvalues:
+            if str(entity.eid) not in cdvalues:
                 return False
         return True
 
@@ -697,8 +697,8 @@ class UnrelatedDivs(EntityView):
   </select>
 </div>
 """ % (hidden and 'hidden' or '', divid, selectid,
-       xml_escape(json_dumps(entity.eid)), is_cell and 'true' or 'null',
-       relname, '\n'.join(options))
+            xml_escape(json_dumps(entity.eid)), is_cell and 'true' or 'null',
+            relname, '\n'.join(options))
 
     def _get_select_options(self, entity, rschema, role):
         """add options to search among all entities of each possible type"""
@@ -813,8 +813,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         if self.formtype == 'main':
             # add the generic relation field if necessary
             if entity.has_eid() and (
-                self.display_fields is None or
-                '_cw_generic_field' in self.display_fields):
+                    self.display_fields is None
+                    or '_cw_generic_field' in self.display_fields):
                 try:
                     field = self.field_by_name('_cw_generic_field')
                 except f.FieldNotFound:
@@ -868,6 +868,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             schema = self._cw.vreg.schema
             for rtype, role in self.display_fields:
                 yield (schema[rtype], role)
+            return
         if self.edited_entity.has_eid() and not self.edited_entity.cw_has_perm('update'):
             return
         action = 'update' if self.edited_entity.has_eid() else 'add'
@@ -954,9 +955,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         relation.
         """
         return (self.should_display_add_new_relation_link(
-            rschema, existing, card) and
-                self.check_inlined_rdef_permissions(
-                    rschema, role, tschema, ttype))
+            rschema, existing, card)
+            and self.check_inlined_rdef_permissions(
+            rschema, role, tschema, ttype))
 
     def check_inlined_rdef_permissions(self, rschema, role, tschema, ttype):
         """return true if permissions are granted on the inlined object and

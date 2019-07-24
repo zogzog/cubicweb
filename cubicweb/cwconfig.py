@@ -1243,6 +1243,8 @@ the repository',
             except Exception as ex:
                 self.exception("can't connect to smtp server %s:%s (%s)",
                                server, port, ex)
+                if self.mode == 'test':
+                    raise
                 return False
             for msg, recipients in msgs:
                 try:
@@ -1250,6 +1252,8 @@ the repository',
                 except Exception as ex:
                     self.exception("error sending mail to %s (%s)",
                                    recipients, ex)
+                    if self.mode == 'test':
+                        raise
             smtp.close()
         finally:
             SMTP_LOCK.release()
