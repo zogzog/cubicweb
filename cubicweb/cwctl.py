@@ -22,6 +22,7 @@ provide a pluggable commands system.
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.
 import sys
+import traceback
 from warnings import filterwarnings
 from os import listdir
 from os.path import exists, join, isdir
@@ -136,14 +137,22 @@ class InstanceCommand(Command):
         appid = args[0]
         cmdmeth = getattr(self, '%s_instance' % self.name)
 
+        traceback_ = None
+
         try:
             status = cmdmeth(appid) or 0
         except (ExecutionError, ConfigurationError) as ex:
+            # we need to do extract this information here for pdb since it is
+            # now lost in python 3 once we exit the try/catch statement
+            exception_type, exception, traceback_ = sys.exc_info()
+
             sys.stderr.write('instance %s not %s: %s\n' % (
                 appid, self.actionverb, ex))
             status = 4
         except Exception as ex:
-            import traceback
+            # idem
+            exception_type, exception, traceback_ = sys.exc_info()
+
             traceback.print_exc()
 
             sys.stderr.write('instance %s not %s: %s\n' % (
@@ -151,6 +160,9 @@ class InstanceCommand(Command):
             status = 8
 
         except (KeyboardInterrupt, SystemExit) as ex:
+            # idem
+            exception_type, exception, traceback_ = sys.exc_info()
+
             sys.stderr.write('%s aborted\n' % self.name)
             if isinstance(ex, KeyboardInterrupt):
                 status = 2  # specific error code
@@ -158,9 +170,15 @@ class InstanceCommand(Command):
                 status = ex.code
 
         if status != 0 and self.config.pdb:
-            exception_type, exception, traceback_ = sys.exc_info()
             pdb = get_pdb()
-            pdb.post_mortem(traceback_)
+
+            if traceback_ is not None:
+                pdb.post_mortem(traceback_)
+            else:
+                print("WARNING: Could not access to the traceback because the command return "
+                      "code is different than 0 but the command didn't raised an exception.")
+                # we can't use "header=" of set_trace because ipdb doesn't supports it
+                pdb.set_trace()
 
         sys.exit(status)
 

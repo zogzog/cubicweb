@@ -139,6 +139,9 @@ class InstanceCommandTest(unittest.TestCase):
         get_pdb.assert_called_once()
         post_mortem.assert_called_once()
 
+        # we want post_mortem to actually receive the traceback
+        self.assertNotEqual(post_mortem.call_args, ((None,),))
+
     @patch.dict(sys.modules, ipdb=MagicMock())
     def test_ipdb_selected_and_called(self):
         ipdb = sys.modules['ipdb']
