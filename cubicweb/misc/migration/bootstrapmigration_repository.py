@@ -20,7 +20,6 @@
 it should only include low level schema changes
 """
 from cubicweb import ConfigurationError
-from cubicweb.server.session import hooks_control
 from cubicweb.server import schemaserial as ss
 
 applcubicwebversion, cubicwebversion = versions_map['cubicweb']
@@ -261,7 +260,7 @@ elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
     session.set_cnxset()
     permsdict = ss.deserialize_ertype_permissions(session)
 
-    with hooks_control(session, session.HOOKS_ALLOW_ALL, 'integrity'):
+    with session.allow_all_hooks_but('integrity'):
         for rschema in repo.schema.relations():
             rpermsdict = permsdict.get(rschema.eid, {})
             for rdef in rschema.rdefs.values():
