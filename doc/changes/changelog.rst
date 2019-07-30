@@ -2,6 +2,7 @@
  Changelog history
 ===================
 
+.. include:: 3.27.rst
 .. include:: 3.26.rst
 .. include:: 3.25.rst
 .. include:: 3.24.rst
