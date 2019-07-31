@@ -74,6 +74,9 @@ def settings_from_cwconfig(cwconfig, debugtoolbar=False):
             'pyramid.reload_templates': True,
         })
 
+        if debugtoolbar:
+            settings["debugtoolbar.includes"] = ["cubicweb.pyramid.debugtoolbar_panels"]
+
     for fname in settings_filenames:
         if os.path.exists(fname):
             cp = ConfigParser()
