@@ -1,6 +1,7 @@
 cubicweb (3.27.0~a2-1) unstable; urgency=medium
 
   * New upstream pre-release.
+  * Cleanup d/source/options from now gone symlinks.
 
  -- Denis Laxalde <denis.laxalde@logilab.fr>  Thu, 01 Aug 2019 09:13:26 +0200
 
