@@ -18,6 +18,7 @@
 """Helper classes to execute RQL queries on a set of sources, performing
 security checking and data aggregation.
 """
+import uuid
 from itertools import repeat
 
 from rql import RQLSyntaxError, CoercionError
@@ -164,6 +165,8 @@ class ExecutionPlan(object):
         self.querier = querier
         self.schema = querier.schema
         self.rqlhelper = cnx.vreg.rqlhelper
+        # tracing token for debugging
+        self.rql_query_tracing_token = None
 
     def annotate_rqlst(self):
         if not self.rqlst.annotated:
@@ -179,6 +182,7 @@ class ExecutionPlan(object):
     def execute(self):
         """execute a plan and return resulting rows"""
         for step in self.steps:
+            step.rql_query_tracing_token = self.rql_query_tracing_token
             result = step.execute()
         # the latest executed step contains the full query result
         return result
@@ -552,6 +556,7 @@ class QuerierHelper(object):
         # make an execution plan
         plan = self.plan_factory(rqlst, args, cnx)
         plan.cache_key = cachekey
+        plan.rql_query_tracing_token = str(uuid.uuid4())
         self._planner.build_plan(plan)
         # execute the plan
         try:

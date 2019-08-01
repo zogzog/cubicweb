@@ -790,11 +790,12 @@ class Connection(RequestSessionBase):
         return service.call(**kwargs)
 
     @_open_only
-    def system_sql(self, sql, args=None, rollback_on_failure=True):
+    def system_sql(self, sql, args=None, rollback_on_failure=True, rql_query_tracing_token=None):
         """return a sql cursor on the system database"""
         source = self.repo.system_source
         try:
-            return source.doexec(self, sql, args, rollback=rollback_on_failure)
+            return source.doexec(self, sql, args, rollback=rollback_on_failure,
+                                 rql_query_tracing_token=rql_query_tracing_token)
         except (source.OperationalError, source.InterfaceError):
             if not rollback_on_failure:
                 raise

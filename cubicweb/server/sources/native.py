@@ -499,7 +499,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 continue
         raise AuthenticationError()
 
-    def syntax_tree_search(self, cnx, union, args=None, cachekey=None):
+    def syntax_tree_search(self, cnx, union, args=None, cachekey=None, rql_query_tracing_token=None):
         """return result from this source for a rql query (actually from
         a rql syntax tree and a solution dictionary mapping each used
         variable to a possible type). If cachekey is given, the query
@@ -523,7 +523,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 self._cache[cachekey] = sql, qargs, cbs
         args = self.merge_args(args, qargs)
         assert isinstance(sql, str), repr(sql)
-        cursor = cnx.system_sql(sql, args)
+        cursor = cnx.system_sql(sql, args, rql_query_tracing_token=rql_query_tracing_token)
         results = self.process_result(cursor, cnx, cbs)
         assert dbg_results(results)
         return results
@@ -680,7 +680,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.doexec(cnx, sql, attrs)
 
     @statsd_timeit
-    def doexec(self, cnx, query, args=None, rollback=True):
+    def doexec(self, cnx, query, args=None, rollback=True, rql_query_tracing_token=None):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """

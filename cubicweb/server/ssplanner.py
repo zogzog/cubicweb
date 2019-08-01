@@ -344,6 +344,7 @@ class OneFetchStep(Step):
     def __init__(self, plan, union):
         Step.__init__(self, plan)
         self.union = union
+        self.rql_query_tracing_token = None
 
     def execute(self):
         """call .syntax_tree_search with the given syntax tree on each
@@ -365,7 +366,8 @@ class OneFetchStep(Step):
             cachekey = union.as_string()
         # get results for query
         source = cnx.repo.system_source
-        result = source.syntax_tree_search(cnx, union, args, cachekey)
+        result = source.syntax_tree_search(cnx, union, args, cachekey,
+                                           rql_query_tracing_token=self.rql_query_tracing_token)
         return result
 
     def mytest_repr(self):
