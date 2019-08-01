@@ -5,6 +5,7 @@
             <th class="table-col-2">Time (ms)</th>
             <th class="table-col-3">RQL</th>
             <th class="table-col-5">Result</th>
+            <th class="table-col-6">SQL</th>
             <th class="table-col-7">Description</th>
             <th class="table-col-8">Stack</th>
         </tr>
@@ -29,6 +30,15 @@
                 % else:
                 <td class="table-col-5">${highlight(query["result"], "python3") | n}</td>
                 % endif
+                <td>
+                    % for sql in query["generated_sql_queries"]:
+                    <div class="well" style="padding: 3px">
+                        ${highlight(sql['sql'], "SQL") | n}
+                        <br>
+                        ${highlight(sql['args'], "python3") | n}
+                    </div>
+                    % endfor
+                </td>
                 <td class="table-col-7">${highlight(query["description"], "python3") | n}</td>
                 <td class="table-col-8">
                     <a class="btn btn-default" id="show-stack-${i}" href="javascript:show_stack(${i})">show stack</a>

@@ -24,6 +24,7 @@ from os.path import basename
 import pickle
 import re
 import itertools
+import time
 import zipfile
 import logging
 import sys
@@ -39,6 +40,7 @@ from cubicweb import (UnknownEid, AuthenticationError, ValidationError, Binary,
                       UniqueTogetherError, UndoTransactionException, ViolatedConstraint)
 from cubicweb import transaction as tx, server, neg_role, _
 from cubicweb.utils import QueryCache
+from cubicweb.debug import emit_to_debug_channel
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.server import hook
@@ -684,6 +686,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """
+
+        query_debug_informations = {
+            "sql": query,
+            "args": args,
+            "rollback": False,
+            "rql_query_tracing_token": rql_query_tracing_token,
+        }
+
+        start = time.time()
+
         cursor = cnx.cnxset.cu
         if server.DEBUG & server.DBG_SQL:
             print('exec', highlight_terminal(query, "SQL"), args, cnx.cnxset.cnx)
@@ -699,6 +711,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if rollback:
                 try:
                     cnx.cnxset.rollback()
+                    query_debug_informations["rollback"] = True
                     if self.repo.config.mode != 'test':
                         self.debug('transaction has been rolled back')
                 except Exception:
@@ -741,6 +754,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         raise ViolatedConstraint(cnx, cstrname=mo.group(1),
                                                  query=query)
             raise
+        finally:
+            query_debug_informations["time"] = (time.time() - start) * 1000
+            emit_to_debug_channel("sql", query_debug_informations)
         return cursor
 
     @statsd_timeit
