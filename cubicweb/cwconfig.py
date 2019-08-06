@@ -192,7 +192,7 @@ import sys
 from threading import Lock
 from warnings import filterwarnings
 
-from six import text_type
+from six import PY2, text_type
 
 from logilab.common.decorators import cached, classproperty
 from logilab.common.deprecation import deprecated
@@ -1344,9 +1344,10 @@ the repository',
                 if self.mode == 'test':
                     raise
                 return False
-            for msg, recipients in msgs:
+            for mimedoc, recipients in msgs:
+                msg = mimedoc.as_string() if PY2 else mimedoc.as_bytes()
                 try:
-                    smtp.sendmail(fromaddr, recipients, msg.as_string())
+                    smtp.sendmail(fromaddr, recipients, msg)
                 except Exception as ex:
                     self.exception("error sending mail to %s (%s)",
                                    recipients, ex)

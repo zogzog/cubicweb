@@ -205,7 +205,7 @@ class MockSMTP:
         pass
 
     def sendmail(self, fromaddr, recipients, msg):
-        MAILBOX.append(Email(fromaddr, recipients, msg))
+        MAILBOX.append(Email(fromaddr, recipients, msg.decode('utf-8')))
 
 
 cwconfig.SMTP = MockSMTP
