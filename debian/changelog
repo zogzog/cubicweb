@@ -35,6 +35,12 @@ cubicweb (3.27.0~a0-1) unstable; urgency=medium
 
  -- Denis Laxalde <denis.laxalde@logilab.fr>  Wed, 24 Jul 2019 16:08:43 +0200
 
+cubicweb (3.26.14-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Denis Laxalde <denis.laxalde@logilab.fr>  Tue, 06 Aug 2019 15:40:33 +0200
+
 cubicweb (3.26.13-1) unstable; urgency=medium
 
   [ Denis Laxalde ]

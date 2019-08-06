@@ -1248,7 +1248,7 @@ the repository',
                 return False
             for msg, recipients in msgs:
                 try:
-                    smtp.sendmail(fromaddr, recipients, msg.as_string())
+                    smtp.sendmail(fromaddr, recipients, msg.as_bytes())
                 except Exception as ex:
                     self.exception("error sending mail to %s (%s)",
                                    recipients, ex)
