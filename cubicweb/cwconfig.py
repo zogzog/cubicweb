@@ -626,7 +626,7 @@ this option is set to yes",
     cubicweb_appobject_path = set(['entities'])
     cube_appobject_path = set(['entities'])
 
-    def __init__(self, debugmode=False):
+    def __init__(self, debugmode=False, log_to_file=False):
         if debugmode:
             # in python 2.7, DeprecationWarning are not shown anymore by default
             filterwarnings('default', category=DeprecationWarning)
@@ -634,6 +634,7 @@ this option is set to yes",
         self._cubes = None
         super(CubicWebNoAppConfiguration, self).__init__()
         self.debugmode = debugmode
+        self.log_to_file = log_to_file
         self.adjust_sys_path()
         self.load_defaults()
         # will be properly initialized later by _gettext_init
@@ -664,12 +665,12 @@ this option is set to yes",
             # no logrotate on win32, so use logging rotation facilities
             # for now, hard code weekly rotation every sunday, and 52 weeks kept
             # idea: make this configurable?
-            init_log(self.debugmode, syslog, logthreshold, logfile, self.log_format,
+            init_log(not self.log_to_file, syslog, logthreshold, logfile, self.log_format,
                      rotation_parameters={'when': 'W6', # every sunday
                                           'interval': 1,
                                           'backupCount': 52})
         else:
-            init_log(self.debugmode, syslog, logthreshold, logfile, self.log_format)
+            init_log(not self.log_to_file, syslog, logthreshold, logfile, self.log_format)
         # configure simpleTal logger
         logging.getLogger('simpleTAL').setLevel(logging.ERROR)
 
@@ -882,13 +883,13 @@ the repository',
         return mdir
 
     @classmethod
-    def config_for(cls, appid, config=None, debugmode=False, creating=False):
+    def config_for(cls, appid, config=None, debugmode=False, log_to_file=False, creating=False):
         """return a configuration instance for the given instance identifier
         """
         cls.load_available_configs()
         config = config or guess_configuration(cls.instance_home(appid))
         configcls = configuration_cls(config)
-        return configcls(appid, debugmode, creating)
+        return configcls(appid, debugmode, creating, log_to_file=log_to_file)
 
     @classmethod
     def possible_configurations(cls, appid):
@@ -981,11 +982,12 @@ the repository',
 
     # instance methods used to get instance specific resources #############
 
-    def __init__(self, appid, debugmode=False, creating=False):
+    def __init__(self, appid, debugmode=False, creating=False, log_to_file=False):
         self.appid = appid
         # set to true while creating an instance
         self.creating = creating
-        super(CubicWebConfiguration, self).__init__(debugmode)
+        super(CubicWebConfiguration, self).__init__(debugmode,
+                                                    log_to_file=log_to_file)
         fake_gettext = (str, lambda ctx, msgid: str(msgid))
         for lang in self.available_languages():
             self.translations[lang] = fake_gettext

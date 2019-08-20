@@ -23,6 +23,10 @@ New features
 * the --loglevel and --dbglevel flags are available for all cubicweb-ctl
   instance commands (and not only the ``pyramid`` one)
 
+* following "only in foreground" behavior all commands logs to stdout by
+  default from now on. To still log to a file pass ``log_to_file=True`` to
+  ``CubicWebConfiguration.config_for``
+
 Backwards incompatible changes
 ------------------------------
 
