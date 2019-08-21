@@ -31,6 +31,7 @@ from cubicweb import Binary, server
 from cubicweb.rset import ResultSet
 
 from cubicweb.utils import QueryCache, RepeatList
+from cubicweb.misc.source_highlight import highlight
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
 from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
 from cubicweb.server.edition import EditedEntity
@@ -519,7 +520,7 @@ class QuerierHelper(object):
         if server.DEBUG & (server.DBG_RQL | server.DBG_SQL):
             if server.DEBUG & (server.DBG_MORE | server.DBG_SQL):
                 print('*'*80)
-            print('querier input', repr(rql), repr(args))
+            print("querier input", highlight(repr(rql)[1:-1], 'RQL'), repr(args))
         try:
             rqlst, cachekey = self.rql_cache.get(cnx, rql, args)
         except UnknownEid:

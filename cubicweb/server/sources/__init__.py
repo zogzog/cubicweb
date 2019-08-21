@@ -27,12 +27,13 @@ from yams.schema import role_name
 
 from cubicweb import ValidationError, set_log_methods, server, _
 from cubicweb.server import SOURCE_TYPES
+from cubicweb.misc.source_highlight import highlight
 
 
 def dbg_st_search(uri, union, args, cachekey=None, prefix='rql for'):
     if server.DEBUG & server.DBG_RQL:
         global t
-        print('  %s %s source: %s' % (prefix, uri, repr(union.as_string())))
+        print(" ", prefix, uri, "source:", highlight(repr(union.as_string())[1:-1], 'RQL'))
         t = time()
         if server.DEBUG & server.DBG_MORE:
             print('    args', repr(args))
