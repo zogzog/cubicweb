@@ -674,6 +674,7 @@ class Connection(RequestSessionBase):
     def rollback(self):
         """rollback the current transaction"""
         cnxset = self.cnxset
+        debug = server.DEBUG & server.DBG_OPS
         assert cnxset is not None
         try:
             # by default, operations are executed with security turned off
@@ -686,7 +687,8 @@ class Connection(RequestSessionBase):
                         self.critical('rollback error', exc_info=sys.exc_info())
                         continue
                 cnxset.rollback()
-                self.debug('rollback for transaction %s done', self)
+                if debug:
+                    print('rollback for transaction %s done' % self)
         finally:
             self.clear()
 
@@ -726,7 +728,8 @@ class Connection(RequestSessionBase):
                                 print(operation)
                             operation.handle_event('precommit_event')
                     self.pending_operations[:] = processed
-                    self.debug('precommit transaction %s done', self)
+                    if debug:
+                        print('precommit transaction %s done' % self)
                 except BaseException:
                     # if error on [pre]commit:
                     #
@@ -772,7 +775,8 @@ class Connection(RequestSessionBase):
                                 raise
                             self.critical('error while postcommit',
                                           exc_info=sys.exc_info())
-                self.debug('postcommit transaction %s done', self)
+                if debug:
+                    print('postcommit transaction %s done' % self)
                 return self.transaction_uuid(set=False)
         finally:
             self.clear()
