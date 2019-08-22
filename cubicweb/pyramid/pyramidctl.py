@@ -33,7 +33,6 @@ import sys
 import time
 import threading
 import subprocess
-import warnings
 
 from cubicweb import ExecutionError
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
@@ -382,10 +381,6 @@ class PyramidStartHandler(InstanceCommand):
         url_scheme = ('https' if cwconfig['base-url'].startswith('https')
                       else 'http')
         repo = app.application.registry['cubicweb.repository']
-        warnings.warn(
-            'the "pyramid" command does not start repository "looping tasks" '
-            'anymore; use the standalone "scheduler" command if needed'
-        )
         try:
             waitress.serve(app, host=host, port=port, url_scheme=url_scheme,
                            clear_untrusted_proxy_headers=True)
