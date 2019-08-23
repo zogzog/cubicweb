@@ -1,0 +1,13 @@
+image: python
+
+before_script:
+  - pip install tox
+
+flake8:
+  script: tox -e flake8
+
+py27:
+  script: tox -e py27
+
+py3:
+  script: tox -e py3
