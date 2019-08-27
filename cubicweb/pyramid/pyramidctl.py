@@ -48,7 +48,7 @@ import waitress
 
 MAXFD = 1024
 
-DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE')
+DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE', 'ALL')
 LOG_LEVELS = ('debug', 'info', 'warning', 'error')
 
 
