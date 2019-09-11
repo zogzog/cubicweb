@@ -45,8 +45,7 @@ class undoable_action(Predicate):
         self.action_type = action_type
 
     def __str__(self):
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(
-            "%s=%v" % (str(k), str(v)) for k, v in kwargs.items() ))
+        return '%s()' % (self.__class__.__name__)
 
     def __call__(self, cls, req, tx_action=None, **kwargs):
         # tx_action is expected to be a transaction.AbstractAction
