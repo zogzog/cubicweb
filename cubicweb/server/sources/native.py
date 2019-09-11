@@ -653,6 +653,18 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def delete_relation(self, cnx, subject, rtype, object):
         """delete a relation from the source"""
         rschema = self.schema.rschema(rtype)
+        # we should not issue UPDATE on inlined relations when subject is going
+        # to be deleted.
+        # Unless object is also going to be deleted and is not equal to the
+        # subject, in this case DELETE should occur in a order which cubicweb
+        # doesn't handle (yet). For example
+        # cubicweb/server/test/unittest_migractions.py::MigrationCommandsTC::test_add_drop_entity_type
+        # trigger such case.
+        if (
+            rschema.inlined and cnx.deleted_in_transaction(subject)
+            and (subject == object or not cnx.deleted_in_transaction(object))
+        ):
+            return
         self._delete_relation(cnx, subject, rtype, object, rschema.inlined)
         if cnx.ertype_supports_undo(rtype):
             self._record_tx_action(cnx, 'tx_relation_actions', u'R',
