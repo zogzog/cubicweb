@@ -54,6 +54,59 @@ class CubicWebDebugPanel(DebugPanel):
         unsubscribe_to_debug_channel("controller", self.collect_controller)
 
 
+class RegistryDecisionsDebugPanel(DebugPanel):
+    """
+    CubicWeb registry decisions debug panel
+    """
+
+    name = 'RegistryDecisions'
+    title = 'Registry Decisions'
+    nav_title = 'Registry Decisions'
+
+    has_content = True
+    template = 'cubicweb.pyramid:debug_toolbar_templates/registry_decisions.dbtmako'
+
+    def __init__(self, request):
+        # clear on every new response
+        self.data = {
+            'registry_decisions': [],
+            'vreg': None,
+            'highlight': highlight_html,
+            'generate_css': generate_css,
+        }
+
+        subscribe_to_debug_channel("vreg", self.collect_vreg)
+        subscribe_to_debug_channel("registry_decisions", self.collect_registry_decisions)
+
+    def collect_vreg(self, message):
+        self.data["vreg"] = message["vreg"]
+
+    def collect_registry_decisions(self, decision):
+        # decision = {
+        #     "all_objects": [],
+        #     "end_score": int,
+        #     "winners": [],
+        #     "registry": obj,
+        #     "args": args,
+        #     "kwargs": kwargs,
+        # }
+        decision["key"] = None
+        self.data["registry_decisions"].append(decision)
+
+    def link_registry_to_their_key(self):
+        if self.data["vreg"]:
+            # use "id" here to be hashable
+            registry_to_key = {id(registry): key for key, registry in self.data["vreg"].items()}
+            for decision in self.data["registry_decisions"]:
+                decision["key"] = registry_to_key.get(id(decision["self"]))
+
+    def process_response(self, response):
+        unsubscribe_to_debug_channel("registry_decisions", self.collect_registry_decisions)
+        unsubscribe_to_debug_channel("vreg", self.collect_vreg)
+
+        self.link_registry_to_their_key()
+
+
 class RegistryDebugPanel(DebugPanel):
     """
     CubicWeb registry content and decisions debug panel
@@ -190,6 +243,7 @@ class SQLDebugPanel(DebugPanel):
 
 def includeme(config):
     config.add_debugtoolbar_panel(CubicWebDebugPanel)
+    config.add_debugtoolbar_panel(RegistryDecisionsDebugPanel)
     config.add_debugtoolbar_panel(RegistryDebugPanel)
     config.add_debugtoolbar_panel(RQLDebugPanel)
     config.add_debugtoolbar_panel(SQLDebugPanel)

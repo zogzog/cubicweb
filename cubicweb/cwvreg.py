@@ -33,6 +33,7 @@ from rql import RQLHelper
 from yams.constraints import BASE_CONVERTERS
 
 from cubicweb import _
+from cubicweb.debug import emit_to_debug_channel
 from cubicweb import (CW_SOFTWARE_ROOT, ETYPE_NAME_MAP, CW_EVENT_MANAGER,
                       onevent, Binary, UnknownProperty, UnknownEid)
 from cubicweb.predicates import appobject_selectable, _reset_is_instance_cache
@@ -71,6 +72,16 @@ class CWRegistry(Registry):
         """
         super(CWRegistry, self).__init__(True)
         self.vreg = vreg
+
+    def _select_best(self, objects, *args, **kwargs):
+        """
+        Overwrite version of Registry._select_best to emit debug information.
+        """
+        def emit_registry_debug_information(debug_registry_select_best):
+            emit_to_debug_channel("registry_decisions", debug_registry_select_best)
+
+        kwargs["debug_callback"] = emit_registry_debug_information
+        return super()._select_best(objects, *args, **kwargs)
 
     @property
     def schema(self):

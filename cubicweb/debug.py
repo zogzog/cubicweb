@@ -26,6 +26,7 @@ SUBSCRIBERS = {
     "rql": [],
     "sql": [],
     "vreg": [],
+    "registry_decisions": [],
 }
 
 

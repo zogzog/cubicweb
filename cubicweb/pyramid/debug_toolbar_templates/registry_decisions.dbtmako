@@ -1,0 +1,65 @@
+<%def name="render_object(obj)">
+% if hasattr(obj, "__name__"):
+    ${obj.__module__}.${obj.__name__}
+% else:
+    ${obj}
+% endif
+</%def>
+
+<table class="table table-bordered table-striped">
+    <tr>
+        <th>Result</th>
+        <th>Decision</th>
+    </tr>
+    <tr></tr>
+% for registry_decision in registry_decisions:
+    <tr>
+        <td colspan="2"><b>${repr(registry_decision["key"])} -&gt; ${render_object(registry_decision["winner"])}</b></td>
+    </tr>
+    <tr>
+        <td>
+            <p>End score: ${registry_decision["end_score"]}</p>
+            <div class="highlight-inline">args: ${highlight(registry_decision["args"], "html") | n}</div>
+            <div>kwargs:
+                <ul>
+                % for key, value in registry_decision["kwargs"].items():
+                    <li>${repr(key)}: ${repr(value)}</li>
+                % endfor
+                </ul>
+            </div>
+        </td>
+
+        <td>
+            <ul>
+                % for obj in registry_decision["all_objects"]:
+                <li>
+                    ${obj["score"]}: ${render_object(obj["object"])}
+                </li>
+                % endfor
+            </ul>
+        </td>
+
+    </tr>
+
+% endfor
+</table>
+<style>
+${generate_css() | n}
+
+.highlight-inline {
+    margin: 0 0 10px; /* like <p> */
+}
+
+.highlight-inline > .highlight {
+    display: inline;
+}
+
+.highlight > pre {
+    word-break: unset;
+    border: none;
+    margin: 0;
+    padding: 0;
+    background-color: unset;
+    display: inline;
+}
+</style>
