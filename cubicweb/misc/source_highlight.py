@@ -22,11 +22,13 @@ def highlight_terminal(code, language):
     return pygments_highlight(code, get_lexer_by_name(language), TerminalFormatter())
 
 
-def highlight_html(code, language, linenos=False):
+def highlight_html(code, language, linenos=False, linenostart=1, **kwargs):
     if not has_pygments:
         return str(code)
 
-    return pygments_highlight(str(code), get_lexer_by_name(language), HtmlFormatter(wrapcode=True, linenos=linenos))
+    return pygments_highlight(str(code),
+                              get_lexer_by_name(language),
+                              HtmlFormatter(wrapcode=True, linenos=linenos, linenostart=linenostart, **kwargs))
 
 
 def generate_css():
