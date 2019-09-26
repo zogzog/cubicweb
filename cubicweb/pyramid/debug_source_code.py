@@ -33,6 +33,8 @@ from cubicweb.misc.source_highlight import highlight_html, generate_css, has_pyg
 
 DEBUG_DISPLAY_SOURCE_CODE_PATH = '_debug_display_source_code'
 
+FILES_WHITE_LIST = set()
+
 
 def source_code_url(object_or_class):
     if object_or_class is None:
@@ -46,6 +48,8 @@ def source_code_url(object_or_class):
     except TypeError:
         logging.debug("Error while trying to source code of '%s'" % object_or_class)
         return ""
+
+    FILES_WHITE_LIST.add(file_path)
 
     try:
         source_code, line = inspect.getsourcelines(object_or_class)
@@ -80,6 +84,10 @@ def debug_display_source_code(request):
 
     if not os.path.exists(source_code_file):
         return Response("Error: file '%s' doesn't exist on the filesystem." % source_code_file)
+
+    # security
+    if source_code_file not in FILES_WHITE_LIST:
+        return Response("Error: access to file is not authorized")
 
     try:
         content = open(source_code_file, "r").read()
