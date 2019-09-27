@@ -24,7 +24,7 @@ def highlight_terminal(code, language):
 
 def highlight_html(code, language, linenos=False):
     if not has_pygments:
-        return code
+        return str(code)
 
     return pygments_highlight(str(code), get_lexer_by_name(language), HtmlFormatter(wrapcode=True, linenos=linenos))
 
