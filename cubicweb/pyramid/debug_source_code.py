@@ -25,6 +25,8 @@ import os
 import logging
 import inspect
 
+from itertools import dropwhile
+
 from pyramid.response import Response
 from mako.template import Template
 
@@ -77,6 +79,65 @@ def source_code_url(object_or_class):
         return _generate_link_to_source(file_path)
 
     return _generate_link_to_source(file_path, line, line + len(source_code))
+
+
+def source_code_url_in_stack(stack, highlighted=False):
+    new_stack = []
+
+    if highlighted:
+        for i in stack.split(" File "):
+            # expecting this format:
+            # '<span class="nb">&quot;/path/to/file.py&quot;</span>,
+            # line <span class="m">885</span>,...'
+            if not i.startswith('<span class="nb">'):
+                new_stack.append(i)
+                continue
+
+            # this will give:
+            # ['<span class="nb">', '/file/to/path.py', '</span>, ...']
+            tag, file_path, rest = i.split("&quot;", 2)
+
+            # "rest" is like that: '</span>, line <span class="m">885</span>, ...'
+            # we want to extrait "885" here
+            line_number = int("".join(dropwhile(lambda x: not x.isdigit(), rest)).split("<")[0])
+
+            new_stack.append("%s%s%s" % (
+                tag,
+                _generate_link_to_source(file_path, start=line_number,
+                                         tag_body="&quot;%s&quot;" % file_path),
+                rest,
+            ))
+
+            FILES_WHITE_LIST.add(file_path)
+
+        new_stack = " File ".join(new_stack)
+
+    # no syntax
+    else:
+        for i in stack.split("\n"):
+            # expecting this format:
+            # File "/path/to/file.py", line 885, in stuf\n  some_code\nFile "/stuff.py", line...
+            if not i.startswith("  File "):
+                new_stack.append(i)
+                continue
+
+            # this will give:
+            # ['File "', '/path/to/file.py', '", line 885, in stuf']
+            beginning, file_path, rest = i.split('"', 2)
+            line_number = int("".join(dropwhile(lambda x: not x.isdigit(), rest)).split(",")[0])
+
+            new_stack.append("%s%s%s" % (
+                beginning,
+                _generate_link_to_source(file_path, start=line_number,
+                                         tag_body='"%s"' % file_path),
+                rest,
+            ))
+
+            FILES_WHITE_LIST.add(file_path)
+
+        new_stack = "\n".join(new_stack)
+
+    return new_stack
 
 
 def debug_display_source_code(request):
