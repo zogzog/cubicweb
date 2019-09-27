@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from pyramid_debugtoolbar.panels import DebugPanel
+
 from cubicweb.debug import subscribe_to_debug_channel, unsubscribe_to_debug_channel
 from cubicweb.misc.source_highlight import highlight_html, generate_css
 
@@ -44,7 +45,11 @@ class CubicWebDebugPanel(DebugPanel):
     template = 'cubicweb.pyramid:debug_toolbar_templates/cw.dbtmako'
 
     def __init__(self, request):
-        self.data = {'controller': None}
+        self.data = {
+            'controller': None,
+            'source_code_url': source_code_url,
+        }
+
         subscribe_to_debug_channel("controller", self.collect_controller)
 
     def collect_controller(self, controller):
@@ -73,6 +78,7 @@ class RegistryDecisionsDebugPanel(DebugPanel):
             'vreg': None,
             'highlight': highlight_html,
             'generate_css': generate_css,
+            'source_code_url': source_code_url,
         }
 
         subscribe_to_debug_channel("vreg", self.collect_vreg)
@@ -120,7 +126,10 @@ class RegistryDebugPanel(DebugPanel):
     template = 'cubicweb.pyramid:debug_toolbar_templates/registry.dbtmako'
 
     def __init__(self, request):
-        self.data = {'vreg': None}
+        self.data = {
+            'vreg': None,
+            'source_code_url': source_code_url,
+        }
         subscribe_to_debug_channel("vreg", self.collect_vreg)
 
     def collect_vreg(self, message):

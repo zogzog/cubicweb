@@ -14,7 +14,7 @@
     <tr></tr>
 % for registry_decision in registry_decisions:
     <tr>
-        <td colspan="2"><b>${repr(registry_decision["key"])} -&gt; ${render_object(registry_decision["winner"])}</b></td>
+        <td colspan="2"><b>${repr(registry_decision["key"])} -&gt; ${render_object(registry_decision["winner"])} ${source_code_url(registry_decision["winner"]) | n}</b></td>
     </tr>
     <tr>
         <td>
@@ -33,7 +33,7 @@
             <ul>
                 % for obj in registry_decision["all_objects"]:
                 <li>
-                    ${obj["score"]}: ${render_object(obj["object"])}
+                    ${obj["score"]}: ${render_object(obj["object"])} ${source_code_url(obj["object"]) | n}
                 </li>
                 % endfor
             </ul>

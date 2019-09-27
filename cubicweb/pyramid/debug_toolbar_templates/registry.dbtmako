@@ -30,7 +30,7 @@
                                     % else:
                                     ${value}
                                     % endif
-
+                                    ${source_code_url(value) | n}
                                     <ul>
                                         % if hasattr(value, "cw_etype"):
                                         <li>regid: '${value.cw_etype}'</li>

@@ -12,9 +12,9 @@
     <tbody>
         <tr>
             <td>${controller["kind"]}</td>
-            <td>${controller["request"]}</td>
+            <td>${controller["request"]} ${source_code_url(controller["request"]) | n}</td>
             <td>${controller["path"]}</td>
-            <td>${controller["controller"]}</td>
+            <td>${controller["controller"]} ${source_code_url(controller["controller"]) | n}</td>
         </tr>
     </tbody>
 </table>
