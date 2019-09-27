@@ -22,6 +22,8 @@ Debug view for pyramid debug toolbar and others to help development
 """
 
 import os
+import logging
+import inspect
 
 from pyramid.response import Response
 from mako.template import Template
@@ -30,6 +32,35 @@ from cubicweb.misc.source_highlight import highlight_html, generate_css, has_pyg
 
 
 DEBUG_DISPLAY_SOURCE_CODE_PATH = '_debug_display_source_code'
+
+
+def source_code_url(object_or_class):
+    if object_or_class is None:
+        return ""
+
+    if not inspect.isclass(object_or_class):
+        object_or_class = object_or_class.__class__
+
+    try:
+        file_path = inspect.getsourcefile(object_or_class)
+    except TypeError:
+        logging.debug("Error while trying to source code of '%s'" % object_or_class)
+        return ""
+
+    try:
+        source_code, line = inspect.getsourcelines(object_or_class)
+    except OSError:  # when we couldn't read the source code/line
+        return '<a href="../%s?file=%s" target="_blank">&lt;&gt;</a>' % (
+            DEBUG_DISPLAY_SOURCE_CODE_PATH, file_path
+        )
+
+    # step back a bit so we have a bit of top padding wen displaying the page
+    # and the highlighted line isn't glued to top of the browser window
+    line_anchor = max(0, line - 10)
+
+    return '<a href="../%s?file=%s&line=%s&end=%s#line-%s" target="_blank">&lt;&gt;</a>' % (
+        DEBUG_DISPLAY_SOURCE_CODE_PATH, file_path, line, line + len(source_code), line_anchor
+    )
 
 
 def debug_display_source_code(request):
