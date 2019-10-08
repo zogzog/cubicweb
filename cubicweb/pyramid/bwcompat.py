@@ -34,7 +34,7 @@ import cubicweb
 import cubicweb.web
 
 from cubicweb.web.application import CubicWebPublisher
-
+from cubicweb.debug import emit_to_debug_channel
 from cubicweb.web import LogOut, PublishException
 
 from cubicweb.pyramid.core import cw_to_pyramid
@@ -93,6 +93,13 @@ class CubicWebPyramidHandler(object):
                                  ctrlid, req.path, controller,
                                  inspect.getsourcefile(controller.__class__),
                                  inspect.getsourcelines(controller.__class__)[1])
+                        emit_to_debug_channel("controller", {
+                            "kind": ctrlid,
+                            "request": req,
+                            "path": req.path,
+                            "controller": controller,
+                            "config": self.appli.repo.config,
+                        })
                     except cubicweb.NoSelectableObject:
                         log.warn("WARNING '%s' unauthorized request", req.path)
                         raise httpexceptions.HTTPUnauthorized(

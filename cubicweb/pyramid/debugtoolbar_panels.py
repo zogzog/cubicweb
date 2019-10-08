@@ -21,6 +21,39 @@ from cubicweb.debug import subscribe_to_debug_channel, unsubscribe_to_debug_chan
 from cubicweb.misc.source_highlight import highlight_html, generate_css
 
 
+class CubicWebDebugPanel(DebugPanel):
+    """
+    CubicWeb general debug panel
+    """
+
+    """
+    Excepted formats:
+    Controller: {
+        "kind": ctrlid,
+        "request": req,
+        "path": req.path,
+        "controller": controller,
+    }
+    """
+
+    name = 'CubicWeb'
+    nav_title = 'CubicWeb'
+    title = 'CubicWeb general panel'
+
+    has_content = True
+    template = 'cubicweb.pyramid:debug_toolbar_templates/cw.dbtmako'
+
+    def __init__(self, request):
+        self.data = {'controller': None}
+        subscribe_to_debug_channel("controller", self.collect_controller)
+
+    def collect_controller(self, controller):
+        self.data["controller"] = controller
+
+    def process_response(self, response):
+        unsubscribe_to_debug_channel("controller", self.collect_controller)
+
+
 class RQLDebugPanel(DebugPanel):
     """
     CubicWeb RQL debug panel
@@ -78,4 +111,5 @@ class RQLDebugPanel(DebugPanel):
 
 
 def includeme(config):
+    config.add_debugtoolbar_panel(CubicWebDebugPanel)
     config.add_debugtoolbar_panel(RQLDebugPanel)

@@ -22,6 +22,7 @@ logger = getLogger('cubicweb')
 
 
 SUBSCRIBERS = {
+    "controller": [],
     "rql": [],
     "sql": [],
 }
