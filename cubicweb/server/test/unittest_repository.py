@@ -320,6 +320,58 @@ class RepositoryTC(CubicWebTC):
             cnx.commit()
             self.assertEqual(bk.title, 'root')
 
+    def test_delete_entity_with_inlined_relation(self):
+        """Test deletion of entity with inlined relations.
+
+        In this case, inlined relation column should not be deleted (= e.g. not
+        updated to NULL), but hooks before_delete_relation and
+        afer_delete_relation must be called.
+        """
+        class OnDeleteInlined(Hook):
+            __regid__ = 'on_delete_inlined'
+            __select__ = Hook.__select__ & hook.match_rtype('personne_inlined')
+            events = ('before_delete_relation', 'after_delete_relation')
+            CALLED = []
+
+            def __call__(self):
+                OnDeleteInlined.CALLED.append(self.event)
+
+        with self.admin_access.cnx() as cnx:
+            # allow only one null on cw_personne_inlined column
+            cnx.system_sql(
+                'CREATE UNIQUE INDEX test_composite_idx ON cw_personne(true) '
+                'WHERE cw_personne_inlined is NULL')
+            cnx.commit()
+
+            # deletion of p1 should not set personne_inlined to NULL (otherwise
+            # the unique index will raise)
+            p0 = cnx.create_entity('Personne', nom=u'p0')
+            p1 = cnx.create_entity('Personne', nom=u'p1', personne_inlined=p0)
+            cnx.commit()
+            with self.temporary_appobjects(OnDeleteInlined):
+                cnx.entity_from_eid(p1.eid).cw_delete()
+            assert OnDeleteInlined.CALLED == [
+                'before_delete_relation', 'after_delete_relation']
+            cnx.commit()
+
+            # XXX: This case is not handled because entities need to be deleted
+            # in a specific order
+            # p1 = cnx.create_entity('Personne', nom=u'p1', personne_inlined=p0)
+            # cnx.commit()
+            # cnx.execute('DELETE Personne X WHERE X eid IN ({}, {})'.format(p1.eid, p0.eid))
+            # cnx.commit()
+            cnx.entity_from_eid(p0.eid).cw_delete()
+            cnx.commit()
+
+            # deletion of p1 should not set personne_inlined to NULL
+            p1 = cnx.create_entity('Personne', nom=u'p1')
+            p1.cw_set(personne_inlined=p1)
+            p0 = cnx.create_entity('Personne', nom=u'p0')
+            cnx.commit()
+            cnx.entity_from_eid(p1.eid).cw_delete()
+            cnx.commit()
+
+
 class SchemaDeserialTC(CubicWebTC):
 
     appid = 'data-schemaserial'

@@ -108,12 +108,5 @@ class ValueGeneratorTC(TestCase):
         self.assertEqual(self.person_valgen.generate_attribute_value({}, 'description', 12),
                           u'yo')
 
-
-class ConstraintInsertionTC(TestCase):
-
-    def test_writeme(self):
-        self.skipTest('Test automatic insertion / Schema Constraints')
-
-
 if __name__ == '__main__':
     unittest_main()

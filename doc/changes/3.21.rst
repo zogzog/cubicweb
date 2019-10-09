@@ -24,7 +24,7 @@ New features
 User-visible changes
 --------------------
 
-* the use of fckeditor for text form fields is disabled by default
+* the use of fckeditor for text form fields is disabled by default, to re-enable it simply install the `cubicweb-ckeditor` cube (then `add_cude('ckeditor')` in a migration or in the shell)
 
 * the 'https-deny-anonymous' configuration setting no longer exists
 
