@@ -126,6 +126,13 @@ If we use an RQL condition on a transition, we can use the following variables:
 * `X`, the entity on which we may pass the transition
 * `U`, the user executing that may pass the transition
 
+It's also possible to get a given transition (usefull in migration) from a
+workflow use `transition_by_name(trname)`.
+To update the permission associated to the transition use
+`set_permissions(requiredgroups=(), conditions=(), reset=True)`.
+If `reset` is False, then the new permission are added instead of replacing the
+old one.
+
 
 .. image:: ../../../images/03-transitions-view_en.png
 

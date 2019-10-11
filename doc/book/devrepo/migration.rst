@@ -182,7 +182,13 @@ The following functions for workflow creation are available in `repository`
 scripts:
 
 * `add_workflow(label, workflowof, initial=False, commit=False, **kwargs)`, adds a new workflow
-  for a given type(s)
+  for a given type(s),
+* `get_workflow_for(etype)`, return the workflow for the given entity type,
+* `transition_by_name(self, trname)`, method of cubicweb.entities.wfobjs.Workflow instance
+  that returns the transition named `trname`,
+* `set_permissions(self, requiredgroups=(), conditions=(), reset=True)` method of
+  cubicweb.entities.wfobjs.Transition instance that sets or adds (if `reset` is False)
+  groups and conditions for this transition.
 
 You can find more details about workflows in the chapter :ref:`Workflow` .
 
