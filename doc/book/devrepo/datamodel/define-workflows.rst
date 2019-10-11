@@ -111,9 +111,6 @@ created before.
     (e.g. a list of user groups who can apply the transition; the user
     has to belong to at least one of the listed group to perform the action).
 
-.. sourcecode:: python
-
-  checkpoint()
 
 .. note::
   Do not forget to add the `_()` in front of all states and
