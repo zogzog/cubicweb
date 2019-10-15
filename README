@@ -78,3 +78,34 @@ a XMPP client: public@conference.jabber.logilab.org
 Mailing list: https://lists.cubicweb.org/mailman/listinfo/cubicweb-devel
 Patchbomb extension: https://www.mercurial-scm.org/wiki/PatchbombExtension
 Good practice on sending email patches: https://www.mercurial-scm.org/wiki/ContributingChanges#Emailing_patches
+
+Full .hg/hgrc example for contributors having ssh access to ``hg.logilab.org`` :
+
+    [paths]
+    default = https://hg.logilab.org/master/cubicweb
+    default-push = ssh://hg@hg.logilab.org/review/cubicweb
+
+    [email]
+    to = cubicweb-devel@lists.cubicweb.org
+
+    [patchbomb]
+    publicurl = https://hg.logilab.org/review/cubicweb
+    flagtemplate = "{separate(' ', 'cubicweb', flags)}"
+
+    [jenkins]
+    url = https://jenkins.logilab.org/
+    job = cubicweb-default
+
+If you don't have ssh access to ``hg.logilab.org``, you can use your own Mercurial server and
+change ``default-push`` and ``publicurl`` accordingly.
+A list of services that provides hosting of Mercurial repositories is available
+on https://www.mercurial-scm.org/wiki/MercurialHosting.
+
+* ``hg pull`` will pull on master repo (public changesets).
+* ``hg push`` will push on review repo using ssh.
+* When sending an email to the list, it will add a "Available at" with command
+  to pull the draft series on the public repo.
+* Using https://hg.logilab.org/master/logilab/devtools/file/tip/hgext/jenkins.py
+  mercurial extension, ``hg show jenkins`` display jenkins build status for
+  each changeset. Read https://www.mercurial-scm.org/wiki/UsingExtensions to learn how
+  to enable a new extension in mercurial.
