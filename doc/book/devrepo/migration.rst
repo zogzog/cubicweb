@@ -164,6 +164,9 @@ scripts:
 * `set_size_constraint(etype, rtype, size, commit=True)`, changes the size constraints
   for the relation <rtype> of entity type <etype>.
 
+* `update_bfss_path(old_path, new_path, commit=True)`, change the path from `old_path` to
+  `new_path` in Bytes File-System Storage (bfss).
+
 Data migration
 --------------
 The following functions for data migration are available in `repository` scripts:

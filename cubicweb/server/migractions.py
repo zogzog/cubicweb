@@ -1390,6 +1390,25 @@ class ServerMigrationHelper(MigrationHelper):
         from cubicweb.server.checkintegrity import reindex_entities
         reindex_entities(self.repo.schema, self.cnx, etypes=etypes)
 
+    def cmd_update_bfss_path(self, old_path, new_path, commit=True):
+        """
+        Change the path of all Files from old_path to new_path.
+        """
+        changes = []
+        for f_eid, fspath in self.rqlexec(
+                'Any F, FSPATH(D) WHERE F is File, F data D'):
+            fspath = fspath.getvalue().decode('utf-8')
+            dirname = os.path.dirname(fspath)
+            if dirname == old_path:
+                newpath = os.path.join(new_path, os.path.basename(fspath))
+                changes.append({'expected': newpath, 'eid': f_eid})
+        self.repo.system_source.doexecmany(
+            self.cnx,
+            'UPDATE cw_file SET cw_data=%(expected)s WHERE cw_eid=%(eid)s',
+            changes)
+        if commit:
+            self.commit()
+
     @contextmanager
     def cmd_dropped_constraints(self, etype, attrname, cstrtype=None,
                                 droprequired=False):

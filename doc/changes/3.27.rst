@@ -27,6 +27,9 @@ New features
   default from now on. To still log to a file pass ``log_to_file=True`` to
   ``CubicWebConfiguration.config_for``
 
+* add a new migration function `update_bfss_path(old_path, new_path)` to update
+  the path in Bytes File-System Storage (bfss).
+
 Backwards incompatible changes
 ------------------------------
 

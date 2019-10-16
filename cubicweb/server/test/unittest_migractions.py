@@ -37,6 +37,7 @@ from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import ServerMigrationHelper
 from cubicweb.server.sources import storages
 from cubicweb.server.schema2sql import build_index_name
+from cubicweb.server.test.unittest_storage import StorageTC
 
 import cubicweb.devtools
 
@@ -832,6 +833,20 @@ class MigrationCommandsTC(MigrationTC):
                 bill.cw_clear_all_caches()
                 self.assertIsNone(bill.photo)
                 storages.unset_attribute_storage(self.repo, 'Personne', 'photo')
+
+
+class MigrationStorageCommandsTC(StorageTC, MigrationCommandsTC):
+
+    def test_change_bfss_path(self):
+        with self.mh() as (cnx, mh):
+            file1 = mh.cmd_create_entity('File', data_name=u"foo.pdf",
+                                         data=Binary(b"xxx"), data_format=u'text/plain')
+            mh.commit()
+            current_dir = osp.dirname(self.fspath(cnx, file1))
+
+            mh.update_bfss_path(current_dir, 'loutre', commit=True)
+
+            self.assertEqual(u'loutre', osp.dirname(self.fspath(cnx, file1)))
 
 
 class MigrationCommandsComputedTC(MigrationTC):
