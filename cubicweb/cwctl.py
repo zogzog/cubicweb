@@ -47,7 +47,7 @@ from cubicweb.toolsutils import Command, rm, create_dir, underline_title
 from cubicweb.__pkginfo__ import version as cw_version
 
 LOG_LEVELS = ('debug', 'info', 'warning', 'error')
-DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE')
+DBG_FLAGS = ('RQL', 'SQL', 'REPO', 'HOOKS', 'OPS', 'SEC', 'MORE', 'ALL')
 
 # don't check duplicated commands, it occurs when reloading site_cubicweb
 CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',

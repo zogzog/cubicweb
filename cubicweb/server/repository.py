@@ -557,8 +557,8 @@ class Repository(object):
                         fsversion = self.config.cubicweb_version()
                     if version < fsversion:
                         msg = ('instance has %s version %s but %s '
-                               'is installed. Run "cubicweb-ctl upgrade".')
-                        raise ExecutionError(msg % (cube, version, fsversion))
+                               'is installed. Run "cubicweb-ctl upgrade %s".')
+                        raise ExecutionError(msg % (cube, version, fsversion, self.config.appid))
         return vcconf
 
     @cached
