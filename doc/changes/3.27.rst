@@ -30,6 +30,23 @@ New features
 * add a new migration function `update_bfss_path(old_path, new_path)` to update
   the path in Bytes File-System Storage (bfss).
 
+* on every request display request path and selected controller in CLI
+
+* migration interactive mode improvements:
+
+  * when an exception occurs, display the full traceback instead of only the exception
+
+  * on migration p(db) choice, launch ipdb if it's installed
+
+  * on migration p(db) choice, give the traceback to pdb if it's available,
+    this mean that the (i)pdb interactive session will be on the stack of
+    the exception instead of being on the stack where pdb is launched which
+    will allow the user to access all the relevant context of the exception
+    which otherwise is lost
+
+* on DBG_SQL and/or DBG_RQL, if pygments is installed, syntax highlight sql/rql
+  debug output
+
 Backwards incompatible changes
 ------------------------------
 
@@ -60,6 +77,10 @@ Backwards incompatible changes
   option ``--no-daemon`` has been removed.
 
 * DBG_MS flag has been removed since it is not used anymore
+
+* transactions db logs where displayed using the logging
+  (debug/info/warning...) mechanism, now it is only displayed if the
+  corresponding DBG_OPS flag is used
 
 Deprecated code drops
 ---------------------
