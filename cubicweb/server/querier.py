@@ -19,6 +19,8 @@
 security checking and data aggregation.
 """
 import uuid
+import time
+import traceback
 from itertools import repeat
 
 from rql import RQLSyntaxError, CoercionError
@@ -30,6 +32,7 @@ from cubicweb import ValidationError, Unauthorized, UnknownEid, QueryError
 from cubicweb.rqlrewrite import RQLRelationRewriter
 from cubicweb import Binary, server
 from cubicweb.rset import ResultSet
+from cubicweb.debug import emit_to_debug_channel
 
 from cubicweb.utils import QueryCache, RepeatList
 from cubicweb.misc.source_highlight import highlight_terminal
@@ -558,6 +561,18 @@ class QuerierHelper(object):
         plan.cache_key = cachekey
         plan.rql_query_tracing_token = str(uuid.uuid4())
         self._planner.build_plan(plan)
+
+        query_debug_informations = {
+            "rql": rql,
+            "rql_query_tracing_token": plan.rql_query_tracing_token,
+            "args": args,
+            # remove the last part of the stack which is: this line
+            "callstack": "".join(traceback.format_stack()[:-1]),
+            "description": "",
+        }
+
+        start = time.time()
+
         # execute the plan
         try:
             results = plan.execute()
@@ -573,6 +588,10 @@ class QuerierHelper(object):
             if cnx.commit_state is None:
                 cnx.commit_state = 'uncommitable'
             raise
+
+        query_debug_informations["time"] = ((time.time() - start) * 1000)
+        query_debug_informations["result"] = results
+
         # build a description for the results if necessary
         descr = ()
         if build_descr:
@@ -596,6 +615,10 @@ class QuerierHelper(object):
                 descr = _build_descr(cnx, results, basedescr, todetermine)
             # FIXME: get number of affected entities / relations on non
             # selection queries ?
+            query_debug_informations["description"] = descr
+
+        emit_to_debug_channel("rql", query_debug_informations)
+
         # return a result set object
         return ResultSet(results, rql, args, descr)
 
