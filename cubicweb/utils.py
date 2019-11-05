@@ -616,6 +616,9 @@ class QueryCache(object):
         self._data = {}
         self._lock = Lock()
 
+    def __contains__(self, key):
+        return key in self._data
+
     def __len__(self):
         with self._lock:
             return len(self._data)
