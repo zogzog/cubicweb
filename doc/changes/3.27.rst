@@ -49,6 +49,9 @@ New features
 
 * add a new '-t/--toolbar' option the pyramid command to activate the pyramid debugtoolbar
 
+* allow to specify the instance id for any instance command using the
+  CW_INSTANCE global variable instead of or giving it as a cli argument
+
 Backwards incompatible changes
 ------------------------------
 

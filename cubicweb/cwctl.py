@@ -21,6 +21,7 @@ provide a pluggable commands system.
 # *ctl module should limit the number of import to be imported as quickly as
 # possible (for cubicweb-ctl reactivity, necessary for instance for usable bash
 # completion). So import locally in command helpers.
+import os
 import sys
 import traceback
 from warnings import filterwarnings
@@ -107,7 +108,8 @@ class InstanceCommand(Command):
     arguments = '<instance>'
 
     # enforce having one instance
-    min_args = max_args = 1
+    min_args = 0
+    max_args = 1
 
     options = (
         ("force",
@@ -142,7 +144,14 @@ class InstanceCommand(Command):
         """run the <command>_method on each argument (a list of instance
         identifiers)
         """
-        appid = args[0]
+        if not args:
+            if "CW_INSTANCE" in os.environ:
+                appid = os.environ["CW_INSTANCE"]
+            else:
+                raise BadCommandUsage("Error: instance id is missing")
+        else:
+            appid = args[0]
+
         cmdmeth = getattr(self, '%s_instance' % self.name)
 
         traceback_ = None
