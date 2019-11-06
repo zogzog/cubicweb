@@ -12,7 +12,7 @@ except ImportError:
     has_pygments = False
 
 
-def highlight(code, language):
+def highlight_terminal(code, language):
     if not has_pygments:
         return code
 

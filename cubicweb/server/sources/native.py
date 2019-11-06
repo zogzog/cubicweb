@@ -50,7 +50,7 @@ from cubicweb.server.hook import CleanupDeletedEidsCacheOp
 from cubicweb.server.edition import EditedEntity
 from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 from cubicweb.server.sources.rql2sql import SQLGenerator
-from cubicweb.misc.source_highlight import highlight
+from cubicweb.misc.source_highlight import highlight_terminal
 from cubicweb.statsd_logger import statsd_timeit
 
 
@@ -68,12 +68,12 @@ class LogCursor(object):
         it's a function just so that it shows up in profiling
         """
         if server.DEBUG & server.DBG_SQL:
-            print('exec', highlight(query, "SQL"), args)
+            print('exec', highlight_terminal(query, "SQL"), args)
         try:
             self.cu.execute(str(query), args)
         except Exception as ex:
             print("sql: %r\n args: %s\ndbms message: %r" % (
-                highlight(query, "SQL"), args, ex.args[0]))
+                highlight_terminal(query, "SQL"), args, ex.args[0]))
             raise
 
     def fetchall(self):
@@ -686,7 +686,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         cursor = cnx.cnxset.cu
         if server.DEBUG & server.DBG_SQL:
-            print('exec', highlight(query, "SQL"), args, cnx.cnxset.cnx)
+            print('exec', highlight_terminal(query, "SQL"), args, cnx.cnxset.cnx)
         try:
             # str(query) to avoid error if it's a unicode string
             cursor.execute(str(query), args)
@@ -749,7 +749,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         it's a function just so that it shows up in profiling
         """
         if server.DEBUG & server.DBG_SQL:
-            print('execmany', highlight(query, "SQL"), 'with', len(args), 'arguments',
+            print('execmany', highlight_terminal(query, "SQL"), 'with', len(args), 'arguments',
                   cnx.cnxset.cnx)
         cursor = cnx.cnxset.cu
         try:
