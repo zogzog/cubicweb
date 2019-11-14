@@ -25,6 +25,7 @@ SUBSCRIBERS = {
     "controller": [],
     "rql": [],
     "sql": [],
+    "vreg": [],
 }
 
 

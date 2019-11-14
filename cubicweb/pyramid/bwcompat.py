@@ -93,6 +93,9 @@ class CubicWebPyramidHandler(object):
                                  ctrlid, req.path, controller,
                                  inspect.getsourcefile(controller.__class__),
                                  inspect.getsourcelines(controller.__class__)[1])
+                        emit_to_debug_channel("vreg", {
+                            "vreg": vreg,
+                        })
                         emit_to_debug_channel("controller", {
                             "kind": ctrlid,
                             "request": req,

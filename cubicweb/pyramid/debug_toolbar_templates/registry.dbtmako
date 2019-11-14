@@ -1,0 +1,93 @@
+% if vreg:
+
+<div id="registry-store">
+    <div class="row">
+        <div class="col-md-3">
+            <nav id="registry-store-categories">
+                <ul class="nav nav-pills nav-stacked">
+                    % for category in sorted(vreg.keys()):
+                    <li role="presentation"><a href="#detail-${category}">${category}</a></li>
+                    % endfor
+                </ul>
+            </nav>
+        </div>
+
+        <div class="col-md-9">
+            % for category, data in sorted(vreg.items(), key=lambda x: x[0]):
+            <div class="anchor">
+                <a class="anchor" id="detail-${category}"></a>
+                <h4>${category.title()}</h4>
+                <table class="table table-bordered table-striped">
+                    % for key, values in sorted(data.items(), key=lambda x: x[0]):
+                    <tr>
+                        <th>${key}</th>
+                        <td>
+                            <ul>
+                                % for value in values:
+                                <li>
+                                    % if isinstance(value, type):
+                                    ${value.__module__}.${value.__name__}
+                                    % else:
+                                    ${value}
+                                    % endif
+
+                                    <ul>
+                                        % if hasattr(value, "cw_etype"):
+                                        <li>regid: '${value.cw_etype}'</li>
+                                        % elif hasattr(value, "__regid__"):
+                                        <li>regid: '${value.__regid__}'</li>
+                                        % endif
+
+                                        % if hasattr(value, "__select__"):
+                                            <li>select: '${value.__select__}'</li>
+                                            % if hasattr(value.__select__, "func_name"):
+                                            <li>select name: '${value.__select__.func_name}'</li>
+                                            % endif
+                                            % if hasattr(value.__select__, "score"):
+                                            <li>select score: '${value.__select__.score}'</li>
+                                            % endif
+                                        % endif
+
+                                        <li>registries: ${value.__registries__}</li>
+
+                                        % if hasattr(value, "rest_attr"):
+                                        <li>rest_attr: '${value.rest_attr}'</li>
+                                        % endif
+
+                                        % if hasattr(value, "fetch_attrs"):
+                                        <li>fetch_attrs: '${value.fetch_attrs}'</li>
+                                        % endif
+
+                                        % if hasattr(value, "cw_skip_copy_for"):
+                                        <li>cw_skip_copy_for: '${value.cw_skip_copy_for}'</li>
+                                        % endif
+
+                                        % if hasattr(value, "e_schema"):
+                                        <li>e_schema: '${value.e_schema}'</li>
+                                        % endif
+                                    </ul>
+                                </li>
+                                % endfor
+                            </ul>
+                        </td>
+                    </tr>
+                    % endfor
+                </table>
+            </div>
+            % endfor
+        </div>
+    </div>
+</div>
+
+% else:
+<p>No registry store got collected, is it a bug?</p>
+% endif
+
+<style>
+a.anchor {
+    display: block;
+    position: relative;
+    top: -150px;
+    visibility: hidden;
+}
+</style>

@@ -54,6 +54,29 @@ class CubicWebDebugPanel(DebugPanel):
         unsubscribe_to_debug_channel("controller", self.collect_controller)
 
 
+class RegistryDebugPanel(DebugPanel):
+    """
+    CubicWeb registry content and decisions debug panel
+    """
+
+    name = 'Registry'
+    title = 'Registry Store'
+    nav_title = 'Registry Store'
+
+    has_content = True
+    template = 'cubicweb.pyramid:debug_toolbar_templates/registry.dbtmako'
+
+    def __init__(self, request):
+        self.data = {'vreg': None}
+        subscribe_to_debug_channel("vreg", self.collect_vreg)
+
+    def collect_vreg(self, message):
+        self.data["vreg"] = message["vreg"]
+
+    def process_response(self, response):
+        unsubscribe_to_debug_channel("vreg", self.collect_vreg)
+
+
 class RQLDebugPanel(DebugPanel):
     """
     CubicWeb RQL debug panel
@@ -167,5 +190,6 @@ class SQLDebugPanel(DebugPanel):
 
 def includeme(config):
     config.add_debugtoolbar_panel(CubicWebDebugPanel)
+    config.add_debugtoolbar_panel(RegistryDebugPanel)
     config.add_debugtoolbar_panel(RQLDebugPanel)
     config.add_debugtoolbar_panel(SQLDebugPanel)
