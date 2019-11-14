@@ -24,6 +24,7 @@ from os.path import basename
 import pickle
 import re
 import itertools
+import traceback
 import time
 import zipfile
 import logging
@@ -691,6 +692,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             "sql": query,
             "args": args,
             "rollback": False,
+            "callstack": "".join(traceback.format_stack()[:-1]),
             "rql_query_tracing_token": rql_query_tracing_token,
         }
 

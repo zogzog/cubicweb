@@ -110,6 +110,62 @@ class RQLDebugPanel(DebugPanel):
         unsubscribe_to_debug_channel("sql", self.collect_sql_queries)
 
 
+class SQLDebugPanel(DebugPanel):
+    """
+    CubicWeb SQL debug panel
+    """
+
+    """
+    Excepted formats:
+    SQL: {
+        'rql_query_tracing_token': 'some_token',
+        'args': {dict with some args},
+        'rollback': False|True,
+        'time': time_in_float,
+        'sql':_sql_query_as_a_string,
+    }
+    """
+
+    name = 'SQL'
+    title = 'SQL queries'
+    nav_title = 'SQL'
+    nav_subtitle_style = 'progress-bar-info'
+
+    has_content = True
+    template = 'cubicweb.pyramid:debug_toolbar_templates/sql.dbtmako'
+
+    def __init__(self, request):
+        self.data = {
+            'rql_queries': [],
+            'sql_queries': [],
+            'highlight': highlight_html,
+            'generate_css': generate_css,
+        }
+        subscribe_to_debug_channel("rql", self.collect_rql_queries)
+        subscribe_to_debug_channel("sql", self.collect_sql_queries)
+
+    @property
+    def nav_subtitle(self):
+        return len(self.data['sql_queries'])
+
+    def collect_rql_queries(self, rql_query):
+        self.data["rql_queries"].append(rql_query)
+
+        # link sql queries to rql's one
+        for sql_query in self.data["sql_queries"]:
+            if sql_query["rql_query_tracing_token"] == rql_query["rql_query_tracing_token"]:
+                sql_query["from_rql_query"] = rql_query
+
+    def collect_sql_queries(self, sql_query):
+        sql_query["from_rql_query"] = None
+        self.data["sql_queries"].append(sql_query)
+
+    def process_response(self, response):
+        unsubscribe_to_debug_channel("rql", self.collect_rql_queries)
+        unsubscribe_to_debug_channel("sql", self.collect_sql_queries)
+
+
 def includeme(config):
     config.add_debugtoolbar_panel(CubicWebDebugPanel)
     config.add_debugtoolbar_panel(RQLDebugPanel)
+    config.add_debugtoolbar_panel(SQLDebugPanel)
