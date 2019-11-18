@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from collections import defaultdict
-
 from pyramid_debugtoolbar.panels import DebugPanel
 from cubicweb.debug import subscribe_to_debug_channel, unsubscribe_to_debug_channel
 from cubicweb.misc.source_highlight import highlight_html, generate_css
