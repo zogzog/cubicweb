@@ -498,7 +498,7 @@ this option is set to yes",
         return Version(version)
 
     @classmethod
-    def _cube_deps(cls, cube, key, oldkey):
+    def _cube_deps(cls, cube, key):
         """return cubicweb cubes used by the given cube"""
         pkginfo = cls.cube_pkginfo(cube)
         try:
@@ -536,12 +536,12 @@ this option is set to yes",
     @classmethod
     def cube_dependencies(cls, cube):
         """return cubicweb cubes used by the given cube"""
-        return cls._cube_deps(cube, '__depends_cubes__', '__use__')
+        return cls._cube_deps(cube, '__depends_cubes__')
 
     @classmethod
     def cube_recommends(cls, cube):
         """return cubicweb cubes recommended by the given cube"""
-        return cls._cube_deps(cube, '__recommends_cubes__', '__recommend__')
+        return cls._cube_deps(cube, '__recommends_cubes__')
 
     @classmethod
     def expand_cubes(cls, cubes, with_recommends=False):
