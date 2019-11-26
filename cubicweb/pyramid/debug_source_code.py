@@ -36,6 +36,26 @@ DEBUG_DISPLAY_SOURCE_CODE_PATH = '_debug_display_source_code'
 FILES_WHITE_LIST = set()
 
 
+def _generate_link_to_source(file_path, start=None, end=None, tag_body="&lt;&gt;"):
+    if start:
+        # step back a bit so we have a bit of top padding wen displaying the page
+        # and the highlighted line isn't glued to top of the browser window
+        line_anchor = max(0, start - 10)
+
+        if end:
+            return '<a href="../%s?file=%s&line=%s&end=%s#line-%s" target="_blank">%s</a>' % (
+                DEBUG_DISPLAY_SOURCE_CODE_PATH, file_path, start, end, line_anchor, tag_body
+            )
+        else:
+            return '<a href="../%s?file=%s&line=%s#line-%s" target="_blank">%s</a>' % (
+                DEBUG_DISPLAY_SOURCE_CODE_PATH, file_path, start, line_anchor, tag_body
+            )
+
+    return '<a href="../%s?file=%s" target="_blank">%s</a>' % (
+        DEBUG_DISPLAY_SOURCE_CODE_PATH, file_path, tag_body
+    )
+
+
 def source_code_url(object_or_class):
     if object_or_class is None:
         return ""
@@ -54,17 +74,9 @@ def source_code_url(object_or_class):
     try:
         source_code, line = inspect.getsourcelines(object_or_class)
     except OSError:  # when we couldn't read the source code/line
-        return '<a href="../%s?file=%s" target="_blank">&lt;&gt;</a>' % (
-            DEBUG_DISPLAY_SOURCE_CODE_PATH, file_path
-        )
+        return _generate_link_to_source(file_path)
 
-    # step back a bit so we have a bit of top padding wen displaying the page
-    # and the highlighted line isn't glued to top of the browser window
-    line_anchor = max(0, line - 10)
-
-    return '<a href="../%s?file=%s&line=%s&end=%s#line-%s" target="_blank">&lt;&gt;</a>' % (
-        DEBUG_DISPLAY_SOURCE_CODE_PATH, file_path, line, line + len(source_code), line_anchor
-    )
+    return _generate_link_to_source(file_path, line, line + len(source_code))
 
 
 def debug_display_source_code(request):
