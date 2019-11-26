@@ -29,7 +29,7 @@
             </tr>
             <tr style="display: none" id="sql-stack-${i}">
                 <td colspan="6">
-                    <pre>${highlight(query["callstack"], "py3tb", linenos="inline") | n}</pre>
+                    <pre>${source_code_url_in_stack(highlight(query["callstack"], "py3tb", linenos="inline"), highlighted=has_pygments) | n}</pre>
                 </td>
             </tr>
             <tr style="display: none"></tr> <!-- css hack because of previous hidden tr for -stripped -->

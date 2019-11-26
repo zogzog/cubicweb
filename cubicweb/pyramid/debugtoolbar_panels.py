@@ -19,7 +19,8 @@
 from pyramid_debugtoolbar.panels import DebugPanel
 
 from cubicweb.debug import subscribe_to_debug_channel, unsubscribe_to_debug_channel
-from cubicweb.misc.source_highlight import highlight_html, generate_css
+from cubicweb.misc.source_highlight import highlight_html, generate_css, has_pygments
+from cubicweb.pyramid.debug_source_code import source_code_url, source_code_url_in_stack
 
 
 class CubicWebDebugPanel(DebugPanel):
@@ -169,6 +170,8 @@ class RQLDebugPanel(DebugPanel):
             'sql_queries': [],
             'highlight': highlight_html,
             'generate_css': generate_css,
+            'has_pygments': has_pygments,
+            'source_code_url_in_stack': source_code_url_in_stack,
         }
         subscribe_to_debug_channel("rql", self.collect_rql_queries)
         subscribe_to_debug_channel("sql", self.collect_sql_queries)
@@ -225,6 +228,8 @@ class SQLDebugPanel(DebugPanel):
             'sql_queries': [],
             'highlight': highlight_html,
             'generate_css': generate_css,
+            'has_pygments': has_pygments,
+            'source_code_url_in_stack': source_code_url_in_stack,
         }
         subscribe_to_debug_channel("rql", self.collect_rql_queries)
         subscribe_to_debug_channel("sql", self.collect_sql_queries)
