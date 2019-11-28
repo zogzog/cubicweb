@@ -72,16 +72,10 @@ class CWRegistry(Registry):
         """
         super(CWRegistry, self).__init__(True)
         self.vreg = vreg
+        self.add_select_best_listener(self._emit_registry_debug_information)
 
-    def _select_best(self, objects, *args, **kwargs):
-        """
-        Overwrite version of Registry._select_best to emit debug information.
-        """
-        def emit_registry_debug_information(debug_registry_select_best):
-            emit_to_debug_channel("registry_decisions", debug_registry_select_best)
-
-        kwargs["debug_callback"] = emit_registry_debug_information
-        return super()._select_best(objects, *args, **kwargs)
+    def _emit_registry_debug_information(self, debug_registry_select_best):
+        emit_to_debug_channel("registry_decisions", debug_registry_select_best)
 
     @property
     def schema(self):
