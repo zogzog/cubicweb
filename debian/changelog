@@ -1,3 +1,9 @@
+cubicweb (3.27.0~rc1-1) unstable; urgency=medium
+
+  * New upstream release candidate
+
+ -- Philippe Pepiot <philippe.pepiot@logilab.fr>  Thu, 28 Nov 2019 11:29:57 +0100
+
 cubicweb (3.27.0~a2-1) unstable; urgency=medium
 
   * New upstream pre-release.
