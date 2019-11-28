@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 """usage: fix-po-encodings [filename...]
 change the encoding of the po files passed as arguments to utf-8
