@@ -502,7 +502,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 continue
         raise AuthenticationError()
 
-    def syntax_tree_search(self, cnx, union, args=None, cachekey=None, rql_query_tracing_token=None):
+    def syntax_tree_search(self, cnx, union, args=None, cachekey=None,
+                           rql_query_tracing_token=None):
         """return result from this source for a rql query (actually from
         a rql syntax tree and a solution dictionary mapping each used
         variable to a possible type). If cachekey is given, the query

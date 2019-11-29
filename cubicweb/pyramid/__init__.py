@@ -28,7 +28,10 @@ import warnings
 import wsgicors
 
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
-from cubicweb.pyramid.debug_source_code import debug_display_source_code, DEBUG_DISPLAY_SOURCE_CODE_PATH
+from cubicweb.pyramid.debug_source_code import (
+    debug_display_source_code,
+    DEBUG_DISPLAY_SOURCE_CODE_PATH,
+)
 
 from pyramid.config import Configurator
 from pyramid.exceptions import ConfigurationError
