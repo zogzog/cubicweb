@@ -74,6 +74,7 @@ recursive-include cubicweb/wsgi/test *.py
 
 include cubicweb/pyramid/development.ini.tmpl
 include cubicweb/pyramid/pyramid.ini.tmpl
+recursive-include cubicweb/pyramid/debug_toolbar_templates *.dbtmako *.mako
 
 include cubicweb/web/data/jquery-treeview/*.md
 
