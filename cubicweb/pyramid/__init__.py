@@ -20,7 +20,9 @@
 
 """Pyramid interface to CubicWeb"""
 
+import sys
 import atexit
+import logging
 from configparser import ConfigParser
 import os
 import warnings
@@ -28,10 +30,6 @@ import warnings
 import wsgicors
 
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
-from cubicweb.pyramid.debug_source_code import (
-    debug_display_source_code,
-    DEBUG_DISPLAY_SOURCE_CODE_PATH,
-)
 
 from pyramid.config import Configurator
 from pyramid.exceptions import ConfigurationError
@@ -116,8 +114,19 @@ def wsgi_application_from_cwconfig(
         config.scan('cubicweb.pyramid.profile')
 
     if debugtoolbar:
-        config.add_route('debug_display_source_code', DEBUG_DISPLAY_SOURCE_CODE_PATH)
-        config.add_view(debug_display_source_code, route_name='debug_display_source_code')
+        try:
+            from cubicweb.pyramid.debug_source_code import (
+                debug_display_source_code,
+                DEBUG_DISPLAY_SOURCE_CODE_PATH,
+            )
+        except ImportError as e:
+            logging.exception("Error: you tried to activate the debug toolbar but you have missing "
+                              "dependencies: %s" % e)
+
+            sys.exit(1)
+        else:
+            config.add_route('debug_display_source_code', DEBUG_DISPLAY_SOURCE_CODE_PATH)
+            config.add_view(debug_display_source_code, route_name='debug_display_source_code')
 
     app = config.make_wsgi_app()
     # This replaces completely web/cors.py, which is not used by
