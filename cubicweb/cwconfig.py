@@ -409,10 +409,11 @@ this option is set to yes",
     def cubicweb_version():
         """return installed cubicweb version"""
         from logilab.common.changelog import Version
-        from cubicweb import __pkginfo__
-        version = __pkginfo__.numversion
+        str_base_version = pkg_resources.get_distribution('cubicweb').parsed_version.base_version
+        version = tuple([int(x) for x in str_base_version.split('.')])
         assert len(version) == 3, version
         return Version(version)
+
 
     @staticmethod
     def persistent_options_configuration():
