@@ -63,7 +63,7 @@ setup(
     package_data=package_data,
     include_package_data=True,
     install_requires=[
-        'logilab-common >= 1.5.0',
+        'logilab-common >= 1.5.2',
         'logilab-mtconverter >= 0.8.0',
         'rql >= 0.34.0',
         'yams >= 0.45.0',

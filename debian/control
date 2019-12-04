@@ -11,7 +11,7 @@ Build-Depends:
  python3-setuptools,
  python3-docutils,
  python3-sphinx,
- python3-logilab-common (>= 1.4.0),
+ python3-logilab-common (>= 1.5.2),
  python3-logilab-mtconverter,
  python3-markdown,
  python3-tz,
