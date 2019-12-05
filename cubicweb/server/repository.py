@@ -147,12 +147,15 @@ class _CnxSetPool:
 
     def __init__(self, source, size):
         self._cnxsets = []
+
         if size is not None:
             self._queue = queue.Queue()
+
             for i in range(size):
                 cnxset = source.wrapped_connection()
                 self._cnxsets.append(cnxset)
                 self._queue.put_nowait(cnxset)
+
         else:
             self._queue = None
             self._source = source
@@ -160,11 +163,13 @@ class _CnxSetPool:
     def qsize(self):
         if self._queue is None:
             return None
+
         return self._queue.qsize()
 
     def get(self):
         if self._queue is None:
             return self._source.wrapped_connection()
+
         try:
             return self._queue.get(True, timeout=5)
         except queue.Empty:
@@ -188,6 +193,7 @@ class _CnxSetPool:
         if self._queue is not None:
             while not self._queue.empty():
                 cnxset = self._queue.get_nowait()
+
                 try:
                     cnxset.close(True)
                 except Exception:
