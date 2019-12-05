@@ -278,8 +278,9 @@ class SQLAdapterMixIn(object):
         try:
             self.dbdriver = source_config['db-driver'].lower()
             dbname = source_config['db-name']
-        except KeyError:
-            raise ConfigurationError('missing some expected entries in sources file')
+        except KeyError as e:
+            raise ConfigurationError('missing some expected entries in sources file (do you have '
+                                     'a db-driver and a db-name keys?), error: %s' % e)
 
         dbhost = source_config.get('db-host')
         port = source_config.get('db-port')
