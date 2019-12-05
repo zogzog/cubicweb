@@ -280,6 +280,7 @@ class SQLAdapterMixIn(object):
             dbname = source_config['db-name']
         except KeyError:
             raise ConfigurationError('missing some expected entries in sources file')
+
         dbhost = source_config.get('db-host')
         port = source_config.get('db-port')
         dbport = port and int(port) or None
@@ -288,11 +289,13 @@ class SQLAdapterMixIn(object):
         dbencoding = source_config.get('db-encoding', 'UTF-8')
         dbextraargs = source_config.get('db-extra-arguments')
         dbnamespace = source_config.get('db-namespace')
+
         self.dbhelper = db.get_db_helper(self.dbdriver)
         self.dbhelper.record_connection_info(dbname, dbhost, dbport, dbuser,
                                              dbpassword, dbextraargs,
                                              dbencoding, dbnamespace)
         self.sqlgen = SQLGenerator()
+
         # copy back some commonly accessed attributes
         dbapi_module = self.dbhelper.dbapi_module
         self.OperationalError = dbapi_module.OperationalError
@@ -310,10 +313,12 @@ class SQLAdapterMixIn(object):
 
         if not repairing:
             statement_timeout = int(source_config.get('db-statement-timeout', 0))
+
             if statement_timeout > 0:
                 def set_postgres_timeout(cnx):
                     cnx.cursor().execute('SET statement_timeout to %d' % statement_timeout)
                     cnx.commit()
+
                 postgres_hooks = SQL_CONNECT_HOOKS['postgres']
                 postgres_hooks.append(set_postgres_timeout)
 
