@@ -190,6 +190,7 @@ class _CnxSetPool:
             yield cnxset
 
     def close(self):
+        # XXX we don't close the connection when there is no queue?
         if self._queue is not None:
             while not self._queue.empty():
                 cnxset = self._queue.get_nowait()
