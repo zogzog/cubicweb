@@ -159,14 +159,12 @@ class _CnxSetPool(object):
         super(_CnxSetPool, self).__init__()
 
     def qsize(self):
-        q = self._queue
-        if q is None:
+        if self._queue is None:
             return None
-        return q.qsize()
+        return self._queue.qsize()
 
     def get(self):
-        q = self._queue
-        if q is None:
+        if self._queue is None:
             return self._source.wrapped_connection()
         try:
             return self._queue.get(True, timeout=5)
@@ -178,8 +176,7 @@ class _CnxSetPool(object):
                             'connections pool size)')
 
     def release(self, cnxset):
-        q = self._queue
-        if q is None:
+        if self._queue is None:
             cnxset.close(True)
         else:
             self._queue.put_nowait(cnxset)
@@ -189,10 +186,9 @@ class _CnxSetPool(object):
             yield cnxset
 
     def close(self):
-        q = self._queue
-        if q is not None:
-            while not q.empty():
-                cnxset = q.get_nowait()
+        if self._queue is not None:
+            while not self._queue.empty():
+                cnxset = self._queue.get_nowait()
                 try:
                     cnxset.close(True)
                 except Exception:
