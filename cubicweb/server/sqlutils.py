@@ -27,7 +27,7 @@ from datetime import time, datetime, timedelta
 
 from pytz import utc
 
-from logilab import database as db, common as lgc
+from logilab import database as logilab_database, common as lgc
 from logilab.common.shellutils import ProgressBar, DummyProgressBar
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.date import utctime, utcdatetime, strptime
@@ -119,7 +119,7 @@ def sqlgrants(schema, driver, user,
     from cubicweb.server.sources import native
     stmts = list(native.grant_schema(user, set_owner))
     if text_index:
-        dbhelper = db.get_db_helper(driver)
+        dbhelper = logilab_database.get_db_helper(driver)
         # XXX should return a list of sql statements rather than ';' joined statements
         stmts += dbhelper.sql_grant_user_on_fti(user).split(';')
     stmts += grant_schema(schema, user, set_owner, skip_entities=skip_entities, prefix=SQL_PREFIX)
@@ -136,7 +136,7 @@ def sqlschema(schema, driver, text_index=True,
     if set_owner:
         assert user, 'user is argument required when set_owner is true'
     stmts = list(native.sql_schema(driver))
-    dbhelper = db.get_db_helper(driver)
+    dbhelper = logilab_database.get_db_helper(driver)
     if text_index:
         stmts += dbhelper.sql_init_fti().split(';')  # XXX
     stmts += schema2sql(dbhelper, schema, prefix=SQL_PREFIX,
@@ -154,7 +154,7 @@ _SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION = re.compile('^(?!(sql|pg)_)').match
 def sql_drop_all_user_tables(driver_or_helper, sqlcursor):
     """Return ths sql to drop all tables found in the database system."""
     if not getattr(driver_or_helper, 'list_tables', None):
-        dbhelper = db.get_db_helper(driver_or_helper)
+        dbhelper = logilab_database.get_db_helper(driver_or_helper)
     else:
         dbhelper = driver_or_helper
 
@@ -291,7 +291,7 @@ class SQLAdapterMixIn(object):
         dbextraargs = source_config.get('db-extra-arguments')
         dbnamespace = source_config.get('db-namespace')
 
-        self.dbhelper = db.get_db_helper(self.dbdriver)
+        self.dbhelper = logilab_database.get_db_helper(self.dbdriver)
         self.dbhelper.record_connection_info(dbname, dbhost, dbport, dbuser,
                                              dbpassword, dbextraargs,
                                              dbencoding, dbnamespace)
