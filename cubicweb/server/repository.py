@@ -143,7 +143,7 @@ class NullEventBus(object):
         pass
 
 
-class _CnxSetPool(object):
+class _CnxSetPool:
 
     def __init__(self, source, size):
         self._cnxsets = []
@@ -156,7 +156,6 @@ class _CnxSetPool(object):
         else:
             self._queue = None
             self._source = source
-        super(_CnxSetPool, self).__init__()
 
     def qsize(self):
         if self._queue is None:
