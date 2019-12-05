@@ -96,6 +96,7 @@ class RegistryDecisionsDebugPanel(DebugPanel):
         #     "registry": obj,
         #     "args": args,
         #     "kwargs": kwargs,
+        #     "self": registry,
         # }
         decision["key"] = None
         self.data["registry_decisions"].append(decision)
