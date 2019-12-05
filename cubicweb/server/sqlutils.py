@@ -274,8 +274,6 @@ class SQLAdapterMixIn(object):
     """Mixin for SQL data sources, getting a connection from a configuration
     dictionary and handling connection locking
     """
-    cnx_wrap = ConnectionWrapper
-
     def __init__(self, source_config, repairing=False):
         try:
             self.dbdriver = source_config['db-driver'].lower()
@@ -303,9 +301,13 @@ class SQLAdapterMixIn(object):
         self._binary = self.dbhelper.binary_value
         self._process_value = dbapi_module.process_value
         self._dbencoding = dbencoding
+
         if self.dbdriver == 'sqlite':
             self.cnx_wrap = SqliteConnectionWrapper
             self.dbhelper.dbname = abspath(self.dbhelper.dbname)
+        else:
+            self.cnx_wrap = ConnectionWrapper
+
         if not repairing:
             statement_timeout = int(source_config.get('db-statement-timeout', 0))
             if statement_timeout > 0:
