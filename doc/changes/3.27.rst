@@ -72,6 +72,12 @@ New features
 
 While this hasn't been done yet, this feature is an open path for building dynamic tools that can help inspect the page.
 
+* a new debug channels mechanism has been added, you can subscribe to one of
+  those channels in your python code to build debug tools for example (the
+  pyramid custom panels are built using that) and you will receive a
+  datastructure (a dict) containing related information. The available channels
+  are: controller, rql, sql, vreg, registry_decisions
+
 * add a new '-t/--toolbar' option the pyramid command to activate the pyramid debugtoolbar
 
 * a series of pyramid debugtoolbar panels specifically made for CW, see bellow
