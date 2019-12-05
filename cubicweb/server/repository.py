@@ -196,8 +196,8 @@ class _CnxSetPool:
 
                 try:
                     cnxset.close(True)
-                except Exception:
-                    self.exception('error while closing %s' % cnxset)
+                except Exception as e:
+                    self.exception('error while closing %s, error: %s' % (cnxset, e))
 
 
 class Repository(object):
