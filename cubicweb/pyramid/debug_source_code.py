@@ -38,7 +38,7 @@ DEBUG_DISPLAY_SOURCE_CODE_PATH = '_debug_display_source_code'
 FILES_WHITE_LIST = set()
 
 
-def _generate_link_to_source(file_path, start=None, end=None, tag_body="&lt;&gt;"):
+def _generate_link_to_source(file_path, start=None, end=None, tag_body="[source]"):
     if start:
         # step back a bit so we have a bit of top padding wen displaying the page
         # and the highlighted line isn't glued to top of the browser window
