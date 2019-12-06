@@ -52,7 +52,7 @@ with open(path) as f:
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
-  'sphinx.ext.autodoc', 
+  'sphinx.ext.autodoc',
   'sphinx.ext.viewcode',
   ]
 
@@ -69,7 +69,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'CubicWeb'
-copyright = '2001-2015, Logilab'
+copyright = '2001-2019, Logilab'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
