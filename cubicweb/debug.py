@@ -31,6 +31,15 @@ SUBSCRIBERS = {
 
 
 def subscribe_to_debug_channel(channel, subscriber):
+    """
+    Allow to subscribe a callable to one of the debug channels.
+
+    The channel must be one of: %s
+
+    And the callable need to accept one argument.
+
+    It will raise Exception if the channel doesn't exist.
+    """ % SUBSCRIBERS.keys()
     if channel not in SUBSCRIBERS.keys():
         raise Exception("debug channel '%s' doesn't exist" % channel)
 
@@ -38,6 +47,10 @@ def subscribe_to_debug_channel(channel, subscriber):
 
 
 def unsubscribe_to_debug_channel(channel, subscriber):
+    """
+    Unsubscribe a callable from a channel. It will raise Exception if the
+    channel doesn't exist nor
+    """
     if channel not in SUBSCRIBERS.keys():
         raise Exception("debug channel '%s' doesn't exist" % channel)
 
@@ -48,6 +61,12 @@ def unsubscribe_to_debug_channel(channel, subscriber):
 
 
 def emit_to_debug_channel(channel, message):
+    """
+    Send a message to a specified debug channel that will call all its
+    subscribers.
+
+    It will raise Exception if the channel doesn't exist.
+    """
     if channel not in SUBSCRIBERS.keys():
         raise Exception("debug channel '%s' doesn't exist" % channel)
 
