@@ -11,7 +11,7 @@ $.fullCalendar.regional = function(lng, options){
      dayNamesShort: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'],
      titleFormat: {
  	month: 'MMMM yyyy', // ex : Janvier 2010
- 	week: "d[ MMMM][ yyyy]{ - d MMMM yyyy}", // ex : 10 Ã¢€” 16 Janvier 2010,
+ 	week: "d[ MMMM][ yyyy]{ - d MMMM yyyy}", // ex : 10 au 16 Janvier 2010,
  	day: 'dddd d MMMM yyyy' // ex : Jeudi 14 Janvier 2010
      },
      columnFormat: {'month': 'dddd',

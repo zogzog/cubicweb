@@ -89,7 +89,7 @@ def parse_js_files(args=sys.argv):
             index.add(filename)
             # save rst file
             with open(osp.join(rst_dir, filename) + '.rst', 'wb') as f_rst:
-                f_rst.write(rst_content)
+                f_rst.write(rst_content.encode())
     stream = open(osp.join(rst_dir, 'index.rst'), 'w')
     stream.write('''
 Javascript API
