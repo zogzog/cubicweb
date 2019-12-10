@@ -23,3 +23,4 @@ separate layer and has its own whole chapter.
    profiling.rst
    fti.rst
    dataimport
+   debug_channels
