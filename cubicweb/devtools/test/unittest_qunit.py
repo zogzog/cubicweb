@@ -6,15 +6,15 @@ from cubicweb.devtools import qunit
 def js(name):
     return '/static/js_examples/' + name
 
+
 class QUnitTestCaseTC(qunit.QUnitTestCase):
 
     timeout_error = SkipTest
     all_js_tests = (
-                    (js('test_simple_success.js'),),
-                    (js('test_with_dep.js'), (js('dep_1.js'),)),
-                    (js('test_with_ordered_deps.js'), (js('dep_1.js'), js('deps_2.js'),)),
-                   )
-
+        (js('test_simple_success.js'),),
+        (js('test_with_dep.js'), (js('dep_1.js'),)),
+        (js('test_with_ordered_deps.js'), (js('dep_1.js'), js('deps_2.js'),)),
+    )
 
     def test_simple_failure(self):
         js_tests = list(self._test_qunit(js('test_simple_failure.js')))

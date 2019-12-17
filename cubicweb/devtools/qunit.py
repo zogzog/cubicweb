@@ -15,7 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-import os, os.path as osp
+import os
+import os.path as osp
 import time
 import errno
 import shutil
@@ -92,7 +93,7 @@ class FirefoxHelper(object):
 
     def stop(self):
         if self._process is not None and self._process.poll() is None:
-            assert self._process.returncode is None,  self._process.returncode
+            assert self._process.returncode is None, self._process.returncode
             self._process.terminate()
             self._process.wait()
             assert self._process.returncode == 0, "Error: firefox return code is %s, see %s" %\
@@ -114,6 +115,7 @@ class QUnitTestCase(cwwebtest.CubicWebTestTC):
     def setUp(self):
         super(QUnitTestCase, self).setUp()
         self.test_queue = Queue()
+
         class MyQUnitResultController(QUnitResultController):
             tc = self
             test_queue = self.test_queue
@@ -193,10 +195,9 @@ class QUnitResultController(Controller):
 
     __regid__ = 'qunit_result'
 
-
     # Class variables to circumvent the instantiation of a new Controller for each request.
-    _log_stack = [] # store QUnit log messages
-    _current_module_name = '' # store the current QUnit module name
+    _log_stack = []  # store QUnit log messages
+    _current_module_name = ''  # store the current QUnit module name
 
     def publish(self, rset=None):
         event = self._cw.form['event']
@@ -207,7 +208,7 @@ class QUnitResultController(Controller):
         self.__class__._current_module_name = self._cw.form.get('name', '')
 
     def handle_test_done(self):
-        name = '%s // %s' %  (self._current_module_name, self._cw.form.get('name', ''))
+        name = '%s // %s' % (self._current_module_name, self._cw.form.get('name', ''))
         failures = int(self._cw.form.get('failures', 0))
         total = int(self._cw.form.get('total', 0))
 
