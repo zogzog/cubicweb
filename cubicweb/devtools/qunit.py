@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 import os, os.path as osp
+import time
 import errno
 import shutil
 from queue import Queue, Empty
@@ -79,8 +80,18 @@ class FirefoxHelper(object):
         with open(self.log_file, 'wb') as fout:
             self._process = Popen(cmd, stdout=fout, stderr=STDOUT)
 
+        # check that the process has correctly started
+        time.sleep(1)
+        if self._process.poll() is not None:
+            with open(self.log_file, 'r') as f:
+                log = f.read()
+
+            raise Exception("Error: failed to start firefox subprocess using the command "
+                            "'%s' with the return code '%s' and the output:\n\n%s" %
+                            (' '.join(cmd), self._process.poll(), log))
+
     def stop(self):
-        if self._process is not None:
+        if self._process is not None and self._process.poll() is None:
             assert self._process.returncode is None,  self._process.returncode
             self._process.terminate()
             self._process.wait()
