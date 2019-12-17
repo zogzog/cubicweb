@@ -148,7 +148,8 @@ trap clean_up EXIT TERM
 if [ -z "$AUTHFILE" ]; then
     XVFB_RUN_TMPDIR="$(mktemp -d -t $PROGNAME.XXXXXX)"
     # Create empty file to avoid xauth warning
-    AUTHFILE=$(tempfile -n "$XVFB_RUN_TMPDIR/Xauthority")
+    touch "$XVFB_RUN_TMPDIR/Xauthority"
+    AUTHFILE="$XVFB_RUN_TMPDIR/Xauthority"
 fi
 
 # Start Xvfb.
