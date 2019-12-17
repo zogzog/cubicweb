@@ -95,6 +95,8 @@ class FirefoxHelper(object):
             assert self._process.returncode is None,  self._process.returncode
             self._process.terminate()
             self._process.wait()
+            assert self._process.returncode == 0, "Error: firefox return code is %s, see %s" %\
+                                                  (self._process.returncode, self.log_file)
             self._process = None
 
     def __del__(self):
