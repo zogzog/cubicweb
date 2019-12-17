@@ -74,10 +74,10 @@ class FormulaDependenciesMatrixTC(TestCase):
         self.assertEqual(len(values), 2)
         values = set((rdef.formula, tuple(v))
                      for rdef, v in values.items())
-        self.assertEquals(values,
-                          set((('Any 2014 - D WHERE X birth_year D', tuple(('birth_year',))),
-                               ('Any SUM(SA) GROUPBY X WHERE P works_for X, P salary SA', tuple(('salary',)))))
-                          )
+        self.assertEqual(values,
+                         set((('Any 2014 - D WHERE X birth_year D', tuple(('birth_year',))),
+                              ('Any SUM(SA) GROUPBY X WHERE P works_for X, P salary SA', tuple(('salary',)))))
+                         )
 
 
 class ComputedAttributeTC(CubicWebTC):
