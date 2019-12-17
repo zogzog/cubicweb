@@ -177,7 +177,10 @@ class QUnitTestCase(cwwebtest.CubicWebTestTC):
                     else:
                         yield test_name, self.fail, (msg, )
                 except Empty:
+                    # Empty means nothing was appended to test_queue within timeout
                     error = True
+                    print("WARNING: timeout while trying to get the next test result from "
+                          "FirefoxHelper queue, see log file '%s' for more info" % browser.log_file)
                     yield test_file, timeout_failure, (test_file, timeout, test_count)
 
         if test_count <= 0 and not error:
