@@ -34,11 +34,6 @@
         :show-inheritance:
         :members:
 
-    .. autoclass:: BwCompatCWRegistry
-        :show-inheritance:
-        :members:
-
-
 :mod:`logilab.common.registry`
 ==============================
 
