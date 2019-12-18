@@ -717,8 +717,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     query_debug_informations["rollback"] = True
                     if self.repo.config.mode != 'test':
                         self.debug('transaction has been rolled back')
-                except Exception:
-                    pass
+                except Exception as rollback_exc:
+                    self.warning('exception raised and ignored during rollback %s:\n%s',
+                                 rollback_exc, traceback.format_exc(limit=2))
             if any(cls.__name__ for cls in ex.__class__.__mro__
                    if cls.__name__ == 'IntegrityError'):
                 # need string comparison because of various backends
