@@ -20,7 +20,7 @@
 """
 
 import re
-from urllib import quote
+from urllib.parse import quote
 
 from twill import commands as twc
 
