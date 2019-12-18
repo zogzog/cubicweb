@@ -315,5 +315,4 @@ preauthenticated or not.
 Full Session and Connection API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: cubicweb.server.session.Session
 .. autoclass:: cubicweb.server.session.Connection
