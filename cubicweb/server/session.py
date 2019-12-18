@@ -168,10 +168,7 @@ class Connection(RequestSessionBase):
       :attr:`cnxset`, the connections set to use to execute queries on sources.
       If the transaction is read only, the connection set may be freed between
       actual queries. This allows multiple connections with a reasonably low
-      connection set pool size.  Control mechanism is detailed below.
-
-    .. automethod:: cubicweb.server.session.Connection.set_cnxset
-    .. automethod:: cubicweb.server.session.Connection.free_cnxset
+      connection set pool size.
 
       :attr:`mode`, string telling the connections set handling mode, may be one
       of 'read' (connections set may be freed), 'write' (some write was done in
