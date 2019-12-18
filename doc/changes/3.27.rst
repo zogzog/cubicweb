@@ -94,18 +94,18 @@ available, they display useful information for the development and the
 debugging of each page. The available panels are:
 
   * a general panel which contains the selected controller, the current
-    settings and useful links `screenshot <../_static/debugtoolbar_general_panel.png>`_
-  * a panel listing all decisions taken in registry for building this page `screenshot <../_static/debugtoolbar_registry_decisions_panel.png>`_
-  * a panel listing the content of the vreg registries `screenshot <../_static/debugtoolbar_registry_content_panel.png>`_
-  * a panel listing all the RQL queries made during a request `screenshot <../_static/debugtoolbar_rql_panel.png>`_
-  * a panel listing all the SQL queries made during a request `screenshot <../_static/debugtoolbar_sql_panel.png>`_
+    settings and useful links `screenshot <../../_images/debugtoolbar_general_panel.png>`_
+  * a panel listing all decisions taken in registry for building this page `screenshot <../../_images/debugtoolbar_registry_decisions_panel.png>`_
+  * a panel listing the content of the vreg registries `screenshot <../../_images/debugtoolbar_registry_content_panel.png>`_
+  * a panel listing all the RQL queries made during a request `screenshot <../../_images/debugtoolbar_rql_panel.png>`_
+  * a panel listing all the SQL queries made during a request `screenshot <../../_images/debugtoolbar_sql_panel.png>`_
 
 Furthermore, in all those panels, next to each object/class/function/method a
 link to display its source code is available (shown as '[source]' `screenshot
-<../_static/debugtoolbar_show_source_link.png>`_) and also every file path shown
+<../../_images/debugtoolbar_show_source_link.png>`_) and also every file path shown
 is a traceback is also a link to display the corresponding file (`screenshot
-<../_static/debugtoolbar_traceback_source_link.png>`_). For example: `screenshot
-<../_static/debugtoolbar_show_source.png>`_.
+<../../_images/debugtoolbar_traceback_source_link.png>`_). For example: `screenshot
+<../../_images/debugtoolbar_show_source.png>`_.
 
 Backwards incompatible changes
 ------------------------------
