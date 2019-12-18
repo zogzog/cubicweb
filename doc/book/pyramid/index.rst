@@ -29,6 +29,7 @@ Narrative Documentation
     settings
     auth
     profiling
+    debug_toolbar
 
 Api Documentation
 =================
