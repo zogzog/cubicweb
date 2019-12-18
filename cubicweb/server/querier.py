@@ -37,9 +37,9 @@ from cubicweb.debug import emit_to_debug_channel
 from cubicweb.utils import QueryCache, RepeatList
 from cubicweb.misc.source_highlight import highlight_terminal
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
-from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
+from cubicweb.server.ssplanner import (READ_ONLY_RTYPES, add_types_restriction,
+                                       SSPlanner)
 from cubicweb.server.edition import EditedEntity
-from cubicweb.server.ssplanner import SSPlanner
 from cubicweb.statsd_logger import statsd_timeit, statsd_c
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
@@ -191,13 +191,12 @@ class ExecutionPlan(object):
         return result
 
     def preprocess(self, union, security=True):
-        """insert security when necessary then annotate rql st for sql generation
-
-        return rqlst to actually execute
+        """insert security when necessary then annotate rql syntax tree
+        to prepare sql generation
         """
         cached = None
         if security and self.cnx.read_security:
-            # ensure security is turned of when security is inserted,
+            # ensure security is turned off when security is inserted,
             # else we may loop for ever...
             if self.cnx.transaction_data.get('security-rqlst-cache'):
                 key = self.cache_key
