@@ -20,8 +20,10 @@ from logilab.database import FunctionDescr
 from logilab.database.sqlite import register_sqlite_pyfunc
 from rql.utils import register_function
 
+
 class DUMB_SORT(FunctionDescr):
     pass
+
 
 register_function(DUMB_SORT)
 def dumb_sort(something):

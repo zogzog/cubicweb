@@ -7,7 +7,7 @@ class Card(EntityType):
         'add':    ('managers', 'users'),
         'delete': ('managers', 'owners'),
         'update': ('managers', 'owners',),
-        }
+    }
 
     title = String(required=True, fulltextindexed=True, maxsize=256)
     synopsis = String(fulltextindexed=True, maxsize=512,

@@ -10,7 +10,7 @@ class Comment(EntityType):
         'add':    ('managers', 'users',),
         'delete': ('managers', 'owners',),
         'update': ('managers', 'owners',),
-        }
+    }
     content = RichString(required=True, fulltextindexed=True)
     comments = SubjectRelation('Comment', cardinality='1*', composite='object')
 
@@ -20,7 +20,7 @@ class comments(RelationType):
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers', 'users',),
         'delete': ('managers', RRQLExpression('S owned_by U'),),
-        }
+    }
     inlined = True
     composite = 'object'
     cardinality = '1*'

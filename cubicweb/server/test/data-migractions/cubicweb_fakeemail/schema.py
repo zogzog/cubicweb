@@ -42,7 +42,7 @@ class EmailPart(EntityType):
         'add':    ('managers', ERQLExpression('E parts X, U has_update_permission E'),),
         'delete': ('managers', ERQLExpression('E parts X, U has_update_permission E')),
         'update': ('managers', 'owners',),
-        }
+    }
 
     content  = String(fulltextindexed=True)
     content_format = String(required=True, maxsize=50)
@@ -56,27 +56,33 @@ class EmailThread(EntityType):
     see_also = SubjectRelation('EmailThread')
     forked_from = SubjectRelation('EmailThread', cardinality='?*')
 
+
 class parts(RelationType):
     """ """
     fulltext_container = 'subject'
+
 
 class sender(RelationType):
     """ """
     inlined = True
 
+
 class in_thread(RelationType):
     """ """
     inlined = True
 
+
 class reply_to(RelationType):
     """ """
     inlined = True
+
 
 class generated_by(RelationType):
     """mark an entity as generated from an email"""
     cardinality = '?*'
     subject = ('TrInfo',)
     object = 'Email'
+
 
 # if comment is installed
 if 'Comment' in context.defined:

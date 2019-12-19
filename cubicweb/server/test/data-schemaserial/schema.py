@@ -19,8 +19,10 @@
 from yams.buildobjs import EntityType, SubjectRelation, String, make_type
 BabarTestType = make_type('BabarTestType')
 
+
 class Affaire(EntityType):
     nom = String(unique=True, maxsize=64)
+
 
 class Personne(EntityType):
     __unique_together__ = [('nom', 'prenom', 'inline2')]

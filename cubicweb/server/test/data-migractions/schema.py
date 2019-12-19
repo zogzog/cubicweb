@@ -13,8 +13,8 @@
 # FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
 # details.
 #
-# You should have received a copy of the GNU Lesser General Public License along
-# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU Lesser General Public License
+# along with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition, ComputedRelation,
                             SubjectRelation, RichString, String, Int, Float,
@@ -30,10 +30,14 @@ from cubicweb import _
 class Affaire(WorkflowableEntityType):
     __permissions__ = {
         'read':   ('managers',
-                   ERQLExpression('X owned_by U'), ERQLExpression('X concerne S?, S owned_by U')),
+                   ERQLExpression('X owned_by U'),
+                   ERQLExpression('X concerne S?, S owned_by U')),
         'add':    ('managers', ERQLExpression('X concerne S, S owned_by U')),
-        'update': ('managers', 'owners', ERQLExpression('X in_state S, S name in ("pitetre", "en cours")')),
-        'delete': ('managers', 'owners', ERQLExpression('X concerne S, S owned_by U')),
+        'update': ('managers', 'owners',
+                   ERQLExpression('X in_state S, '
+                                  'S name in ("pitetre", "en cours")')),
+        'delete': ('managers', 'owners',
+                   ERQLExpression('X concerne S, S owned_by U')),
         }
 
     ref = String(fulltextindexed=True, indexed=True,
@@ -61,7 +65,7 @@ class Societe(EntityType):
         'update': ('managers', 'owners', ERQLExpression('U login L, X nom L')),
         'delete': ('managers', 'owners', ERQLExpression('U login L, X nom L')),
         'add': ('managers', 'users',)
-        }
+    }
 
     nom  = String(maxsize=64, fulltextindexed=True)
     web  = String(maxsize=128)
@@ -79,12 +83,15 @@ class Societe(EntityType):
 class Division(Societe):
     __specializes_schema__ = True
 
+
 class SubDivision(Division):
     __specializes_schema__ = True
+
 
 class travaille_subdivision(RelationDefinition):
     subject = 'Personne'
     object = 'SubDivision'
+
 
 from cubicweb.schemas.base import CWUser
 next(CWUser.get_relations('login')).fulltextindexed = True
@@ -106,10 +113,12 @@ class Note(WorkflowableEntityType):
                       })
     migrated_from = SubjectRelation('Note')
     attachment = SubjectRelation('File')
-    inline1 = SubjectRelation('Affaire', inlined=True, cardinality='?*',
-                              constraints=[RQLUniqueConstraint('S type T, S inline1 A1, A1 todo_by C, '
-                                                              'Y type T, Y inline1 A2, A2 todo_by C',
-                                                               'S,Y')])
+    inline1 = SubjectRelation(
+        'Affaire', inlined=True, cardinality='?*',
+        constraints=[
+            RQLUniqueConstraint('S type T, S inline1 A1, A1 todo_by C, '
+                                'Y type T, Y inline1 A2, A2 todo_by C',
+                                'S,Y')])
     todo_by = SubjectRelation('CWUser')
 
 
@@ -168,12 +177,14 @@ class Old(EntityType):
 class connait(RelationType):
     symmetric = True
 
+
 class concerne(RelationType):
     __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers', RRQLExpression('U has_update_permission S')),
         'delete': ('managers', RRQLExpression('O owned_by U')),
         }
+
 
 class travaille(RelationDefinition):
     __permissions__ = {
@@ -186,15 +197,18 @@ class travaille(RelationDefinition):
     constraints = [RQLVocabularyConstraint('S owned_by U'),
                    RQLVocabularyConstraint('S created_by U')]
 
+
 class comments(RelationDefinition):
     subject = 'Comment'
     object = 'Personne'
+
 
 class fiche(RelationDefinition):
     inlined = True
     subject = 'Personne'
     object = 'Card'
     cardinality = '??'
+
 
 class multisource_inlined_rel(RelationDefinition):
     inlined = True
@@ -207,10 +221,12 @@ class see_also_1(RelationDefinition):
     name = 'see_also'
     subject = object = 'Folder'
 
+
 class see_also_2(RelationDefinition):
     name = 'see_also'
     subject = ('Bookmark', 'Note')
     object = ('Bookmark', 'Note')
+
 
 class evaluee(RelationDefinition):
     subject = ('Personne', 'CWUser', 'Societe')
@@ -220,14 +236,17 @@ class evaluee(RelationDefinition):
         RQLVocabularyConstraint('S owned_by U'),
     ]
 
+
 class ecrit_par(RelationType):
     inlined = True
+
 
 class ecrit_par_1(RelationDefinition):
     name = 'ecrit_par'
     subject = 'Note'
     object = 'Personne'
     cardinality = '?*'
+
 
 class ecrit_par_2(RelationDefinition):
     name = 'ecrit_par'
@@ -239,9 +258,11 @@ class ecrit_par_2(RelationDefinition):
 class copain(RelationDefinition):
     subject = object = 'CWUser'
 
+
 class tags(RelationDefinition):
     subject = 'Tag'
     object = ('CWUser', 'CWGroup', 'State', 'Note', 'Card', 'Affaire')
+
 
 class Folder(EntityType):
     """folders are used to classify entities. They may be defined as a tree.
@@ -251,22 +272,27 @@ class Folder(EntityType):
     description = RichString(fulltextindexed=True)
     filed_under = SubjectRelation('Folder', description=_('parent folder'))
 
+
 class filed_under(RelationDefinition):
     subject = ('Note', 'Affaire')
     object = 'Folder'
+
 
 class require_permission(RelationDefinition):
     subject = ('Card', 'Note', 'Personne')
     object = 'CWPermission'
 
+
 class require_state(RelationDefinition):
     subject = 'CWPermission'
     object = 'State'
+
 
 class personne_composite(RelationDefinition):
     subject='Personne'
     object='Personne'
     composite='subject'
+
 
 class personne_inlined(RelationDefinition):
     subject='Personne'
@@ -279,6 +305,7 @@ class login_user(RelationDefinition):
     subject = 'Personne'
     object = 'CWUser'
     cardinality = '??'
+
 
 class ambiguous_inlined(RelationDefinition):
     subject = ('Affaire', 'Note')

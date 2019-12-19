@@ -9,7 +9,7 @@ class Basket(EntityType):
         'add':    ('managers', 'users',),
         'delete': ('managers', 'owners',),
         'update': ('managers', 'owners',),
-        }
+    }
 
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=128)
