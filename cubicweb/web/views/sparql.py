@@ -61,11 +61,11 @@ class SparqlFormView(form.FormViewMixIn, StartupView):
             try:
                 qinfo = Sparql2rqlTranslator(self._cw.vreg.schema).translate(sparql)
             except TypeResolverException as exc:
-                self.w(self._cw._('can not resolve entity types:') + u' ' + unicode(exc))
+                self.w(self._cw._('can not resolve entity types:') + u' ' + str(exc))
             except UnsupportedQuery:
                 self.w(self._cw._('we are not yet ready to handle this query'))
             except xy.UnsupportedVocabulary as exc:
-                self.w(self._cw._('unknown vocabulary:') + u' ' + unicode(exc))
+                self.w(self._cw._('unknown vocabulary:') + u' ' + str(exc))
             else:
                 rql, args = qinfo.finalize()
                 if vid == 'sparqlxml':
