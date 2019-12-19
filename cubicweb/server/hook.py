@@ -248,6 +248,7 @@ Hooks and operations classes
 
 from logging import getLogger
 from itertools import chain
+from typing import Union, Tuple
 
 from logilab.common.decorators import classproperty, cached
 from logilab.common.logging_ext import set_log_methods
@@ -521,8 +522,8 @@ class Hook(AppObject):
     """
     __select__ = enabled_category()
     # set this in derivated classes
-    events = None
     category = None
+    events: Union[None, Tuple[str], Tuple[str, str]] = None
     order = 0
     # stop pylint from complaining about missing attributes in Hooks classes
     eidfrom = eidto = entity = rtype = repo = None
