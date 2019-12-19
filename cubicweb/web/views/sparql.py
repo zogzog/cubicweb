@@ -35,6 +35,7 @@ except ImportError:
     # fyzz not available (only a recommends)
     Sparql2rqlTranslator = None
 
+
 class SparqlForm(forms.FieldsForm):
     __regid__ = 'sparql'
     sparql = formfields.StringField(help=_('type here a sparql query'))
@@ -50,6 +51,7 @@ class SparqlForm(forms.FieldsForm):
 
 class SparqlFormView(form.FormViewMixIn, StartupView):
     __regid__ = 'sparql'
+
     def call(self):
         form = self._cw.vreg['forms'].select('sparql', self._cw)
         form.render(w=self.w)
@@ -94,10 +96,12 @@ YAMS_XMLSCHEMA_MAPPING = {
     'Interval': 'duration',
     'Bytes': 'base64Binary',
     'Password': 'string',
-    }
+}
+
 
 def xmlschema(yamstype):
     return 'http://www.w3.org/2001/XMLSchema#%s' % YAMS_XMLSCHEMA_MAPPING[yamstype]
+
 
 class SparqlResultXmlView(AnyRsetView):
     """The spec can be found here: http://www.w3.org/TR/rdf-sparql-XMLres/
@@ -137,6 +141,7 @@ class SparqlResultXmlView(AnyRsetView):
         self._cw.set_content_type(self.content_type,
                                   filename='sparql.xml',
                                   encoding=self._cw.encoding)
+
 
 def registration_callback(vreg):
     if Sparql2rqlTranslator is not None:
