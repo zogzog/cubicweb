@@ -29,11 +29,12 @@ common to all the application objects.
 """
 
 
+from typing import Union
 from logging import getLogger
 
 from logilab.common.logging_ext import set_log_methods
 
-from logilab.common.registry import RegistrableObject, yes
+from logilab.common.registry import RegistrableObject, yes, Predicate
 
 
 # the base class for all appobjects ############################################
@@ -74,7 +75,7 @@ class AppObject(RegistrableObject):
         such as `AnyEntity`, `EntityView`, `AnyRsetView`, `Action`...
 
     """
-    __select__ = yes()
+    __select__: Union[None, str, Predicate] = yes()
 
     @classmethod
     def __registered__(cls, registry):
