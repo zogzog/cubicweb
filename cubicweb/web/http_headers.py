@@ -899,6 +899,7 @@ class ETag(object):
     def __repr__(self):
         return "Etag(%r, weak=%r)" % (self.tag, self.weak)
 
+    @staticmethod
     def parse(tokens):
         tokens = tuple(tokens)
         if len(tokens) == 1 and not isinstance(tokens[0], Token):
@@ -909,8 +910,6 @@ class ETag(object):
             return ETag(tokens[2], weak=True)
 
         raise ValueError("Invalid ETag.")
-
-    parse = staticmethod(parse)
 
     def generate(self):
         if self.weak:
