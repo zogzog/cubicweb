@@ -68,12 +68,15 @@ ColumnAlias._q_invariant = False  # avoid to check for ColumnAlias / Variable
 
 def default_update_cb_stack(self, stack):
     stack.append(self.source_execute)
+
+
 FunctionDescr.update_cb_stack = default_update_cb_stack
 FunctionDescr.source_execute = None
 
 
 def length_source_execute(source, session, value):
     return len(value.getvalue())
+
 
 LENGTH = get_func_descr('LENGTH')
 LENGTH.source_execute = length_source_execute

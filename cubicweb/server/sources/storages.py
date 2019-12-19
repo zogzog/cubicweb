@@ -18,7 +18,6 @@
 """custom storages for the system source"""
 
 import os
-import sys
 from os import unlink, path as osp
 from contextlib import contextmanager
 import tempfile
@@ -34,6 +33,7 @@ from cubicweb.server.edition import EditedEntity
 
 def set_attribute_storage(repo, etype, attr, storage):
     repo.system_source.set_storage(etype, attr, storage)
+
 
 def unset_attribute_storage(repo, etype, attr):
     repo.system_source.unset_storage(etype, attr)
@@ -71,12 +71,15 @@ class Storage(object):
     def entity_added(self, entity, attr):
         """an entity using this storage for attr has been added"""
         raise NotImplementedError()
+
     def entity_updated(self, entity, attr):
         """an entity using this storage for attr has been updatded"""
         raise NotImplementedError()
+
     def entity_deleted(self, entity, attr):
         """an entity using this storage for attr has been deleted"""
         raise NotImplementedError()
+
     def migrate_entity(self, entity, attribute):
         """migrate an entity attribute to the storage"""
         raise NotImplementedError()
@@ -86,12 +89,14 @@ class Storage(object):
 # * better file path attribution
 # * handle backup/restore
 
+
 def uniquify_path(dirpath, basename):
     """return a file descriptor and unique file name for `basename` in `dirpath`
     """
     path = basename.replace(osp.sep, '-')
     base, ext = osp.splitext(path)
     return tempfile.mkstemp(prefix=base, suffix=ext, dir=dirpath)
+
 
 @contextmanager
 def fsimport(cnx):
@@ -128,7 +133,6 @@ class BytesFileSystemStorage(Storage):
         fileobj = os.fdopen(fd, 'wb')
         binary.to_file(fileobj)
         fileobj.close()
-
 
     def callback(self, source, cnx, value):
         """sql generator callback when some attribute with a custom storage is
@@ -220,7 +224,7 @@ class BytesFileSystemStorage(Storage):
         if name is not None:
             basename.append(name)
         fd, fspath = uniquify_path(self.default_directory,
-                               '_'.join(basename))
+                                   '_'.join(basename))
         if fspath is None:
             msg = entity._cw._('failed to uniquify path (%s, %s)') % (
                 self.default_directory, '_'.join(basename))
@@ -235,9 +239,9 @@ class BytesFileSystemStorage(Storage):
         sysource = entity._cw.repo.system_source
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
-                             attr, entity.cw_etype, entity.eid))
+                                 attr, entity.cw_etype, entity.eid))
         rawvalue = cu.fetchone()[0]
-        if rawvalue is None: # no previous value
+        if rawvalue is None:  # no previous value
             return None
         fspath = sysource._process_value(rawvalue, cu.description[0],
                                          binarywrap=bytes)
@@ -265,6 +269,7 @@ class AddFileOp(hook.DataOperationMixIn, hook.Operation):
                 unlink(filepath)
             except Exception as ex:
                 self.error("can't remove %s: %s" % (filepath, ex))
+
 
 class DeleteFileOp(hook.DataOperationMixIn, hook.Operation):
     def postcommit_event(self):

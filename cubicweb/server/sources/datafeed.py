@@ -42,7 +42,7 @@ class DataFeedSource(AbstractSource):
 
     options = (
         ('synchronize',
-         {'type' : 'yn',
+         {'type': 'yn',
           'default': True,
           'help': ('Is the repository responsible to automatically import '
                    'content from this source? '
@@ -52,14 +52,14 @@ class DataFeedSource(AbstractSource):
           'group': 'datafeed-source', 'level': 2,
           }),
         ('synchronization-interval',
-         {'type' : 'time',
+         {'type': 'time',
           'default': '5min',
           'help': ('Interval in seconds between synchronization with the '
                    'external source (default to 5 minutes, must be >= 1 min).'),
           'group': 'datafeed-source', 'level': 2,
           }),
         ('max-lock-lifetime',
-         {'type' : 'time',
+         {'type': 'time',
           'default': '1h',
           'help': ('Maximum time allowed for a synchronization to be run. '
                    'Exceeded that time, the synchronization will be considered '
@@ -68,7 +68,7 @@ class DataFeedSource(AbstractSource):
           'group': 'datafeed-source', 'level': 2,
           }),
         ('delete-entities',
-         {'type' : 'yn',
+         {'type': 'yn',
           'default': False,
           'help': ('Should already imported entities not found anymore on the '
                    'external source be deleted? Handling of this parameter '
@@ -89,7 +89,7 @@ class DataFeedSource(AbstractSource):
           }),
         ('use-cwuri-as-url',
          {'type': 'yn',
-          'default': None, # explicitly unset
+          'default': None,  # explicitly unset
           'help': ('Use cwuri (i.e. external URL) for link to the entity '
                    'instead of its local URL.'),
           'group': 'datafeed-source', 'level': 1,
@@ -353,8 +353,8 @@ class DataFeedParser(AppObject):
         self.notify_checked(entity)
         mdate = attrs.get('modification_date')
         if not mdate or mdate > entity.modification_date:
-            attrs = dict( (k, v) for k, v in attrs.items()
-                          if v != getattr(entity, k))
+            attrs = dict((k, v) for k, v in attrs.items()
+                         if v != getattr(entity, k))
             if attrs:
                 entity.cw_set(**attrs)
                 self.notify_updated(entity)
@@ -424,6 +424,6 @@ _OPENER = build_opener()
 try:
     from logilab.common import urllib2ext
     _OPENER.add_handler(urllib2ext.HTTPGssapiAuthHandler())
-except ImportError: # python-kerberos not available
+except ImportError:  # python-kerberos not available
     pass
 _OPENER.add_handler(HTTPCookieProcessor(CookieJar()))
