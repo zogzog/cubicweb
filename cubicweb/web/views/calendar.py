@@ -101,8 +101,8 @@ try:
                     elt.add(stop_kw).value = ical_task.stop
 
             buff = ical.serialize()
-            if not isinstance(buff, unicode):
-                buff = unicode(buff, self._cw.encoding)
+            if not isinstance(buff, str):
+                buff = str(buff, self._cw.encoding)
             self.w(buff)
 
 except ImportError:

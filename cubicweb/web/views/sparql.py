@@ -119,7 +119,7 @@ class SparqlResultXmlView(AnyRsetView):
         sparql = E.sparql(E.head(*(E.variable(name=name) for name in varnames)),
                           results)
         self.w(u'<?xml version="1.0"?>\n')
-        self.w(etree.tostring(sparql, encoding=unicode, pretty_print=True))
+        self.w(etree.tostring(sparql, encoding=str, pretty_print=True))
 
     def cell_binding(self, row, col, varname):
         celltype = self.cw_rset.description[row][col]

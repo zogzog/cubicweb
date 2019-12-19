@@ -302,10 +302,9 @@ class SimpleTableModel(object):
         value =  self._rows[rowindex][colindex]
         if value is None:
             return u''
-        elif isinstance(value, int):
+        if isinstance(value, int):
             return u'%09d' % value
-        else:
-            return unicode(value)
+        return str(value)
 
 
 class TableWidget(HTMLWidget):

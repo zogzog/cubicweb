@@ -207,7 +207,7 @@ def compile_template_file(filepath):
     :param template: path of the file to compile
     """
     fp = open(filepath)
-    file_content = unicode(fp.read()) # template file should be pure ASCII
+    file_content = str(fp.read()) # template file should be pure ASCII
     fp.close()
     return compile_template(file_content)
 

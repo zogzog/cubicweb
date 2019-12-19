@@ -529,18 +529,18 @@ class AddSourceCommand(Command):
                     if not sourceuri:
                         print('-> mandatory.')
                     else:
-                        sourceuri = unicode(sourceuri, sys.stdin.encoding)
+                        sourceuri = str(sourceuri, sys.stdin.encoding)
                         if sourceuri in used:
                             print('-> uri already used, choose another one.')
                         else:
                             break
                 url = input('source URL (leave empty for none): ').strip()
-                url = unicode(url) if url else None
+                url = str(url) if url else None
                 # XXX configurable inputlevel
                 sconfig = ask_source_config(config, type, inputlevel=self.config.config_level)
-                cfgstr = unicode(generate_source_config(sconfig), sys.stdin.encoding)
-                cnx.create_entity('CWSource', name=sourceuri, type=unicode(type),
-                                  config=cfgstr, parser=unicode(parser), url=unicode(url))
+                cfgstr = str(generate_source_config(sconfig), sys.stdin.encoding)
+                cnx.create_entity('CWSource', name=sourceuri, type=str(type),
+                                  config=cfgstr, parser=str(parser), url=str(url))
                 cnx.commit()
         finally:
             repo.hm.call_hooks('server_shutdown')
