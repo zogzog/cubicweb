@@ -121,7 +121,7 @@ class NotificationView(EntityView):
                 try:
                     # since the same view (eg self) may be called multiple time and we
                     # need a fresh stream at each iteration, reset it explicitly
-                    self.w = None
+                    self._w = None
                     try:
                         # XXX forcing the row & col here may make the content and
                         #     subject inconsistent because subject will depend on
