@@ -5,7 +5,5 @@
 
 .. automodule:: cubicweb.req
 
-    .. autoexception:: FindEntityError
-
     .. autoclass:: RequestSessionBase
         :members:

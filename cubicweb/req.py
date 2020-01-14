@@ -34,10 +34,6 @@ ONESECOND = timedelta(0, 1, 0)
 CACHE_REGISTRY = {}
 
 
-class FindEntityError(Exception):
-    """raised when find_one_entity() can not return one and only one entity"""
-
-
 class Cache(dict):
     def __init__(self):
         super(Cache, self).__init__()
