@@ -111,16 +111,6 @@ Best Practices
    3. `hg ci`
    4. `hg push`
 
-Installation of the guestrepo extension
-```````````````````````````````````````
-
-Set up the guestrepo extension by getting a copy of the sources
-from https://bitbucket.org/selinc/guestrepo and adding the following
-lines to your ``~/.hgrc``: ::
-
-   [extensions]
-   guestrepo=/path/to/guestrepo/guestrepo
-
 
 More information
 ````````````````
