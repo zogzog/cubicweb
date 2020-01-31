@@ -22,12 +22,11 @@ from cubicweb import _
 
 import re
 from io import BytesIO
-from typing import Union
 from warnings import warn
 from functools import partial
 from inspect import getframeinfo, stack
 
-from logilab.common.registry import yes, Predicate
+from logilab.common.registry import yes
 from logilab.mtconverter import xml_escape
 
 from rql import nodes
@@ -359,7 +358,7 @@ class View(AppObject):
 
 class EntityView(View):
     """base class for views applying on an entity (i.e. uniform result set)"""
-    __select__: Union[None, str, Predicate] = non_final_entity()
+    __select__ = non_final_entity()
     category = _('entityview')
 
     def call(self, **kwargs):
@@ -391,7 +390,7 @@ class StartupView(View):
     """base class for views which doesn't need a particular result set to be
     displayed (so they can always be displayed!)
     """
-    __select__: Union[None, str, Predicate] = none_rset()
+    __select__ = none_rset()
 
     category = _('startupview')
 
@@ -408,7 +407,7 @@ class EntityStartupView(EntityView):
     """base class for entity views which may also be applied to None
     result set (usually a default rql is provided by the view class)
     """
-    __select__: Union[None, str, Predicate] = none_rset() | non_final_entity()
+    __select__ = none_rset() | non_final_entity()
 
     default_rql = None
 
@@ -442,7 +441,7 @@ class EntityStartupView(EntityView):
 
 class AnyRsetView(View):
     """base class for views applying on any non empty result sets"""
-    __select__: Union[None, str, Predicate] = nonempty_rset()
+    __select__ = nonempty_rset()
 
     category = _('anyrsetview')
 
@@ -542,7 +541,7 @@ class ReloadableMixIn(object):
 class Component(ReloadableMixIn, View):
     """base class for components"""
     __registry__ = 'components'
-    __select__: Union[None, str, Predicate] = yes()
+    __select__ = yes()
 
     # XXX huummm, much probably useless (should be...)
     htmlclass = 'mainRelated'
