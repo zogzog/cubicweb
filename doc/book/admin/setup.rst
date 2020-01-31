@@ -19,7 +19,6 @@ your system:
 - `Installation on Debian/Ubuntu`_
 - `Installation in a virtualenv`_
 - `Installation with pip`_
-- `Installation with easy_install`_
 - `Installation from tarball`_
 
 If you are a power-user and need the very latest features, you will
@@ -32,7 +31,6 @@ and advanced features of |cubicweb|.
 .. _`Installation on Debian/Ubuntu`: DebianInstallation_
 .. _`Installation in a virtualenv`: VirtualenvInstallation_
 .. _`Installation with pip`: PipInstallation_
-.. _`Installation with easy_install`: EasyInstallInstallation_
 .. _`Installation from tarball`: TarballInstallation_
 .. _`Install from version control`: MercurialInstallation_
 
@@ -152,41 +150,6 @@ or at the `CubicWeb.org forge`_.
 For example, installing the *blog cube* is achieved by::
 
   pip install cubicweb-blog
-
-.. _EasyInstallInstallation:
-
-`easy_install` install
-----------------------
-
-.. note::
-
-   If you are not a Windows user and you have a compilation environment, we
-   recommend you to use the PipInstallation_.
-
-`easy_install`_ is a python utility that helps downloading, installing, and
-managing python packages and their dependencies.
-
-Install |cubicweb| and its dependencies, run::
-
-  easy_install cubicweb
-
-There is also a wide variety of :ref:`cubes <AvailableCubes>`. You can access a
-list of available cubes on `PyPI
-<http://pypi.python.org/pypi?%3Aaction=search&term=cubicweb&submit=search>`_
-or at the `CubicWeb.org Forge`_.
-
-For example, installing the *blog cube* is achieved by::
-
-  easy_install cubicweb-blog
-
-.. note::
-
-  If you encounter problem with :ref:`cubes <AvailableCubes>` installation,
-  consider using :ref:`PipInstallation` which is more stable
-  but can not installed pre-compiled binaries.
-
-.. _`easy_install`: http://packages.python.org/distribute/easy_install.html
-
 
 .. _SourceInstallation:
 
