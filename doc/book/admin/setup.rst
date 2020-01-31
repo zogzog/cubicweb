@@ -112,12 +112,12 @@ inside an activated virtual environment.
 `pip` install
 -------------
 
-`pip <http://pip.openplans.org/>`_ is a python tool that helps downloading,
+`pip <https://pip.pypa.io/>`_ is a python tool that helps downloading,
 building, installing, and managing Python packages and their dependencies. It
 is fully compatible with `virtualenv`_ and installs the packages from sources
 published on the `The Python Package Index`_.
 
-.. _`virtualenv`: http://virtualenv.openplans.org/
+.. _`virtualenv`: https://virtualenv.pypa.io
 
 A working compilation chain is needed to build the modules that include C
 extensions. If you really do not want to compile anything, installing `lxml <http://lxml.de/>`_,
