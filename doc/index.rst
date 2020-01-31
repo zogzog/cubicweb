@@ -120,8 +120,9 @@ Developpers
     :maxdepth: 1
     :glob:
 
-    How to contribute to the code base <https://hg.logilab.org/master/cubicweb/file/tip/README#l39>
+    How to contribute to the code base <https://hg.logilab.org/master/cubicweb/file/tip/README#l56>
     General contribution guide for cubes <https://www.logilab.org/Card/contributing>
+    Priorities are discussed over on the development dashboard <https://www.cubicweb.org/card/cw-dev-board>
     dev/*
 
 Indexes
