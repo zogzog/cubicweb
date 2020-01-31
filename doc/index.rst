@@ -43,6 +43,8 @@ Social
 *   Discuss on the `mailing-list`_
 *   Discover on the `blog`_
 *   Contribute on the forge_
+*   Find published python modules on `pypi <https://pypi.org/search/?q=cubicweb>`_
+*   Find published npm modules on `npm <https://www.npmjs.com/search?q=keywords:cubicweb>`_
 
 
 .. _Logilab: http://www.logilab.fr/
