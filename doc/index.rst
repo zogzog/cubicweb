@@ -23,7 +23,7 @@ Main Features
 
 * the power and flexibility of the Python_ programming language,
 
-* the reliability of SQL databases, LDAP directories, Subversion and Mercurial
+* the reliability of SQL databases, LDAP directories and Mercurial
   for storage backends.
 
 Built since 2000 from an R&D effort still continued, supporting 100,000s of

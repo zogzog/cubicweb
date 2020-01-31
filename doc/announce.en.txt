@@ -19,7 +19,7 @@ Its main features are:
     * a selection+view mechanism for semi-automatic XHTML/XML/JSON/text generation,
     * a library of reusable components (data model and views) that fulfill common needs,
     * the power and flexibility of the Python programming language,
-    * the reliability of SQL databases, LDAP directories, Subversion and Mercurial for storage backends.
+    * the reliability of SQL databases, LDAP directories and Mercurial for storage backends.
 
 Being built since 2000 by an R&D project still going on today, supporting
 100,000s of daily visits at some production sites, CubicWeb is a proven end to
