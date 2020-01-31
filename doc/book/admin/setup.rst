@@ -15,6 +15,7 @@ changes after a few days when bugs are fixed.
 Depending on your needs, you will chose a different way to install CubicWeb on
 your system:
 
+- `Installation using docker`_
 - `Installation on Debian/Ubuntu`_
 - `Installation in a virtualenv`_
 - `Installation with pip`_
@@ -35,6 +36,18 @@ and advanced features of |cubicweb|.
 .. _`Installation from tarball`: TarballInstallation_
 .. _`Install from version control`: MercurialInstallation_
 
+
+.. _DockerInstallation:
+
+Docker install
+--------------
+
+Detailed instructions on how to deploy CubicWeb using docker can be found
+on the `docker hub <https://hub.docker.com/r/logilab/cubicweb>`_.
+
+The images there are built using the following source code :
+`docker-cubicweb <https://hg.logilab.org/master/docker-cubicweb/>`_,
+see it's `README <https://hg.logilab.org/master/docker-cubicweb/file/tip/README.rst>`_
 
 .. _DebianInstallation:
 
