@@ -14,6 +14,7 @@ instances based on that framework.
    :numbered:
 
    setup
+   deploy
    config
    cubicweb-ctl
    create-instance
