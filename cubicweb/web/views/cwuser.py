@@ -57,7 +57,7 @@ class FoafView(EntityView):
 
     title = _('foaf')
     templatable = False
-    content_type = 'text/xml'
+    content_type = 'application/rdf+xml'
 
     def call(self):
         self.w(u'''<?xml version="1.0" encoding="%s"?>
