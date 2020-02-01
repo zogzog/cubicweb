@@ -48,8 +48,8 @@ if rdflib is not None:
         title = _('rdf export')
         templatable = False
         binary = True
-        format = 'xml'
-        content_type = 'text/xml' # +rdf
+        format = 'xml' # or maybe pretty-xml ?
+        content_type = 'application/rdf+xml'
 
         def call(self):
             graph = rdflib.Graph()
@@ -104,6 +104,26 @@ if rdflib is not None:
 
 
     class RDFN3View(RDFView):
-        __regid__ = 'n3rdf'
+        __regid__ = 'rdf.n3'
         format = 'n3'
-        content_type = 'text/n3'
+        content_type = 'text/n3' # see https://www.w3.org/TeamSubmission/n3/#mimetype
+
+    class RDFTurtleView(RDFView):
+        __regid__ = 'rdf.turtle'
+        format = 'turtle'
+        content_type = 'text/turtle' # see https://www.w3.org/TR/turtle/#sec-mediaReg
+
+    class RDFnquadsView(RDFView):
+        __regid__ = 'rdf.nquads'
+        format = 'nquads'
+        content_type = 'application/n-quads' # see https://www.w3.org/TR/n-quads/#sec-mediatype
+
+    class RDFntriplesView(RDFView):
+        __regid__ = 'rdf.nt'
+        format = 'nt'
+        content_type = 'application/n-triples' # see https://www.w3.org/TR/n-triples/#n-triples-mediatype
+
+    class RDFtrigView(RDFView):
+        __regid__ = 'rdf.trig'
+        format = 'trig'
+        content_type = 'application/trig' # see https://www.w3.org/TR/trig/#sec-mime
