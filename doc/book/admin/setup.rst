@@ -15,11 +15,10 @@ changes after a few days when bugs are fixed.
 Depending on your needs, you will chose a different way to install CubicWeb on
 your system:
 
+- `Installation using docker`_
 - `Installation on Debian/Ubuntu`_
-- `Installation on Windows`_
 - `Installation in a virtualenv`_
 - `Installation with pip`_
-- `Installation with easy_install`_
 - `Installation from tarball`_
 
 If you are a power-user and need the very latest features, you will
@@ -30,13 +29,23 @@ Once the software is installed, move on to :ref:`ConfigEnv` for better control
 and advanced features of |cubicweb|.
 
 .. _`Installation on Debian/Ubuntu`: DebianInstallation_
-.. _`Installation on Windows`: WindowsInstallation_
 .. _`Installation in a virtualenv`: VirtualenvInstallation_
 .. _`Installation with pip`: PipInstallation_
-.. _`Installation with easy_install`: EasyInstallInstallation_
 .. _`Installation from tarball`: TarballInstallation_
 .. _`Install from version control`: MercurialInstallation_
 
+
+.. _DockerInstallation:
+
+Docker install
+--------------
+
+Detailed instructions on how to deploy CubicWeb using docker can be found
+on the `docker hub <https://hub.docker.com/r/logilab/cubicweb>`_.
+
+The images there are built using the following source code :
+`docker-cubicweb <https://hg.logilab.org/master/docker-cubicweb/>`_,
+see it's `README <https://hg.logilab.org/master/docker-cubicweb/file/tip/README.rst>`_
 
 .. _DebianInstallation:
 
@@ -50,9 +59,10 @@ dependencies (like databases) are automatically installed.
 
 Depending on the distribution you are using, add the appropriate line to your
 `list of sources` (for example by editing ``/etc/apt/sources.list``), replacing
-``<release>`` with e.g. ``wheezy`` or ``trusty``::
+``<release>`` with e.g. ``buster`` or ``bionic``::
 
-  deb http://download.logilab.org/production/ <release>/
+  deb http://apt.logilab.fr <release> main  # all cubicweb & cubes
+  deb http://apt.logilab.fr <release> cubicweb-3.26  # latest cubicweb 3.26 & cubes
 
 The repositories are signed with `Logilab's gnupg key`_. You can download
 and register the key to avoid warnings::
@@ -85,25 +95,6 @@ list of available cubes using ``apt-cache search cubicweb`` or at the
 .. _`Logilab's gnupg key`: https://www.logilab.fr/logilab-debian-keyring.gpg
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
 
-.. _WindowsInstallation:
-
-Windows Install
----------------
-
-You need to have `python`_ version >= 2.5 and < 3 installed.
-
-If you want an automated install, your best option is probably the
-:ref:`EasyInstallInstallation`. EasyInstall is a tool that helps users to
-install python packages along with their dependencies, searching for suitable
-pre-compiled binaries on the `The Python Package Index`_.
-
-If you want better control over the process as well as a suitable development
-environment or if you are having problems with `easy_install`, read on to
-:ref:`SetUpWindowsEnv`.
-
-.. _python:  http://www.python.org/
-.. _`The Python Package Index`: http://pypi.python.org
-
 .. _VirtualenvInstallation:
 
 `Virtualenv` install
@@ -119,12 +110,12 @@ inside an activated virtual environment.
 `pip` install
 -------------
 
-`pip <http://pip.openplans.org/>`_ is a python tool that helps downloading,
+`pip <https://pip.pypa.io/>`_ is a python tool that helps downloading,
 building, installing, and managing Python packages and their dependencies. It
 is fully compatible with `virtualenv`_ and installs the packages from sources
 published on the `The Python Package Index`_.
 
-.. _`virtualenv`: http://virtualenv.openplans.org/
+.. _`virtualenv`: https://virtualenv.pypa.io
 
 A working compilation chain is needed to build the modules that include C
 extensions. If you really do not want to compile anything, installing `lxml <http://lxml.de/>`_,
@@ -159,41 +150,6 @@ or at the `CubicWeb.org forge`_.
 For example, installing the *blog cube* is achieved by::
 
   pip install cubicweb-blog
-
-.. _EasyInstallInstallation:
-
-`easy_install` install
-----------------------
-
-.. note::
-
-   If you are not a Windows user and you have a compilation environment, we
-   recommend you to use the PipInstallation_.
-
-`easy_install`_ is a python utility that helps downloading, installing, and
-managing python packages and their dependencies.
-
-Install |cubicweb| and its dependencies, run::
-
-  easy_install cubicweb
-
-There is also a wide variety of :ref:`cubes <AvailableCubes>`. You can access a
-list of available cubes on `PyPI
-<http://pypi.python.org/pypi?%3Aaction=search&term=cubicweb&submit=search>`_
-or at the `CubicWeb.org Forge`_.
-
-For example, installing the *blog cube* is achieved by::
-
-  easy_install cubicweb-blog
-
-.. note::
-
-  If you encounter problem with :ref:`cubes <AvailableCubes>` installation,
-  consider using :ref:`PipInstallation` which is more stable
-  but can not installed pre-compiled binaries.
-
-.. _`easy_install`: http://packages.python.org/distribute/easy_install.html
-
 
 .. _SourceInstallation:
 

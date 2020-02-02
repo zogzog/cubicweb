@@ -11,7 +11,7 @@ that purpose.
 
 To use the pyramid debug toolbar in CubicWeb, you need to:
 
-* install it either by doing a `pip install pyramid_debugtoobar` or following
+* install it either by doing a `pip install pyramid_debugtoolbar` or following
   `the official installation instructions
   <https://docs.pylonsproject.org/projects/pyramid_debugtoolbar/#installation>`_
 * launch the pyramid command adding the `-t/--toolbar` argument to enable it

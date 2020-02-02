@@ -277,7 +277,7 @@ except that:
 
 * it is not limited to one specific SQL backend (every one of them
   having an idiomatic way to encode triggers), nor to SQL backends at
-  all (think about LDAP or a Subversion repository)
+  all (think about LDAP or a Mercurial repository)
 
 * it is well-coupled to the rest of the framework
 

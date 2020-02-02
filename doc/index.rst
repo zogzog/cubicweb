@@ -23,7 +23,7 @@ Main Features
 
 * the power and flexibility of the Python_ programming language,
 
-* the reliability of SQL databases, LDAP directories, Subversion and Mercurial
+* the reliability of SQL databases, LDAP directories and Mercurial
   for storage backends.
 
 Built since 2000 from an R&D effort still continued, supporting 100,000s of
@@ -43,6 +43,8 @@ Social
 *   Discuss on the `mailing-list`_
 *   Discover on the `blog`_
 *   Contribute on the forge_
+*   Find published python modules on `pypi <https://pypi.org/search/?q=cubicweb>`_
+*   Find published npm modules on `npm <https://www.npmjs.com/search?q=keywords:cubicweb>`_
 
 
 .. _Logilab: http://www.logilab.fr/
@@ -118,8 +120,9 @@ Developpers
     :maxdepth: 1
     :glob:
 
-    How to contribute to the code base <https://hg.logilab.org/master/cubicweb/file/tip/README#l39>
+    How to contribute to the code base <https://hg.logilab.org/master/cubicweb/file/tip/README#l56>
     General contribution guide for cubes <https://www.logilab.org/Card/contributing>
+    Priorities are discussed over on the development dashboard <https://www.cubicweb.org/card/cw-dev-board>
     dev/*
 
 Indexes

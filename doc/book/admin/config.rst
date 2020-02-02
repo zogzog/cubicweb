@@ -41,7 +41,7 @@ that will be stored in the instance's :file:`sources` file. The database to use
 will be chosen when creating the instance. CubicWeb is known to run with
 Postgresql (recommended), SQLServer and SQLite.
 
-Other possible sources of data include CubicWeb, Subversion, LDAP and Mercurial,
+Other possible sources of data include CubicWeb, LDAP and Mercurial,
 but at least one relational database is required for CubicWeb to work. You do
 not need to install a backend that you do not intend to use for one of your
 instances. SQLite is not fit for production use, but it works well for testing
