@@ -14,7 +14,6 @@ instances based on that framework.
    :numbered:
 
    setup
-   setup-windows
    config
    cubicweb-ctl
    create-instance

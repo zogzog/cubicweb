@@ -16,7 +16,6 @@ Depending on your needs, you will chose a different way to install CubicWeb on
 your system:
 
 - `Installation on Debian/Ubuntu`_
-- `Installation on Windows`_
 - `Installation in a virtualenv`_
 - `Installation with pip`_
 - `Installation with easy_install`_
@@ -30,7 +29,6 @@ Once the software is installed, move on to :ref:`ConfigEnv` for better control
 and advanced features of |cubicweb|.
 
 .. _`Installation on Debian/Ubuntu`: DebianInstallation_
-.. _`Installation on Windows`: WindowsInstallation_
 .. _`Installation in a virtualenv`: VirtualenvInstallation_
 .. _`Installation with pip`: PipInstallation_
 .. _`Installation with easy_install`: EasyInstallInstallation_
@@ -84,25 +82,6 @@ list of available cubes using ``apt-cache search cubicweb`` or at the
 .. _`list of sources`: http://wiki.debian.org/SourcesList
 .. _`Logilab's gnupg key`: https://www.logilab.fr/logilab-debian-keyring.gpg
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
-
-.. _WindowsInstallation:
-
-Windows Install
----------------
-
-You need to have `python`_ version >= 2.5 and < 3 installed.
-
-If you want an automated install, your best option is probably the
-:ref:`EasyInstallInstallation`. EasyInstall is a tool that helps users to
-install python packages along with their dependencies, searching for suitable
-pre-compiled binaries on the `The Python Package Index`_.
-
-If you want better control over the process as well as a suitable development
-environment or if you are having problems with `easy_install`, read on to
-:ref:`SetUpWindowsEnv`.
-
-.. _python:  http://www.python.org/
-.. _`The Python Package Index`: http://pypi.python.org
 
 .. _VirtualenvInstallation:
 
