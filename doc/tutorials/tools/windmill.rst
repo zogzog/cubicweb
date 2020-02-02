@@ -31,13 +31,13 @@ to used the last snapshot of the Git repository::
 
     $ git clone git://github.com/windmill/windmill.git HEAD
     $ cd windmill
-    $ python setup.py develop
+    $ python3 setup.py develop
 
 Install instructions are `available <http://wiki.github.com/windmill/windmill/installing>`_.
 
 Be sure to have the windmill module in your PYTHONPATH afterwards::
 
-    $ python -c "import windmill"
+    $ python3 -c "import windmill"
 
 X dummy
 -------

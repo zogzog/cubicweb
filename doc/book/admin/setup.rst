@@ -123,11 +123,11 @@ and `libgecode <http://www.gecode.org/>`_ will help.
 
 For Debian, these minimal dependencies can be obtained by doing::
 
-  apt-get install gcc python-pip python-dev python-lxml
+  apt-get install gcc python3-pip python3-dev python3-lxml
 
 or, if you prefer to get as much as possible from pip::
 
-  apt-get install gcc python-pip python-dev libxslt1-dev libxml2-dev
+  apt-get install gcc python3-pip python3-dev libxslt1-dev libxml2-dev
 
 For Windows, you can install pre-built packages (possible `source
 <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_). For a minimal setup, install:
@@ -166,7 +166,7 @@ Make sure you also have all the :ref:`InstallDependencies`.
 Once uncompressed, you can install the framework from inside the uncompressed
 folder with::
 
-  python setup.py install
+  python3 setup.py install
 
 Or you can run |cubicweb| directly from the source directory by
 setting the :ref:`resource mode <RessourcesConfiguration>` to `user`. This will

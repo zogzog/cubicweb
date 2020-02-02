@@ -402,7 +402,7 @@ To run it type:
 
 .. sourcecode:: bash
 
-    $ python test/test_sytweb.py
+    $ python3 test/test_sytweb.py
     ======================================================================
     -> creating tables [====================]
     -> inserting default user and default groups.
@@ -420,7 +420,7 @@ test instance. The second one will be much quicker:
 
 .. sourcecode:: bash
 
-    $ python test/test_sytweb.py
+    $ python3 test/test_sytweb.py
     ======================================================================
     .
     ----------------------------------------------------------------------
