@@ -61,9 +61,10 @@ dependencies (like databases) are automatically installed.
 
 Depending on the distribution you are using, add the appropriate line to your
 `list of sources` (for example by editing ``/etc/apt/sources.list``), replacing
-``<release>`` with e.g. ``wheezy`` or ``trusty``::
+``<release>`` with e.g. ``buster`` or ``bionic``::
 
-  deb http://download.logilab.org/production/ <release>/
+  deb http://apt.logilab.fr <release> main  # all cubicweb & cubes
+  deb http://apt.logilab.fr <release> cubicweb-3.26  # latest cubicweb 3.26 & cubes
 
 The repositories are signed with `Logilab's gnupg key`_. You can download
 and register the key to avoid warnings::
