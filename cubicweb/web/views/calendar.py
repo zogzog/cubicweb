@@ -28,7 +28,8 @@ from logilab.common.date import todatetime
 
 from cubicweb.utils import json_dumps, make_uid
 from cubicweb.predicates import adaptable
-from cubicweb.view import EntityView, EntityAdapter
+from cubicweb.view import EntityView
+from cubicweb.entity import EntityAdapter
 
 # useful constants & functions ################################################
 

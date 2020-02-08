@@ -554,18 +554,7 @@ class Component(ReloadableMixIn, View):
     def domid(self):
         return '%sComponent' % domid(self.__regid__)
 
-
-class Adapter(AppObject):
-    """base class for adapters"""
-    __registry__ = 'adapters'
-
-
-class EntityAdapter(Adapter):
-    """base class for entity adapters (eg adapt an entity to an interface)"""
-    def __init__(self, _cw, **kwargs):
-        try:
-            self.entity = kwargs.pop('entity')
-        except KeyError:
-            self.entity = kwargs['rset'].get_entity(kwargs.get('row') or 0,
-                                                    kwargs.get('col') or 0)
-        Adapter.__init__(self, _cw, **kwargs)
+# EntityAdapter moved to cubicweb.entity ######################################
+from logilab.common.deprecation import class_moved
+from cubicweb import entity
+EntityAdapter = class_moved(entity.EntityAdapter) # cubicweb 3.28

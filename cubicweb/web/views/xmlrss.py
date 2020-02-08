@@ -26,7 +26,8 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.predicates import (is_instance, non_final_entity, one_line_rset,
                                  appobject_selectable, adaptable)
-from cubicweb.view import EntityView, EntityAdapter, AnyRsetView, Component
+from cubicweb.view import EntityView, AnyRsetView, Component
+from cubicweb.entity import EntityAdapter
 from cubicweb.uilib import simple_sgml_tag
 from cubicweb.web import httpcache, component
 

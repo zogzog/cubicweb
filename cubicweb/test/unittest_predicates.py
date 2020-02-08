@@ -29,7 +29,7 @@ from cubicweb.predicates import (is_instance, adaptable, match_kwargs, match_use
                                  multi_lines_rset, score_entity, is_in_state,
                                  rql_condition, relation_possible, match_form_params,
                                  paginated_rset)
-from cubicweb.view import EntityAdapter
+from cubicweb.entity import EntityAdapter
 from cubicweb.web import action
 
 

@@ -24,7 +24,7 @@
 from logilab.common.decorators import cached, clear_cache
 
 from cubicweb.entities import AnyEntity, fetch_config
-from cubicweb.view import EntityAdapter
+from cubicweb.entity import EntityAdapter
 from cubicweb.predicates import relation_possible
 
 

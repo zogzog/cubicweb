@@ -23,7 +23,7 @@ from os.path import join
 from cubicweb import CW_SOFTWARE_ROOT as BASE, devtools
 from cubicweb.cwvreg import CWRegistryStore, UnknownProperty
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.view import EntityAdapter
+from cubicweb.entity import EntityAdapter
 
 
 class YesSchema:

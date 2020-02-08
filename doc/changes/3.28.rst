@@ -1,0 +1,8 @@
+3.28
+====
+
+Changes
+-------
+
+- the class cubicweb.view.EntityAdapter was moved to cubicweb.entity.EntityAdapter
+  a deprecation warning is in place, but please update your source code accordingly.

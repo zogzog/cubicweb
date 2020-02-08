@@ -25,13 +25,14 @@ from itertools import chain
 from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
 
-from cubicweb import (Unauthorized, ValidationError, view, ViolatedConstraint,
+from cubicweb.entity import EntityAdapter
+from cubicweb import (Unauthorized, ValidationError, ViolatedConstraint,
                       UniqueTogetherError)
 from cubicweb.schema import constraint_name_for
 from cubicweb.predicates import is_instance, relation_possible, match_exception
 
 
-class IDublinCoreAdapter(view.EntityAdapter):
+class IDublinCoreAdapter(EntityAdapter):
     __regid__ = 'IDublinCore'
     __select__ = is_instance('Any')
 
@@ -93,7 +94,7 @@ class IDublinCoreAdapter(view.EntityAdapter):
         return self._cw._(self._cw.vreg.property_value('ui.language'))
 
 
-class IEmailableAdapter(view.EntityAdapter):
+class IEmailableAdapter(EntityAdapter):
     __regid__ = 'IEmailable'
     __select__ = relation_possible('primary_email') | relation_possible('use_email')
 
@@ -126,7 +127,7 @@ class IEmailableAdapter(view.EntityAdapter):
                     for attr in self.allowed_massmail_keys())
 
 
-class INotifiableAdapter(view.EntityAdapter):
+class INotifiableAdapter(EntityAdapter):
     __regid__ = 'INotifiable'
     __select__ = is_instance('Any')
 
@@ -145,7 +146,7 @@ class INotifiableAdapter(view.EntityAdapter):
         return ()
 
 
-class IFTIndexableAdapter(view.EntityAdapter):
+class IFTIndexableAdapter(EntityAdapter):
     """standard adapter to handle fulltext indexing
 
     .. automethod:: cubicweb.entities.adapters.IFTIndexableAdapter.fti_containers
@@ -226,7 +227,7 @@ def merge_weight_dict(maindict, newdict):
         maindict.setdefault(weight, []).extend(words)
 
 
-class IDownloadableAdapter(view.EntityAdapter):
+class IDownloadableAdapter(EntityAdapter):
     """interface for downloadable entities"""
     __regid__ = 'IDownloadable'
     __abstract__ = True
@@ -256,7 +257,7 @@ class IDownloadableAdapter(view.EntityAdapter):
 
 
 # XXX should propose to use two different relations for children/parent
-class ITreeAdapter(view.EntityAdapter):
+class ITreeAdapter(EntityAdapter):
     """This adapter provides a tree interface.
 
     It has to be overriden to be configured using the tree_relation,
@@ -412,7 +413,7 @@ class ITreeAdapter(view.EntityAdapter):
         return path
 
 
-class ISerializableAdapter(view.EntityAdapter):
+class ISerializableAdapter(EntityAdapter):
     """Adapter to serialize an entity to a bare python structure that may be
     directly serialized to e.g. JSON.
     """
@@ -441,7 +442,7 @@ class ISerializableAdapter(view.EntityAdapter):
 # error handling adapters ######################################################
 
 
-class IUserFriendlyError(view.EntityAdapter):
+class IUserFriendlyError(EntityAdapter):
     __regid__ = 'IUserFriendlyError'
     __abstract__ = True
 

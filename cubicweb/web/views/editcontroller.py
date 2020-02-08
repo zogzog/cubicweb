@@ -27,7 +27,7 @@ from logilab.common.graph import ordered_nodes
 from rql.utils import rqlvar_maker
 
 from cubicweb import _, ValidationError, UnknownEid
-from cubicweb.view import EntityAdapter
+from cubicweb.entity import EntityAdapter
 from cubicweb.predicates import is_instance
 from cubicweb.web import RequestError, NothingToEdit, ProcessFormError
 from cubicweb.web.views import basecontrollers, autoform

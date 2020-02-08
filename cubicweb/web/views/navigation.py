@@ -56,7 +56,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.predicates import paginated_rset, sorted_rset, adaptable
 from cubicweb.uilib import cut
-from cubicweb.view import EntityAdapter
+from cubicweb.entity import EntityAdapter
 from cubicweb.web.component import EmptyComponent, EntityCtxComponent, NavigationComponent
 
 

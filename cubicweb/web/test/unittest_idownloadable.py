@@ -23,12 +23,12 @@ from functools import partial
 from pytz import utc
 
 from cubicweb.devtools.testlib import CubicWebTC, real_error_handling
-from cubicweb import view
+from cubicweb.entity import EntityAdapter
 from cubicweb.predicates import is_instance
 from cubicweb.web import http_headers
 
 
-class IDownloadableUser(view.EntityAdapter):
+class IDownloadableUser(EntityAdapter):
     __regid__ = 'IDownloadable'
     __select__ = is_instance('CWUser')
 
