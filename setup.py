@@ -104,6 +104,7 @@ setup(
         ],
         'rdf': [
             'rdflib',
+            'rdflib-jsonld',
         ],
         'sparql': [
             'fyzz >= 0.1.0',
