@@ -287,6 +287,9 @@ class HTMLHeadTC(CubicWebTC):
             head.add_js(base_url + u'bob1.js')
             head.add_js(u'http://ext.com/bob2.js')
             head.add_js(u'http://ext.com/bob3.js')
+            head.write_front(
+                '<script type="text/javascript">console.log("FIRST SCRIPT ADDED HERE")</script>'
+            )
             head.add_css(base_url + u'bob4.css')
             head.add_css(base_url + u'bob5.css')
             head.add_css(base_url + u'bob6.css', 'print')
@@ -295,6 +298,7 @@ class HTMLHeadTC(CubicWebTC):
             head.add_ie_css(base_url + u'bob9.css', 'print', u'[if lt IE 7]')
             result = head.getvalue()
             expected = u"""<head>
+<script type="text/javascript">console.log("FIRST SCRIPT ADDED HERE")</script>
 <link rel="stylesheet" type="text/css" media="all" href="http://test.fr/data/bob4.css"/>
 <link rel="stylesheet" type="text/css" media="all" href="http://test.fr/data/bob5.css"/>
 <link rel="stylesheet" type="text/css" media="print" href="http://test.fr/data/bob6.css"/>

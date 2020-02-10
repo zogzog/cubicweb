@@ -33,6 +33,7 @@ if PY3:
     from inspect import getfullargspec as getargspec
 else:
     from inspect import getargspec
+from functools import wraps
 from itertools import repeat
 from uuid import uuid4
 from warnings import warn
@@ -191,6 +192,22 @@ class RepeatList(object):
         self._size -= 1
 
 
+def handle_writing_constraints(method):
+    @wraps(method)
+    def wrapper(self, value):
+        assert isinstance(value, text_type), u"unicode required not %s : %s"\
+            % (type(value).__name__, repr(value))
+        if self.tracewrites:
+            from traceback import format_stack
+            stack = format_stack(None)[:-1]
+            escaped_stack = xml_escape(json_dumps(u'\n'.join(stack)))
+            escaped_html = xml_escape(value).replace('\n', '<br/>\n')
+            tpl = u'<span onclick="alert(%s)">%s</span>'
+            value = tpl % (escaped_stack, escaped_html)
+        return method(self, value)
+    return wrapper
+
+
 class UStringIO(list):
     """a file wrapper which automatically encode unicode string to an encoding
     specifed in the constructor
@@ -205,17 +222,13 @@ class UStringIO(list):
 
     __nonzero__ = __bool__
 
+    @handle_writing_constraints
     def write(self, value):
-        assert isinstance(value, text_type), u"unicode required not %s : %s"\
-                                     % (type(value).__name__, repr(value))
-        if self.tracewrites:
-            from traceback import format_stack
-            stack = format_stack(None)[:-1]
-            escaped_stack = xml_escape(json_dumps(u'\n'.join(stack)))
-            escaped_html = xml_escape(value).replace('\n', '<br/>\n')
-            tpl = u'<span onclick="alert(%s)">%s</span>'
-            value = tpl % (escaped_stack, escaped_html)
         self.append(value)
+
+    @handle_writing_constraints
+    def write_front(self, value):
+        self.insert(0, value)
 
     def getvalue(self):
         return u''.join(self)
