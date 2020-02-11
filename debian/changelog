@@ -1,3 +1,9 @@
+cubicweb (3.27.1-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Katia Saurfelt <katia.saurfelt@logilab.fr>  Tue, 11 Feb 2020 10:51:08 +0100
+
 cubicweb (3.27.0-1) unstable; urgency=medium
 
   * New upstream release
