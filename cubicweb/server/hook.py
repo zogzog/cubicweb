@@ -522,8 +522,8 @@ class Hook(AppObject):
     """
     __select__ = enabled_category()
     # set this in derivated classes
+    category = None
     events: Union[None, Tuple[str], Tuple[str, str]] = None
-    category: Union[None, str] = None
     order = 0
     # stop pylint from complaining about missing attributes in Hooks classes
     eidfrom = eidto = entity = rtype = repo = None

@@ -32,7 +32,6 @@ special view (with `self._cw.build_url(...)` for instance)
 Many examples are available in :mod:`cubicweb.web.views.actions`.
 """
 
-from typing import Optional
 
 from cubicweb import _
 
@@ -49,7 +48,7 @@ class Action(AppObject):
     __registry__ = 'actions'
     __select__ = match_search_state('normal')
     order = 99
-    category: Optional[str] = 'moreactions'
+    category = 'moreactions'
     # actions in category 'moreactions' can specify a sub-menu in which they should be filed
     submenu = None
 
