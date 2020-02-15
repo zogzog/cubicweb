@@ -35,11 +35,11 @@ into `mycube/hooks.py`. If this file were to grow too much, we can easily have a
         events = ('before_add_entity', 'before_update_entity')
 
         def __call__(self):
-	    if 'age' in self.entity.cw_edited:
+            if 'age' in self.entity.cw_edited:
                 if 0 <= self.entity.age <= 120:
                    return
-		msg = self._cw._('age must be between 0 and 120')
-		raise ValidationError(self.entity.eid, {'age': msg})
+                msg = self._cw._('age must be between 0 and 120')
+                raise ValidationError(self.entity.eid, {'age': msg})
 
 In our example the base `__select__` is augmented with an `is_instance` selector
 matching the desired entity type.

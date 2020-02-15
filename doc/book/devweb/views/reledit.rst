@@ -136,14 +136,14 @@ below somewhere in your cube's views:
     from cubicweb.web.views import reledit
 
     class DeactivatedAutoClickAndEditFormView(reledit.AutoClickAndEditFormView):
-	def _should_edit_attribute(self, rschema):
-	    return False
+        def _should_edit_attribute(self, rschema):
+            return False
 
-	def _should_edit_attribute(self, rschema, role):
-	    return False
+        def _should_edit_attribute(self, rschema, role):
+            return False
 
     def registration_callback(vreg):
-	vreg.register_and_replace(DeactivatedAutoClickAndEditFormView,
-				  reledit.AutoClickAndEditFormView)
+        vreg.register_and_replace(DeactivatedAutoClickAndEditFormView,
+                                  reledit.AutoClickAndEditFormView)
 
 

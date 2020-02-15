@@ -466,7 +466,7 @@ simplify greatly complex security definition and upgrade.
     __permissions__ = {'read': ('managers', 'users'),
                        'add': ('managers', RRQLExpression('U has_update_permission S')),
                        'delete': ('managers', RRQLExpression('U has_update_permission S'))
-		       }
+                       }
 
 In the above example, user will be allowed to add/delete `my_relation` if he has
 the `update` permission on the subject of the relation.

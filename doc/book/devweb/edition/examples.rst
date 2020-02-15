@@ -56,42 +56,42 @@ Here is the source code:
 .. sourcecode:: python
 
     def sender_value(form, field):
-	return '%s <%s>' % (form._cw.user.dc_title(), form._cw.user.get_email())
+        return '%s <%s>' % (form._cw.user.dc_title(), form._cw.user.get_email())
 
     def recipient_choices(form, field):
-	return [(e.get_email(), e.eid)
+        return [(e.get_email(), e.eid)
                  for e in form.cw_rset.entities()
-		 if e.get_email()]
+                 if e.get_email()]
 
     def recipient_value(form, field):
-	return [e.eid for e in form.cw_rset.entities()
+        return [e.eid for e in form.cw_rset.entities()
                 if e.get_email()]
 
     class MassMailingForm(forms.FieldsForm):
-	__regid__ = 'massmailing'
+        __regid__ = 'massmailing'
 
-	needs_js = ('cubicweb.widgets.js',)
-	domid = 'sendmail'
-	action = 'sendmail'
+        needs_js = ('cubicweb.widgets.js',)
+        domid = 'sendmail'
+        action = 'sendmail'
 
-	sender = ff.StringField(widget=TextInput({'disabled': 'disabled'}),
-				label=_('From:'),
-				value=sender_value)
+        sender = ff.StringField(widget=TextInput({'disabled': 'disabled'}),
+                                label=_('From:'),
+                                value=sender_value)
 
-	recipient = ff.StringField(widget=CheckBox(),
-	                           label=_('Recipients:'),
-				   choices=recipient_choices,
-				   value=recipients_value)
+        recipient = ff.StringField(widget=CheckBox(),
+                                   label=_('Recipients:'),
+                                   choices=recipient_choices,
+                                   value=recipients_value)
 
-	subject = ff.StringField(label=_('Subject:'), max_length=256)
+        subject = ff.StringField(label=_('Subject:'), max_length=256)
 
-	mailbody = ff.StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
-						    inputid='mailbody'))
+        mailbody = ff.StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
+                                                    inputid='mailbody'))
 
-	form_buttons = [ImgButton('sendbutton', "javascript: $('#sendmail').submit()",
-				  _('send email'), 'SEND_EMAIL_ICON'),
-			ImgButton('cancelbutton', "javascript: history.back()",
-				  stdmsgs.BUTTON_CANCEL, 'CANCEL_EMAIL_ICON')]
+        form_buttons = [ImgButton('sendbutton', "javascript: $('#sendmail').submit()",
+                                  _('send email'), 'SEND_EMAIL_ICON'),
+                        ImgButton('cancelbutton', "javascript: history.back()",
+                                  stdmsgs.BUTTON_CANCEL, 'CANCEL_EMAIL_ICON')]
 
 Let's detail what's going on up there. Our form will hold four fields:
 
@@ -125,13 +125,13 @@ To see this form, we still have to wrap it in a view. This is pretty simple:
 .. sourcecode:: python
 
     class MassMailingFormView(form.FormViewMixIn, EntityView):
-	__regid__ = 'massmailing'
-	__select__ = is_instance(IEmailable) & authenticated_user()
+        __regid__ = 'massmailing'
+        __select__ = is_instance(IEmailable) & authenticated_user()
 
-	def call(self):
-	    form = self._cw.vreg['forms'].select('massmailing', self._cw,
-	                                         rset=self.cw_rset)
-	    form.render(w=self.w)
+        def call(self):
+            form = self._cw.vreg['forms'].select('massmailing', self._cw,
+                                                 rset=self.cw_rset)
+            form.render(w=self.w)
 
 As you see, we simply define a view with proper selector so it only apply to a
 result set containing :class:`IEmailable` entities, and so that only users in the

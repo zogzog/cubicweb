@@ -300,18 +300,18 @@ Here is a quick example:
 .. sourcecode:: python
 
     class UserLink(component.Component):
-	'''if the user is the anonymous user, build a link to login else a link
-	to the connected user object with a logout link
-	'''
-	__regid__ = 'loggeduserlink'
+        '''if the user is the anonymous user, build a link to login else a link
+        to the connected user object with a logout link
+        '''
+        __regid__ = 'loggeduserlink'
 
-	def call(self):
-	    if self._cw.session.anonymous_session:
-		# display login link
-		...
-	    else:
-		# display a link to the connected user object with a loggout link
-		...
+        def call(self):
+            if self._cw.session.anonymous_session:
+                # display login link
+                ...
+            else:
+                # display a link to the connected user object with a loggout link
+                ...
 
 The proper way to implement this with |cubicweb| is two have two different
 classes sharing the same identifier but with different selectors so you'll get
@@ -320,21 +320,21 @@ the correct one according to the context.
 .. sourcecode:: python
 
     class UserLink(component.Component):
-	'''display a link to the connected user object with a loggout link'''
-	__regid__ = 'loggeduserlink'
-	__select__ = component.Component.__select__ & authenticated_user()
+        '''display a link to the connected user object with a loggout link'''
+        __regid__ = 'loggeduserlink'
+        __select__ = component.Component.__select__ & authenticated_user()
 
-	def call(self):
+        def call(self):
             # display useractions and siteactions
-	    ...
+            ...
 
     class AnonUserLink(component.Component):
-	'''build a link to login'''
-	__regid__ = 'loggeduserlink'
-	__select__ = component.Component.__select__ & anonymous_user()
+        '''build a link to login'''
+        __regid__ = 'loggeduserlink'
+        __select__ = component.Component.__select__ & anonymous_user()
 
-	def call(self):
-	    # display login link
+        def call(self):
+            # display login link
             ...
 
 The big advantage, aside readability once you're familiar with the

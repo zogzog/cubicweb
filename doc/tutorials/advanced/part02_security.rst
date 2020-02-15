@@ -117,25 +117,25 @@ attribute and relation. Here is the code to add to :file:`schema.py`:
     from cubicweb.schema import ERQLExpression
 
     VISIBILITY_PERMISSIONS = {
-	'read':   ('managers',
-		   ERQLExpression('X visibility "public"'),
-		   ERQLExpression('X may_be_read_by U')),
-	'add':    ('managers',),
-	'update': ('managers', 'owners',),
-	'delete': ('managers', 'owners'),
-	}
+        'read':   ('managers',
+                   ERQLExpression('X visibility "public"'),
+                   ERQLExpression('X may_be_read_by U')),
+        'add':    ('managers',),
+        'update': ('managers', 'owners',),
+        'delete': ('managers', 'owners'),
+        }
     AUTH_ONLY_PERMISSIONS = {
-	    'read':   ('managers', 'users'),
-	    'add':    ('managers',),
-	    'update': ('managers', 'owners',),
-	    'delete': ('managers', 'owners'),
-	    }
+            'read':   ('managers', 'users'),
+            'add':    ('managers',),
+            'update': ('managers', 'owners',),
+            'delete': ('managers', 'owners'),
+            }
     CLASSIFIERS_PERMISSIONS = {
-	    'read':   ('managers', 'users', 'guests'),
-	    'add':    ('managers',),
-	    'update': ('managers', 'owners',),
-	    'delete': ('managers', 'owners'),
-	    }
+            'read':   ('managers', 'users', 'guests'),
+            'add':    ('managers',),
+            'update': ('managers', 'owners',),
+            'delete': ('managers', 'owners'),
+            }
 
     from cubicweb_folder.schema import Folder
     from cubicweb_file.schema import File
